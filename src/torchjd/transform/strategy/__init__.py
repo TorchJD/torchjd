@@ -1,0 +1,4 @@
+from torchjd.transform.strategy.extrapolating import ExtrapolatingStrategy
+from torchjd.transform.strategy.isolating import IsolatingStrategy
+from torchjd.transform.strategy.partitioning import PartitioningStrategy
+from torchjd.transform.strategy.unifying import UnifyingStrategy

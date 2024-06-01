@@ -1,0 +1,38 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace  # Trim trailing whitespace at the end of lines.
+    -   id: end-of-file-fixer  # Make sure files end in a newline and only a newline.
+    -   id: check-added-large-files  # Prevent giant files from being committed.
+    -   id: check-case-conflict  # Check for files that would conflict in case-insensitive filesystems.
+    -   id: check-docstring-first  # Check a common error of defining a docstring after code.
+    -   id: check-merge-conflict  # Check for files that contain merge conflict strings.
+
+-   repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8  # Check style and syntax. Does not modify code, issues have to be solved manually.
+        args: [
+            '--ignore=E501,E203,W503',  # Ignore line length problems, space after colon problems, line break occurring before a binary operator problems.
+            '--per-file-ignores=*/__init__.py:F401',  # Ignore module imported but unused problems in __init__.py files.
+        ]
+
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort  # Sort imports.
+        args: [
+            --multi-line=3,
+            --line-length=100,
+            --trailing-comma,
+            --force-grid-wrap=0,
+            --use-parentheses,
+            --ensure-newline-before-comments,
+        ]
+
+-   repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+    -   id: black  # Format code.
+        args: [--line-length=100]

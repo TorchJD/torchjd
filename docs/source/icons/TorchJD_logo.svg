@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created using Krita: http://krita.org -->
+
+<svg
+   width="2047.72pt"
+   height="2047.72pt"
+   viewBox="0 0 2047.72 2047.72"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="TorchJD_logo_circular.svg"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     inkscape:zoom="0.16298615"
+     inkscape:cx="1395.8241"
+     inkscape:cy="874.30739"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <defs
+     id="defs1" />
+  <path
+     id="shape1"
+     fill="#000000"
+     fill-rule="evenodd"
+     d="M255.215 899.875L255.964 255.964L767.893 255.964L767.893 0L0 0L0.0312533 898.844C0.0317305 898.814 84.5726 899.875 255.215 899.875Z"
+     style="fill:#1a81eb;fill-opacity:1"
+     transform="matrix(1.00000001430707 0 0 1.00000001430707 127.982226522056 127.982226522056)" />
+  <path
+     id="shape01"
+     transform="matrix(-1.00000000922185 0 0 -1.00000000922185 1919.91361739871 1910.33719693125)"
+     fill="#000000"
+     fill-rule="evenodd"
+     d="M768.074 1772.61C-282.004 1598.65 -229.712 151.821 768.074 0C767.083 29.9337 768.096 142.76 768.074 260.886C41.4746 456.903 137.423 1380.06 768.074 1513.64"
+     style="fill:#1a81eb;fill-opacity:1" />
+  <path
+     id="shape02"
+     fill="#000000"
+     fill-rule="evenodd"
+     d="M767.909 887.338C263.402 803.926 0.0759421 387.964 0 0.0856497C14.6868 -0.0285499 99.0551 -0.0285499 255.011 0.0856497C255.311 281.114 448.786 562.163 767.909 626.499"
+     style="fill:#1a81eb;fill-opacity:1"
+     transform="matrix(0.99999996073844 0 0 0.99999996073844 127.966591494328 1023.7721478314)" />
+  <ellipse
+     style="fill:#1a81eb;stroke-width:1.0679;fill-opacity:1"
+     id="path1"
+     cx="1026.361"
+     cy="1014.2211"
+     rx="183.25543"
+     ry="183.51558" />
+</svg>
