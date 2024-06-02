@@ -118,6 +118,7 @@ Here is a comparison of the code for SGD and SSJD.
         One iteration of SGD
         ^^^
         .. code-block:: python
+            :emphasize-lines: 5, 6, 11, 12, 15, 19
 
             import torch
             from torch.nn import MSELoss, Sequential, Linear, ReLU
@@ -147,6 +148,7 @@ Here is a comparison of the code for SGD and SSJD.
         One iteration of SSJD with UPGrad
         ^^^
         .. code-block:: python
+            :emphasize-lines: 5, 6, 11, 12, 15, 19
 
             import torch
             from torch.nn import MSELoss, Sequential, Linear, ReLU
