@@ -15,7 +15,7 @@ def backward(
 ) -> None:
     """
     Computes the Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
-    ``A`` and stores it in the ``.grad`` fields the inputs.
+    ``A`` and stores it in the ``.grad`` fields of the inputs.
 
     .. admonition::
         Example
