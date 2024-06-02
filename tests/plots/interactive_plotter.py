@@ -152,9 +152,9 @@ def make_gradient_div(i: int, initial_gradient: torch.Tensor) -> html.Div:
     angle, r = coord_to_angle(x, y)
     div = html.Div(
         [
-            html.P(f"g{i+1}", style={"display": "inline-block", "margin-right": 20}),
+            html.P(f"g{i + 1}", style={"display": "inline-block", "margin-right": 20}),
             dcc.Input(
-                id=f"g{i+1}-angle-range",
+                id=f"g{i + 1}-angle-range",
                 type="range",
                 value=angle,
                 min=0,
@@ -162,7 +162,7 @@ def make_gradient_div(i: int, initial_gradient: torch.Tensor) -> html.Div:
                 style={"width": "250px"},
             ),
             dcc.Input(
-                id=f"g{i+1}-r-range",
+                id=f"g{i + 1}-r-range",
                 type="range",
                 value=r,
                 min=MIN_LENGTH,

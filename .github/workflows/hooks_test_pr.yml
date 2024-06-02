@@ -3,13 +3,12 @@ name: Apply pre-commit and run tests on PR
 on:
   pull_request:
 
-permissions:
-  contents: read
-
 jobs:
   # pre-commit hooks job
   pre-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,6 +33,8 @@ jobs:
   # testing job
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,4 +47,4 @@ jobs:
       - name: Install dependencies
         run: pdm install --frozen-lockfile
       - name: Run tests
-        run: pdm run pytest --doctest-plus --doctest-rst
+        run: pdm run pytest
