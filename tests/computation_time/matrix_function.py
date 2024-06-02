@@ -51,7 +51,7 @@ def main():
     for n_rows, n_cols in _SHAPES:
         matrix = torch.randn(n_rows, n_cols)
         time = get_computation_milliseconds(func, matrix)
-        print(f"{n_rows}x{n_cols} - {time:.3f}ms")
+        print(f"{n_rows}x{n_cols} - {time: .3f}ms")
 
 
 if __name__ == "__main__":
