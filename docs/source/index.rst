@@ -48,7 +48,7 @@ These losses are then backwarded through the model and aggregated using UPGrad.
 Import several classes from torch and torchjd:
 
 >>> import torch
->>> from torch.nn import L1Loss, Sequential, Linear, ReLU
+>>> from torch.nn import MSELoss, Sequential, Linear, ReLU
 >>> from torch.optim import SGD
 >>>
 >>> import torchjd
@@ -77,9 +77,9 @@ target:
 >>> target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
 
 Prepare a vector loss for comparing the output of the model to the labels. Setting
-`reduction='none'` makes the `L1Loss` into an element-wise loss.
+`reduction='none'` makes the `MSELoss` into an element-wise loss.
 
->>> loss = L1Loss(reduction='none')
+>>> loss = MSELoss(reduction='none')
 
 Here, we generate the data such that each target is equal to the sum of its corresponding input
 vector, for the sake of the example.
