@@ -42,7 +42,7 @@ def backward(
         >>> output = model(input)
         >>> losses = loss(output, target)
         >>>
-        >>> backward_transform(losses, model.parameters(), A)
+        >>> backward(losses, model.parameters(), A)
 
         The ``.grad`` field of each parameter of the model is now populated.
 
@@ -57,7 +57,7 @@ def backward(
     """
     parameters = list(leaves)
 
-    # Transform that create gradients containing only ones
+    # Transform that creates gradients containing only ones
     init = Init([losses])
 
     # Transform that turns the gradients into jacobians
