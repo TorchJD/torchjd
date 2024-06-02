@@ -2,20 +2,20 @@ The following steps outline how to contribute to torchjd. Additionally, make sur
 
 1) Clone the repository
 
-2) Install Python 3.10.13. We use pyenv to manage python versions:
+2) Install an appropriate version of Python. We use pyenv to manage python versions:
     - Install pyenv: https://github.com/pyenv/pyenv#installation
     - [Ubuntu] Install libraries that are required to install python with pyenv:
       ```bash
       sudo apt-get install build-essential zlib1g-dev libffi-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev liblzma-dev
       ```
-    - Install a python 3.10.13 version using pyenv:
+    - Install a python 3.11.9 version using pyenv:
       ```bash
-      pyenv install 3.10.13
+      pyenv install 3.11.9
       ```
     - Automatically activate this python version when you are inside of this repo (command to run
       from the root of torchjd):
       ```bash
-      pyenv local 3.10.13
+      pyenv local 3.11.9
       ```
 
 3) Install `pdm`:

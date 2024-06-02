@@ -5,7 +5,7 @@
 groups = ["default", "check", "doc", "test", "plot"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:f8f6d8d544b90d957e0d2a3a7682c3e4db0badb54a32052fbf119b60d482632e"
+content_hash = "sha256:3fac584d492d5979341d27515414e9d06f9bfb6a6fe7d1c3b07949772d26f01b"
 
 [[package]]
 name = "alabaster"
