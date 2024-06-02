@@ -42,7 +42,7 @@ The following steps outline how to contribute to torchjd. Additionally, make sur
 
 5) Install pre-commit by running:
    ```bash
-   pre-commit install
+   pdm run pre-commit install
    ```
    from the root of torchjd. This will register some hooks that git will execute before each commit. These hooks help to maintain the repository, for instance by checking that each file ends with a newline.
 
