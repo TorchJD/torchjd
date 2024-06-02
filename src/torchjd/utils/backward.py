@@ -42,7 +42,7 @@ def backward(
         >>> output = model(input)
         >>> losses = loss(output, target)
         >>>
-        >>> backward(losses, model.parameters(), A)
+        >>> backward_transform(losses, model.parameters(), A)
 
         The ``.grad`` field of each parameter of the model is now populated.
 
@@ -57,12 +57,21 @@ def backward(
     """
     parameters = list(leaves)
 
+    # Transform that create gradients containing only ones
     init = Init([losses])
+
+    # Transform that turns the gradients into jacobians
     diag = Diagonalize([losses])
+
+    # Transform that computes the required jacobians
     jac = Jac([losses], parameters, chunk_size=parallel_chunk_size)
+
+    # Transform that defines the aggregation of the jacobians into gradients
     aggregation = make_aggregation(UnifyingStrategy(aggregator, parameters))
+
+    # Transform that stores the gradients with respect to the model's parameters
     store = Store(parameters)
 
-    transform = store << aggregation << jac << diag << init
+    backward_transform = store << aggregation << jac << diag << init
 
-    transform(EmptyTensorDict())
+    backward_transform(EmptyTensorDict())
