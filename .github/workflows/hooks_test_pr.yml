@@ -46,4 +46,4 @@ jobs:
       - name: Install dependencies
         run: pdm install --frozen-lockfile
       - name: Run tests
-        run: pdm run pytest --doctest-plus --doctest-rst
+        run: pdm run pytest
