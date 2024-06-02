@@ -20,7 +20,7 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install dependencies
-        run: pdm install
+        run: pdm install --frozen-lockfile
       - name: Cache pre-commit hooks
         uses: actions/cache@v2
         with:
@@ -44,6 +44,6 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install dependencies
-        run: pdm install
+        run: pdm install --frozen-lockfile
       - name: Run tests
         run: pdm run pytest --doctest-plus --doctest-rst

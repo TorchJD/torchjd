@@ -40,7 +40,7 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install dependencies
-        run: pdm install
+        run: pdm install --frozen-lockfile
       - name: Build HTML
         run: |
           cd docs/
