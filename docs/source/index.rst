@@ -107,3 +107,59 @@ Update each parameter based on its ``.grad`` field, using the ``optimizer``:
 >>> optimizer.step()
 
 The model's parameters have been updated!
+
+
+Here is a comparison of the code for SGD and SSJD.
+
+.. grid:: 2
+
+    .. grid-item-card::  SGD
+
+        One iteration of SGD
+        ^^^
+        >>> import torch
+        >>> from torch.nn import MSELoss, Sequential, Linear, ReLU
+        >>> from torch.optim import SGD
+        >>>
+        >>>
+        >>>
+        >>>
+        >>> _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
+        >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+        >>> optimizer = SGD(model.parameters(), lr=0.1)
+        >>>
+        >>>
+        >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
+        >>> target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
+        >>> loss = MSELoss()
+        >>> output = model(input)
+        >>> loss_scalar = loss(output, target)
+        >>> optimizer.zero_grad()
+        >>> loss_scalar.backward()
+        >>> optimizer.step()
+
+
+    .. grid-item-card::  SSJD
+
+        One iteration of SSJD with UPGrad
+        ^^^
+        >>> import torch
+        >>> from torch.nn import MSELoss, Sequential, Linear, ReLU
+        >>> from torch.optim import SGD
+        >>>
+        >>> import torchjd
+        >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
+        >>>
+        >>> _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
+        >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+        >>> optimizer = SGD(model.parameters(), lr=0.1)
+        >>> W = UPGradWrapper(MeanWeighting())
+        >>> A = WeightedAggregator(W)
+        >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
+        >>> target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
+        >>> loss = MSELoss(reduction='none')
+        >>> output = model(input)
+        >>> loss_vector = loss(output, target)
+        >>> optimizer.zero_grad()
+        >>> torchjd.backward(loss_vector, model.parameters(), A)
+        >>> optimizer.step()

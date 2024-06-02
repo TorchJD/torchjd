@@ -25,6 +25,7 @@ doc = [
 	"furo>=2023.0, <2024.04.27",  # Force it to be recent so that the theme looks better, 2024.04.27 seems to have bugged link colors
 	"tomli>=1.1",  # The load function doesn't work similarly before 1.1
 	"sphinx-autodoc-typehints>=1.16.0",  # Some problems with TypeVars before 1.16
+    "sphinx-design>=0.6.0"
 ]
 
 test = [
