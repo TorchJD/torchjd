@@ -14,7 +14,7 @@ def backward(
     parallel_chunk_size: int | None = None,
 ) -> None:
     """
-    Computes tha Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
+    Computes the Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
     ``A`` and stores it in the ``.grad`` fields the inputs.
 
     .. admonition::
