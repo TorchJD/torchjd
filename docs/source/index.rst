@@ -118,27 +118,42 @@ Here is a comparison of the code for SGD and SSJD.
         One iteration of SGD
         ^^^
         .. code-block:: python
-            :emphasize-lines: 5, 6, 11, 12, 15, 19
 
             import torch
-            from torch.nn import MSELoss, Sequential, Linear, ReLU
+            from torch.nn import (
+                MSELoss,
+                Sequential,
+                Linear,
+                ReLU
+            )
             from torch.optim import SGD
 
 
 
 
-            _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
-            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            optimizer = SGD(model.parameters(), lr=0.1)
 
 
-            input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-            target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
-            loss = MSELoss()
-            output = model(input)
-            loss_scalar = loss(output, target)
+
+
+
+
+
+            model = Sequential(
+                Linear(10, 5),
+                ReLU(),
+                Linear(5, 1)
+            )
+            loss_fn = MSELoss()
+            params = model.parameters()
+            optimizer = SGD(params, lr=0.1)
+
+            x = torch.randn(16, 10)
+            y = torch.randn(16, 1)
+            y_hat = model(x)
+            loss = loss_fn(y_hat, y)
+
             optimizer.zero_grad()
-            loss_scalar.backward()
+            loss.backward()
             optimizer.step()
 
 
@@ -148,25 +163,41 @@ Here is a comparison of the code for SGD and SSJD.
         One iteration of SSJD with UPGrad
         ^^^
         .. code-block:: python
-            :emphasize-lines: 5, 6, 11, 12, 15, 19
+            :emphasize-lines: 10, 11, 12, 13, 14, 15, 16, 17, 18, 25, 35
 
             import torch
-            from torch.nn import MSELoss, Sequential, Linear, ReLU
+            from torch.nn import (
+                MSELoss,
+                Sequential,
+                Linear,
+                ReLU
+            )
             from torch.optim import SGD
 
             import torchjd
-            from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
+            from torchjd.aggregation import (
+                WeightedAggregator,
+                UPGradWrapper,
+                MeanWeighting
+            )
 
-            _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
-            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            optimizer = SGD(model.parameters(), lr=0.1)
             W = UPGradWrapper(MeanWeighting())
             A = WeightedAggregator(W)
-            input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-            target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
-            loss = MSELoss(reduction='none')
-            output = model(input)
-            loss_vector = loss(output, target)
+
+            model = Sequential(
+                Linear(10, 5),
+                ReLU(),
+                Linear(5, 1)
+            )
+            loss_fn = MSELoss(reduction='none')
+            params = model.parameters()
+            optimizer = SGD(params, lr=0.1)
+
+            x = torch.randn(16, 10)
+            y = torch.randn(16, 1)
+            y_hat = model(x)
+            losses = loss_fn(y_hat, y)
+
             optimizer.zero_grad()
-            torchjd.backward(loss_vector, model.parameters(), A)
+            torchjd.backward(losses, params, A)
             optimizer.step()
