@@ -8,14 +8,14 @@ from torchjd.transform.strategy import UnifyingStrategy
 
 
 def backward(
-    losses: Tensor,
-    leaves: Iterable[Tensor],
+    tensor: Tensor,
+    inputs: Iterable[Tensor],
     aggregator: Aggregator,
     parallel_chunk_size: int | None = None,
 ) -> None:
     """
-    Computes the aggregation of the Jacobian of the ``losses`` wrt graph ``leaves``. Stores it in
-    the ``.grad`` field of each leaf.
+    Computes tha Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
+    ``A`` and stores it in the ``.grad`` fields the inputs.
 
     .. admonition::
         Example
@@ -46,25 +46,26 @@ def backward(
 
         The ``.grad`` field of each parameter of the model is now populated.
 
-    :param losses: The losses to differentiate.
-    :param leaves: The leaves of the graph to differentiate with respect to. These must have their
-        ``requires_grad`` flag to ``True``.
-    :param aggregator: Aggregator used for the aggregation of the Jacobian.
-    :param parallel_chunk_size: The number of losses to differentiate simultaneously in the
-        backward pass. If set to ``None``, all losses will be differentiated in parallel in one go.
-        If set to `1`, all losses will be differentiated sequentially. A larger value results in
-        faster differentiation, but also higher memory usage. Defaults to ``None``.
+    :param tensor: The vector (1-dimensional tensor) to differentiate.
+    :param inputs: The tensors with respect ot which the tensor values must be differentiated. These
+        must have their ``requires_grad`` flag set to ``True``.
+    :param aggregator: Aggregator to use for the aggregation of the Jacobian.
+    :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
+        backward pass. If set to ``None``, all coordinates of ``tensor`` will be differentiated in
+        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
+        larger value results in faster differentiation, but also higher memory usage. Defaults to
+        ``None``.
     """
-    parameters = list(leaves)
+    parameters = list(inputs)
 
     # Transform that creates gradients containing only ones
-    init = Init([losses])
+    init = Init([tensor])
 
     # Transform that turns the gradients into jacobians
-    diag = Diagonalize([losses])
+    diag = Diagonalize([tensor])
 
     # Transform that computes the required jacobians
-    jac = Jac([losses], parameters, chunk_size=parallel_chunk_size)
+    jac = Jac([tensor], parameters, chunk_size=parallel_chunk_size)
 
     # Transform that defines the aggregation of the jacobians into gradients
     aggregation = make_aggregation(UnifyingStrategy(aggregator, parameters))
