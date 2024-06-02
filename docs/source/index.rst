@@ -3,33 +3,42 @@
 |
 
 .. image:: _static/logo-dark-mode.png
-    :width: 200
+    :width: 400
     :alt: torchjd
     :align: center
-    :class: only-dark
+    :class: only-dark, no-scaled-link
 
 .. image:: _static/logo-light-mode.png
-    :width: 200
+    :width: 400
     :alt: torchjd
     :align: center
-    :class: only-light
+    :class: only-light, no-scaled-link
 
-Library enabling Jacobian Descent with PyTorch. This version is a simplified minimal version, it is
-subject to substantial changes.
+|
 
-This library is made for deep learning researchers and practitioners. It contains several packages
-enabling multi-objective optimization with Jacobian Descent.
+TorchJD is a library enabling Jacobian descent with PyTorch, for optimization of neural networks
+with multiple objectives.
 
-It enables the computation of loss vectors, the computation and the aggregation of the corresponding
-Jacobian matrices, and the description of how the backward pass must be performed.
+*TorchJD is still in early development and can thus undergo backward-incompatible changes without
+notice.*
 
 Packages
-########
-- **backward**: Contains utility functions such as `backward`.
+========
+
+- **utils**: Contains utility functions such as `backward`.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
 
+.. toctree::
+    :maxdepth: 2
+    :name: api reference
+    :caption: API Reference
+    :hidden:
+
+    packages/utils/index.rst
+    packages/aggregation/index.rst
+
 Usage
-#####
+=====
 
 This example shows how to use torchjd to perform an iteration of Jacobian Descent on a regression
 model. More precisely, this is a step of stochastic sub-Jacobian descent where a batch of inputs is
@@ -98,12 +107,3 @@ Update each parameter based on its ``.grad`` field, using the ``optimizer``:
 >>> optimizer.step()
 
 The model's parameters have been updated!
-
-.. toctree::
-    :maxdepth: 2
-    :name: api reference
-    :caption: API Reference
-    :hidden:
-
-    packages/utils/index.rst
-    packages/aggregation/index.rst
