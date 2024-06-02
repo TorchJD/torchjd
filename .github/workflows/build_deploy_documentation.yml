@@ -8,12 +8,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # Cancels jobs that are in progress if a new job arrives.
 concurrency:
@@ -27,7 +21,6 @@ jobs:
     permissions:
       contents: read
       pages: write
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,9 +50,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: read
-      pages: write
+  permissions:
+    contents: read
+    pages: write
+    id-token: write
       id-token: write
     steps:
       - name: Deploy to GitHub Pages
