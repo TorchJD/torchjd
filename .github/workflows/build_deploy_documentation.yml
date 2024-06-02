@@ -12,8 +12,7 @@ on:
 permissions:
   contents: read
   pages: write
-  # We can maybe remove the following, it was from a copy paste and this is not well documented, needs testing.
-  # id-token: write
+  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # Cancels jobs that are in progress if a new job arrives.
