@@ -15,7 +15,7 @@ def backward(
 ) -> None:
     """
     Computes the Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
-    ``A`` and stores it in the ``.grad`` fields of the inputs.
+    ``A`` and stores it in the ``.grad`` fields of the ``inputs``.
 
     .. admonition::
         Example
@@ -46,7 +46,7 @@ def backward(
 
         The ``.grad`` field of each parameter of the model is now populated.
 
-    :param tensors: The tensors to differentiate. Should be non-empty
+    :param tensors: The tensors to differentiate. Should be non-empty.
     :param inputs: The tensors with respect ot which the tensor values must be differentiated. These
         must have their ``requires_grad`` flag set to ``True``.
     :param aggregator: Aggregator to use for the aggregation of the Jacobian.
