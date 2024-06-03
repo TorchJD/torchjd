@@ -56,6 +56,11 @@ def backward(
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
     """
+    if not (parallel_chunk_size is None or parallel_chunk_size > 0):
+        raise ValueError(
+            f"`chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
+        )
+
     parameters = list(inputs)
 
     # Transform that creates gradients containing only ones
