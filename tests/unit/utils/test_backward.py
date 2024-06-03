@@ -34,7 +34,7 @@ def test_backward_various_aggregators(aggregator: Aggregator):
     output = model(input)
     losses = loss(output, target)
 
-    backward(losses, model.parameters(), aggregator)
+    backward([losses], model.parameters(), aggregator)
 
     for p in model.parameters():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -62,7 +62,7 @@ def test_backward_chunk_size(chunk_size):
     output = model(input)
     losses = loss(output, target)
 
-    backward(losses, model.parameters(), A, parallel_chunk_size=chunk_size)
+    backward([losses], model.parameters(), A, parallel_chunk_size=chunk_size)
 
     for p in model.parameters():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -91,6 +91,6 @@ def test_backward_grads(aggregator: Aggregator, shape: tuple[int]):
     input = torch.randn([shape[1]], requires_grad=True)
     output = jacobian @ input
 
-    backward(output, [input], aggregator)
+    backward([output], [input], aggregator)
 
     assert_close(input.grad, aggregator(jacobian))

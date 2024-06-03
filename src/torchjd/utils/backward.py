@@ -8,7 +8,7 @@ from torchjd.transform.strategy import UnifyingStrategy
 
 
 def backward(
-    tensor: Tensor,
+    tensors: Iterable[Tensor],
     inputs: Iterable[Tensor],
     aggregator: Aggregator,
     parallel_chunk_size: int | None = None,
@@ -42,11 +42,11 @@ def backward(
         >>> output = model(input)
         >>> losses = loss(output, target)
         >>>
-        >>> backward(losses, model.parameters(), A)
+        >>> backward([losses], model.parameters(), A)
 
         The ``.grad`` field of each parameter of the model is now populated.
 
-    :param tensor: The vector (1-dimensional tensor) to differentiate.
+    :param tensors: The tensors to differentiate. Should be non-empty
     :param inputs: The tensors with respect ot which the tensor values must be differentiated. These
         must have their ``requires_grad`` flag set to ``True``.
     :param aggregator: Aggregator to use for the aggregation of the Jacobian.
@@ -61,16 +61,20 @@ def backward(
             f"`chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
         )
 
+    tensors = list(tensors)
+    if len(tensors) == 0:
+        raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
+
     parameters = list(inputs)
 
     # Transform that creates gradients containing only ones
-    init = Init([tensor])
+    init = Init(tensors)
 
     # Transform that turns the gradients into jacobians
-    diag = Diagonalize([tensor])
+    diag = Diagonalize(tensors)
 
     # Transform that computes the required jacobians
-    jac = Jac([tensor], parameters, chunk_size=parallel_chunk_size)
+    jac = Jac(tensors, parameters, chunk_size=parallel_chunk_size)
 
     # Transform that defines the aggregation of the jacobians into gradients
     aggregation = make_aggregation(UnifyingStrategy(aggregator, parameters))
