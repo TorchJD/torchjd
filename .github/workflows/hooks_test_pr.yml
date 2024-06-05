@@ -46,5 +46,7 @@ jobs:
         uses: pdm-project/setup-pdm@v4
       - name: Install dependencies
         run: pdm install --frozen-lockfile
-      - name: Run tests
-        run: pdm run pytest
+      - name: Run unit tests
+        run: pdm run pytest tests/unit
+      - name: Run doc tests
+        run: pdm run pytest tests/doc
