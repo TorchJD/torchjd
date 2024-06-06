@@ -13,6 +13,6 @@ class TestUnifyingStructure(ExpectedStructureProperty):
     pass
 
 
-@pytest.mark.parametrize("strategy", [UnifyingStrategy(aggregator, key_order={})])
+@pytest.mark.parametrize("strategy", [UnifyingStrategy(aggregator, key_order=[])])
 class TestUnifyingEmpty(EmptyDictProperty):
     pass
