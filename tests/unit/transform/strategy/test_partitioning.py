@@ -17,7 +17,7 @@ from torchjd.transform.strategy import PartitioningStrategy
         ),
     ],
 )
-class TestPartitioning(ExpectedStructureProperty):
+class TestPartitioningStructure(ExpectedStructureProperty):
     pass
 
 

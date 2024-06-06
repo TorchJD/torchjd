@@ -9,7 +9,7 @@ from torchjd.transform.strategy import UnifyingStrategy
 
 
 @pytest.mark.parametrize("strategy", [UnifyingStrategy(aggregator, key_order=keys)])
-class TestUnifyingStructure(ExpectedStructureProperty):
+class TestUnifyingStructureStructure(ExpectedStructureProperty):
     pass
 
 
