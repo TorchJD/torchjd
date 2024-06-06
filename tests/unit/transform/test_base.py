@@ -10,12 +10,18 @@ from torchjd.transform.tensor_dict import TensorDict
 
 
 class FakeTransform(Transform[_B, _C]):
+    """
+    Fake Transform to test `required_keys` and `output_keys` when composing and conjuncting.
+    """
+
     def __init__(self, required_keys: set[Tensor], output_keys: set[Tensor]):
         self._required_keys = required_keys
         self._output_keys = output_keys
 
     def _compute(self, input: _B) -> _C:
-        output_dict = {key: None for key in self._output_keys}
+        # ignore the input, create a dictionary with the right keys as an output.
+        # cast the type for the purpose of type-checking.
+        output_dict = {key: torch.empty(0) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
     @property
