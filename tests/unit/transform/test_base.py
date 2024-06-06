@@ -9,7 +9,7 @@ from torchjd.transform.base import Conjunction, Transform
 from torchjd.transform.tensor_dict import TensorDict
 
 
-class MockTransform(Transform[_B, _C]):
+class FakeTransform(Transform[_B, _C]):
     def __init__(self, required_keys: set[Tensor], output_keys: set[Tensor]):
         self._required_keys = required_keys
         self._output_keys = output_keys
@@ -30,7 +30,7 @@ class MockTransform(Transform[_B, _C]):
 def test_apply_keys():
     t1 = torch.randn([2])
     t2 = torch.randn([3])
-    transform = MockTransform({t1}, {t1, t2})
+    transform = FakeTransform({t1}, {t1, t2})
 
     transform(TensorDict({t1: t2}))
 
@@ -47,8 +47,8 @@ def test_apply_keys():
 def test_compose_keys_match():
     t1 = torch.randn([2])
     t2 = torch.randn([3])
-    transform1 = MockTransform({t1}, {t1, t2})
-    transform2 = MockTransform({t2}, {t1})
+    transform1 = FakeTransform({t1}, {t1, t2})
+    transform2 = FakeTransform({t2}, {t1})
 
     transform1 << transform2
 
@@ -60,9 +60,9 @@ def test_conjunct_required_keys():
     t1 = torch.randn([2])
     t2 = torch.randn([3])
 
-    transform1 = MockTransform({t1}, set())
-    transform2 = MockTransform({t1}, set())
-    transform3 = MockTransform({t2}, set())
+    transform1 = FakeTransform({t1}, set())
+    transform2 = FakeTransform({t1}, set())
+    transform3 = FakeTransform({t2}, set())
 
     transform1 | transform2
 
@@ -77,9 +77,9 @@ def test_conjunct_wrong_output_keys():
     t1 = torch.randn([2])
     t2 = torch.randn([3])
 
-    transform1 = MockTransform(set(), {t1, t2})
-    transform2 = MockTransform(set(), {t1})
-    transform3 = MockTransform(set(), {t2})
+    transform1 = FakeTransform(set(), {t1, t2})
+    transform2 = FakeTransform(set(), {t1})
+    transform3 = FakeTransform(set(), {t2})
 
     transform2 | transform3
 
