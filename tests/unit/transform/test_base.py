@@ -27,25 +27,21 @@ class MockTransform(Transform[_B, _C]):
         return self._output_keys
 
 
-class MockTensorDict(TensorDict):
-    pass
-
-
 def test_apply_keys():
     t1 = torch.randn([2])
     t2 = torch.randn([3])
     transform = MockTransform({t1}, {t1, t2})
 
-    transform(MockTensorDict({t1: t2}))
+    transform(TensorDict({t1: t2}))
 
     with pytest.raises(ValueError):
-        transform(MockTensorDict({t2: t1}))
+        transform(TensorDict({t2: t1}))
 
     with pytest.raises(ValueError):
-        transform(MockTensorDict({}))
+        transform(TensorDict({}))
 
     with pytest.raises(ValueError):
-        transform(MockTensorDict({t1: t2, t2: t1}))
+        transform(TensorDict({t1: t2, t2: t1}))
 
 
 def test_compose_keys_match():
@@ -97,4 +93,4 @@ def test_conjunct_wrong_output_keys():
 def test_conjunction_empty_transforms():
     conjunction = Conjunction([])
 
-    assert len(conjunction(MockTensorDict({}))) == 0
+    assert len(conjunction(TensorDict({}))) == 0
