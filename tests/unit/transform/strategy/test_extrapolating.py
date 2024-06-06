@@ -15,7 +15,7 @@ from torchjd.transform.strategy import ExtrapolatingStrategy
         ExtrapolatingStrategy(aggregator, considered_keys=keys[:3], remaining_keys=keys[3:]),
     ],
 )
-class TestExtrapolating(ExpectedStructureProperty):
+class TestExtrapolatingStructure(ExpectedStructureProperty):
     pass
 
 

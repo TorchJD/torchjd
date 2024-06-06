@@ -9,7 +9,7 @@ from torchjd.transform.strategy import IsolatingStrategy
 
 
 @pytest.mark.parametrize("strategy", [IsolatingStrategy(aggregator, keys)])
-class TestIsolating(ExpectedStructureProperty):
+class TestIsolatingStructure(ExpectedStructureProperty):
     pass
 
 

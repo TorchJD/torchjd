@@ -74,7 +74,7 @@ def test_compose_keys_match():
 
 def test_conjunct_required_keys():
     """
-    Tests that the conjunction of ``Transform``s checks that the provided transforms all havve the
+    Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
     same `required_keys`.
     """
 
@@ -118,7 +118,7 @@ def test_conjunct_wrong_output_keys():
 
 def test_conjunction_empty_transforms():
     """
-    Tests that it is possible to take the conjunction of no transform, this should return an empty
+    Tests that it is possible to take the conjunction of no transform. This should return an empty
     dictionary.
     """
 
