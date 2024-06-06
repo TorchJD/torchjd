@@ -27,7 +27,6 @@ class GradDropAggregator(Aggregator):
         >>> from torch import tensor
         >>> from torchjd.aggregation import GradDropAggregator
         >>>
-        >>> _ = torch.manual_seed(0)
         >>> A = GradDropAggregator()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>

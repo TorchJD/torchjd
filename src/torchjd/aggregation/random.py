@@ -19,7 +19,6 @@ class RandomWeighting(Weighting):
         >>> from torch import tensor, manual_seed
         >>> from torchjd.aggregation import WeightedAggregator, RandomWeighting
         >>>
-        >>> _ = torch.manual_seed(0)
         >>> W = RandomWeighting()
         >>> A = WeightedAggregator(W)
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
@@ -38,7 +37,6 @@ class RandomWeighting(Weighting):
         >>> from torch import tensor, manual_seed
         >>> from torchjd.aggregation import WeightedAggregator, RandomWeighting
         >>>
-        >>> _ = torch.manual_seed(0)
         >>> W = RandomWeighting()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>

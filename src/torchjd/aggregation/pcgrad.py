@@ -18,7 +18,6 @@ class PCGradWeighting(Weighting):
         >>> from torch import tensor, sqrt, manual_seed
         >>> from torchjd.aggregation import WeightedAggregator, PCGradWeighting
         >>>
-        >>> _ = manual_seed(0)
         >>> W = PCGradWeighting()
         >>> A = WeightedAggregator(W)
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
