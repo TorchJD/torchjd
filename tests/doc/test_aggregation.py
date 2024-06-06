@@ -67,7 +67,7 @@ def test_mgda():
     assert_close(W(J), tensor([0.6000, 0.4000]), rtol=0, atol=1e-4)
 
 
-def test_dual_proj():
+def test_dualproj():
     from torch import tensor
 
     from torchjd.aggregation import DualProjWrapper, MeanWeighting, WeightedAggregator
@@ -80,7 +80,7 @@ def test_dual_proj():
     assert_close(W(J), tensor([0.6109, 0.5000]), rtol=0, atol=1e-4)
 
 
-def test_pc_grad():
+def test_pcgrad():
     from torch import tensor
 
     from torchjd.aggregation import PCGradWeighting, WeightedAggregator
@@ -93,7 +93,7 @@ def test_pc_grad():
     assert_close(W(J), tensor([2.2222, 1.5789]), rtol=0, atol=1e-4)
 
 
-def test_grad_drop():
+def test_graddrop():
     from torch import tensor
 
     from torchjd.aggregation import GradDropAggregator
@@ -106,7 +106,7 @@ def test_grad_drop():
     assert_close(A(J), tensor([6.0, 2.0, 2.0]), rtol=0, atol=1e-4)
 
 
-def test_imtlg():
+def test_imtl_g():
     from torch import tensor
 
     from torchjd.aggregation import IMTLGWeighting, WeightedAggregator
@@ -119,7 +119,7 @@ def test_imtlg():
     assert_close(W(J), tensor([0.5923, 0.4077]), rtol=0, atol=1e-4)
 
 
-def test_ca_grad():
+def test_cagrad():
     import warnings
 
     warnings.filterwarnings("ignore")
