@@ -1,6 +1,9 @@
 import pytest
 from unit.transform.strategy.utils.inputs import aggregator, keys
-from unit.transform.strategy.utils.property_testers import ExpectedStructureProperty
+from unit.transform.strategy.utils.property_testers import (
+    EmptyDictProperty,
+    ExpectedStructureProperty,
+)
 
 from torchjd.transform.strategy import PartitioningStrategy
 
@@ -14,5 +17,10 @@ from torchjd.transform.strategy import PartitioningStrategy
         ),
     ],
 )
-class TestPartitioning(ExpectedStructureProperty):
+class TestPartitioningStructure(ExpectedStructureProperty):
+    pass
+
+
+@pytest.mark.parametrize("strategy", [PartitioningStrategy([], [])])
+class TestPartitioningEmpty(EmptyDictProperty):
     pass

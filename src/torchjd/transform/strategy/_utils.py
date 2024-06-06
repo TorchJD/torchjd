@@ -6,7 +6,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator, WeightedAggregator
 from torchjd.transform._utils import _OrderedSet
-from torchjd.transform.tensor_dict import GradientVectors
+from torchjd.transform.tensor_dict import EmptyTensorDict, GradientVectors
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
@@ -31,6 +31,9 @@ def _aggregate_group(
     :class:`~torchjd.aggregation.bases.Aggregator`. Returns the obtained gradient vectors.
     """
 
+    if len(jacobian_matrices) == 0:
+        return EmptyTensorDict()
+
     united_jacobian_matrix = _unite(jacobian_matrices)
     united_gradient_vector = aggregator(united_jacobian_matrix)
     gradient_vectors = _disunite(united_gradient_vector, jacobian_matrices)
@@ -46,6 +49,9 @@ def _combine_group(
     :class:`~torchjd.aggregation.bases.WeightedAggregator`. Returns the obtained gradient
     vectors and the associated weights.
     """
+
+    if len(jacobian_matrices) == 0:
+        return EmptyTensorDict(), torch.empty([0])
 
     united_jacobian_matrix = _unite(jacobian_matrices)
     gradient_weights = aggregator.weighting(united_jacobian_matrix)
