@@ -120,6 +120,10 @@ def test_imtlg():
 
 
 def test_ca_grad():
+    import warnings
+
+    warnings.filterwarnings("ignore")
+
     from torch import tensor
 
     from torchjd.aggregation import CAGradWeighting, WeightedAggregator
@@ -148,6 +152,10 @@ def test_random():
 
 
 def test_nash_mtl():
+    import warnings
+
+    warnings.filterwarnings("ignore")
+
     from torch import tensor
 
     from torchjd.aggregation import NashMTLWeighting, WeightedAggregator
