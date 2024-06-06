@@ -1,4 +1,4 @@
-def test_dummy():
+def test_root_index():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
