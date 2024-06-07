@@ -99,7 +99,7 @@ Reset the ``.grad`` field of each model parameter:
 
 Perform the Jacobian descent backward pass:
 
->>> torchjd.backward([losses], model.parameters(), A)
+>>> torchjd.backward(losses, model.parameters(), A)
 
 This will populate the ``.grad`` field of each model parameter with the corresponding aggregated
 Jacobian matrix.

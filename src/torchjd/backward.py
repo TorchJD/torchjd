@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from torch import Tensor
 
@@ -8,7 +8,7 @@ from torchjd.transform.strategy import UnifyingStrategy
 
 
 def backward(
-    tensors: Iterable[Tensor],
+    tensors: Sequence[Tensor] | Tensor,
     inputs: Iterable[Tensor],
     aggregator: Aggregator,
     parallel_chunk_size: int | None = None,
@@ -42,7 +42,7 @@ def backward(
         >>> output = model(input)
         >>> losses = loss(output, target)
         >>>
-        >>> backward([losses], model.parameters(), A)
+        >>> backward(losses, model.parameters(), A)
 
         The ``.grad`` field of each parameter of the model is now populated.
 
@@ -61,7 +61,9 @@ def backward(
             f"`chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
         )
 
-    tensors = list(tensors)
+    if isinstance(tensors, Tensor):
+        tensors = [tensors]
+
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
 
