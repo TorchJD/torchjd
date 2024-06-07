@@ -37,7 +37,7 @@ def backward(
         >>> A = WeightedAggregator(W)
         >>>
         >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-        >>> target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
+        >>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
         >>>
         >>> output = model(input)
         >>> losses = loss(output, target)
