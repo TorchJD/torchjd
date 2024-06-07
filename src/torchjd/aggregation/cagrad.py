@@ -24,7 +24,7 @@ class CAGradWeighting(Weighting):
         >>> import warnings
         >>> warnings.filterwarnings("ignore")
         >>>
-        >>> from torch import tensor, sqrt
+        >>> from torch import tensor
         >>> from torchjd.aggregation import WeightedAggregator, CAGradWeighting
         >>>
         >>> W = CAGradWeighting(c=0.5)

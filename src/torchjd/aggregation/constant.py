@@ -24,6 +24,11 @@ class ConstantWeighting(Weighting):
         >>>
         >>> A(J)
         tensor([8., 3., 3.])
+
+        We can also call the weighting directly to get the weights vector associated to the matrix:
+
+        >>> W(J)
+        tensor([1., 2.])
     """
 
     def __init__(self, weights: Tensor):
