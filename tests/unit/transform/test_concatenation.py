@@ -1,7 +1,32 @@
-import torch
-from unit.transform.utils import FakeJacobiansTransform, assert_tensor_dicts_are_close
+from typing import Iterable
 
-from torchjd.transform import Concatenation, EmptyTensorDict
+import torch
+from torch import Tensor
+from unit.transform.utils import assert_tensor_dicts_are_close
+
+from torchjd.transform import Concatenation, EmptyTensorDict, Jacobians, Transform
+
+
+class FakeJacobiansTransform(Transform[EmptyTensorDict, Jacobians]):
+    """
+    Transform that produces jacobians filled with ones, of the specified number of rows, for testing
+    purposes.
+    """
+
+    def __init__(self, keys: Iterable[Tensor], n_rows: int):
+        self.keys = set(keys)
+        self.n_rows = n_rows
+
+    def _compute(self, input: EmptyTensorDict) -> Jacobians:
+        return Jacobians({key: torch.ones(self.n_rows, *key.shape) for key in self.keys})
+
+    @property
+    def required_keys(self) -> set[Tensor]:
+        return set()
+
+    @property
+    def output_keys(self) -> set[Tensor]:
+        return self.keys
 
 
 def test_concatenation_single_key():

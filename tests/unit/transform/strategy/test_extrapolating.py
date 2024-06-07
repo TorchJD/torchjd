@@ -1,6 +1,9 @@
 import pytest
 from unit.transform.strategy.utils.inputs import aggregator, keys
-from unit.transform.strategy.utils.property_testers import ExpectedStructureProperty
+from unit.transform.strategy.utils.property_testers import (
+    EmptyDictProperty,
+    ExpectedStructureProperty,
+)
 
 from torchjd.transform.strategy import ExtrapolatingStrategy
 
@@ -12,5 +15,10 @@ from torchjd.transform.strategy import ExtrapolatingStrategy
         ExtrapolatingStrategy(aggregator, considered_keys=keys[:3], remaining_keys=keys[3:]),
     ],
 )
-class TestExtrapolating(ExpectedStructureProperty):
+class TestExtrapolatingStructure(ExpectedStructureProperty):
+    pass
+
+
+@pytest.mark.parametrize("strategy", [ExtrapolatingStrategy(aggregator, [], [])])
+class TestExtrapolatingEmpty(EmptyDictProperty):
     pass

@@ -46,3 +46,24 @@ class ExpectedStructureProperty:
             jacobian_matrix = jacobian_matrices[key]
             gradient_vector = gradient_vectors[key]
             assert gradient_vector.numel() == jacobian_matrix[0].numel()
+
+
+class EmptyDictProperty:
+    """
+    This class tests that the `__call__` method of a strategy applied to an empty dict, returns an
+    empty dict.
+    """
+
+    @classmethod
+    def test_empty_dict_property(
+        cls,
+        strategy: Transform[JacobianMatrices, GradientVectors],
+    ):
+        cls._assert_empty_dict(strategy)
+
+    @staticmethod
+    def _assert_empty_dict(
+        strategy: Transform[JacobianMatrices, GradientVectors],
+    ) -> None:
+        gradient_vectors = strategy(JacobianMatrices({}))
+        assert len(gradient_vectors) == 0

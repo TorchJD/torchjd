@@ -89,14 +89,12 @@ class Composition(Transform[_A, _C]):
 
 class Conjunction(Transform[_A, _B]):
     def __init__(self, transforms: Sequence[Transform[_A, _B]]):
-        if len(transforms) == 0:
-            raise ValueError("Parameter `transforms` cannot be empty.")
-
         self.transforms = transforms
 
-        self._required_keys = transforms[0].required_keys
-
-        for transform in transforms[1:]:
+        self._required_keys = set(
+            key for transform in transforms for key in transform.required_keys
+        )
+        for transform in transforms:
             if transform.required_keys != self.required_keys:
                 raise ValueError("All transforms should require the same set of keys.")
 

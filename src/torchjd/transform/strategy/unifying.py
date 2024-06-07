@@ -28,7 +28,6 @@ class UnifyingStrategy(Transform[JacobianMatrices, GradientVectors]):
         :param jacobian_matrices: The dictionary of jacobian matrices to aggregate. The first
             dimension of each jacobian matrix should be the same.
         """
-
         ordered_matrices = _select_ordered_subdict(jacobian_matrices, self.key_order)
         return _aggregate_group(ordered_matrices, self.aggregator)
 

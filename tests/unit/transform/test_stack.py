@@ -1,7 +1,31 @@
-import torch
-from unit.transform.utils import FakeGradientsTransform, assert_tensor_dicts_are_close
+from typing import Iterable
 
-from torchjd.transform import EmptyTensorDict, Stack
+import torch
+from torch import Tensor
+from unit.transform.utils import assert_tensor_dicts_are_close
+
+from torchjd.transform import EmptyTensorDict, Gradients, Stack, Transform
+
+
+class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
+    """
+    Transform that produces gradients filled with ones, for testing purposes.
+    Note that it does the same thing as Init, but it does not depend on Init.
+    """
+
+    def __init__(self, keys: Iterable[Tensor]):
+        self.keys = set(keys)
+
+    def _compute(self, input: EmptyTensorDict) -> Gradients:
+        return Gradients({key: torch.ones_like(key) for key in self.keys})
+
+    @property
+    def required_keys(self) -> set[Tensor]:
+        return set()
+
+    @property
+    def output_keys(self) -> set[Tensor]:
+        return self.keys
 
 
 def test_stack_single_key():

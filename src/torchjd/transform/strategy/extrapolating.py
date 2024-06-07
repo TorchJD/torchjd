@@ -40,7 +40,6 @@ class ExtrapolatingStrategy(Transform[JacobianMatrices, GradientVectors]):
         :param jacobian_matrices: The dictionary of jacobian matrices to aggregate. The first
             dimension of each jacobian matrix should be the same.
         """
-
         considered_matrices = _select_ordered_subdict(jacobian_matrices, self.considered_keys)
         remaining_matrices = _select_ordered_subdict(jacobian_matrices, self.remaining_keys)
 
