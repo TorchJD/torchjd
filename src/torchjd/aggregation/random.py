@@ -16,7 +16,7 @@ class RandomWeighting(Weighting):
 
         Compute several random combinations of the rows of a matrix.
 
-        >>> from torch import tensor, manual_seed
+        >>> from torch import tensor
         >>> from torchjd.aggregation import WeightedAggregator, RandomWeighting
         >>>
         >>> W = RandomWeighting()
