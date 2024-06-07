@@ -34,7 +34,7 @@ Packages
     :caption: API Reference
     :hidden:
 
-    packages/utils/index.rst
+    packages/backward.rst
     packages/aggregation/index.rst
 
 Usage
