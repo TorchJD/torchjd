@@ -74,7 +74,7 @@ Now that everything is defined, we can train the model. Define the model input a
 target:
 
 >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
->>> target = input.sum(axis=1, keepdim=True)  # Batch of 16 targets
+>>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
 
 Prepare a vector loss for comparing the output of the model to the labels. Setting
 `reduction='none'` makes the `MSELoss` into an element-wise loss.
