@@ -15,10 +15,9 @@ class PCGradWeighting(Weighting):
 
         Use PCGrad to aggregate a matrix.
 
-        >>> from torch import tensor, sqrt, manual_seed
+        >>> from torch import tensor
         >>> from torchjd.aggregation import WeightedAggregator, PCGradWeighting
         >>>
-        >>> _ = manual_seed(0)
         >>> W = PCGradWeighting()
         >>> A = WeightedAggregator(W)
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
