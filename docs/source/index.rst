@@ -22,10 +22,11 @@ with multiple objectives.
 *TorchJD is still in early development and can thus undergo backward-incompatible changes without
 notice.*
 
-Packages
-========
+API
+===
 
-- **utils**: Contains utility functions such as `backward`.
+- **backward**: Provides a function to compute the backward pass of an iteration of
+    Jacobian descent.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
 
 .. toctree::
