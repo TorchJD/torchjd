@@ -34,7 +34,7 @@ class IMTLGWeighting(Weighting):
     """
 
     def forward(self, matrix: Tensor) -> Tensor:
-        d = torch.linalg.norm(matrix, axis=1)
+        d = torch.linalg.norm(matrix, dim=1)
 
         try:
             raw_weights = torch.linalg.pinv(matrix @ matrix.T) @ d
