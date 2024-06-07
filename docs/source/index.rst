@@ -25,8 +25,7 @@ notice.*
 API
 ===
 
-- **backward**: Provides a function to compute the backward pass of an iteration of
-    Jacobian descent.
+- **backward**: Provides a function to compute the backward pass of an iteration of Jacobian descent.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
 
 .. toctree::
