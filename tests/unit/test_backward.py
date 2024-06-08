@@ -1,6 +1,5 @@
 import pytest
 import torch
-from torch.nn import Linear, MSELoss, ReLU, Sequential
 from torch.testing import assert_close
 
 from torchjd import backward
@@ -28,19 +27,16 @@ def test_backward_various_aggregators(A: Aggregator):
     Tests that backward works for various aggregators.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    params = [p1, p2]
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
-    loss = MSELoss(reduction="none")
+    backward([y1, y2], params, A)
 
-    output = model(input)
-    losses = loss(output, target)
-
-    backward([losses], model.parameters(), A)
-
-    for p in model.parameters():
+    for p in params:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
@@ -50,20 +46,18 @@ def test_backward_valid_chunk_size(chunk_size):
     Tests that backward works for various valid values of the chunk sizes parameter.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    params = [p1, p2]
 
-    loss = MSELoss(reduction="none")
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
-    output = model(input)
-    losses = loss(output, target)
+    backward([y1, y2], params, A, parallel_chunk_size=chunk_size)
 
-    backward([losses], model.parameters(), A, parallel_chunk_size=chunk_size)
-
-    for p in model.parameters():
+    for p in params:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
@@ -73,19 +67,17 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
     Tests that backward raises an error when using invalid chunk sizes.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    params = [p1, p2]
 
-    loss = MSELoss(reduction="none")
-
-    output = model(input)
-    losses = loss(output, target)
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
     with pytest.raises(ValueError):
-        backward([losses], model.parameters(), A, parallel_chunk_size=chunk_size)
+        backward([y1, y2], params, A, parallel_chunk_size=chunk_size)
 
 
 @pytest.mark.parametrize(
@@ -126,20 +118,18 @@ def test_backward_empty_inputs():
     Tests that backward does not fill the .grad values if no input is specified.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(MeanWeighting())
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    params = [p1, p2]
 
-    loss = MSELoss(reduction="none")
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
-    output = model(input)
-    losses = loss(output, target)
+    backward([y1, y2], [], A)
 
-    backward([losses], [], A)
-
-    for p in model.parameters():
+    for p in params:
         assert p.grad is None
 
 
@@ -149,24 +139,18 @@ def test_backward_partial_inputs():
     specified as inputs.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(MeanWeighting())
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
 
-    loss = MSELoss(reduction="none")
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
-    output = model(input)
-    losses = loss(output, target)
+    backward([y1, y2], [p1], A)
 
-    backward([losses], model[0].parameters(), A)
-
-    for p in model[0].parameters():
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
-
-    for p in model[1:].parameters():
-        assert p.grad is None
+    assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
+    assert p2.grad is None
 
 
 def test_backward_empty_tensors():
@@ -174,11 +158,13 @@ def test_backward_empty_tensors():
     Tests that backward raises an error when called with an empty list of tensors.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
     with pytest.raises(ValueError):
-        backward([], model.parameters(), A)
+        backward([], [p1, p2], A)
 
 
 def test_backward_multiple_tensors():
@@ -187,27 +173,22 @@ def test_backward_multiple_tensors():
     containing the all the values of the original tensors.
     """
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target1 = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
-    target2 = torch.ones_like(target1)  # Batch of 16 other targets
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    params = [p1, p2]
 
-    loss = MSELoss(reduction="none")
+    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y2 = (p1**2).sum() + p2.norm()
 
-    output = model(input)
-    losses1 = loss(output, target1)
-    losses2 = loss(output, target2)
+    backward([y1, y2], params, A)
 
-    backward([losses1, losses2], model.parameters(), A)
-
-    param_to_grad = {p: p.grad for p in model.parameters()}
-    for p in model.parameters():
+    param_to_grad = {p: p.grad for p in params}
+    for p in params:
         p.grad = None
 
-    losses = torch.cat([losses1, losses2])
-    backward(losses, model.parameters(), A)
+    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]), params, A)
 
-    for p in model.parameters():
+    for p in params:
         assert (p.grad == param_to_grad[p]).all()
