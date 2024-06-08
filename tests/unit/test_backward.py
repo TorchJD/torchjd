@@ -155,3 +155,37 @@ def test_backward_empty_tensors():
 
     with pytest.raises(ValueError):
         backward([], model.parameters(), A)
+
+
+def test_backward_multiple_tensors():
+    """
+    Tests that giving multiple tensors to backward is equivalent to giving a single tensor
+    containing the all the values of the original tensors.
+    """
+
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+
+    W = UPGradWrapper(MeanWeighting())
+    A = WeightedAggregator(W)
+
+    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
+    target1 = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    target2 = torch.ones_like(target1)  # Batch of 16 other targets
+
+    loss = MSELoss(reduction="none")
+
+    output = model(input)
+    losses1 = loss(output, target1)
+    losses2 = loss(output, target2)
+
+    backward([losses1, losses2], model.parameters(), A)
+
+    param_to_grad = {p: p.grad for p in model.parameters()}
+    for p in model.parameters():
+        p.grad = None
+
+    losses = torch.cat([losses1, losses2])
+    backward(losses, model.parameters(), A)
+
+    for p in model.parameters():
+        assert (p.grad == param_to_grad[p]).all()
