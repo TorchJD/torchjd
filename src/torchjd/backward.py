@@ -67,7 +67,7 @@ def backward(
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
 
-    parameters = list(inputs)
+    inputs = list(inputs)
 
     # Transform that creates gradients containing only ones
     init = Init(tensors)
@@ -76,13 +76,13 @@ def backward(
     diag = Diagonalize(tensors)
 
     # Transform that computes the required jacobians
-    jac = Jac(tensors, parameters, chunk_size=parallel_chunk_size)
+    jac = Jac(tensors, inputs, chunk_size=parallel_chunk_size)
 
     # Transform that defines the aggregation of the jacobians into gradients
-    aggregation = make_aggregation(UnifyingStrategy(aggregator, parameters))
+    aggregation = make_aggregation(UnifyingStrategy(aggregator, inputs))
 
-    # Transform that stores the gradients with respect to the model's parameters
-    store = Store(parameters)
+    # Transform that stores the gradients with respect to the inputs
+    store = Store(inputs)
 
     backward_transform = store << aggregation << jac << diag << init
 
