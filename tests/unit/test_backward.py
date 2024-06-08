@@ -15,7 +15,7 @@ from torchjd.aggregation import (
 
 
 @pytest.mark.parametrize(
-    "aggregator",
+    "A",
     [
         WeightedAggregator(MeanWeighting()),
         WeightedAggregator(UPGradWrapper(MeanWeighting())),
@@ -23,7 +23,7 @@ from torchjd.aggregation import (
         WeightedAggregator(RandomWeighting()),
     ],
 )
-def test_backward_various_aggregators(aggregator: Aggregator):
+def test_backward_various_aggregators(A: Aggregator):
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
@@ -34,7 +34,7 @@ def test_backward_various_aggregators(aggregator: Aggregator):
     output = model(input)
     losses = loss(output, target)
 
-    backward([losses], model.parameters(), aggregator)
+    backward([losses], model.parameters(), A)
 
     for p in model.parameters():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -43,9 +43,7 @@ def test_backward_various_aggregators(aggregator: Aggregator):
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_backward_valid_chunk_size(chunk_size):
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-
-    W = UPGradWrapper(MeanWeighting())
-    A = WeightedAggregator(W)
+    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
@@ -64,9 +62,7 @@ def test_backward_valid_chunk_size(chunk_size):
 @pytest.mark.parametrize("chunk_size", [0, -1])
 def test_backward_non_positive_chunk_size(chunk_size: int):
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-
-    W = UPGradWrapper(MeanWeighting())
-    A = WeightedAggregator(W)
+    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
@@ -81,7 +77,7 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
 
 
 @pytest.mark.parametrize(
-    "aggregator",
+    "A",
     [
         WeightedAggregator(MeanWeighting()),
         WeightedAggregator(UPGradWrapper(MeanWeighting())),
@@ -98,19 +94,19 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
         (120, 143),
     ],
 )
-def test_backward_grads(aggregator: Aggregator, shape: tuple[int]):
+def test_backward_grads(A: Aggregator, shape: tuple[int]):
     jacobian = torch.randn(shape)
     input = torch.randn([shape[1]], requires_grad=True)
     output = jacobian @ input
 
-    backward([output], [input], aggregator)
+    backward([output], [input], A)
 
-    assert_close(input.grad, aggregator(jacobian))
+    assert_close(input.grad, A(jacobian))
 
 
 def test_backward_empty_inputs():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-    aggregator = WeightedAggregator(MeanWeighting())
+    A = WeightedAggregator(MeanWeighting())
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
@@ -120,7 +116,7 @@ def test_backward_empty_inputs():
     output = model(input)
     losses = loss(output, target)
 
-    backward([losses], [], aggregator)
+    backward([losses], [], A)
 
     for p in model.parameters():
         assert p.grad is None
@@ -128,7 +124,7 @@ def test_backward_empty_inputs():
 
 def test_backward_partial_inputs():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-    aggregator = WeightedAggregator(MeanWeighting())
+    A = WeightedAggregator(MeanWeighting())
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
@@ -138,7 +134,7 @@ def test_backward_partial_inputs():
     output = model(input)
     losses = loss(output, target)
 
-    backward([losses], model[0].parameters(), aggregator)
+    backward([losses], model[0].parameters(), A)
 
     for p in model[0].parameters():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -149,9 +145,7 @@ def test_backward_partial_inputs():
 
 def test_backward_empty_tensors():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-
-    W = UPGradWrapper(MeanWeighting())
-    A = WeightedAggregator(W)
+    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
     with pytest.raises(ValueError):
         backward([], model.parameters(), A)
@@ -164,9 +158,7 @@ def test_backward_multiple_tensors():
     """
 
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-
-    W = UPGradWrapper(MeanWeighting())
-    A = WeightedAggregator(W)
+    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target1 = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
