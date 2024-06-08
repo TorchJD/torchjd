@@ -25,8 +25,6 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Install pre-commit
-        run: pdm run pip install pre-commit
       - name: Run pre-commit
         run: pdm run pre-commit run --all-files
 
