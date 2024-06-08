@@ -28,8 +28,6 @@ def backward(
         >>> from torchjd import backward
         >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
         >>>
-        >>> _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
-        >>>
         >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
         >>> loss = MSELoss(reduction='none')
         >>>
