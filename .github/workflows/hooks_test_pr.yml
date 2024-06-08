@@ -18,8 +18,8 @@ jobs:
            python-version: "3.11.9"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
-      - name: Install dependencies
-        run: pdm install --frozen-lockfile
+      - name: Install check dependencies
+        run: pdm install --no-default --group check --frozen-lockfile
       - name: Cache pre-commit hooks
         uses: actions/cache@v2
         with:
