@@ -106,19 +106,19 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
         (120, 143),
     ],
 )
-def test_backward_grads(A: Aggregator, shape: tuple[int]):
+def test_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
     product.
     """
 
-    jacobian = torch.randn(shape)
+    J = torch.randn(shape)
     input = torch.randn([shape[1]], requires_grad=True)
-    output = jacobian @ input
+    output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
     backward([output], [input], A)
 
-    assert_close(input.grad, A(jacobian))
+    assert_close(input.grad, A(J))
 
 
 def test_backward_empty_inputs():
