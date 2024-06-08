@@ -24,6 +24,10 @@ from torchjd.aggregation import (
     ],
 )
 def test_backward_various_aggregators(A: Aggregator):
+    """
+    Tests that backward works for various aggregators.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
@@ -42,6 +46,10 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_backward_valid_chunk_size(chunk_size):
+    """
+    Tests that backward works for various valid values of the chunk sizes parameter.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
@@ -61,6 +69,10 @@ def test_backward_valid_chunk_size(chunk_size):
 
 @pytest.mark.parametrize("chunk_size", [0, -1])
 def test_backward_non_positive_chunk_size(chunk_size: int):
+    """
+    Tests that backward raises an error when using invalid chunk sizes.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
@@ -95,6 +107,11 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
     ],
 )
 def test_backward_grads(A: Aggregator, shape: tuple[int]):
+    """
+    Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
+    product.
+    """
+
     jacobian = torch.randn(shape)
     input = torch.randn([shape[1]], requires_grad=True)
     output = jacobian @ input
@@ -105,6 +122,10 @@ def test_backward_grads(A: Aggregator, shape: tuple[int]):
 
 
 def test_backward_empty_inputs():
+    """
+    Tests that backward does not fill the .grad values if no input is specified.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(MeanWeighting())
 
@@ -123,6 +144,11 @@ def test_backward_empty_inputs():
 
 
 def test_backward_partial_inputs():
+    """
+    Tests that backward fills the right .grad values when only a subset of the parameters are
+    specified as inputs.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(MeanWeighting())
 
@@ -144,6 +170,10 @@ def test_backward_partial_inputs():
 
 
 def test_backward_empty_tensors():
+    """
+    Tests that backward raises an error when called with an empty list of tensors.
+    """
+
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
 
