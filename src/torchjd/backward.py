@@ -13,7 +13,7 @@ def backward(
     aggregator: Aggregator,
     parallel_chunk_size: int | None = None,
 ) -> None:
-    """
+    r"""
     Computes the Jacobian of ``tensor`` with respect to ``inputs``. Computes its aggregation by
     ``A`` and stores it in the ``.grad`` fields of the ``inputs``.
 
@@ -22,27 +22,24 @@ def backward(
 
         The following code snippet showcases a simple usage of ``backward``.
 
-        >>> import torch
-        >>> from torch.nn import Sequential, Linear, ReLU, MSELoss
-        >>>
-        >>> from torchjd import backward
-        >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
-        >>>
-        >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-        >>> loss = MSELoss(reduction='none')
-        >>>
-        >>> W = UPGradWrapper(MeanWeighting())
-        >>> A = WeightedAggregator(W)
-        >>>
-        >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-        >>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
-        >>>
-        >>> output = model(input)
-        >>> losses = loss(output, target)
-        >>>
-        >>> backward(losses, model.parameters(), A)
+            >>> import torch
+            >>>
+            >>> from torchjd import backward
+            >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
+            >>>
+            >>> W = UPGradWrapper(MeanWeighting())
+            >>> A = WeightedAggregator(W)
+            >>>
+            >>> param = torch.tensor([1., 2.], requires_grad=True)
+            >>>
+            >>> # Compute arbitrary quantities that are function of param
+            >>> y1 = torch.tensor([-1., 1.]) @ param
+            >>> y2 = (param ** 2).sum()
+            >>>
+            >>> backward([y1, y2], [param], A)
 
-        The ``.grad`` field of each parameter of the model is now populated.
+        The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
+        :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
 
     :param tensors: The tensors to differentiate. Should be non-empty. The Jacobians matrices will
         have one row for each value of each of these tensors.
