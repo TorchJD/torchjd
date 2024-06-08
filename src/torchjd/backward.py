@@ -10,12 +10,12 @@ from torchjd.transform.strategy import UnifyingStrategy
 def backward(
     tensors: Sequence[Tensor] | Tensor,
     inputs: Iterable[Tensor],
-    aggregator: Aggregator,
+    A: Aggregator,
     parallel_chunk_size: int | None = None,
 ) -> None:
     r"""
     Computes the Jacobian of all values in ``tensors`` with respect to all ``inputs``. Computes its
-    aggregation by ``aggregator`` and stores it in the ``.grad`` fields of the ``inputs``.
+    aggregation by ``A`` and stores it in the ``.grad`` fields of the ``inputs``.
 
     .. admonition::
         Example
@@ -36,7 +36,7 @@ def backward(
             >>> y1 = torch.tensor([-1., 1.]) @ param
             >>> y2 = (param ** 2).sum()
             >>>
-            >>> backward([y1, y2], [param], aggregator)
+            >>> backward([y1, y2], [param], A)
 
         The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
@@ -45,7 +45,7 @@ def backward(
         matrices will have one row for each value of each of these tensors.
     :param inputs: The tensors with respect to which the Jacobians must be computed. These must have
         their ``requires_grad`` flag set to ``True``.
-    :param aggregator: Aggregator to use for the aggregation of the Jacobian.
+    :param A: Aggregator to use for the aggregation of the Jacobian.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
         backward pass. If set to ``None``, all coordinates of ``tensor`` will be differentiated in
         parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
@@ -75,7 +75,7 @@ def backward(
     jac = Jac(tensors, inputs, chunk_size=parallel_chunk_size)
 
     # Transform that defines the aggregation of the jacobians into gradients
-    aggregation = make_aggregation(UnifyingStrategy(aggregator, inputs))
+    aggregation = make_aggregation(UnifyingStrategy(A, inputs))
 
     # Transform that stores the gradients with respect to the inputs
     store = Store(inputs)
