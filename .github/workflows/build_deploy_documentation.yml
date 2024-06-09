@@ -37,8 +37,8 @@ jobs:
            python-version: "3.11.9"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
-      - name: Install dependencies
-        run: pdm install --frozen-lockfile
+      - name: Install default and doc dependencies
+        run: pdm install --group doc --frozen-lockfile
       - name: Build HTML
         run: |
           cd docs/
