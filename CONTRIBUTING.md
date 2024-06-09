@@ -1,4 +1,5 @@
-The following steps outline how to contribute to torchjd. Additionally, make sure to use issues to communicate with us.
+The following steps outline how to contribute to torchjd. Additionally, make sure to use issues to
+communicate with us.
 
 1) Clone the repository
 
@@ -44,14 +45,18 @@ The following steps outline how to contribute to torchjd. Additionally, make sur
    ```bash
    pdm run pre-commit install
    ```
-   from the root of torchjd. This will register some hooks that git will execute before each commit. These hooks help to maintain the repository, for instance by checking that each file ends with a newline.
+   from the root of torchjd. This will register some hooks that git will execute before each commit.
+   These hooks help to maintain the repository, for instance by checking that each file ends with a
+   newline.
 
-6) Make changes to the library. Do not forget to update the `.rst` files of the `docs/source/` folder if needed.
+6) Make changes to the library. Do not forget to update the `.rst` files of the `docs/source/`
+   folder if needed.
 
-7) Make sure that all tests are still passing. To run the tests, simply go to the root of torchjd and run:
+7) Make sure that all tests are still passing. To run the tests, simply go to the root of torchjd
+   and run:
    ```bash
    pdm run pytest --doctest-plus --doctest-rst
    ```
-   It will automatically locate all tests and run them. The `--doctest-plus --doctest-rst` flags will
-   additionally make it verify that all usage examples present in docstrings produce the advertised
-   output.
+   It will automatically locate all tests and run them. The `--doctest-plus --doctest-rst` flags
+   will additionally make it verify that all usage examples present in docstrings produce the
+   advertised output.
