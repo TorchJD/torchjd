@@ -16,6 +16,23 @@
 
 |
 
+.. toctree::
+    :maxdepth: 2
+    :name: getting started
+    :caption: Getting started
+    :hidden:
+
+    packages/getting_started/installation.rst
+    packages/getting_started/examples/index.rst
+.. toctree::
+    :maxdepth: 2
+    :name: api reference
+    :caption: API Reference
+    :hidden:
+
+    packages/api_references/backward.rst
+    packages/api_references/aggregation/index.rst
+
 TorchJD is a library enabling Jacobian descent with PyTorch, for optimization of neural networks
 with multiple objectives.
 
@@ -29,15 +46,6 @@ API
 
 - **backward**: Provides a function to compute the backward pass of an iteration of Jacobian descent.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
-
-.. toctree::
-    :maxdepth: 2
-    :name: api reference
-    :caption: API Reference
-    :hidden:
-
-    packages/backward.rst
-    packages/aggregation/index.rst
 
 Usage
 =====
