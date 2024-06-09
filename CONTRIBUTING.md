@@ -55,8 +55,3 @@ The following steps outline how to contribute to torchjd. Additionally, make sur
    It will automatically locate all tests and run them. The `--doctest-plus --doctest-rst` flags will
    additionally make it verify that all usage examples present in docstrings produce the advertised
    output.
-8) If you want to update the versions of the dependencies in the environment, while still respecting the constraints written in `pyproject.toml`, you have to run:
-   ```bash
-   pdm update
-   ```
-   and add the updated `pdm.lock` file to your commit. These locked dependencies are only used to run the tests and will not affect users. Only the version constraints specified in `pyproject.toml` will affect them.
