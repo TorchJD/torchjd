@@ -24,10 +24,10 @@ with multiple objectives.
     in future versions. Use with caution in production environments and be prepared for potential
     breaking changes in upcoming releases.
 
-Packages
-========
+API
+===
 
-- **utils**: Contains utility functions such as `backward`.
+- **backward**: Provides a function to compute the backward pass of an iteration of Jacobian descent.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
 
 .. toctree::
@@ -36,7 +36,7 @@ Packages
     :caption: API Reference
     :hidden:
 
-    packages/utils/index.rst
+    packages/backward.rst
     packages/aggregation/index.rst
 
 Usage
