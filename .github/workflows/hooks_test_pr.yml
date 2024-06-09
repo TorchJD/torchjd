@@ -18,15 +18,13 @@ jobs:
            python-version: "3.11.9"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
-      - name: Install dependencies
-        run: pdm install --frozen-lockfile
+      - name: Install check dependencies
+        run: pdm install --no-default --group check --frozen-lockfile
       - name: Cache pre-commit hooks
         uses: actions/cache@v2
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Install pre-commit
-        run: pdm run pip install pre-commit
       - name: Run pre-commit
         run: pdm run pre-commit run --all-files
 
@@ -44,8 +42,8 @@ jobs:
            python-version: "3.11.9"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
-      - name: Install dependencies
-        run: pdm install --frozen-lockfile
+      - name: Install default and test dependencies
+        run: pdm install --group test --frozen-lockfile
       - name: Run unit tests
         run: pdm run pytest tests/unit
       - name: Run doc tests
