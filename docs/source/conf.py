@@ -50,16 +50,10 @@ html_theme_options = {
     "light_logo": "logo-light-mode.png",
     "dark_logo": "logo-dark-mode.png",
     "dark_css_variables": {
-        "color-problematic": "#eeeeee",
-        # "color-brand-primary": "#00ff70",
-        # "color-brand-content": "#9adfb8",
-        # "color-link": "#7dad92",
+        "color-problematic": "#eeeeee",  # class names
     },
     "light_css_variables": {
-        "color-problematic": "#000000",  # title
-        # "color-brand-primary": "#0b7c80",  # left navigation bar
-        # "color-brand-content": "#053233",  # links highlighted
-        # "color-link": "#04878a",  # links
+        "color-problematic": "#000000",  # class names
     },
     "sidebar_hide_name": True,
 }
