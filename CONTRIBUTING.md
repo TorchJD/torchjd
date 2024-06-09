@@ -41,18 +41,10 @@ communicate with us.
    > 💡 The python version that you should specify in your IDE is
    `path_to_torchjd/.venv/bin/python`.
 
-5) Install pre-commit by running:
-   ```bash
-   pdm run pre-commit install
-   ```
-   from the root of torchjd. This will register some hooks that git will execute before each commit.
-   These hooks help to maintain the repository, for instance by checking that each file ends with a
-   newline.
-
-6) Make changes to the library. Do not forget to update the `.rst` files of the `docs/source/`
+5) Make changes to the library. Do not forget to update the `.rst` files of the `docs/source/`
    folder if needed.
 
-7) Make sure that all tests are still passing. To run the tests, simply go to the root of torchjd
+6) Make sure that all tests are still passing. To run the tests, simply go to the root of torchjd
    and run:
    ```bash
    pdm run pytest --doctest-plus --doctest-rst
