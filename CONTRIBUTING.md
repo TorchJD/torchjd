@@ -24,6 +24,14 @@ located into. This makes them easier to import.
    [pdm](https://pdm-project.org/en/latest/) to manage dependencies, and we advise contributors to
    do the same.
    - Install pyenv by following [their instructions](https://github.com/pyenv/pyenv#installation)
+   - Install libraries that are required to install python with pyenv:
+     ```bash
+     sudo apt-get install build-essential zlib1g-dev libffi-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev liblzma-dev
+     ```
+   - Install python 3.12.4 (or another supported version) using pyenv:
+      ```bash
+      pyenv install 3.12.4
+      ```
    - Download and install pdm:
      ```bash
      curl -sSL https://pdm.fming.dev/install-pdm.py | python3 -
@@ -33,29 +41,18 @@ located into. This makes them easier to import.
      ```bash
      export PATH="$PATH:$HOME/.local/bin"
      ```
-   - Install libraries that are required to install python with pyenv:
-     ```bash
-     sudo apt-get install build-essential zlib1g-dev libffi-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev liblzma-dev
-     ```
 
-2) Install and activate an appropriate version of Python:
-    - Install python 3.11.9 (or another supported version) using pyenv:
-      ```bash
-      pyenv install 3.11.9
-      ```
-    - Automatically activate this python version when you are inside of this repo (command to run
-      from the root of torchjd):
-      ```bash
-      pyenv local 3.11.9
-      ```
-
-3) Install the project and its dependencies. From the root of torchjd, run:
+2) Create a virtual environment and install the project in it. From the root of torchjd, run:
    ```bash
+   pdm venv create 3.12.4
+   pdm venv use .venv/bin/python
    pdm install --frozen-lockfile
    ```
-   It should create a virtual environment in a `.venv` folder. If it does not create this `.venv`
-   folder, you can try to run `pdm venv create`, followed by `pdm use .venv/bin/python`, and install
-   the project by re-running `pdm install --frozen-lockfile`.
+
+3) Install pre-commit hooks, from the root of torchjd.
+   ```bash
+   pdm run pre-commit install
+   ```
 
 > [!TIP]
 > The python version that you should specify in your IDE is `<path-to-torchjd>/.venv/bin/python`.
