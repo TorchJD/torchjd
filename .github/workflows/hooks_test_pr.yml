@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Python 3.11.9
+      - name: Set up Python 3.12.4
         uses: actions/setup-python@v2
         with:
-           python-version: "3.11.9"
+           python-version: "3.12.4"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install check dependencies
@@ -36,10 +36,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Python 3.11.9
+      - name: Set up Python 3.12.4
         uses: actions/setup-python@v2
         with:
-           python-version: "3.11.9"
+           python-version: "3.12.4"
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install default and test dependencies
