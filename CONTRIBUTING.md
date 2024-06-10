@@ -46,7 +46,7 @@ located into. This makes them easier to import.
 2) Create a virtual environment and install the project in it. From the root of torchjd, run:
    ```bash
    pdm venv create 3.12.4
-   pdm venv use .venv/bin/python
+   pdm use .venv/bin/python
    pdm install --frozen-lockfile
    ```
 
