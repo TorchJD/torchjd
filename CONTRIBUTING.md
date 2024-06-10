@@ -55,13 +55,13 @@ located into. This makes them easier to import.
    ```
    It should create a virtual environment in a `.venv` folder.
 
-   > [!NOTE]
-   > If it does not create this `.venv` folder, you can try to run `pdm venv create`, followed by
-   > `pdm use .venv/bin/python`, and install the project by re-running `pdm install
-   > --frozen-lockfile`.
+> [!NOTE]
+> If it does not create this `.venv` folder, you can try to run `pdm venv create`, followed by
+> `pdm use .venv/bin/python`, and install the project by re-running `pdm install
+> --frozen-lockfile`.
 
-   > [!NOTE]
-   > The python version that you should specify in your IDE is `path_to_torchjd/.venv/bin/python`.
+> [!NOTE]
+> The python version that you should specify in your IDE is `path_to_torchjd/.venv/bin/python`.
 
 ## Running tests
    - To verify that your installation was successful, and that alls unit tests pass, run:
