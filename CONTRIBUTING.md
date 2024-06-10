@@ -54,6 +54,7 @@ located into. This makes them easier to import.
    pdm install --frozen-lockfile
    ```
    It should create a virtual environment in a `.venv` folder.
+
    > [!NOTE]
    > If it does not create this `.venv` folder, you can try to run `pdm venv create`, followed by
    > `pdm use .venv/bin/python`, and install the project by re-running `pdm install
