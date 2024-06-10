@@ -58,7 +58,7 @@ located into. This makes them easier to import.
    the project by re-running `pdm install --frozen-lockfile`.
 
 > [!TIP]
-> The python version that you should specify in your IDE is `path_to_torchjd/.venv/bin/python`.
+> The python version that you should specify in your IDE is `<path-to-torchjd>/.venv/bin/python`.
 
 ## Running tests
    - To verify that your installation was successful, and that alls unit tests pass, run:
