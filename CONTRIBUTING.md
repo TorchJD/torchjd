@@ -53,14 +53,11 @@ located into. This makes them easier to import.
    ```bash
    pdm install --frozen-lockfile
    ```
-   It should create a virtual environment in a `.venv` folder.
+   It should create a virtual environment in a `.venv` folder. If it does not create this `.venv`
+   folder, you can try to run `pdm venv create`, followed by `pdm use .venv/bin/python`, and install
+   the project by re-running `pdm install --frozen-lockfile`.
 
-> [!NOTE]
-> If it does not create this `.venv` folder, you can try to run `pdm venv create`, followed by
-> `pdm use .venv/bin/python`, and install the project by re-running `pdm install
-> --frozen-lockfile`.
-
-> [!NOTE]
+> [!TIP]
 > The python version that you should specify in your IDE is `path_to_torchjd/.venv/bin/python`.
 
 ## Running tests
