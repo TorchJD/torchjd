@@ -21,8 +21,9 @@ located into. This makes them easier to import.
 
 ## Installation
 1) Pre-requisites: We use [pyenv](https://github.com/pyenv/pyenv) to manage python versions and
-   [pdm](https://pdm-project.org/en/latest/) to manage dependencies, and we advise contributors to
-   do the same.
+   [pdm](https://pdm-project.org/en/latest/) to manage dependencies. While the desired python
+   version can be installed manually rather than using pyenv, the installation of torchjd for
+   development purposes requires pdm.
    - Install pyenv by following [their instructions](https://github.com/pyenv/pyenv#installation)
    - Install libraries that are required to install python with pyenv:
      ```bash
