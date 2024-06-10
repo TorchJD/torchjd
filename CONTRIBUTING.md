@@ -29,9 +29,9 @@ located into. This makes them easier to import.
      ```bash
      sudo apt-get install build-essential zlib1g-dev libffi-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev liblzma-dev
      ```
-   - Install python 3.12.4 (or another supported version) using pyenv:
+   - Install python 3.12.3 (or another supported version) using pyenv:
       ```bash
-      pyenv install 3.12.4
+      pyenv install 3.12.3
       ```
    - Download and install pdm:
      ```bash
@@ -45,7 +45,7 @@ located into. This makes them easier to import.
 
 2) Create a virtual environment and install the project in it. From the root of torchjd, run:
    ```bash
-   pdm venv create 3.12.4
+   pdm venv create 3.12.3
    pdm use .venv/bin/python
    pdm install --frozen-lockfile
    ```
