@@ -2,9 +2,9 @@ from typing import Iterable, Sequence
 
 from torch import Tensor
 
-from torchjd.aggregation import Aggregator
-from torchjd.transform import Diagonalize, EmptyTensorDict, Init, Jac, Store, make_aggregation
-from torchjd.transform.strategy import UnifyingStrategy
+from ._transform import Diagonalize, EmptyTensorDict, Init, Jac, Store, make_aggregation
+from ._transform.strategy import UnifyingStrategy
+from .aggregation import Aggregator
 
 
 def backward(
