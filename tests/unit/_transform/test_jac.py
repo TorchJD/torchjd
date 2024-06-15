@@ -88,8 +88,8 @@ def test_two_levels():
     z = y * x2
     input = Jacobians({z: torch.eye(2)})
 
-    outer_jac = Jac(outputs=[y], inputs=[a, b], chunk_size=None)
-    inner_jac = Jac(outputs=[z], inputs=[y], chunk_size=None)
+    outer_jac = Jac(outputs=[y], inputs=[a, b], chunk_size=None, retain_graph=True)
+    inner_jac = Jac(outputs=[z], inputs=[y], chunk_size=None, retain_graph=True)
     composed_jac = outer_jac << inner_jac
     jac = Jac(outputs=[z], inputs=[a, b], chunk_size=None)
 
@@ -115,8 +115,8 @@ def test_composition_of_jacs_is_jac():
     z2 = y2 + x1
     input = Jacobians({z1: torch.tensor([1.0, 0.0]), z2: torch.tensor([0.0, 1.0])})
 
-    outer_jac = Jac(outputs=[y1, y2], inputs=[a, b], chunk_size=None)
-    inner_jac = Jac(outputs=[z1, z2], inputs=[y1, y2], chunk_size=None)
+    outer_jac = Jac(outputs=[y1, y2], inputs=[a, b], chunk_size=None, retain_graph=True)
+    inner_jac = Jac(outputs=[z1, z2], inputs=[y1, y2], chunk_size=None, retain_graph=True)
     composed_jac = outer_jac << inner_jac
     jac = Jac(outputs=[z1, z2], inputs=[a, b], chunk_size=None)
 
@@ -141,8 +141,8 @@ def test_conjunction_of_jacs_is_jac():
     y = torch.stack([y1, y2])
     input = Jacobians({y: torch.eye(len(y))})
 
-    jac1 = Jac(outputs=[y], inputs=[a1], chunk_size=None)
-    jac2 = Jac(outputs=[y], inputs=[a2], chunk_size=None)
+    jac1 = Jac(outputs=[y], inputs=[a1], chunk_size=None, retain_graph=True)
+    jac2 = Jac(outputs=[y], inputs=[a2], chunk_size=None, retain_graph=True)
     conjunction_of_jacs = jac1 | jac2
     jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None)
 

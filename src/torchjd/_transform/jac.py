@@ -10,9 +10,16 @@ from torchjd._transform.tensor_dict import Jacobians
 
 
 class Jac(_Differentiation[Jacobians]):
-    def __init__(self, outputs: Iterable[Tensor], inputs: Iterable[Tensor], chunk_size: int | None):
+    def __init__(
+        self,
+        outputs: Iterable[Tensor],
+        inputs: Iterable[Tensor],
+        chunk_size: int | None,
+        retain_graph: bool = False,
+    ):
         super().__init__(outputs, inputs)
         self.chunk_size = chunk_size
+        self.retain_graph = retain_graph
 
     def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         return _jac(
@@ -20,7 +27,8 @@ class Jac(_Differentiation[Jacobians]):
             inputs=self.inputs,
             jac_outputs=jac_outputs,
             chunk_size=self.chunk_size,
-            retain_graph=True,
+            retain_graph=self.retain_graph,
+            create_graph=False,
             allow_unused=True,
         )
 
@@ -30,9 +38,9 @@ def _jac(
     inputs: Sequence[Tensor],
     jac_outputs: Sequence[Tensor],
     chunk_size: int | None,
-    retain_graph: bool | None = None,
-    create_graph: bool = False,
-    allow_unused: bool = False,
+    retain_graph: bool,
+    create_graph: bool,
+    allow_unused: bool,
 ) -> tuple[Tensor, ...]:
     """
     Wraps the call to `autograd.grad` to compute the jacobian with respect to each input, in an

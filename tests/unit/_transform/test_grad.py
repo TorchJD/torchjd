@@ -124,8 +124,8 @@ def test_composition_of_grads_is_grad():
     z2 = y2 + x1
     input = Gradients({z1: torch.ones_like(z1), z2: torch.ones_like(z2)})
 
-    outer_grad = Grad(outputs=[y1, y2], inputs=[a, b])
-    inner_grad = Grad(outputs=[z1, z2], inputs=[y1, y2])
+    outer_grad = Grad(outputs=[y1, y2], inputs=[a, b], retain_graph=True)
+    inner_grad = Grad(outputs=[z1, z2], inputs=[y1, y2], retain_graph=True)
     composed_grad = outer_grad << inner_grad
     grad = Grad(outputs=[z1, z2], inputs=[a, b])
 
@@ -150,8 +150,8 @@ def test_conjunction_of_grads_is_grad():
     y = torch.stack([y1, y2])
     input = Gradients({y: torch.ones_like(y)})
 
-    grad1 = Grad(outputs=[y], inputs=[a1])
-    grad2 = Grad(outputs=[y], inputs=[a2])
+    grad1 = Grad(outputs=[y], inputs=[a1], retain_graph=True)
+    grad2 = Grad(outputs=[y], inputs=[a2], retain_graph=True)
     conjunction = grad1 | grad2
     grad = Grad(outputs=[y], inputs=[a1, a2])
 
