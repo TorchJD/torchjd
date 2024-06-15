@@ -73,8 +73,8 @@ def backward(
         and not retain_graph
     ):
         raise ValueError(
-            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or big"
-            "enough to compute all gradients in parallel."
+            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
+            "large enough to compute all gradients in parallel."
         )
 
     if len(tensors) == 0:
