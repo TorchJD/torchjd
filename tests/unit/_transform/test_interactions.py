@@ -35,7 +35,7 @@ def test_jac_is_stack_of_grads():
     jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True) << Diagonalize(
         [y1, y2]
     )
-    grad1 = Grad(outputs=[y1], inputs=[a1, a2], retain_graph=True) << Subset([y1], [y1, y2])
+    grad1 = Grad(outputs=[y1], inputs=[a1, a2]) << Subset([y1], [y1, y2])
     grad2 = Grad(outputs=[y2], inputs=[a1, a2]) << Subset([y2], [y1, y2])
     stack_of_grads = Stack([grad1, grad2])
 
