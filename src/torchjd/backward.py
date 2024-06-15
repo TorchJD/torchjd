@@ -64,11 +64,7 @@ def backward(
         tensors = [tensors]
 
     tensors_numel = sum([tensor.numel() for tensor in tensors])
-    if (
-        parallel_chunk_size is not None
-        and 0 < parallel_chunk_size < tensors_numel
-        and not retain_graph
-    ):
+    if parallel_chunk_size is not None and parallel_chunk_size < tensors_numel and not retain_graph:
         raise ValueError(
             "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
             "large enough to compute all gradients in parallel."
