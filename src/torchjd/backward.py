@@ -57,7 +57,8 @@ def backward(
     """
     if not (parallel_chunk_size is None or parallel_chunk_size > 0):
         raise ValueError(
-            f"`parallel_chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
+            "`parallel_chunk_size` should be `None` or greater than `0`. (got "
+            f"{parallel_chunk_size})"
         )
 
     if isinstance(tensors, Tensor):
