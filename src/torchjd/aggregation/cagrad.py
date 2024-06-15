@@ -41,10 +41,9 @@ class CAGradWeighting(Weighting):
 
     .. note::
         This implementation differs from the `official implementations
-        <https://github.com/Cranial-XIX/CAGrad/>`_ in the way the underlying
-        optimization problem is solved. This uses the `CLARABEL
-        <https://oxfordcontrol.github.io/ClarabelDocs/stable/>`_ solver of `cvxpy
-        <https://www.cvxpy.org/index.html>`_ rather than the `scipy.minimize
+        <https://github.com/Cranial-XIX/CAGrad/>`_ in the way the underlying optimization problem is
+        solved. This uses the `CLARABEL <https://oxfordcontrol.github.io/ClarabelDocs/stable/>`_
+        solver of `cvxpy <https://www.cvxpy.org/index.html>`_ rather than the `scipy.minimize
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
         function.
     """
