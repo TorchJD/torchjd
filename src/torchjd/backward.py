@@ -63,10 +63,7 @@ def backward(
     if isinstance(tensors, Tensor):
         tensors = [tensors]
 
-    tensors_numel = 0
-    for tensor in tensors:
-        tensors_numel += tensor.numel()
-
+    tensors_numel = sum([tensor.numel() for tensor in tensors])
     if (
         parallel_chunk_size is not None
         and 0 < parallel_chunk_size < tensors_numel
