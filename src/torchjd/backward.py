@@ -11,6 +11,7 @@ def backward(
     tensors: Sequence[Tensor] | Tensor,
     inputs: Iterable[Tensor],
     A: Aggregator,
+    retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
     r"""
@@ -46,6 +47,8 @@ def backward(
     :param inputs: The tensors with respect to which the Jacobians must be computed. These must have
         their ``requires_grad`` flag set to ``True``.
     :param A: Aggregator to use for the aggregation of the Jacobian.
+    :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Default to
+    ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
         backward pass. If set to ``None``, all coordinates of ``tensor`` will be differentiated in
         parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
@@ -54,11 +57,25 @@ def backward(
     """
     if not (parallel_chunk_size is None or parallel_chunk_size > 0):
         raise ValueError(
-            f"`chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
+            f"`parallel_chunk_size` should be `None` or greater than `0`. (got {parallel_chunk_size})"
         )
 
     if isinstance(tensors, Tensor):
         tensors = [tensors]
+
+    tensors_numel = 0
+    for tensor in tensors:
+        tensors_numel += tensor.numel()
+
+    if (
+        parallel_chunk_size is not None
+        and 0 < parallel_chunk_size < tensors_numel
+        and not retain_graph
+    ):
+        raise ValueError(
+            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or big"
+            "enough to compute all gradients in parallel."
+        )
 
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
@@ -72,7 +89,7 @@ def backward(
     diag = Diagonalize(tensors)
 
     # Transform that computes the required jacobians
-    jac = Jac(tensors, inputs, chunk_size=parallel_chunk_size)
+    jac = Jac(tensors, inputs, chunk_size=parallel_chunk_size, retain_graph=retain_graph)
 
     # Transform that defines the aggregation of the jacobians into gradients
     aggregation = make_aggregation(UnifyingStrategy(A, inputs))

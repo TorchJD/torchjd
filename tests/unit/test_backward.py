@@ -55,7 +55,7 @@ def test_backward_valid_chunk_size(chunk_size):
     y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], params, A, parallel_chunk_size=chunk_size)
+    backward([y1, y2], params, A, parallel_chunk_size=chunk_size, retain_graph=True)
 
     for p in params:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -182,7 +182,7 @@ def test_backward_multiple_tensors():
     y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], params, A)
+    backward([y1, y2], params, A, retain_graph=True)
 
     param_to_grad = {p: p.grad for p in params}
     for p in params:

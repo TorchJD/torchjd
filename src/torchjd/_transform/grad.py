@@ -9,15 +9,22 @@ from torchjd._transform.tensor_dict import Gradients
 
 
 class Grad(_Differentiation[Gradients]):
-    def __init__(self, outputs: Iterable[Tensor], inputs: Iterable[Tensor]):
+    def __init__(
+        self,
+        outputs: Iterable[Tensor],
+        inputs: Iterable[Tensor],
+        retain_graph: bool = False,
+    ):
         super().__init__(outputs, inputs)
+        self.retain_graph = retain_graph
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         return _grad(
             outputs=self.outputs,
             inputs=self.inputs,
             grad_outputs=grad_outputs,
-            retain_graph=True,
+            retain_graph=self.retain_graph,
+            create_graph=False,
             allow_unused=True,
         )
 
@@ -26,9 +33,9 @@ def _grad(
     outputs: Sequence[Tensor],
     inputs: Sequence[Tensor],
     grad_outputs: Sequence[Tensor],
-    retain_graph: bool | None = None,
-    create_graph: bool = False,
-    allow_unused: bool = False,
+    retain_graph: bool,
+    create_graph: bool,
+    allow_unused: bool,
 ) -> tuple[Tensor, ...]:
     """
     Wraps `autograd.grad` to give it additional responsibilities that it should have (like being
