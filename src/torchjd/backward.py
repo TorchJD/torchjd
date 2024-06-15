@@ -48,7 +48,7 @@ def backward(
         their ``requires_grad`` flag set to ``True``.
     :param A: Aggregator to use for the aggregation of the Jacobian.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Default to
-    ``False``.
+        ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
         backward pass. If set to ``None``, all coordinates of ``tensor`` will be differentiated in
         parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
