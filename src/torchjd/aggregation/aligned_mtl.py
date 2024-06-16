@@ -33,7 +33,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class AlignedMTLWrapper(Weighting):
-    r"""
+    """
     Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that corrects the extracted
     weights with the balance transformation defined in Algorithm 1 of `Independent Component
     Alignment for Multi-Task Learning

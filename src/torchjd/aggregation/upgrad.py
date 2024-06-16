@@ -10,13 +10,13 @@ from torchjd.aggregation.bases import Weighting
 
 
 class UPGradWrapper(Weighting):
-    r"""
+    """
     Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the weights vector such
     that each weighted row is projected onto the dual cone of all rows. If the wrapped weighting is
     :class:`~torchjd.aggregation.mean.Mean`, this corresponds exactly to UPGrad, as defined in our
     paper.
 
-    :param weighting: The wrapped weight weighting.
+    :param weighting: The wrapped weighting.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.

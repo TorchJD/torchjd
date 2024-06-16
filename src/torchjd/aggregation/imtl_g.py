@@ -6,7 +6,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class IMTLGWeighting(Weighting):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using a method which is
     a generalization of the method described in `Towards Impartial Multi-task Learning
     <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_, supporting non-linearly independent rows

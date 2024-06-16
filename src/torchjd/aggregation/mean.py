@@ -6,8 +6,8 @@ from torchjd.aggregation.bases import Weighting
 
 class MeanWeighting(Weighting):
     r"""
-    :class:`~torchjd.aggregation.bases.Weighting` that returns a vector of weights equal
-    to :math:`\begin{bmatrix} \frac{1}{m} & \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
+    :class:`~torchjd.aggregation.bases.Weighting` that gives the weights
+    :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
     \mathbb{R}^m`.
 
     .. admonition::

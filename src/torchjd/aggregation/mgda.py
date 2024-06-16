@@ -8,8 +8,8 @@ from torchjd.aggregation.bases import Weighting
 class MGDAWeighting(Weighting):
     r"""
     :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using Algorithm
-    2 proposed in `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
-    <https://www.sciencedirect.com/science/article/pii/S1631073X12000738/pdf?md5=2622857e4abde98b6f7ddc8a13a337e1&pid=1-s2.0-S1631073X12000738-main.pdf>`_.
+    2 of `Multi-Task Learning as Multi-Objective Optimization
+    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.
@@ -33,11 +33,6 @@ class MGDAWeighting(Weighting):
 
         >>> W(J)
         tensor([0.6000, 0.4000])
-
-    .. note::
-        This implementation is based on Algorithm 2 of `Multi-Task Learning as Multi-Objective
-        Optimization
-        <https://proceedings.neurips.cc/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):

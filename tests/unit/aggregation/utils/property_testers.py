@@ -31,7 +31,7 @@ class ExpectedShapeProperty:
 
 
 class NonConflictingProperty:
-    r"""
+    """
     This class tests empirically that a given `Aggregator` has the `Non-conflicting property` (as
     defined in `docs/source/aggregation_properties/non_conflicting.rst`).
 
@@ -61,7 +61,7 @@ class NonConflictingProperty:
 
 
 class PermutationInvarianceProperty:
-    r"""
+    """
     This class tests empirically that for a given `Aggregator`, randomly permuting rows of the input
     matrix doesn't change the aggregated vector.
     """
