@@ -8,7 +8,7 @@ def _identity(P: Tensor) -> Tensor:
     return P
 
 
-class GradDropAggregator(Aggregator):
+class GradDrop(Aggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that applies the gradient combination steps from
     GradDrop, as defined in lines 10 to 15 of Algorithm 1 of `Just Pick a Sign: Optimizing Deep
@@ -25,9 +25,9 @@ class GradDropAggregator(Aggregator):
         Use GradDrop to aggregate a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import GradDropAggregator
+        >>> from torchjd.aggregation import GradDrop
         >>>
-        >>> A = GradDropAggregator()
+        >>> A = GradDrop()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)

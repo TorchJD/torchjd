@@ -6,16 +6,16 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import Aggregator, TrimmedMeanAggregator
+from torchjd.aggregation import Aggregator, TrimmedMean
 
 
-@pytest.mark.parametrize("aggregator", [TrimmedMeanAggregator(trim_number=1)])
+@pytest.mark.parametrize("aggregator", [TrimmedMean(trim_number=1)])
 class TestTrimmedMean(ExpectedShapeProperty, PermutationInvarianceProperty):
-    # Override the parametrization of some property-testing methods because `TrimmedMeanAggregator`
-    # with `trim_number=1` only works on matrices with >= 2 rows.
+    # Override the parametrization of some property-testing methods because `TrimmedMean` with
+    # `trim_number=1` only works on matrices with >= 2 rows.
     @classmethod
     @pytest.mark.parametrize("matrix", scaled_matrices_2_plus_rows)
-    def test_expected_shape_property(cls, aggregator: TrimmedMeanAggregator, matrix: Tensor):
+    def test_expected_shape_property(cls, aggregator: TrimmedMean, matrix: Tensor):
         cls._assert_expected_shape_property(aggregator, matrix)
 
     @classmethod
@@ -25,6 +25,6 @@ class TestTrimmedMean(ExpectedShapeProperty, PermutationInvarianceProperty):
 
 
 def test_representations():
-    aggregator = TrimmedMeanAggregator(trim_number=2)
-    assert repr(aggregator) == "TrimmedMeanAggregator(trim_number=2)"
+    aggregator = TrimmedMean(trim_number=2)
+    assert repr(aggregator) == "TrimmedMean(trim_number=2)"
     assert str(aggregator) == "TM2"

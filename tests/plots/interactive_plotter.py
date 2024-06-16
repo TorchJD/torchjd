@@ -13,7 +13,7 @@ from torchjd.aggregation import (
     AlignedMTLWrapper,
     CAGradWeighting,
     DualProjWrapper,
-    GradDropAggregator,
+    GradDrop,
     IMTLGWeighting,
     MeanWeighting,
     MGDAWeighting,
@@ -55,7 +55,7 @@ def main():
     ]
 
     aggregators = [
-        GradDropAggregator(),
+        GradDrop(),
     ] + [WeightedAggregator(weighting) for weighting in weightings]
 
     aggregators_dict = {str(aggregator): aggregator for aggregator in aggregators}

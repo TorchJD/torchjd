@@ -4,7 +4,7 @@ from torch import Tensor
 from torchjd.aggregation.bases import Aggregator
 
 
-class TrimmedMeanAggregator(Aggregator):
+class TrimmedMean(Aggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that trims the most extreme values of the input
     matrix, before averaging its rows, as defined in `Byzantine-Robust Distributed Learning: Towards
@@ -20,9 +20,9 @@ class TrimmedMeanAggregator(Aggregator):
         the rows of the remaining matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import TrimmedMeanAggregator
+        >>> from torchjd.aggregation import TrimmedMean
         >>>
-        >>> A = TrimmedMeanAggregator(trim_number=1)
+        >>> A = TrimmedMean(trim_number=1)
         >>> J = tensor([
         ...     [ 1e11,     3],
         ...     [    1, -1e11],

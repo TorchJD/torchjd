@@ -96,11 +96,11 @@ def test_pcgrad():
 def test_graddrop():
     from torch import tensor
 
-    from torchjd.aggregation import GradDropAggregator
+    from torchjd.aggregation import GradDrop
 
     _ = torch.manual_seed(0)
 
-    A = GradDropAggregator()
+    A = GradDrop()
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
     assert_close(A(J), tensor([6.0, 2.0, 2.0]), rtol=0, atol=1e-4)
@@ -205,9 +205,9 @@ def test_krum():
 def test_trimmed_mean():
     from torch import tensor
 
-    from torchjd.aggregation import TrimmedMeanAggregator
+    from torchjd.aggregation import TrimmedMean
 
-    A = TrimmedMeanAggregator(trim_number=1)
+    A = TrimmedMean(trim_number=1)
     J = tensor(
         [
             [1e11, 3],
