@@ -16,7 +16,7 @@ class UPGradWrapper(Weighting):
     :class:`~torchjd.aggregation.mean.Mean`, this corresponds exactly to UPGrad, as defined in our
     paper.
 
-    :param weighting: The wrapped weight weighting.
+    :param weighting: The wrapped weighting.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
