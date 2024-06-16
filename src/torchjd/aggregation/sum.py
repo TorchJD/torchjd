@@ -5,8 +5,9 @@ from torchjd.aggregation.bases import Weighting
 
 
 class SumWeighting(Weighting):
-    """
-    :class:`~torchjd.aggregation.bases.Weighting` that gives weights equal to 1.
+    r"""
+    :class:`~torchjd.aggregation.bases.Weighting` that gives the weights
+    :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
 
     .. admonition::
         Example
