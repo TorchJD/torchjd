@@ -43,9 +43,10 @@ Usage
 =====
 
 This example shows how to use torchjd to perform an iteration of Jacobian Descent on a regression
-model. More precisely, this is a step of stochastic sub-Jacobian descent where a batch of inputs is
-forwarded through the model and the corresponding batch of label is used to build a batch of losses.
-These losses are then backwarded through the model and aggregated using UPGrad.
+model. In this example, a batch of inputs is forwarded through the model and the corresponding batch
+of labels is used to compute a batch of losses. These losses are then backwarded through the model.
+The obtained Jacobian matrix, consisting of the gradients of the losses, is then aggregated using
+UPGrad, and the parameters are updated using the resulting aggregation.
 
 Import several classes from torch and torchjd:
 
