@@ -68,9 +68,8 @@ Define the aggregator that makes a combination of the rows of the jacobian matri
 >>> W = UPGradWrapper(MeanWeighting())
 >>> A = WeightedAggregator(W)
 
-The weights used to make this combination are given by the application of the UPGrad algorithm to
-the Jacobian matrix. In short, this algorithm ensures that the parameter update will not
-negatively impact any of the losses.
+In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
+averages the results. This ensures that locally, no loss will be negatively affected by the update.
 
 Now that everything is defined, we can train the model. Define the model input and the associated
 target:
@@ -78,20 +77,18 @@ target:
 >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
 >>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
 
-Prepare a vector loss for comparing the output of the model to the labels. Setting
-`reduction='none'` makes the `MSELoss` into an element-wise loss.
-
->>> loss = MSELoss(reduction='none')
-
 Here, we generate the data such that each target is equal to the sum of its corresponding input
 vector, for the sake of the example.
 
 We can now compute the losses associated to each element of the batch.
 
+>>> loss_fn = MSELoss(reduction='none')
 >>> output = model(input)
->>> losses = loss(output, target)
+>>> losses = loss_fn(output, target)
 
-The last steps are identical to gradient descent-based optimization.
+Note that setting `reduction='none'` is necessary to obtain the element-wise loss vector.
+
+The last steps are similar to gradient descent-based optimization.
 
 Reset the ``.grad`` field of each model parameter:
 
