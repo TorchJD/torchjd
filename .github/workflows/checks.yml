@@ -1,7 +1,8 @@
-name: Apply pre-commit and run tests on PR
+name: Run pre-commit checks and tests on PR or manually
 
 on:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   # pre-commit hooks job
