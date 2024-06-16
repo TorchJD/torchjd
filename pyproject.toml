@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0.0",
     "quadprog>=0.1.9, != 0.1.10",  # Doesn't work before 0.1.9, 0.1.10 is yanked
-    "numpy>=1.21.0",  # Does not work before 1.21
+    "numpy>=1.21.0, <2.0.0",  # Does not work before 1.21. cvxpy is not yet compatible with numpy>=2.0.0. The upper cap should be removed when this becomes the case, or when their pyproject.toml reflects the incompatibility. See https://github.com/cvxpy/cvxpy/issues/2474.
     "qpsolvers>=1.0.1",  # Does not work before 1.0.1
     "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
 ]
