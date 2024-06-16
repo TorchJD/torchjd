@@ -56,8 +56,6 @@ Import several classes from torch and torchjd:
 >>>
 >>> import torchjd
 >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
->>>
->>> _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
 
 Define the model and the optimizer, as in usual deep learning optimization:
 
