@@ -8,7 +8,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class CAGradWeighting(Weighting):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the CAGrad
     algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
     Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.

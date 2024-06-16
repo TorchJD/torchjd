@@ -10,7 +10,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class DualProjWrapper(Weighting):
-    r"""
+    """
     Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
     of the input matrix. This corresponds to the solution to equation 11 of `Gradient Episodic

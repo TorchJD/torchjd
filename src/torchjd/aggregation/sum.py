@@ -5,7 +5,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class SumWeighting(Weighting):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Weighting` that gives weights equal to 1.
 
     .. admonition::

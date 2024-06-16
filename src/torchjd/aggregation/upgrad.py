@@ -10,7 +10,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class UPGradWrapper(Weighting):
-    r"""
+    """
     Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the weights vector such
     that each weighted row is projected onto the dual cone of all rows. If the wrapped weighting is
     :class:`~torchjd.aggregation.mean.Mean`, this corresponds exactly to UPGrad, as defined in our

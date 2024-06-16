@@ -53,7 +53,7 @@ class Weighting(nn.Module, ABC):
 
 
 class WeightedAggregator(Aggregator):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Aggregator` that combines the rows of the input matrix with
     weights given by applying a :class:`~torchjd.aggregation.bases.Weighting` to the matrix.
 

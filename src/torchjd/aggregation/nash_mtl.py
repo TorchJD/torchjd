@@ -33,7 +33,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class NashMTLWeighting(Weighting):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the
     step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.

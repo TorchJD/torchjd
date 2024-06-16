@@ -5,7 +5,7 @@ from torchjd.aggregation.bases import Weighting
 
 
 class PCGradWeighting(Weighting):
-    r"""
+    """
     :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the PCGrad
     algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
     <https://arxiv.org/pdf/2001.06782.pdf>`_.
