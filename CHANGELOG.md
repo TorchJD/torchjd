@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ConstantWeighting` to get constant weights.
   - `DualProjWrapper` adapted from [Gradient Episodic
       Memory for Continual Learning](https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf).
-  - `GradDropAggregator` from [Just Pick a Sign: Optimizing Deep
+  - `GradDrop` from [Just Pick a Sign: Optimizing Deep
       Multitask Models with Gradient Sign Dropout](https://arxiv.org/pdf/2010.06808.pdf).
   - `IMTLGWeighting` from [Towards Impartial Multi-task Learning](https://discovery.ucl.ac.uk/id/eprint/10120667/).
   - `KrumWeighting` from [Machine Learning with Adversaries: Byzantine
