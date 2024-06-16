@@ -1,5 +1,7 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
+[![tests](https://github.com/TorchJD/torchjd/actions/workflows/checks.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/checks.yml)
+
 TorchJD is a library enabling Jacobian descent with PyTorch, for optimization of neural networks
 with multiple objectives.
 
