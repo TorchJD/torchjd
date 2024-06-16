@@ -57,12 +57,12 @@ Import several classes from torch and torchjd:
 >>> import torchjd
 >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
 
-Define the model and the optimizer, as in usual deep learning optimization:
+Define the model and the optimizer, as usual:
 
 >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
 >>> optimizer = SGD(model.parameters(), lr=0.1)
 
-Define the aggregator that makes a combination of the rows of the jacobian matrices:
+Define the aggregator that will be used to combine the Jacobian matrix:
 
 >>> W = UPGradWrapper(MeanWeighting())
 >>> A = WeightedAggregator(W)
@@ -70,13 +70,12 @@ Define the aggregator that makes a combination of the rows of the jacobian matri
 In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
 averages the results. This ensures that locally, no loss will be negatively affected by the update.
 
-Now that everything is defined, we can train the model. Define the model input and the associated
-target:
+Now that everything is defined, we can train the model. Define the input and the associated target:
 
 >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
 >>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
 
-Here, we generate the data such that each target is equal to the sum of its corresponding input
+Here, we generate fake data in which each target is equal to the sum of its corresponding input
 vector, for the sake of the example.
 
 We can now compute the losses associated to each element of the batch.
