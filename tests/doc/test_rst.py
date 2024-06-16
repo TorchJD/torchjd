@@ -14,12 +14,11 @@ def test_root_index():
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
-    loss = MSELoss(reduction="none")
 
+    loss_fn = MSELoss(reduction="none")
     output = model(input)
-    losses = loss(output, target)
+    losses = loss_fn(output, target)
 
     optimizer.zero_grad()
-
     torchjd.backward(losses, model.parameters(), A)
     optimizer.step()

@@ -43,9 +43,10 @@ Usage
 =====
 
 This example shows how to use torchjd to perform an iteration of Jacobian Descent on a regression
-model. More precisely, this is a step of stochastic sub-Jacobian descent where a batch of inputs is
-forwarded through the model and the corresponding batch of label is used to build a batch of losses.
-These losses are then backwarded through the model and aggregated using UPGrad.
+model. In this example, a batch of inputs is forwarded through the model and the corresponding batch
+of labels is used to compute a batch of losses. These losses are then backwarded through the model.
+The obtained Jacobian matrix, consisting of the gradients of the losses, is then aggregated using
+UPGrad, and the parameters are updated using the resulting aggregation.
 
 Import several classes from torch and torchjd:
 
@@ -55,43 +56,37 @@ Import several classes from torch and torchjd:
 >>>
 >>> import torchjd
 >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
->>>
->>> _ = torch.manual_seed(0)  # Set the seed to make this example deterministic
 
-Define the model and the optimizer, as in usual deep learning optimization:
+Define the model and the optimizer, as usual:
 
 >>> model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
 >>> optimizer = SGD(model.parameters(), lr=0.1)
 
-Define the aggregator that makes a combination of the rows of the jacobian matrices:
+Define the aggregator that will be used to combine the Jacobian matrix:
 
 >>> W = UPGradWrapper(MeanWeighting())
 >>> A = WeightedAggregator(W)
 
-The weights used to make this combination are given by the application of the UPGrad algorithm to
-the Jacobian matrix. In short, this algorithm ensures that the parameter update will not
-negatively impact any of the losses.
+In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
+averages the results. This ensures that locally, no loss will be negatively affected by the update.
 
-Now that everything is defined, we can train the model. Define the model input and the associated
-target:
+Now that everything is defined, we can train the model. Define the input and the associated target:
 
 >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
 >>> target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
 
-Prepare a vector loss for comparing the output of the model to the labels. Setting
-`reduction='none'` makes the `MSELoss` into an element-wise loss.
-
->>> loss = MSELoss(reduction='none')
-
-Here, we generate the data such that each target is equal to the sum of its corresponding input
+Here, we generate fake data in which each target is equal to the sum of its corresponding input
 vector, for the sake of the example.
 
 We can now compute the losses associated to each element of the batch.
 
+>>> loss_fn = MSELoss(reduction='none')
 >>> output = model(input)
->>> losses = loss(output, target)
+>>> losses = loss_fn(output, target)
 
-The last steps are identical to gradient descent-based optimization.
+Note that setting `reduction='none'` is necessary to obtain the element-wise loss vector.
+
+The last steps are similar to gradient descent-based optimization.
 
 Reset the ``.grad`` field of each model parameter:
 
