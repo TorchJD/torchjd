@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RandomWeighting` from [Reasonable Effectiveness of Random Weighting: A
       Litmus Test for Multi-Task Learning](https://arxiv.org/pdf/2111.10603.pdf).
   - `SumWeighting` to get weights corresponding to a sum.
-  - `TrimmedMeanAggregator` from [Byzantine-Robust Distributed Learning: Towards
+  - `TrimmedMean` from [Byzantine-Robust Distributed Learning: Towards
       Optimal Statistical Rates](https://proceedings.mlr.press/v80/yin18a/yin18a.pdf).
   - `UPGradWrapper` from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/search/?query=jacobian+descent+for+multi-objective+optimization&searchtype=all&source=header).
 - `backward` function to perform a step of Jacobian descent.

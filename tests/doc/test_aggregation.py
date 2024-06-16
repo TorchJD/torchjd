@@ -205,9 +205,9 @@ def test_krum():
 def test_trimmed_mean():
     from torch import tensor
 
-    from torchjd.aggregation import TrimmedMeanAggregator
+    from torchjd.aggregation import TrimmedMean
 
-    A = TrimmedMeanAggregator(trim_number=1)
+    A = TrimmedMean(trim_number=1)
     J = tensor(
         [
             [1e11, 3],

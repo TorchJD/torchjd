@@ -13,5 +13,5 @@ from torchjd.aggregation.normalizing import NormalizingWrapper
 from torchjd.aggregation.pcgrad import PCGradWeighting
 from torchjd.aggregation.random import RandomWeighting
 from torchjd.aggregation.sum import SumWeighting
-from torchjd.aggregation.trimmed_mean import TrimmedMeanAggregator
+from torchjd.aggregation.trimmed_mean import TrimmedMean
 from torchjd.aggregation.upgrad import UPGradWrapper
