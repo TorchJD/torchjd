@@ -29,7 +29,31 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class NashMTL(WeightedAggregator):
+    """TODO"""
+
+    def __init__(
+        self,
+        n_tasks: int,
+        max_norm: float = 1.0,
+        update_weights_every: int = 1,
+        optim_niter: int = 20,
+    ):
+        super().__init__(
+            weighting=NashMTLWeighting(
+                n_tasks=n_tasks,
+                max_norm=max_norm,
+                update_weights_every=update_weights_every,
+                optim_niter=optim_niter,
+            )
+        )
+
+    def reset(self):
+        """Resets the internal state of the algorithm."""
+        self.weighting.reset()
 
 
 class NashMTLWeighting(Weighting):

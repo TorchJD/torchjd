@@ -2,7 +2,14 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class IMTLG(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self):
+        super().__init__(weighting=IMTLGWeighting())
 
 
 class IMTLGWeighting(Weighting):

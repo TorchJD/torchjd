@@ -1,12 +1,12 @@
 from torch import Tensor
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
 
 
-class ConstantWeighting(Weighting):
+class Constant(WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that returns constant, pre-determined
-    weights.
+    :class:`~torchjd.aggregation.bases.WeightedAggregator` that makes a linear combination of the
+    provided matrix, with constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
 
@@ -24,9 +24,30 @@ class ConstantWeighting(Weighting):
         >>>
         >>> A(J)
         tensor([8., 3., 3.])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self, weights: Tensor):
+        super().__init__(weighting=ConstantWeighting(weights=weights))
 
+
+class ConstantWeighting(Weighting):
+    """
+    :class:`~torchjd.aggregation.bases.Weighting` that returns constant, pre-determined
+    weights.
+
+    :param weights: The weights associated to the rows of the input matrices.
+
+    .. admonition::
+        Example
+
+        Get the weights vector associated to the matrix:
+
+        >>> from torch import tensor
+        >>> from torchjd.aggregation import ConstantWeighting
+        >>>
+        >>> W = ConstantWeighting(tensor([1., 2.]))
+        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
+        >>>
         >>> W(J)
         tensor([1., 2.])
     """

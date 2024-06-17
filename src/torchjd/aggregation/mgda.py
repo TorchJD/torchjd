@@ -2,7 +2,14 @@ import torch
 from torch import Tensor
 
 from torchjd.aggregation._utils import _compute_gramian
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class MGDA(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
+        super().__init__(weighting=MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
 
 
 class MGDAWeighting(Weighting):

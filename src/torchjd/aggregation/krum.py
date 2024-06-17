@@ -2,7 +2,14 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class Krum(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self, n_byzantine: int, n_selected: int = 1):
+        super().__init__(weighting=KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
 
 
 class KrumWeighting(Weighting):

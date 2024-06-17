@@ -2,7 +2,14 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class Random(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self):
+        super().__init__(weighting=RandomWeighting())
 
 
 class RandomWeighting(Weighting):

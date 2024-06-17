@@ -29,7 +29,18 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.mean import MeanWeighting
+
+
+class AlignedMTL(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self, weighting: Weighting | None = None):
+        if weighting is None:
+            weighting = MeanWeighting()
+
+        super().__init__(weighting=AlignedMTLWrapper(weighting))
 
 
 class AlignedMTLWrapper(Weighting):

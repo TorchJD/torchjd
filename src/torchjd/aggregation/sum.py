@@ -1,7 +1,14 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class Sum(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self):
+        super().__init__(weighting=SumWeighting())
 
 
 class SumWeighting(Weighting):

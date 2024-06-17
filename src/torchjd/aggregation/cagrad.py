@@ -4,7 +4,14 @@ import torch
 from torch import Tensor
 
 from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+
+
+class CAGrad(WeightedAggregator):
+    """TODO"""
+
+    def __init__(self, c: float, norm_eps: float = 0.0001):
+        super().__init__(weighting=CAGradWeighting(c=c, norm_eps=norm_eps))
 
 
 class CAGradWeighting(Weighting):

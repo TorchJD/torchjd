@@ -6,7 +6,28 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.mean import MeanWeighting
+
+
+class DualProj(WeightedAggregator):
+    """TODO"""
+
+    def __init__(
+        self,
+        weighting: Weighting | None = None,
+        norm_eps: float = 0.0001,
+        reg_eps: float = 0.0001,
+        solver: Literal["quadprog"] = "quadprog",
+    ):
+        if weighting is None:
+            weighting = MeanWeighting()
+
+        super().__init__(
+            weighting=DualProjWrapper(
+                weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
+            )
+        )
 
 
 class DualProjWrapper(Weighting):
