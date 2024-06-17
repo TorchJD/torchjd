@@ -3,7 +3,7 @@ import math
 import torch
 
 from torchjd._transform import JacobianMatrices
-from torchjd.aggregation import RandomWeighting, WeightedAggregator
+from torchjd.aggregation import Random
 
 _param_shapes = [
     [],
@@ -36,4 +36,4 @@ torch.manual_seed(0)
 
 jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs) for n_outputs in [1, 2, 5]]
 
-aggregator = WeightedAggregator(RandomWeighting())
+aggregator = Random()

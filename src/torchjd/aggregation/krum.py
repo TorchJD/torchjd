@@ -2,26 +2,12 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class Krum(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self, n_byzantine: int, n_selected: int = 1):
-        super().__init__(weighting=KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
-
-
-class KrumWeighting(Weighting):
+class Krum(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the
-    (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
-    Tolerant Gradient Descent
-    <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
-
-    :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
-        source.
-    :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
+    TODO
 
     .. admonition::
         Example
@@ -29,10 +15,9 @@ class KrumWeighting(Weighting):
         Use Multi-Krum to aggregate a matrix with 1 adversarial row.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, KrumWeighting
+        >>> from torchjd.aggregation import Krum
         >>>
-        >>> W = KrumWeighting(n_byzantine=1, n_selected=4)
-        >>> A = WeightedAggregator(W)
+        >>> A = Krum(n_byzantine=1, n_selected=4)
         >>> J = tensor([
         ...     [1.,     1., 1.],
         ...     [1.,     0., 1.],
@@ -43,14 +28,31 @@ class KrumWeighting(Weighting):
         >>>
         >>> A(J)
         tensor([1.2500, 0.7500, 1.5000])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self, n_byzantine: int, n_selected: int = 1):
+        super().__init__(weighting=_KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
 
-        >>> W(J)
-        tensor([0.2500, 0.2500, 0.0000, 0.2500, 0.2500])
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(n_byzantine={self.weighting.n_byzantine}, n_selected="
+            f"{self.weighting.n_selected})"
+        )
 
-        As we can see from the value of ``weights``, 4 rows have been selected, but not the
-        adversarial one.
+    def __str__(self) -> str:
+        return f"Krum{self.weighting.n_byzantine}-{self.weighting.n_selected}"
+
+
+class _KrumWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
+    (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
+    Tolerant Gradient Descent
+    <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
+
+    :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
+        source.
+    :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
     """
 
     def __init__(self, n_byzantine: int, n_selected: int = 1):
@@ -98,12 +100,3 @@ class KrumWeighting(Weighting):
                 f"Parameter `matrix` should have at least {self.n_selected} rows (n_selected). "
                 f"Found `matrix` with {matrix.shape[0]} rows."
             )
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(n_byzantine={self.n_byzantine}, n_selected="
-            f"{self.n_selected})"
-        )
-
-    def __str__(self) -> str:
-        return f"Krum{self.n_byzantine}-{self.n_selected}Weighting"

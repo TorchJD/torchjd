@@ -6,25 +6,10 @@ from pytest import raises
 from torch.testing import assert_close
 
 from torchjd import backward
-from torchjd.aggregation import (
-    Aggregator,
-    MeanWeighting,
-    MGDAWeighting,
-    RandomWeighting,
-    UPGradWrapper,
-    WeightedAggregator,
-)
+from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 
-@pytest.mark.parametrize(
-    "A",
-    [
-        WeightedAggregator(MeanWeighting()),
-        WeightedAggregator(UPGradWrapper(MeanWeighting())),
-        WeightedAggregator(MGDAWeighting()),
-        WeightedAggregator(RandomWeighting()),
-    ],
-)
+@pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
 def test_backward_various_aggregators(A: Aggregator):
     """
     Tests that backward works for various aggregators.
@@ -49,7 +34,7 @@ def test_backward_valid_chunk_size(chunk_size):
     Tests that backward works for various valid values of the chunk sizes parameter.
     """
 
-    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
+    A = UPGrad()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -70,7 +55,7 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
     Tests that backward raises an error when using invalid chunk sizes.
     """
 
-    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
+    A = UPGrad()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -93,7 +78,7 @@ def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation)
     large enough to allow differentiation of all tensors are once.
     """
 
-    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
+    A = UPGrad()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -106,24 +91,8 @@ def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation)
         backward([y1, y2], params, A, retain_graph=False, parallel_chunk_size=chunk_size)
 
 
-@pytest.mark.parametrize(
-    "A",
-    [
-        WeightedAggregator(MeanWeighting()),
-        WeightedAggregator(UPGradWrapper(MeanWeighting())),
-        WeightedAggregator(MGDAWeighting()),
-    ],
-)
-@pytest.mark.parametrize(
-    "shape",
-    [
-        (2, 3),
-        (2, 6),
-        (5, 8),
-        (60, 55),
-        (120, 143),
-    ],
-)
+@pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
+@pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
 def test_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
@@ -144,7 +113,7 @@ def test_backward_empty_inputs():
     Tests that backward does not fill the .grad values if no input is specified.
     """
 
-    A = WeightedAggregator(MeanWeighting())
+    A = Mean()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -165,7 +134,7 @@ def test_backward_partial_inputs():
     specified as inputs.
     """
 
-    A = WeightedAggregator(MeanWeighting())
+    A = Mean()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -184,7 +153,7 @@ def test_backward_empty_tensors():
     Tests that backward raises an error when called with an empty list of tensors.
     """
 
-    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
+    A = UPGrad()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -199,7 +168,7 @@ def test_backward_multiple_tensors():
     containing the all the values of the original tensors.
     """
 
-    A = WeightedAggregator(UPGradWrapper(MeanWeighting()))
+    A = UPGrad()
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)

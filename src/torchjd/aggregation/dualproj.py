@@ -5,40 +5,72 @@ import torch
 from qpsolvers import solve_qp
 from torch import Tensor
 
-from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
-from torchjd.aggregation.mean import MeanWeighting
+from torchjd.aggregation._gramian_utils import _compute_normalized_gramian
+from torchjd.aggregation._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
+from torchjd.aggregation._str_utils import _vector_to_str
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class DualProj(WeightedAggregator):
-    """TODO"""
+class DualProj(_WeightedAggregator):
+    """
+    TODO
+
+    .. admonition::
+        Example
+
+        Use DualProj to aggregate a matrix.
+
+        >>> from torch import tensor
+        >>> from torchjd.aggregation import DualProj
+        >>>
+        >>> A = DualProj()
+        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
+        >>>
+        >>> A(J)
+        tensor([0.5563, 1.1109, 1.1109])
+    """
 
     def __init__(
         self,
-        weighting: Weighting | None = None,
+        pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        if weighting is None:
-            weighting = MeanWeighting()
+        _check_pref_vector(pref_vector)
+        weighting = _pref_vector_to_weighting(pref_vector)
+        self._pref_vector = pref_vector
 
         super().__init__(
-            weighting=DualProjWrapper(
+            weighting=_DualProjWrapper(
                 weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
             )
         )
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
+            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps}, "
+            f"solver={repr(self.weighting.solver)})"
+        )
 
-class DualProjWrapper(Weighting):
+    def __str__(self) -> str:
+        if self._pref_vector is None:
+            suffix = ""
+        else:
+            suffix = f"([{_vector_to_str(self._pref_vector)}])"
+        return f"DualProj{suffix}"
+
+
+class _DualProjWrapper(_Weighting):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the extracted
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
     of the input matrix. This corresponds to the solution to equation 11 of `Gradient Episodic
     Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases.Weighting`
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
         responsible for extracting weight vectors from the input matrices.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
@@ -47,35 +79,11 @@ class DualProjWrapper(Weighting):
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem. Defaults to
         ``'quadprog'``.
-
-    .. admonition::
-        Example
-
-        Use DualProj to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import (
-        ...     WeightedAggregator,
-        ...     MeanWeighting,
-        ...     DualProjWrapper,
-        ... )
-        >>>
-        >>> W = DualProjWrapper(MeanWeighting())
-        >>> A = WeightedAggregator(W)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.5563, 1.1109, 1.1109])
-
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.6109, 0.5000])
     """
 
     def __init__(
         self,
-        weighting: Weighting,
+        weighting: _Weighting,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
@@ -110,12 +118,3 @@ class DualProjWrapper(Weighting):
             device=matrix.device, dtype=matrix.dtype
         )
         return projection_weights + weights
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(weighting={repr(self.weighting)}, norm_eps="
-            f"{self.norm_eps}, reg_eps={self.reg_eps}, solver={repr(self.solver)})"
-        )
-
-    def __str__(self) -> str:
-        return f"DualProj {self.weighting}"

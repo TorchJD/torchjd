@@ -5,19 +5,19 @@ import torch
 from qpsolvers import solve_qp
 from torch import Tensor
 
-from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
-from torchjd.aggregation.mean import MeanWeighting
+from torchjd.aggregation._gramian_utils import _compute_normalized_gramian
+from torchjd.aggregation._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
+from torchjd.aggregation._str_utils import _vector_to_str
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class UPGrad(WeightedAggregator):
+class UPGrad(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.WeightedAggregator` that projects each row of the input
-    matrix onto the dual cone of all rows of this matrix, and that combines the result using the
-    provided `weighting`.
+    :class:`~torchjd.aggregation.bases.Aggregator` that projects each row of the input matrix onto
+    the dual cone of all rows of this matrix, and that combines the result.
 
-    :param weighting: The weighting used to combine the projected rows. If `None`, defaults to the
-        simple averaging of the projected rows.
+    :param pref_vector: The preference vector used to combine the projected rows. If `None`,
+        defaults to the simple averaging of the projected rows.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
@@ -43,24 +43,39 @@ class UPGrad(WeightedAggregator):
 
     def __init__(
         self,
-        weighting: Weighting | None = None,
+        pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        if weighting is None:
-            weighting = MeanWeighting()
+        _check_pref_vector(pref_vector)
+        weighting = _pref_vector_to_weighting(pref_vector)
+        self._pref_vector = pref_vector
 
         super().__init__(
-            weighting=UPGradWrapper(
+            weighting=_UPGradWrapper(
                 weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
             )
         )
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
+            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps}, "
+            f"solver={repr(self.weighting.solver)})"
+        )
 
-class UPGradWrapper(Weighting):
+    def __str__(self) -> str:
+        if self._pref_vector is None:
+            suffix = ""
+        else:
+            suffix = f"([{_vector_to_str(self._pref_vector)}])"
+        return f"UPGrad{suffix}"
+
+
+class _UPGradWrapper(_Weighting):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the weights vector such
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the weights vector such
     that each weighted row is projected onto the dual cone of all rows. If the wrapped weighting is
     :class:`~torchjd.aggregation.mean.Mean`, this corresponds exactly to UPGrad, as defined in our
     paper.
@@ -73,25 +88,11 @@ class UPGradWrapper(Weighting):
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem. Defaults to
         ``'quadprog'``.
-
-    .. admonition::
-        Example
-
-        Use UPGradWrapper to extract from a matrix the weights corresponding to UPGrad.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import UPGradWrapper, MeanWeighting
-        >>>
-        >>> W = UPGradWrapper(MeanWeighting())
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> W(J)
-        tensor([1.1109, 0.7894])
     """
 
     def __init__(
         self,
-        weighting: Weighting,
+        weighting: _Weighting,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
@@ -137,12 +138,3 @@ class UPGradWrapper(Weighting):
             device=gramian.device, dtype=gramian.dtype
         )
         return lagrangian
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(weighting={repr(self.weighting)}, norm_eps="
-            f"{self.norm_eps}, reg_eps={self.reg_eps}, solver={repr(self.solver)})"
-        )
-
-    def __str__(self) -> str:
-        return f"UPGrad {self.weighting}"

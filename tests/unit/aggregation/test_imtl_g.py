@@ -1,19 +1,15 @@
 import pytest
 from unit.aggregation.utils import ExpectedShapeProperty, PermutationInvarianceProperty
 
-from torchjd.aggregation import IMTLGWeighting, WeightedAggregator
+from torchjd.aggregation import IMTLG
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(IMTLGWeighting())])
+@pytest.mark.parametrize("aggregator", [IMTLG()])
 class TestIMTLG(ExpectedShapeProperty, PermutationInvarianceProperty):
     pass
 
 
 def test_representations():
-    weighting = IMTLGWeighting()
-    assert repr(weighting) == "IMTLGWeighting()"
-    assert str(weighting) == "IMTLGWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == "WeightedAggregator(weighting=IMTLGWeighting())"
-    assert str(aggregator) == "IMTLG"
+    A = IMTLG()
+    assert repr(A) == "IMTLG()"
+    assert str(A) == "IMTLG"

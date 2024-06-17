@@ -1,21 +1,12 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class PCGrad(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self):
-        super().__init__(weighting=PCGradWeighting())
-
-
-class PCGradWeighting(Weighting):
+class PCGrad(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the PCGrad
-    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
-    <https://arxiv.org/pdf/2001.06782.pdf>`_.
+    TODO
 
     .. admonition::
         Example
@@ -23,19 +14,24 @@ class PCGradWeighting(Weighting):
         Use PCGrad to aggregate a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, PCGradWeighting
+        >>> from torchjd.aggregation import PCGrad
         >>>
-        >>> W = PCGradWeighting()
-        >>> A = WeightedAggregator(W)
+        >>> A = PCGrad()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([0.5848, 3.8012, 3.8012])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self):
+        super().__init__(weighting=_PCGradWeighting())
 
-        >>> W(J)
-        tensor([2.2222, 1.5789])
+
+class _PCGradWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the PCGrad
+    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
+    <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. note::
         This implementation corresponds to the paper's algorithm, which differs from the `official

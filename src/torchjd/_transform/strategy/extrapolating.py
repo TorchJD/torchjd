@@ -7,7 +7,7 @@ from torchjd._transform import Transform
 from torchjd._transform._utils import ordered_set
 from torchjd._transform.strategy._utils import _combine_group, _select_ordered_subdict
 from torchjd._transform.tensor_dict import GradientVectors, JacobianMatrices
-from torchjd.aggregation import WeightedAggregator
+from torchjd.aggregation.bases import _WeightedAggregator
 
 
 class ExtrapolatingStrategy(Transform[JacobianMatrices, GradientVectors]):
@@ -17,7 +17,7 @@ class ExtrapolatingStrategy(Transform[JacobianMatrices, GradientVectors]):
 
     def __init__(
         self,
-        aggregator: WeightedAggregator,
+        aggregator: _WeightedAggregator,
         considered_keys: Iterable[Tensor],
         remaining_keys: Iterable[Tensor],
     ):
@@ -58,7 +58,7 @@ class ExtrapolatingStrategy(Transform[JacobianMatrices, GradientVectors]):
         jacobian_matrices: OrderedDict[Tensor, Tensor], weights: Tensor
     ) -> GradientVectors:
         gradient_vectors = {
-            key: WeightedAggregator.combine(value, weights)
+            key: _WeightedAggregator.combine(value, weights)
             for key, value in jacobian_matrices.items()
         }
         return GradientVectors(gradient_vectors)

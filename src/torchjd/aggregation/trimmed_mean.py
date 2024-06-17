@@ -29,6 +29,7 @@ class TrimmedMean(Aggregator):
         ...     [-1e10,  1e10],
         ...     [    2,     2],
         ... ])
+        >>>
         >>> A(J)
         tensor([1.5000, 2.5000])
     """

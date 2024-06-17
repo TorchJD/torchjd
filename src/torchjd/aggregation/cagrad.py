@@ -3,25 +3,13 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation._gramian_utils import _compute_normalized_gramian
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class CAGrad(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self, c: float, norm_eps: float = 0.0001):
-        super().__init__(weighting=CAGradWeighting(c=c, norm_eps=norm_eps))
-
-
-class CAGradWeighting(Weighting):
+class CAGrad(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the CAGrad
-    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
-    Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
-
-    :param c: The scale of the radius of the ball constraint.
-    :param norm_eps: A small value to avoid division by zero when normalizing.
+    TODO
 
     .. admonition::
         Example
@@ -32,19 +20,36 @@ class CAGradWeighting(Weighting):
         >>> warnings.filterwarnings("ignore")
         >>>
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, CAGradWeighting
+        >>> from torchjd.aggregation import CAGrad
         >>>
-        >>> W = CAGradWeighting(c=0.5)
-        >>> A = WeightedAggregator(W)
+        >>> A = CAGrad(c=0.5)
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([0.1835, 1.2041, 1.2041])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self, c: float, norm_eps: float = 0.0001):
+        super().__init__(weighting=_CAGradWeighting(c=c, norm_eps=norm_eps))
 
-        >>> W(J)
-        tensor([0.7041, 0.5000])
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(c={self.weighting.c}, norm_eps={self.weighting.norm_eps})"
+        )
+
+    def __str__(self) -> str:
+        c_str = str(self.weighting.c).rstrip("0")
+        return f"CAGrad{c_str}"
+
+
+class _CAGradWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the CAGrad
+    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
+    Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
+
+    :param c: The scale of the radius of the ball constraint.
+    :param norm_eps: A small value to avoid division by zero when normalizing.
 
     .. note::
         This implementation differs from the `official implementations
@@ -93,10 +98,3 @@ class CAGradWeighting(Weighting):
         weights = torch.from_numpy(weight_array).to(device=matrix.device, dtype=matrix.dtype)
 
         return weights
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(c={self.c}, norm_eps={self.norm_eps})"
-
-    def __str__(self) -> str:
-        c_str = str(self.c).rstrip("0")
-        return f"CAGrad{c_str}Weighting"

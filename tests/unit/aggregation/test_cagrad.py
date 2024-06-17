@@ -8,23 +8,17 @@ from unit.aggregation.utils import (
     stationary_matrices,
 )
 
-from torchjd.aggregation import CAGradWeighting, MeanWeighting, WeightedAggregator
+from torchjd.aggregation import CAGrad, Mean
 
 
 @pytest.mark.filterwarnings("ignore:np.find_common_type is deprecated:")
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(CAGradWeighting(c=0.5))])
+@pytest.mark.parametrize("aggregator", [CAGrad(c=0.5)])
 class TestCAGrad(ExpectedShapeProperty):
     pass
 
 
 @pytest.mark.filterwarnings("ignore:np.find_common_type is deprecated:")
-@pytest.mark.parametrize(
-    "aggregator",
-    [
-        WeightedAggregator(CAGradWeighting(c=1.0)),
-        WeightedAggregator(CAGradWeighting(c=2.0)),
-    ],
-)
+@pytest.mark.parametrize("aggregator", [CAGrad(c=1.0), CAGrad(c=2.0)])
 class TestCAGradNonConflicting(NonConflictingProperty):
     """Tests that CAGrad is non-conflicting when c >= 1 (it should not hold when c < 1)"""
 
@@ -36,8 +30,8 @@ class TestCAGradNonConflicting(NonConflictingProperty):
 def test_equivalence_mean(matrix: Tensor):
     """Tests that CAGrad is equivalent to Mean when c=0."""
 
-    ca_grad = WeightedAggregator(CAGradWeighting(c=0.0))
-    mean = WeightedAggregator(MeanWeighting())
+    ca_grad = CAGrad(c=0.0)
+    mean = Mean()
 
     result = ca_grad(matrix)
     expected = mean(matrix)
@@ -46,12 +40,6 @@ def test_equivalence_mean(matrix: Tensor):
 
 
 def test_representations():
-    weighting = CAGradWeighting(c=0.5, norm_eps=0.0001)
-    assert repr(weighting) == "CAGradWeighting(c=0.5, norm_eps=0.0001)"
-    assert str(weighting) == "CAGrad0.5Weighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=CAGradWeighting(c=0.5, norm_eps=0.0001))"
-    )
-    assert str(aggregator) == "CAGrad0.5"
+    A = CAGrad(c=0.5, norm_eps=0.0001)
+    assert repr(A) == "CAGrad(c=0.5, norm_eps=0.0001)"
+    assert str(A) == "CAGrad0.5"

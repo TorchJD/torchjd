@@ -1,21 +1,12 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class Mean(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self):
-        super().__init__(weighting=MeanWeighting())
-
-
-class MeanWeighting(Weighting):
-    r"""
-    :class:`~torchjd.aggregation.bases.Weighting` that gives the weights
-    :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
-    \mathbb{R}^m`.
+class Mean(_WeightedAggregator):
+    """
+    TODO
 
     .. admonition::
         Example
@@ -23,19 +14,24 @@ class MeanWeighting(Weighting):
         Average the rows of a matrix
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, MeanWeighting
+        >>> from torchjd.aggregation import Mean
         >>>
-        >>> W = MeanWeighting()
-        >>> A = WeightedAggregator(W)
+        >>> A = Mean()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([1., 1., 1.])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self):
+        super().__init__(weighting=_MeanWeighting())
 
-        >>> W(J)
-        tensor([0.5000, 0.5000])
+
+class _MeanWeighting(_Weighting):
+    r"""
+    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
+    :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
+    \mathbb{R}^m`.
     """
 
     def forward(self, matrix: Tensor) -> Tensor:

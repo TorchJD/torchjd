@@ -2,21 +2,12 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class Random(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self):
-        super().__init__(weighting=RandomWeighting())
-
-
-class RandomWeighting(Weighting):
+class Random(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that generates positive random weights
-    at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A
-    Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
+    TODO
 
     .. admonition::
         Example
@@ -24,10 +15,9 @@ class RandomWeighting(Weighting):
         Compute several random combinations of the rows of a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, RandomWeighting
+        >>> from torchjd.aggregation import Random
         >>>
-        >>> W = RandomWeighting()
-        >>> A = WeightedAggregator(W)
+        >>> A = Random()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
@@ -35,20 +25,17 @@ class RandomWeighting(Weighting):
         >>>
         >>> A(J)
         tensor([5.3976, 1.0000, 1.0000])
+    """
 
-    .. admonition::
-        Example
+    def __init__(self):
+        super().__init__(weighting=_RandomWeighting())
 
-        Generate random weights for the rows of a matrix.
 
-        >>> from torch import tensor, manual_seed
-        >>> from torchjd.aggregation import WeightedAggregator, RandomWeighting
-        >>>
-        >>> W = RandomWeighting()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> W(J)
-        tensor([0.8623, 0.1377])
+class _RandomWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that generates positive random weights
+    at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A
+    Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
     """
 
     def forward(self, matrix: Tensor) -> Tensor:

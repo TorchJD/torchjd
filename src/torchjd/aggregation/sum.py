@@ -1,20 +1,12 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class Sum(WeightedAggregator):
-    """TODO"""
-
-    def __init__(self):
-        super().__init__(weighting=SumWeighting())
-
-
-class SumWeighting(Weighting):
-    r"""
-    :class:`~torchjd.aggregation.bases.Weighting` that gives the weights
-    :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
+class Sum(_WeightedAggregator):
+    """
+    TODO
 
     .. admonition::
         Example
@@ -22,19 +14,23 @@ class SumWeighting(Weighting):
         Sum the rows of a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, SumWeighting
+        >>> from torchjd.aggregation import Sum
         >>>
-        >>> W = SumWeighting()
-        >>> A = WeightedAggregator(W)
+        >>> A = Sum()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([2., 2., 2.])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self):
+        super().__init__(weighting=_SumWeighting())
 
-        >>> W(J)
-        tensor([1., 1.])
+
+class _SumWeighting(_Weighting):
+    r"""
+    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
+    :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
     """
 
     def forward(self, matrix: Tensor) -> Tensor:

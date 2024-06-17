@@ -29,11 +29,30 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import WeightedAggregator, Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class NashMTL(WeightedAggregator):
-    """TODO"""
+class NashMTL(_WeightedAggregator):
+    """
+    TODO
+
+    .. admonition::
+        Example
+
+        Use NashMTL to aggregate a matrix.
+
+        >>> import warnings
+        >>> warnings.filterwarnings("ignore")
+        >>>
+        >>> from torch import tensor
+        >>> from torchjd.aggregation import NashMTL
+        >>>
+        >>> A = NashMTL(n_tasks=2)
+        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
+        >>>
+        >>> A(J)
+        tensor([0.0542, 0.7061, 0.7061])
+    """
 
     def __init__(
         self,
@@ -43,7 +62,7 @@ class NashMTL(WeightedAggregator):
         optim_niter: int = 20,
     ):
         super().__init__(
-            weighting=NashMTLWeighting(
+            weighting=_NashMTLWeighting(
                 n_tasks=n_tasks,
                 max_norm=max_norm,
                 update_weights_every=update_weights_every,
@@ -55,10 +74,13 @@ class NashMTL(WeightedAggregator):
         """Resets the internal state of the algorithm."""
         self.weighting.reset()
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n_tasks={self.weighting.n_tasks})"
 
-class NashMTLWeighting(Weighting):
+
+class _NashMTLWeighting(_Weighting):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
     step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
@@ -69,29 +91,6 @@ class NashMTLWeighting(Weighting):
         performed. A larger value means that the same weights will be re-used for more calls to the
         weighting.
     :param optim_niter: The number of iterations of the underlying optimization process.
-
-    .. admonition::
-        Example
-
-        Use NashMTL to aggregate a matrix.
-
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore")
-        >>>
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, NashMTLWeighting
-        >>>
-        >>> W = NashMTLWeighting(n_tasks=2)
-        >>> A = WeightedAggregator(W)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.0542, 0.7061, 0.7061])
-
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.4182, 0.2878])
 
     .. note::
         This implementation was adapted from the `official implementation

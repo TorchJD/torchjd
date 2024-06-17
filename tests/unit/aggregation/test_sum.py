@@ -4,19 +4,15 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import SumWeighting, WeightedAggregator
+from torchjd.aggregation import Sum
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(SumWeighting())])
+@pytest.mark.parametrize("aggregator", [Sum()])
 class TestSum(ExpectedShapeProperty, PermutationInvarianceProperty):
     pass
 
 
 def test_representations():
-    weighting = SumWeighting()
-    assert repr(weighting) == "SumWeighting()"
-    assert str(weighting) == "SumWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == "WeightedAggregator(weighting=SumWeighting())"
-    assert str(aggregator) == "Sum"
+    A = Sum()
+    assert repr(A) == "Sum()"
+    assert str(A) == "Sum"
