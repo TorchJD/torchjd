@@ -49,7 +49,7 @@ def main():
         IMTLGWeighting(),
         MeanWeighting(),
         MGDAWeighting(),
-        NashMTLWeighting(n_tasks=3),
+        NashMTLWeighting(n_tasks=matrix.shape[0]),
         PCGradWeighting(),
         RandomWeighting(),
         SumWeighting(),
