@@ -19,6 +19,8 @@ from torchjd.aggregation import (
     MGDAWeighting,
     PCGradWeighting,
     RandomWeighting,
+    SumWeighting,
+    TrimmedMean,
     UPGradWrapper,
     WeightedAggregator,
 )
@@ -50,11 +52,13 @@ def main():
         NashMTLWeighting(n_tasks=3),
         PCGradWeighting(),
         RandomWeighting(),
+        SumWeighting(),
         UPGradWrapper(MeanWeighting()),
     ]
 
     aggregators = [
         GradDrop(),
+        TrimmedMean(trim_number=1),
     ] + [WeightedAggregator(weighting) for weighting in weightings]
 
     aggregators_dict = {str(aggregator): aggregator for aggregator in aggregators}
