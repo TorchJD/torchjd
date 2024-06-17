@@ -1,3 +1,6 @@
+from torch.testing import assert_close
+
+
 def test_backward():
     import torch
 
@@ -10,3 +13,5 @@ def test_backward():
     y2 = (param**2).sum()
 
     backward([y1, y2], [param], A=UPGrad())
+
+    assert_close(param.grad, torch.tensor([0.5000, 2.5000]))
