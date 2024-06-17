@@ -41,16 +41,16 @@ def main():
     )
 
     weightings = [
-        MeanWeighting(),
-        RandomWeighting(),
-        IMTLGWeighting(),
-        UPGradWrapper(MeanWeighting()),
-        DualProjWrapper(MeanWeighting()),
-        MGDAWeighting(),
-        PCGradWeighting(),
-        CAGradWeighting(c=0.5),
         AlignedMTLWrapper(MeanWeighting()),
+        CAGradWeighting(c=0.5),
+        DualProjWrapper(MeanWeighting()),
+        IMTLGWeighting(),
+        MeanWeighting(),
+        MGDAWeighting(),
         NashMTLWeighting(n_tasks=3),
+        PCGradWeighting(),
+        RandomWeighting(),
+        UPGradWrapper(MeanWeighting()),
     ]
 
     aggregators = [
