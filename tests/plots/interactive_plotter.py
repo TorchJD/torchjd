@@ -20,6 +20,7 @@ from torchjd.aggregation import (
     PCGradWeighting,
     RandomWeighting,
     SumWeighting,
+    TrimmedMean,
     UPGradWrapper,
     WeightedAggregator,
 )
@@ -42,20 +43,22 @@ def main():
     )
 
     weightings = [
-        SumWeighting(),
-        RandomWeighting(),
-        IMTLGWeighting(),
-        UPGradWrapper(SumWeighting()),
-        DualProjWrapper(SumWeighting()),
-        MGDAWeighting(),
-        PCGradWeighting(),
-        CAGradWeighting(c=0.5),
         AlignedMTLWrapper(MeanWeighting()),
-        NashMTLWeighting(n_tasks=3),
+        CAGradWeighting(c=0.5),
+        DualProjWrapper(MeanWeighting()),
+        IMTLGWeighting(),
+        MeanWeighting(),
+        MGDAWeighting(),
+        NashMTLWeighting(n_tasks=matrix.shape[0]),
+        PCGradWeighting(),
+        RandomWeighting(),
+        SumWeighting(),
+        UPGradWrapper(MeanWeighting()),
     ]
 
     aggregators = [
         GradDrop(),
+        TrimmedMean(trim_number=1),
     ] + [WeightedAggregator(weighting) for weighting in weightings]
 
     aggregators_dict = {str(aggregator): aggregator for aggregator in aggregators}

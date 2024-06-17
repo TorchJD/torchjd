@@ -19,8 +19,8 @@ class Plotter:
 
         fig = go.Figure()
 
-        start_angle, opening = compute_2d_non_conflicting_cone(self.matrix.numpy())
-        cone = make_cone_scatter(start_angle, opening, label="Non-conflicting cone")
+        start_angle, opening = compute_2d_dual_cone(self.matrix.numpy())
+        cone = make_cone_scatter(start_angle, opening, label="Dual cone")
         fig.add_trace(cone)
 
         for i in range(len(self.matrix)):
@@ -187,9 +187,9 @@ def make_right_angle(
     return [p1, p2, p3]
 
 
-def compute_2d_non_conflicting_cone(matrix: np.ndarray) -> tuple[float, float]:
+def compute_2d_dual_cone(matrix: np.ndarray) -> tuple[float, float]:
     """
-    Computes the frontier of the non-conflicting cone from a matrix of 2-dimensional rows.
+    Computes the frontier of the dual cone from a matrix of 2-dimensional rows.
     Returns the result as an angle in [0, 2pi[ corresponding to the start of the cone, and an
     opening angle, that is <= pi and that can be negative if the cone is empty.
 
@@ -201,10 +201,10 @@ def compute_2d_non_conflicting_cone(matrix: np.ndarray) -> tuple[float, float]:
 
     row_angles = [coord_to_angle(*row)[0] for row in matrix]
 
-    # Compute the start of the non-conflicting half-space of each individual row.
+    # Compute the start of the dual half-space of each individual row.
     start_angles = [(angle - np.pi / 2) % (2 * np.pi) for angle in row_angles]
 
-    # Combine these non-conflicting half-spaces to obtain the global non-conflicting cone.
+    # Combine these dual half-spaces to obtain the global dual cone.
     cone_start_angle = start_angles[0]
     opening = np.pi
     for hs_start_angle in start_angles[1:]:
@@ -259,9 +259,3 @@ def angle_to_coord(angle: float, r: float = 1.0) -> tuple[float, float]:
     x = r * np.cos(angle)
     y = r * np.sin(angle)
     return x, y
-
-
-def project(vector: torch.Tensor, onto: torch.Tensor) -> torch.Tensor:
-    onto_normalized = onto / torch.linalg.norm(onto)
-    projection = vector @ onto_normalized * onto_normalized
-    return projection
