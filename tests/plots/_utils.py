@@ -259,9 +259,3 @@ def angle_to_coord(angle: float, r: float = 1.0) -> tuple[float, float]:
     x = r * np.cos(angle)
     y = r * np.sin(angle)
     return x, y
-
-
-def project(vector: torch.Tensor, onto: torch.Tensor) -> torch.Tensor:
-    onto_normalized = onto / torch.linalg.norm(onto)
-    projection = vector @ onto_normalized * onto_normalized
-    return projection
