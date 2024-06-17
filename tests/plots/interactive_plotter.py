@@ -19,7 +19,6 @@ from torchjd.aggregation import (
     MGDAWeighting,
     PCGradWeighting,
     RandomWeighting,
-    SumWeighting,
     UPGradWrapper,
     WeightedAggregator,
 )
@@ -42,11 +41,11 @@ def main():
     )
 
     weightings = [
-        SumWeighting(),
+        MeanWeighting(),
         RandomWeighting(),
         IMTLGWeighting(),
-        UPGradWrapper(SumWeighting()),
-        DualProjWrapper(SumWeighting()),
+        UPGradWrapper(MeanWeighting()),
+        DualProjWrapper(MeanWeighting()),
         MGDAWeighting(),
         PCGradWeighting(),
         CAGradWeighting(c=0.5),
