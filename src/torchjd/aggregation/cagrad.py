@@ -9,7 +9,12 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class CAGrad(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    `Conflict-Averse Gradient Descent for Multi-task Learning
+    <https://arxiv.org/pdf/2110.14048.pdf>`_.
+
+    :param c: The scale of the radius of the ball constraint.
+    :param norm_eps: A small value to avoid division by zero when normalizing.
 
     .. admonition::
         Example
@@ -60,7 +65,7 @@ class _CAGradWeighting(_Weighting):
         function.
     """
 
-    def __init__(self, c: float, norm_eps: float = 0.0001):
+    def __init__(self, c: float, norm_eps: float):
         super().__init__()
 
         if c < 0.0:

@@ -6,8 +6,8 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class Constant(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.WeightedAggregator` that makes a linear combination of the
-    provided matrix, with constant, pre-determined weights.
+    :class:`~torchjd.aggregation.bases.Aggregator` that makes a linear combination of the rows of
+    the provided matrix, with constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
 

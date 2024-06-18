@@ -6,8 +6,15 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
 class MGDA(_WeightedAggregator):
-    """
-    TODO
+    r"""
+    :class:`~torchjd.aggregation.bases.Aggregator` performing the gradient aggregation step of
+    `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
+    <https://www.sciencedirect.com/science/article/pii/S1631073X12000738>`_. The implementation is
+    based on Algorithm 2 of `Multi-Task Learning as Multi-Objective Optimization
+    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+
+    :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
+    :param max_iters: The maximum number of iterations of the optimization loop.
 
     .. admonition::
         Example
@@ -44,7 +51,7 @@ class _MGDAWeighting(_Weighting):
     :param max_iters: The maximum number of iterations of the optimization loop.
     """
 
-    def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
+    def __init__(self, epsilon: float, max_iters: int):
         super().__init__()
         self.epsilon = epsilon
         self.max_iters = max_iters

@@ -34,7 +34,16 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class NashMTL(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` as proposed in Algorithm 1 of
+    `Multi-Task Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.
+
+    :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
+        matrices.
+    :param max_norm: Maximum value of the norm of :math:`A^T w`.
+    :param update_weights_every: A parameter determining how often the actual weighting should be
+        performed. A larger value means that the same weights will be re-used for more calls to the
+        aggregator.
+    :param optim_niter: The number of iterations of the underlying optimization process.
 
     .. admonition::
         Example
@@ -52,6 +61,15 @@ class NashMTL(_WeightedAggregator):
         >>>
         >>> A(J)
         tensor([0.0542, 0.7061, 0.7061])
+
+    .. warning::
+        This implementation was adapted from the `official implementation
+        <https://github.com/AvivNavon/nash-mtl/tree/main>`_, which has some flaws. Use with caution.
+
+    .. warning::
+        The aggregator is stateful. Its output will thus depend not only on the input matrix, but
+        also on its state. It thus depends on previously seen matrices. It should be reset between
+        experiments.
     """
 
     def __init__(
@@ -91,23 +109,14 @@ class _NashMTLWeighting(_Weighting):
         performed. A larger value means that the same weights will be re-used for more calls to the
         weighting.
     :param optim_niter: The number of iterations of the underlying optimization process.
-
-    .. note::
-        This implementation was adapted from the `official implementation
-        <https://github.com/AvivNavon/nash-mtl/tree/main>`_.
-
-    .. warning::
-        The aggregator is stateful. Its output will thus depend not only on the input matrix, but
-        also on its state. It thus depends on previously seen matrices. It should be reset between
-        experiments.
     """
 
     def __init__(
         self,
         n_tasks: int,
-        max_norm: float = 1.0,
-        update_weights_every: int = 1,
-        optim_niter: int = 20,
+        max_norm: float,
+        update_weights_every: int,
+        optim_niter: int,
     ):
         super().__init__()
 

@@ -6,7 +6,7 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class Mean(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` that averages the rows of the input matrices.
 
     .. admonition::
         Example

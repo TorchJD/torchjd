@@ -6,7 +6,8 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class PCGrad(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in algorithm 1 of
+    `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. admonition::
         Example

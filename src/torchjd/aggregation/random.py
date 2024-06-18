@@ -7,7 +7,10 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class Random(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` that computes a random combination of the rows of
+    the provided matrices, as defined in algorithm 2 of
+    `Reasonable Effectiveness of Random Weighting: A Litmus Test for Multi-Task Learning
+    <https://arxiv.org/pdf/2111.10603.pdf>`_.
 
     .. admonition::
         Example

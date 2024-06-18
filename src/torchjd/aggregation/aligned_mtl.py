@@ -36,7 +36,11 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class AlignedMTL(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    `Independent Component Alignment for Multi-Task Learning
+    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+
+    :param pref_vector: The preference vector to use.
 
     .. admonition::
         Example
@@ -51,6 +55,10 @@ class AlignedMTL(_WeightedAggregator):
         >>>
         >>> A(J)
         tensor([0.2133, 0.9673, 0.9673])
+
+    .. note::
+        This implementation was adapted from the `official implementation
+        <https://github.com/SamsungLabs/MTL/tree/master/code/optim/aligned>`_.
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
@@ -80,10 +88,6 @@ class _AlignedMTLWrapper(_Weighting):
 
     :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
         responsible for extracting weight vectors from the input matrices.
-
-    .. note::
-        This implementation was adapted from the `official implementation
-        <https://github.com/SamsungLabs/MTL/tree/master/code/optim/aligned>`_.
     """
 
     def __init__(self, weighting: _Weighting):

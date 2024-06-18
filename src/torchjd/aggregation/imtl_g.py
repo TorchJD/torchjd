@@ -7,7 +7,9 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class IMTLG(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in
+    `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.
+    This generalization supports matrices with some linearly dependant rows.
 
     .. admonition::
         Example

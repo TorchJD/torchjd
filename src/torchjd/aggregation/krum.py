@@ -7,7 +7,13 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 class Krum(_WeightedAggregator):
     """
-    TODO
+    :class:`~torchjd.aggregation.bases.Aggregator` for adversarial federated learning, as defined
+    in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
+    <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
+
+    :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
+        source.
+    :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
 
     .. admonition::
         Example
@@ -55,7 +61,7 @@ class _KrumWeighting(_Weighting):
     :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
     """
 
-    def __init__(self, n_byzantine: int, n_selected: int = 1):
+    def __init__(self, n_byzantine: int, n_selected: int):
         super().__init__()
         if n_byzantine < 0:
             raise ValueError(
