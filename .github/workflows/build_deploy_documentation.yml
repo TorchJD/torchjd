@@ -38,7 +38,10 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install default and doc dependencies
-        run: pdm install --group doc --frozen-lockfile
+        run: |
+          pdm venv create 3.12.3
+          pdm use .venv/bin/python
+          pdm install --group doc --frozen-lockfile
       - name: Build HTML
         run: |
           cd docs/

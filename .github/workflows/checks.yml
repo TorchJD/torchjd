@@ -20,7 +20,10 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install check dependencies
-        run: pdm install --no-default --group check --frozen-lockfile
+        run: |
+          pdm venv create 3.12.3
+          pdm use .venv/bin/python
+          pdm install --no-default --group check --frozen-lockfile
       - name: Cache pre-commit hooks
         uses: actions/cache@v2
         with:
@@ -44,7 +47,10 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install default and test dependencies
-        run: pdm install --group test --frozen-lockfile
+        run: |
+          pdm venv create 3.12.3
+          pdm use .venv/bin/python
+          pdm install --group test --frozen-lockfile
       - name: Run unit tests
         run: pdm run pytest tests/unit
       - name: Run doc tests
