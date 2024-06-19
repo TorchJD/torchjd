@@ -5,30 +5,17 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import DualProjWrapper, MeanWeighting, WeightedAggregator
+from torchjd.aggregation import DualProj
 
 
-@pytest.mark.parametrize(
-    "aggregator",
-    [WeightedAggregator(DualProjWrapper(MeanWeighting()))],
-)
+@pytest.mark.parametrize("aggregator", [DualProj()])
 class TestDualProj(ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 
 def test_representations():
-    weighting = DualProjWrapper(
-        weighting=MeanWeighting(), norm_eps=0.0001, reg_eps=0.0001, solver="quadprog"
+    A = DualProj(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver="quadprog")
+    assert (
+        repr(A) == "DualProj(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver='quadprog')"
     )
-    assert repr(weighting) == (
-        "DualProjWrapper(weighting=MeanWeighting(), norm_eps=0.0001, "
-        "reg_eps=0.0001, solver='quadprog')"
-    )
-    assert str(weighting) == "DualProj MeanWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=DualProjWrapper(weighting="
-        "MeanWeighting(), norm_eps=0.0001, reg_eps=0.0001, solver='quadprog'))"
-    )
-    assert str(aggregator) == "DualProj Mean"
+    assert str(A) == "DualProj"

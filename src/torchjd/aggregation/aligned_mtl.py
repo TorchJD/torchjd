@@ -29,18 +29,18 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
+from torchjd.aggregation._str_utils import _vector_to_str
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class AlignedMTLWrapper(Weighting):
+class AlignedMTL(_WeightedAggregator):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that corrects the extracted
-    weights with the balance transformation defined in Algorithm 1 of `Independent Component
-    Alignment for Multi-Task Learning
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    `Independent Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases.Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param pref_vector: The preference vector to use.
 
     .. admonition::
         Example
@@ -48,30 +48,49 @@ class AlignedMTLWrapper(Weighting):
         Use AlignedMTL to aggregate a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import (
-        ...     WeightedAggregator,
-        ...     MeanWeighting,
-        ...     AlignedMTLWrapper,
-        ... )
+        >>> from torchjd.aggregation import AlignedMTL
         >>>
-        >>> W = AlignedMTLWrapper(MeanWeighting())
-        >>> A = WeightedAggregator(W)
+        >>> A = AlignedMTL()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([0.2133, 0.9673, 0.9673])
-
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.5591, 0.4083])
 
     .. note::
         This implementation was adapted from the `official implementation
         <https://github.com/SamsungLabs/MTL/tree/master/code/optim/aligned>`_.
     """
 
-    def __init__(self, weighting: Weighting):
+    def __init__(self, pref_vector: Tensor | None = None):
+        _check_pref_vector(pref_vector)
+        weighting = _pref_vector_to_weighting(pref_vector)
+        self._pref_vector = pref_vector
+
+        super().__init__(weighting=_AlignedMTLWrapper(weighting))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
+
+    def __str__(self) -> str:
+        if self._pref_vector is None:
+            suffix = ""
+        else:
+            suffix = f"([{_vector_to_str(self._pref_vector)}])"
+        return f"AlignedMTL{suffix}"
+
+
+class _AlignedMTLWrapper(_Weighting):
+    """
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that corrects the extracted
+    weights with the balance transformation defined in Algorithm 1 of `Independent Component
+    Alignment for Multi-Task Learning
+    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
+        responsible for extracting weight vectors from the input matrices.
+    """
+
+    def __init__(self, weighting: _Weighting):
         super().__init__()
         self.weighting = weighting
 
@@ -108,9 +127,3 @@ class AlignedMTLWrapper(Weighting):
         lambda_R = lambda_[-1]
         B = lambda_R.sqrt() * V @ sigma_inv @ V.T
         return B
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(weighting={repr(self.weighting)})"
-
-    def __str__(self) -> str:
-        return f"AlignedMTL {self.weighting}"

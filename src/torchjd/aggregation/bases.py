@@ -33,7 +33,7 @@ class Aggregator(nn.Module, ABC):
         return f"{self.__class__.__name__}()"
 
 
-class Weighting(nn.Module, ABC):
+class _Weighting(nn.Module, ABC):
     r"""
     Abstract base class for all weighting methods. It has the role of extracting a vector of weights
     of dimension :math:`m` from a matrix of dimension :math:`m \times n`.
@@ -52,15 +52,15 @@ class Weighting(nn.Module, ABC):
         return f"{self.__class__.__name__}"
 
 
-class WeightedAggregator(Aggregator):
+class _WeightedAggregator(Aggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that combines the rows of the input matrix with
-    weights given by applying a :class:`~torchjd.aggregation.bases.Weighting` to the matrix.
+    weights given by applying a :class:`~torchjd.aggregation.bases._Weighting` to the matrix.
 
     :param weighting: The object responsible for extracting the vector of weights from the matrix.
     """
 
-    def __init__(self, weighting: Weighting):
+    def __init__(self, weighting: _Weighting):
         super().__init__()
         self.weighting = weighting
 
@@ -83,7 +83,7 @@ class WeightedAggregator(Aggregator):
         return vector
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(weighting={repr(self.weighting)})"
+        return f"{self.__class__.__name__}()"
 
     def __str__(self) -> str:
-        return str(self.weighting).replace("Weighting", "")
+        return f"{self.__class__.__name__}"

@@ -6,7 +6,7 @@ from torch import Tensor
 
 from torchjd._transform._utils import _OrderedSet
 from torchjd._transform.tensor_dict import EmptyTensorDict, GradientVectors
-from torchjd.aggregation import Aggregator, WeightedAggregator
+from torchjd.aggregation.bases import Aggregator, _WeightedAggregator
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
@@ -42,7 +42,7 @@ def _aggregate_group(
 
 def _combine_group(
     jacobian_matrices: OrderedDict[Tensor, Tensor],
-    aggregator: WeightedAggregator,
+    aggregator: _WeightedAggregator,
 ) -> tuple[GradientVectors, Tensor]:
     """
     Unites the jacobian matrices and aggregates them using a

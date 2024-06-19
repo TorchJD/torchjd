@@ -4,24 +4,15 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import AlignedMTLWrapper, MeanWeighting, WeightedAggregator
+from torchjd.aggregation import AlignedMTL
 
 
-@pytest.mark.parametrize(
-    "aggregator",
-    [WeightedAggregator(AlignedMTLWrapper(MeanWeighting()))],
-)
+@pytest.mark.parametrize("aggregator", [AlignedMTL()])
 class TestAlignedMTL(ExpectedShapeProperty, PermutationInvarianceProperty):
     pass
 
 
 def test_representations():
-    weighting = AlignedMTLWrapper(weighting=MeanWeighting())
-    assert repr(weighting) == "AlignedMTLWrapper(weighting=MeanWeighting())"
-    assert str(weighting) == "AlignedMTL MeanWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=AlignedMTLWrapper(weighting=MeanWeighting" "()))"
-    )
-    assert str(aggregator) == "AlignedMTL Mean"
+    A = AlignedMTL(pref_vector=None)
+    assert repr(A) == "AlignedMTL(pref_vector=None)"
+    assert str(A) == "AlignedMTL"

@@ -9,20 +9,17 @@ from unit.aggregation.utils.inputs import (
 )
 from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
-from torchjd.aggregation import ConstantWeighting, WeightedAggregator
+from torchjd.aggregation import Constant
 
-# The `ConstantWeighting`'s `weights` parameter must be a vector of length equal to the number of
-# rows in the matrix that it will be applied to. Thus, each `ConstantWeighting` is specific to
-# matrices of a given number of rows. To test properties on all possible matrices, we have to create
-# one `ConstantWeighting` with the right number of weights for each matrix.
+# The weights must be a vector of length equal to the number of rows in the matrix that it will be
+# applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To
+# test properties on all possible matrices, we have to create one `Constant` with the right number
+# of weights for each matrix.
 
 
-def _make_aggregator(matrix: Tensor) -> WeightedAggregator:
+def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    weights = torch.tensor([1.0 / n_rows] * n_rows)
-    weighting = ConstantWeighting(weights)
-    aggregator = WeightedAggregator(weighting)
-    return aggregator
+    return Constant(torch.tensor([1.0 / n_rows] * n_rows))
 
 
 _matrices_1 = scaled_matrices + zero_rank_matrices
@@ -38,17 +35,11 @@ class TestConstant(ExpectedShapeProperty):
 
     @classmethod
     @pytest.mark.parametrize(["aggregator", "matrix"], zip(_aggregators_1, _matrices_1))
-    def test_expected_shape_property(cls, aggregator: WeightedAggregator, matrix: Tensor):
+    def test_expected_shape_property(cls, aggregator: Constant, matrix: Tensor):
         cls._assert_expected_shape_property(aggregator, matrix)
 
 
 def test_representations():
-    weighting = ConstantWeighting(weights=torch.tensor([1.0, 2.0]))
-    assert repr(weighting) == "ConstantWeighting(weights=tensor([1., 2.]))"
-    assert str(weighting) == "ConstantWeighting([1., 2.])"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=ConstantWeighting(weights=tensor([1., 2.])))"
-    )
-    assert str(aggregator) == "Constant([1., 2.])"
+    A = Constant(weights=torch.tensor([1.0, 2.0]))
+    assert repr(A) == "Constant(weights=tensor([1., 2.]))"
+    assert str(A) == "Constant([1., 2.])"

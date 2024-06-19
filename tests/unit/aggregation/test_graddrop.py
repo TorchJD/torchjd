@@ -11,10 +11,10 @@ class TestGradDrop(ExpectedShapeProperty):
 
 
 def test_representations():
-    aggregator = GradDrop(leak=torch.tensor([0.0, 1.0]))
-    assert repr(aggregator) == "GradDrop(leak=tensor([0., 1.]))"
-    assert str(aggregator) == "GradDrop([0., 1.])"
+    A = GradDrop(leak=torch.tensor([0.0, 1.0]))
+    assert repr(A) == "GradDrop(leak=tensor([0., 1.]))"
+    assert str(A) == "GradDrop([0., 1.])"
 
-    aggregator = GradDrop()
-    assert repr(aggregator) == "GradDrop(leak=None)"
-    assert str(aggregator) == "GradDrop"
+    A = GradDrop()
+    assert repr(A) == "GradDrop(leak=None)"
+    assert str(A) == "GradDrop"

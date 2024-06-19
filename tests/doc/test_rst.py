@@ -4,13 +4,12 @@ def test_root_index():
     from torch.optim import SGD
 
     import torchjd
-    from torchjd.aggregation import MeanWeighting, UPGradWrapper, WeightedAggregator
+    from torchjd.aggregation import UPGrad
 
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
     optimizer = SGD(model.parameters(), lr=0.1)
 
-    W = UPGradWrapper(MeanWeighting())
-    A = WeightedAggregator(W)
+    A = UPGrad()
 
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
     target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets

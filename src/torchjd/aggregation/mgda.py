@@ -1,14 +1,16 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._utils import _compute_gramian
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation._gramian_utils import _compute_gramian
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class MGDAWeighting(Weighting):
+class MGDA(_WeightedAggregator):
     r"""
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using Algorithm
-    2 of `Multi-Task Learning as Multi-Objective Optimization
+    :class:`~torchjd.aggregation.bases.Aggregator` performing the gradient aggregation step of
+    `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
+    <https://www.sciencedirect.com/science/article/pii/S1631073X12000738>`_. The implementation is
+    based on Algorithm 2 of `Multi-Task Learning as Multi-Objective Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
@@ -20,22 +22,36 @@ class MGDAWeighting(Weighting):
         Use MGDA to aggregate a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, MGDAWeighting
+        >>> from torchjd.aggregation import MGDA
         >>>
-        >>> W = MGDAWeighting()
-        >>> A = WeightedAggregator(W)
+        >>> A = MGDA()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([1.1921e-07, 1.0000e+00, 1.0000e+00])
-
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.6000, 0.4000])
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
+        super().__init__(weighting=_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(epsilon={self.weighting.epsilon}, "
+            f"max_iters={self.weighting.max_iters})"
+        )
+
+
+class _MGDAWeighting(_Weighting):
+    r"""
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm
+    2 of `Multi-Task Learning as Multi-Objective Optimization
+    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+
+    :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
+    :param max_iters: The maximum number of iterations of the optimization loop.
+    """
+
+    def __init__(self, epsilon: float, max_iters: int):
         super().__init__()
         self.epsilon = epsilon
         self.max_iters = max_iters
@@ -67,6 +83,3 @@ class MGDAWeighting(Weighting):
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self._frank_wolfe_solver(matrix)
         return weights
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(epsilon={self.epsilon}, max_iters={self.max_iters})"

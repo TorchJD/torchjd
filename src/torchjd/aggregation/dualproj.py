@@ -5,27 +5,27 @@ import torch
 from qpsolvers import solve_qp
 from torch import Tensor
 
-from torchjd.aggregation._utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation._gramian_utils import _compute_normalized_gramian
+from torchjd.aggregation._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
+from torchjd.aggregation._str_utils import _vector_to_str
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class DualProjWrapper(Weighting):
+class DualProj(_WeightedAggregator):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases.Weighting` that changes the extracted
-    weight vector such the corresponding aggregation is projected onto the dual cone of the rows
-    of the input matrix. This corresponds to the solution to equation 11 of `Gradient Episodic
-    Memory for Continual Learning
+    :class:`~torchjd.aggregation.bases.Aggregator` that averages the rows of the input matrix, and
+    projects the result onto the dual cone of the rows of the matrix. This corresponds to the
+    solution to Equation 11 of `Gradient Episodic Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases.Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
+        the simple averaging.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
-    :param solver: The solver used to optimize the underlying optimization problem. Defaults to
-        ``'quadprog'``.
+    :param solver: The solver used to optimize the underlying optimization problem.
 
     .. admonition::
         Example
@@ -33,31 +33,71 @@ class DualProjWrapper(Weighting):
         Use DualProj to aggregate a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import (
-        ...     WeightedAggregator,
-        ...     MeanWeighting,
-        ...     DualProjWrapper,
-        ... )
+        >>> from torchjd.aggregation import DualProj
         >>>
-        >>> W = DualProjWrapper(MeanWeighting())
-        >>> A = WeightedAggregator(W)
+        >>> A = DualProj()
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([0.5563, 1.1109, 1.1109])
-
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.6109, 0.5000])
     """
 
     def __init__(
         self,
-        weighting: Weighting,
+        pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
+    ):
+        _check_pref_vector(pref_vector)
+        weighting = _pref_vector_to_weighting(pref_vector)
+        self._pref_vector = pref_vector
+
+        super().__init__(
+            weighting=_DualProjWrapper(
+                weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
+            )
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
+            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps}, "
+            f"solver={repr(self.weighting.solver)})"
+        )
+
+    def __str__(self) -> str:
+        if self._pref_vector is None:
+            suffix = ""
+        else:
+            suffix = f"([{_vector_to_str(self._pref_vector)}])"
+        return f"DualProj{suffix}"
+
+
+class _DualProjWrapper(_Weighting):
+    """
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
+    weight vector such the corresponding aggregation is projected onto the dual cone of the rows
+    of the input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic
+    Memory for Continual Learning
+    <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
+
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
+        responsible for extracting weight vectors from the input matrices.
+    :param norm_eps: A small value to avoid division by zero when normalizing.
+    :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
+        numerical errors when computing the gramian, it might not exactly be positive definite.
+        This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
+        ensures that it is positive definite.
+    :param solver: The solver used to optimize the underlying optimization problem.
+    """
+
+    def __init__(
+        self,
+        weighting: _Weighting,
+        norm_eps: float,
+        reg_eps: float,
+        solver: Literal["quadprog"],
     ):
         super().__init__()
         self.weighting = weighting
@@ -89,12 +129,3 @@ class DualProjWrapper(Weighting):
             device=matrix.device, dtype=matrix.dtype
         )
         return projection_weights + weights
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(weighting={repr(self.weighting)}, norm_eps="
-            f"{self.norm_eps}, reg_eps={self.reg_eps}, solver={repr(self.solver)})"
-        )
-
-    def __str__(self) -> str:
-        return f"DualProj {self.weighting}"

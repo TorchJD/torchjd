@@ -10,21 +10,20 @@ from dash.html import Figure
 from plots._utils import Plotter, angle_to_coord, coord_to_angle
 
 from torchjd.aggregation import (
-    AlignedMTLWrapper,
-    CAGradWeighting,
-    DualProjWrapper,
+    IMTLG,
+    MGDA,
+    AlignedMTL,
+    CAGrad,
+    DualProj,
     GradDrop,
-    IMTLGWeighting,
-    MeanWeighting,
-    MGDAWeighting,
-    PCGradWeighting,
-    RandomWeighting,
-    SumWeighting,
+    Mean,
+    NashMTL,
+    PCGrad,
+    Random,
+    Sum,
     TrimmedMean,
-    UPGradWrapper,
-    WeightedAggregator,
+    UPGrad,
 )
-from torchjd.aggregation.nash_mtl import NashMTLWeighting
 
 MIN_LENGTH = 0.01
 MAX_LENGTH = 25.0
@@ -42,24 +41,21 @@ def main():
         ]
     )
 
-    weightings = [
-        AlignedMTLWrapper(MeanWeighting()),
-        CAGradWeighting(c=0.5),
-        DualProjWrapper(MeanWeighting()),
-        IMTLGWeighting(),
-        MeanWeighting(),
-        MGDAWeighting(),
-        NashMTLWeighting(n_tasks=matrix.shape[0]),
-        PCGradWeighting(),
-        RandomWeighting(),
-        SumWeighting(),
-        UPGradWrapper(MeanWeighting()),
-    ]
-
     aggregators = [
+        AlignedMTL(),
+        CAGrad(c=0.5),
+        DualProj(),
         GradDrop(),
+        IMTLG(),
+        Mean(),
+        MGDA(),
+        NashMTL(n_tasks=matrix.shape[0]),
+        PCGrad(),
+        Random(),
+        Sum(),
         TrimmedMean(trim_number=1),
-    ] + [WeightedAggregator(weighting) for weighting in weightings]
+        UPGrad(),
+    ]
 
     aggregators_dict = {str(aggregator): aggregator for aggregator in aggregators}
 

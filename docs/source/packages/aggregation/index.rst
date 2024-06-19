@@ -23,4 +23,3 @@ Aggregation
     aligned_mtl.rst
     krum.rst
     trimmed_mean.rst
-    normalizing.rst

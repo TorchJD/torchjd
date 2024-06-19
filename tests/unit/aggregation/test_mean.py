@@ -4,19 +4,15 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import MeanWeighting, WeightedAggregator
+from torchjd.aggregation import Mean
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(MeanWeighting())])
+@pytest.mark.parametrize("aggregator", [Mean()])
 class TestMean(ExpectedShapeProperty, PermutationInvarianceProperty):
     pass
 
 
 def test_representations():
-    weighting = MeanWeighting()
-    assert repr(weighting) == "MeanWeighting()"
-    assert str(weighting) == "MeanWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == "WeightedAggregator(weighting=MeanWeighting())"
-    assert str(aggregator) == "Mean"
+    A = Mean()
+    assert repr(A) == "Mean()"
+    assert str(A) == "Mean"

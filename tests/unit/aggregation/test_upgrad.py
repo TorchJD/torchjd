@@ -7,36 +7,26 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import MeanWeighting, UPGradWrapper, WeightedAggregator
+from torchjd.aggregation import UPGrad
+from torchjd.aggregation.mean import _MeanWeighting
+from torchjd.aggregation.upgrad import _UPGradWrapper
 
 
-@pytest.mark.parametrize(
-    "aggregator",
-    [WeightedAggregator(UPGradWrapper(MeanWeighting()))],
-)
+@pytest.mark.parametrize("aggregator", [UPGrad()])
 class TestUPGrad(ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 
-@pytest.mark.parametrize(
-    "shape",
-    [
-        (5, 7),
-        (9, 37),
-        (2, 14),
-        (32, 114),
-        (50, 100),
-    ],
-)
+@pytest.mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
 def test_upgrad_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = torch.randn(shape)
     weights = torch.rand(shape[0])
 
     gramian = matrix @ matrix.T
 
-    upgrad = UPGradWrapper(MeanWeighting(), norm_eps=0.0001, reg_eps=0.0, solver="quadprog")
+    W = _UPGradWrapper(_MeanWeighting(), norm_eps=0.0001, reg_eps=0.0, solver="quadprog")
 
-    lagrange_multiplier = upgrad._compute_lagrangian(matrix, weights)
+    lagrange_multiplier = W._compute_lagrangian(matrix, weights)
 
     positive_lagrange_multiplier = lagrange_multiplier[lagrange_multiplier >= 0]
     assert_close(
@@ -53,18 +43,6 @@ def test_upgrad_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
 
 
 def test_representations():
-    weighting = UPGradWrapper(
-        weighting=MeanWeighting(), norm_eps=0.0001, reg_eps=0.0001, solver="quadprog"
-    )
-    assert repr(weighting) == (
-        "UPGradWrapper(weighting=MeanWeighting(), norm_eps=0.0001, "
-        "reg_eps=0.0001, solver='quadprog')"
-    )
-    assert str(weighting) == "UPGrad MeanWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=UPGradWrapper(weighting=MeanWeighting(), "
-        "norm_eps=0.0001, reg_eps=0.0001, solver='quadprog'))"
-    )
-    assert str(aggregator) == "UPGrad Mean"
+    A = UPGrad(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver="quadprog")
+    assert repr(A) == "UPGrad(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver='quadprog')"
+    assert str(A) == "UPGrad"

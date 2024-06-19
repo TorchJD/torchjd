@@ -1,12 +1,13 @@
 from torch import Tensor
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation._str_utils import _vector_to_str
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class ConstantWeighting(Weighting):
+class Constant(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that returns constant, pre-determined
-    weights.
+    :class:`~torchjd.aggregation.bases.Aggregator` that makes a linear combination of the rows of
+    the provided matrix, with constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
 
@@ -16,19 +17,32 @@ class ConstantWeighting(Weighting):
         Compute a linear combination of the rows of a matrix.
 
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, ConstantWeighting
+        >>> from torchjd.aggregation import Constant
         >>>
-        >>> W = ConstantWeighting(tensor([1., 2.]))
-        >>> A = WeightedAggregator(W)
+        >>> A = Constant(tensor([1., 2.]))
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([8., 3., 3.])
+    """
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
+    def __init__(self, weights: Tensor):
+        super().__init__(weighting=_ConstantWeighting(weights=weights))
 
-        >>> W(J)
-        tensor([1., 2.])
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(weights={repr(self.weighting.weights)})"
+
+    def __str__(self) -> str:
+        weights_str = _vector_to_str(self.weighting.weights)
+        return f"{self.__class__.__name__}([{weights_str}])"
+
+
+class _ConstantWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that returns constant, pre-determined
+    weights.
+
+    :param weights: The weights associated to the rows of the input matrices.
     """
 
     def __init__(self, weights: Tensor):
@@ -51,10 +65,3 @@ class ConstantWeighting(Weighting):
                 f"Parameter `matrix` should have {len(self.weights)} rows (the number of specified "
                 f"weights). Found `matrix` with {matrix.shape[0]} rows."
             )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(weights={repr(self.weights)})"
-
-    def __str__(self) -> str:
-        weights_str = ", ".join(["{:.2f}".format(weight).rstrip("0") for weight in self.weights])
-        return f"{self.__class__.__name__}([{weights_str}])"

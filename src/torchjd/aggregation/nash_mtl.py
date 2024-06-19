@@ -29,21 +29,20 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Weighting
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class NashMTLWeighting(Weighting):
+class NashMTL(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Weighting` that extracts weights using the
-    step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
-    <https://arxiv.org/pdf/2202.01017.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` as proposed in Algorithm 1 of
+    `Multi-Task Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
         matrices.
     :param max_norm: Maximum value of the norm of :math:`A^T w`.
     :param update_weights_every: A parameter determining how often the actual weighting should be
         performed. A larger value means that the same weights will be re-used for more calls to the
-        weighting.
+        aggregator.
     :param optim_niter: The number of iterations of the underlying optimization process.
 
     .. admonition::
@@ -55,23 +54,17 @@ class NashMTLWeighting(Weighting):
         >>> warnings.filterwarnings("ignore")
         >>>
         >>> from torch import tensor
-        >>> from torchjd.aggregation import WeightedAggregator, NashMTLWeighting
+        >>> from torchjd.aggregation import NashMTL
         >>>
-        >>> W = NashMTLWeighting(n_tasks=2)
-        >>> A = WeightedAggregator(W)
+        >>> A = NashMTL(n_tasks=2)
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
         tensor([0.0542, 0.7061, 0.7061])
 
-        We can also call the weighting directly to get the weights vector associated to the matrix:
-
-        >>> W(J)
-        tensor([0.4182, 0.2878])
-
-    .. note::
+    .. warning::
         This implementation was adapted from the `official implementation
-        <https://github.com/AvivNavon/nash-mtl/tree/main>`_.
+        <https://github.com/AvivNavon/nash-mtl/tree/main>`_, which has some flaws. Use with caution.
 
     .. warning::
         The aggregator is stateful. Its output will thus depend not only on the input matrix, but
@@ -85,6 +78,45 @@ class NashMTLWeighting(Weighting):
         max_norm: float = 1.0,
         update_weights_every: int = 1,
         optim_niter: int = 20,
+    ):
+        super().__init__(
+            weighting=_NashMTLWeighting(
+                n_tasks=n_tasks,
+                max_norm=max_norm,
+                update_weights_every=update_weights_every,
+                optim_niter=optim_niter,
+            )
+        )
+
+    def reset(self):
+        """Resets the internal state of the algorithm."""
+        self.weighting.reset()
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n_tasks={self.weighting.n_tasks})"
+
+
+class _NashMTLWeighting(_Weighting):
+    """
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
+    step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
+    <https://arxiv.org/pdf/2202.01017.pdf>`_.
+
+    :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
+        matrices.
+    :param max_norm: Maximum value of the norm of :math:`A^T w`.
+    :param update_weights_every: A parameter determining how often the actual weighting should be
+        performed. A larger value means that the same weights will be re-used for more calls to the
+        weighting.
+    :param optim_niter: The number of iterations of the underlying optimization process.
+    """
+
+    def __init__(
+        self,
+        n_tasks: int,
+        max_norm: float,
+        update_weights_every: int,
+        optim_niter: int,
     ):
         super().__init__()
 

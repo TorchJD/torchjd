@@ -1,19 +1,15 @@
 import pytest
 from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
-from torchjd.aggregation import RandomWeighting, WeightedAggregator
+from torchjd.aggregation import Random
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(RandomWeighting())])
+@pytest.mark.parametrize("aggregator", [Random()])
 class TestRGW(ExpectedShapeProperty):
     pass
 
 
 def test_representations():
-    weighting = RandomWeighting()
-    assert repr(weighting) == "RandomWeighting()"
-    assert str(weighting) == "RandomWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == "WeightedAggregator(weighting=RandomWeighting())"
-    assert str(aggregator) == "Random"
+    A = Random()
+    assert repr(A) == "Random()"
+    assert str(A) == "Random"

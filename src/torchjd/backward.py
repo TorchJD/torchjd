@@ -26,18 +26,17 @@ def backward(
             >>> import torch
             >>>
             >>> from torchjd import backward
-            >>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
-            >>>
-            >>> W = UPGradWrapper(MeanWeighting())
-            >>> A = WeightedAggregator(W)
+            >>> from torchjd.aggregation import UPGrad
             >>>
             >>> param = torch.tensor([1., 2.], requires_grad=True)
-            >>>
             >>> # Compute arbitrary quantities that are function of param
             >>> y1 = torch.tensor([-1., 1.]) @ param
             >>> y2 = (param ** 2).sum()
             >>>
-            >>> backward([y1, y2], [param], A)
+            >>> backward([y1, y2], [param], A=UPGrad())
+            >>>
+            >>> param.grad
+            tensor([0.5000, 2.5000])
 
         The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.

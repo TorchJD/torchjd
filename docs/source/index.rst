@@ -55,7 +55,7 @@ Import several classes from torch and torchjd:
 >>> from torch.optim import SGD
 >>>
 >>> import torchjd
->>> from torchjd.aggregation import WeightedAggregator, UPGradWrapper, MeanWeighting
+>>> from torchjd.aggregation import UPGrad
 
 Define the model and the optimizer, as usual:
 
@@ -64,8 +64,7 @@ Define the model and the optimizer, as usual:
 
 Define the aggregator that will be used to combine the Jacobian matrix:
 
->>> W = UPGradWrapper(MeanWeighting())
->>> A = WeightedAggregator(W)
+>>> A = UPGrad()
 
 In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
 averages the results. This ensures that locally, no loss will be negatively affected by the update.

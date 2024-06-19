@@ -3,10 +3,13 @@ import torch
 from torch.testing import assert_close
 from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
-from torchjd.aggregation import PCGradWeighting, SumWeighting, UPGradWrapper, WeightedAggregator
+from torchjd.aggregation import PCGrad
+from torchjd.aggregation.pcgrad import _PCGradWeighting
+from torchjd.aggregation.sum import _SumWeighting
+from torchjd.aggregation.upgrad import _UPGradWrapper
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(PCGradWeighting())])
+@pytest.mark.parametrize("aggregator", [PCGrad()])
 class TestPCGrad(ExpectedShapeProperty):
     pass
 
@@ -34,8 +37,10 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
 
     matrix = torch.randn(shape)
 
-    pc_grad_weighting = PCGradWeighting()
-    upgrad_sum_weighting = UPGradWrapper(SumWeighting())
+    pc_grad_weighting = _PCGradWeighting()
+    upgrad_sum_weighting = _UPGradWrapper(
+        _SumWeighting(), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
+    )
 
     result = pc_grad_weighting(matrix)
     expected = upgrad_sum_weighting(matrix)
@@ -44,10 +49,6 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
 
 
 def test_representations():
-    weighting = PCGradWeighting()
-    assert repr(weighting) == "PCGradWeighting()"
-    assert str(weighting) == "PCGradWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == "WeightedAggregator(weighting=PCGradWeighting())"
-    assert str(aggregator) == "PCGrad"
+    A = PCGrad()
+    assert repr(A) == "PCGrad()"
+    assert str(A) == "PCGrad"

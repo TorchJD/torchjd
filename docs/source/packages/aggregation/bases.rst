@@ -1,7 +1,7 @@
 :hide-toc:
 
-Base classes
-============
+Aggregator (abstract)
+=====================
 
 .. automodule:: torchjd.aggregation.bases
     :members:

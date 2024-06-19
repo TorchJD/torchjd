@@ -6,9 +6,10 @@ from torchjd.aggregation.bases import Aggregator
 
 class TrimmedMean(Aggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that trims the most extreme values of the input
-    matrix, before averaging its rows, as defined in `Byzantine-Robust Distributed Learning: Towards
-    Optimal Statistical Rates <https://proceedings.mlr.press/v80/yin18a/yin18a.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` for adversarial federated learning, that trims
+    the most extreme values of the input matrix, before averaging its rows, as defined in
+    `Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates
+    <https://proceedings.mlr.press/v80/yin18a/yin18a.pdf>`_.
 
     :param trim_number: The number of maximum and minimum values to remove from each column of the
         input matrix (note that ``2 * trim_number`` values are removed from each column).
@@ -29,6 +30,7 @@ class TrimmedMean(Aggregator):
         ...     [-1e10,  1e10],
         ...     [    2,     2],
         ... ])
+        >>>
         >>> A(J)
         tensor([1.5000, 2.5000])
     """

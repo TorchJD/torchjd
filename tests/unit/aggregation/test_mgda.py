@@ -7,10 +7,11 @@ from unit.aggregation.utils.property_testers import (
     PermutationInvarianceProperty,
 )
 
-from torchjd.aggregation import MGDAWeighting, WeightedAggregator
+from torchjd.aggregation import MGDA
+from torchjd.aggregation.mgda import _MGDAWeighting
 
 
-@pytest.mark.parametrize("aggregator", [WeightedAggregator(MGDAWeighting())])
+@pytest.mark.parametrize("aggregator", [MGDA()])
 class TestMGDA(ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
@@ -27,7 +28,7 @@ class TestMGDA(ExpectedShapeProperty, NonConflictingProperty, PermutationInvaria
 )
 def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = torch.randn(shape)
-    weighting = MGDAWeighting(epsilon=1e-05, max_iters=10000)
+    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=10000)
 
     gramian = matrix @ matrix.T
 
@@ -50,12 +51,6 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
 
 
 def test_representations():
-    weighting = MGDAWeighting(epsilon=0.001, max_iters=100)
-    assert repr(weighting) == "MGDAWeighting(epsilon=0.001, max_iters=100)"
-    assert str(weighting) == "MGDAWeighting"
-
-    aggregator = WeightedAggregator(weighting)
-    assert repr(aggregator) == (
-        "WeightedAggregator(weighting=MGDAWeighting(epsilon=0.001, max_iters=100))"
-    )
-    assert str(aggregator) == "MGDA"
+    A = MGDA(epsilon=0.001, max_iters=100)
+    assert repr(A) == "MGDA(epsilon=0.001, max_iters=100)"
+    assert str(A) == "MGDA"

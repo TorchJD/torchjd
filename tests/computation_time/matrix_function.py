@@ -2,7 +2,7 @@ import torch
 from contexttimer import Timer
 from torch import Tensor
 
-from torchjd.aggregation.mgda import MGDAWeighting
+from torchjd.aggregation.mgda import _MGDAWeighting
 
 _SHAPES = [
     (1, 1),
@@ -45,7 +45,7 @@ def get_computation_milliseconds(func: callable, matrix: Tensor) -> float:
 
 
 def main():
-    mgda = MGDAWeighting()
+    mgda = _MGDAWeighting()
     func = mgda.forward
 
     for n_rows, n_cols in _SHAPES:
