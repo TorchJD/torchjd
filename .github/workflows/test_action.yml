@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm sync -d -G test
+          pdm install -d -G test --frozen-lockfile
       - name: Run unit tests
         run: pdm run pytest tests/unit
       - name: Run doc tests
