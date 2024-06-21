@@ -1,0 +1,28 @@
+name: Test action
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Testing:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pdm sync -d -G test
+      - name: Run unit tests
+        run: pdm run pytest tests/unit
+      - name: Run doc tests
+        run: pdm run pytest tests/doc
