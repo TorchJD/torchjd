@@ -2,26 +2,30 @@ import torch
 from torch.testing import assert_close
 
 
-def test_mean():
+def test_aligned_mtl():
     from torch import tensor
 
-    from torchjd.aggregation import Mean
+    from torchjd.aggregation import AlignedMTL
 
-    A = Mean()
+    A = AlignedMTL()
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
-    assert_close(A(J), tensor([1.0, 1.0, 1.0]), rtol=0, atol=1e-4)
+    assert_close(A(J), tensor([0.2133, 0.9673, 0.9673]), rtol=0, atol=1e-4)
 
 
-def test_sum():
+def test_cagrad():
+    import warnings
+
+    warnings.filterwarnings("ignore")
+
     from torch import tensor
 
-    from torchjd.aggregation import Sum
+    from torchjd.aggregation import CAGrad
 
-    A = Sum()
+    A = CAGrad(c=0.5)
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
-    assert_close(A(J), tensor([2.0, 2.0, 2.0]), rtol=0, atol=1e-4)
+    assert_close(A(J), tensor([0.1835, 1.2041, 1.2041]), rtol=0, atol=1e-4)
 
 
 def test_constant():
@@ -35,28 +39,6 @@ def test_constant():
     assert_close(A(J), tensor([8.0, 3.0, 3.0]), rtol=0, atol=1e-4)
 
 
-def test_upgrad():
-    from torch import tensor
-
-    from torchjd.aggregation import UPGrad
-
-    A = UPGrad()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([0.2929, 1.9004, 1.9004]), rtol=0, atol=1e-4)
-
-
-def test_mgda():
-    from torch import tensor
-
-    from torchjd.aggregation import MGDA
-
-    A = MGDA()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([1.1921e-07, 1.0000e00, 1.0000e00]), rtol=0, atol=1e-4)
-
-
 def test_dualproj():
     from torch import tensor
 
@@ -66,17 +48,6 @@ def test_dualproj():
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
     assert_close(A(J), tensor([0.5563, 1.1109, 1.1109]), rtol=0, atol=1e-4)
-
-
-def test_pcgrad():
-    from torch import tensor
-
-    from torchjd.aggregation import PCGrad
-
-    A = PCGrad()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([0.5848, 3.8012, 3.8012]), rtol=0, atol=1e-4)
 
 
 def test_graddrop():
@@ -103,60 +74,6 @@ def test_imtl_g():
     assert_close(A(J), tensor([0.0767, 1.0000, 1.0000]), rtol=0, atol=1e-4)
 
 
-def test_cagrad():
-    import warnings
-
-    warnings.filterwarnings("ignore")
-
-    from torch import tensor
-
-    from torchjd.aggregation import CAGrad
-
-    A = CAGrad(c=0.5)
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([0.1835, 1.2041, 1.2041]), rtol=0, atol=1e-4)
-
-
-def test_random():
-    from torch import tensor
-
-    from torchjd.aggregation import Random
-
-    A = Random()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    _ = torch.manual_seed(0)
-    assert_close(A(J), tensor([-2.6229, 1.0000, 1.0000]), rtol=0, atol=1e-4)
-    assert_close(A(J), tensor([5.3976, 1.0000, 1.0000]), rtol=0, atol=1e-4)
-
-
-def test_nash_mtl():
-    import warnings
-
-    warnings.filterwarnings("ignore")
-
-    from torch import tensor
-
-    from torchjd.aggregation import NashMTL
-
-    A = NashMTL(n_tasks=2)
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([0.0542, 0.7061, 0.7061]), rtol=0, atol=1e-4)
-
-
-def test_aligned_mtl():
-    from torch import tensor
-
-    from torchjd.aggregation import AlignedMTL
-
-    A = AlignedMTL()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-
-    assert_close(A(J), tensor([0.2133, 0.9673, 0.9673]), rtol=0, atol=1e-4)
-
-
 def test_krum():
     from torch import tensor
 
@@ -176,6 +93,78 @@ def test_krum():
     assert_close(A(J), tensor([1.2500, 0.7500, 1.5000]), rtol=0, atol=1e-4)
 
 
+def test_mean():
+    from torch import tensor
+
+    from torchjd.aggregation import Mean
+
+    A = Mean()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([1.0, 1.0, 1.0]), rtol=0, atol=1e-4)
+
+
+def test_mgda():
+    from torch import tensor
+
+    from torchjd.aggregation import MGDA
+
+    A = MGDA()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([1.1921e-07, 1.0000e00, 1.0000e00]), rtol=0, atol=1e-4)
+
+
+def test_nash_mtl():
+    import warnings
+
+    warnings.filterwarnings("ignore")
+
+    from torch import tensor
+
+    from torchjd.aggregation import NashMTL
+
+    A = NashMTL(n_tasks=2)
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([0.0542, 0.7061, 0.7061]), rtol=0, atol=1e-4)
+
+
+def test_pcgrad():
+    from torch import tensor
+
+    from torchjd.aggregation import PCGrad
+
+    A = PCGrad()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([0.5848, 3.8012, 3.8012]), rtol=0, atol=1e-4)
+
+
+def test_random():
+    from torch import tensor
+
+    from torchjd.aggregation import Random
+
+    A = Random()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    _ = torch.manual_seed(0)
+    assert_close(A(J), tensor([-2.6229, 1.0000, 1.0000]), rtol=0, atol=1e-4)
+    assert_close(A(J), tensor([5.3976, 1.0000, 1.0000]), rtol=0, atol=1e-4)
+
+
+def test_sum():
+    from torch import tensor
+
+    from torchjd.aggregation import Sum
+
+    A = Sum()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([2.0, 2.0, 2.0]), rtol=0, atol=1e-4)
+
+
 def test_trimmed_mean():
     from torch import tensor
 
@@ -192,3 +181,14 @@ def test_trimmed_mean():
     )
 
     assert_close(A(J), tensor([1.5000, 2.5000]), rtol=0, atol=1e-4)
+
+
+def test_upgrad():
+    from torch import tensor
+
+    from torchjd.aggregation import UPGrad
+
+    A = UPGrad()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([0.2929, 1.9004, 1.9004]), rtol=0, atol=1e-4)

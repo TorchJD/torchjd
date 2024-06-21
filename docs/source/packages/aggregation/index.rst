@@ -8,18 +8,18 @@ Aggregation
     :hidden:
 
     bases.rst
-    mean.rst
-    sum.rst
+    aligned_mtl.rst
+    cagrad.rst
     constant.rst
-    upgrad.rst
-    mgda.rst
     dualproj.rst
-    pcgrad.rst
     graddrop.rst
     imtl_g.rst
-    cagrad.rst
-    random.rst
-    nash_mtl.rst
-    aligned_mtl.rst
     krum.rst
+    mean.rst
+    mgda.rst
+    nash_mtl.rst
+    pcgrad.rst
+    random.rst
+    sum.rst
     trimmed_mean.rst
+    upgrad.rst
