@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Testing:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install default and test dependencies
+        run: pdm install --group test --frozen-lockfile
+      - name: Run unit tests
+        run: pdm run pytest tests/unit
+      - name: Run doc tests
+        run: pdm run pytest tests/doc
