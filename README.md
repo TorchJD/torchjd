@@ -10,7 +10,10 @@ with multiple objectives.
 
 ## Installation
 <!-- start installation -->
-
+TorchJD can be installed directly with pip:
+```bash
+pip install torchjd
+```
 <!-- end installation -->
 
 ## Compatibility
