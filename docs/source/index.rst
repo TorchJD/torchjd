@@ -24,6 +24,9 @@ with multiple objectives.
     in future versions. Use with caution in production environments and be prepared for potential
     breaking changes in upcoming releases.
 
+TorchJD is open-source, under MIT License. The source code is available on
+`GitHub <https://github.com/TorchJD/torchjd>`_.
+
 .. toctree::
     :maxdepth: 2
     :caption: Getting Started
