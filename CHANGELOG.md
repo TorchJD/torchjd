@@ -41,5 +41,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests:
   - Unit tests.
   - Documentation tests.
-  - Computation time test.
   - Plotting utilities to verify qualitatively that aggregators work as expected.
