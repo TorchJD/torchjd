@@ -24,12 +24,6 @@ with multiple objectives.
     in future versions. Use with caution in production environments and be prepared for potential
     breaking changes in upcoming releases.
 
-API
-===
-
-- **backward**: Provides a function to compute the backward pass of an iteration of Jacobian descent.
-- **aggregation**: Contains the implementation of aggregators such as UPGrad.
-
 .. toctree::
     :maxdepth: 2
     :caption: Getting Started
