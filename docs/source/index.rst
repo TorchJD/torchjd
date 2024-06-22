@@ -36,8 +36,8 @@ API
     :caption: API Reference
     :hidden:
 
-    packages/backward.rst
-    packages/aggregation/index.rst
+    docs/main/backward.rst
+    docs/main/aggregation/index.rst
 
 Usage
 =====
