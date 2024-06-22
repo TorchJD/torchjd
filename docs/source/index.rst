@@ -98,6 +98,14 @@ The model's parameters have been updated!
 
 .. toctree::
     :maxdepth: 2
+    :caption: Getting Started
+    :hidden:
+
+    installation.md
+    examples/index.rst
+
+.. toctree::
+    :maxdepth: 2
     :caption: API Reference
     :hidden:
 

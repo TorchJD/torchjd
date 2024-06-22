@@ -9,7 +9,9 @@ with multiple objectives.
 > breaking changes in upcoming releases.
 
 ## Installation
+<!-- start installation -->
 
+<!-- end installation -->
 ## Contribution
 
 Please read the [Contribution page](CONTRIBUTING.md).
