@@ -98,7 +98,6 @@ The model's parameters have been updated!
 
 .. toctree::
     :maxdepth: 2
-    :name: api reference
     :caption: API Reference
     :hidden:
 
