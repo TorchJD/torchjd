@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pages: write
-      id-token: read
+      id-token: write
     needs: build
     steps:
       - name: Setup Pages
