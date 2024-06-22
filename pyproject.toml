@@ -2,6 +2,7 @@
 name = "torchjd"
 version = "0.1.0"
 description = "Library for Jacobian Descent with PyTorch."
+readme = "README.md"
 authors = [
 	{name = "Valerian Rey", email = "valerian.rey@gmail.com"},
 	{name = "Pierre Quinton", email = "pierre.quinton@gmail.com"}
