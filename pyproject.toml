@@ -2,6 +2,7 @@
 name = "torchjd"
 version = "0.1.0"
 description = "Library for Jacobian Descent with PyTorch."
+readme = "README.md"
 authors = [
 	{name = "Valerian Rey", email = "valerian.rey@gmail.com"},
 	{name = "Pierre Quinton", email = "pierre.quinton@gmail.com"}
@@ -14,6 +15,26 @@ dependencies = [
     "qpsolvers>=1.0.1",  # Does not work before 1.0.1
     "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
 ]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Developers",
+	"Intended Audience :: Science/Research",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Topic :: Scientific/Engineering",
+	"Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://torchjd.org/"
+Documentation = "https://torchjd.org/"
+Source = "https://github.com/TorchJD/torchjd"
+Changelog = "https://github.com/TorchJD/torchjd/blob/main/CHANGELOG.md"
 
 [tool.pdm.dev-dependencies]
 check = [
