@@ -8,8 +8,6 @@ This section contains some usage examples for TorchJD.
   <../docs/main/aggregation/upgrad>` aggregator.
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Examples
     :hidden:
 
     basic_usage.rst

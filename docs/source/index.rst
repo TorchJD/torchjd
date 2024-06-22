@@ -28,7 +28,6 @@ TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
 
 .. toctree::
-    :maxdepth: 2
     :caption: Getting Started
     :hidden:
 
@@ -36,7 +35,6 @@ TorchJD is open-source, under MIT License. The source code is available on
     examples/index.rst
 
 .. toctree::
-    :maxdepth: 2
     :caption: API Reference
     :hidden:
 
