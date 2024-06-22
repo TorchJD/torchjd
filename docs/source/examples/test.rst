@@ -1,5 +1,0 @@
-Test
-====
-
-
->>> import torchjd

@@ -6,4 +6,4 @@ Examples
     :caption: Examples
     :hidden:
 
-    test.rst
+    basic_usage.rst
