@@ -1,9 +1,6 @@
 name: Build and deploy docs
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -46,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pages: write
-      id-token: write
+      id-token: read
     needs: build
     steps:
       - name: Setup Pages
