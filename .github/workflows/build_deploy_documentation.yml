@@ -1,17 +1,11 @@
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Build and deploy docs
 
 on:
   # Runs on pushes targeting the default branch
-  # push:
-  #   branches: ["main"]
-
+  push:
+    branches: ["main"]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # Cancels jobs that are in progress if a new job arrives.
@@ -25,12 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
@@ -52,8 +44,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     needs: build
     steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
