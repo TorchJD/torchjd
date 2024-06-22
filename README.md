@@ -8,6 +8,8 @@ with multiple objectives.
 > in future versions. Use with caution in production environments and be prepared for potential
 > breaking changes in upcoming releases.
 
+The full documentation is available at [torchjd.org](https://torchjd.org).
+
 ## Installation
 <!-- start installation -->
 TorchJD can be installed directly with pip:
