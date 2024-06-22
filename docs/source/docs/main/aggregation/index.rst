@@ -3,7 +3,6 @@ Aggregation
 
 .. toctree::
     :maxdepth: 2
-    :name: aggregation
     :caption: Aggregation
     :hidden:
 
