@@ -30,15 +30,6 @@ API
 - **backward**: Provides a function to compute the backward pass of an iteration of Jacobian descent.
 - **aggregation**: Contains the implementation of aggregators such as UPGrad.
 
-.. toctree::
-    :maxdepth: 2
-    :name: api reference
-    :caption: API Reference
-    :hidden:
-
-    docs/main/backward.rst
-    docs/main/aggregation/index.rst
-
 Usage
 =====
 
@@ -103,3 +94,13 @@ Update each parameter based on its ``.grad`` field, using the ``optimizer``:
 >>> optimizer.step()
 
 The model's parameters have been updated!
+
+
+.. toctree::
+    :maxdepth: 2
+    :name: api reference
+    :caption: API Reference
+    :hidden:
+
+    docs/main/backward.rst
+    docs/main/aggregation/index.rst
