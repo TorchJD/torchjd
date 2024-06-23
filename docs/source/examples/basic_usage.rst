@@ -2,13 +2,13 @@ Basic Usage
 ===========
 
 
-This example shows how to use torchjd to perform an iteration of Jacobian Descent on a regression
+This example shows how to use TorchJD to perform an iteration of Jacobian Descent on a regression
 model. In this example, a batch of inputs is forwarded through the model and the corresponding batch
 of labels is used to compute a batch of losses. These losses are then backwarded through the model.
 The obtained Jacobian matrix, consisting of the gradients of the losses, is then aggregated using
 UPGrad, and the parameters are updated using the resulting aggregation.
 
-Import several classes from torch and torchjd:
+Import several classes from ``torch`` and ``torchjd``:
 
 >>> import torch
 >>> from torch.nn import MSELoss, Sequential, Linear, ReLU
@@ -26,8 +26,9 @@ Define the aggregator that will be used to combine the Jacobian matrix:
 
 >>> A = UPGrad()
 
-In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
-averages the results. This ensures that locally, no loss will be negatively affected by the update.
+In essence, :doc:`UPGrad <../docs/aggregation/upgrad>` projects each gradient onto the dual cone of
+the rows of the Jacobian and averages the results. This ensures that locally, no loss will be
+negatively affected by the update.
 
 Now that everything is defined, we can train the model. Define the input and the associated target:
 
@@ -43,7 +44,7 @@ We can now compute the losses associated to each element of the batch.
 >>> output = model(input)
 >>> losses = loss_fn(output, target)
 
-Note that setting `reduction='none'` is necessary to obtain the element-wise loss vector.
+Note that setting ``reduction='none'`` is necessary to obtain the element-wise loss vector.
 
 The last steps are similar to gradient descent-based optimization.
 
