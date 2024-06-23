@@ -21,3 +21,28 @@ def test_basic_usage():
     optimizer.zero_grad()
     torchjd.backward(losses, model.parameters(), A)
     optimizer.step()
+
+
+def test_ssjd():
+    import torch
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    import torchjd
+    from torchjd.aggregation import UPGrad
+
+    A = UPGrad()
+
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+    loss_fn = MSELoss(reduction="none")
+    params = model.parameters()
+    optimizer = SGD(params, lr=0.1)
+
+    x = torch.randn(16, 10)
+    y = torch.randn(16, 1)
+    y_hat = model(x)
+    losses = loss_fn(y_hat, y)
+
+    optimizer.zero_grad()
+    torchjd.backward(losses, params, A)
+    optimizer.step()

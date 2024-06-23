@@ -6,8 +6,11 @@ This section contains some usage examples for TorchJD.
 - :doc:`Basic Usage <basic_usage>` provides a toy example using :doc:`torchjd.backward
   <../docs/backward>` to make a step of Jacobian descent with the :doc:`UPGrad
   <../docs/aggregation/upgrad>` aggregator.
+- :doc:`Stochastic Sub-Jecobian Descent (SSJD) <ssjd>` provides an example to perform a
+  single step of SSJD. It compares it to a single step of SGD to emphasize the differences.
 
 .. toctree::
     :hidden:
 
     basic_usage.rst
+    ssjd.rst
