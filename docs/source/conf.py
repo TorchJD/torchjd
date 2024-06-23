@@ -36,6 +36,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "myst_parser",  # Enables markdown support
+    "sphinx_design",  # Enables side to side cards
 ]
 
 # -- Options for HTML output -------------------------------------------------
