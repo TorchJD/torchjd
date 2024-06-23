@@ -14,7 +14,7 @@ from torchjd.aggregation import Aggregator
 
 class ExpectedShapeProperty:
     """
-    This class tests that the vector returned by the `__call__` method of an `Aggregator` have the
+    This class tests that the vector returned by the `__call__` method of an `Aggregator` has the
     expected shape. Note that this property implies that the `__call__` method does not raise any
     exception.
     """
@@ -32,12 +32,7 @@ class ExpectedShapeProperty:
 
 class NonConflictingProperty:
     """
-    This class tests empirically that a given `Aggregator` has the `Non-conflicting property` (as
-    defined in `docs/source/aggregation_properties/non_conflicting.rst`).
-
-    .. info:
-        Due to numerical approximation in some `Aggregator`s, it may be that the output direction
-        has negligible negative elements. This test is lenient for such cases.
+    This class tests empirically that a given `Aggregator` satisfies the non-conflicting property.
     """
 
     @classmethod
@@ -63,7 +58,7 @@ class NonConflictingProperty:
 class PermutationInvarianceProperty:
     """
     This class tests empirically that for a given `Aggregator`, randomly permuting rows of the input
-    matrix doesn't change the aggregated vector.
+    matrix doesn't change the aggregation.
     """
 
     N_PERMUTATIONS = 5
