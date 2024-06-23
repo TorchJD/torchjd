@@ -26,8 +26,9 @@ Define the aggregator that will be used to combine the Jacobian matrix:
 
 >>> A = UPGrad()
 
-In essence, UPGrad projects each gradient onto the dual cone of the rows of the Jacobian and
-averages the results. This ensures that locally, no loss will be negatively affected by the update.
+In essence, :doc:`UPGrad <../docs/aggregation/upgrad>` projects each gradient onto the dual cone of
+the rows of the Jacobian and averages the results. This ensures that locally, no loss will be
+negatively affected by the update.
 
 Now that everything is defined, we can train the model. Define the input and the associated target:
 
