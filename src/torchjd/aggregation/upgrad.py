@@ -14,7 +14,8 @@ from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 class UPGrad(_WeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that projects each row of the input matrix onto
-    the dual cone of all rows of this matrix, and that combines the result.
+    the dual cone of all rows of this matrix, and that combines the result, as proposed in
+    `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
