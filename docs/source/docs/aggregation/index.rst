@@ -27,3 +27,7 @@ This package provides several aggregators from the literature:
     sum.rst
     trimmed_mean.rst
     upgrad.rst
+
+.. hint::
+    Most of these aggregators are analyzed theoretically in `Jacobian Descent For Multi-Objective
+    Optimization <https://arxiv.org/pdf/2406.16232>`_.
