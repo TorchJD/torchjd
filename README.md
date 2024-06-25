@@ -1,6 +1,6 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
-TorchJD is a library enabling Jacobian descent with PyTorch, for optimization of neural networks
+TorchJD is a library enabling [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch, for optimization of neural networks
 with multiple objectives.
 
 > [!IMPORTANT]
@@ -25,3 +25,14 @@ TorchJD requires python 3.10, 3.11 or 3.12. It is only compatible with recent ve
 ## Contribution
 
 Please read the [Contribution page](CONTRIBUTING.md).
+
+## Citation
+If you use TorchJD for your research, please cite:
+```
+@article{jacobian_descent,
+  title={Jacobian Descent For Multi-Objective Optimization},
+  author={Quinton, Pierre and Rey, Valérian},
+  journal={arXiv preprint arXiv:2406.16232},
+  year={2024}
+}
+```

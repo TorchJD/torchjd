@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Sum` to sum the rows of the matrix.
   - `TrimmedMean` from [Byzantine-Robust Distributed Learning: Towards
       Optimal Statistical Rates](https://proceedings.mlr.press/v80/yin18a/yin18a.pdf).
-  - `UPGrad` from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/search/?query=jacobian+descent+for+multi-objective+optimization&searchtype=all&source=header).
+  - `UPGrad` from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232).
 - `backward` function to perform a step of Jacobian descent.
 - Documentation of the public API and of some usage examples.
 - Tests:
