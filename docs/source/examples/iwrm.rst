@@ -5,6 +5,11 @@ This example shows how to use TorchJD to minimize the vector of per-instance los
 paradigm, called IWRM, is multi-objective, as opposed to the usual empirical risk minimization
 (ERM), which seeks to minimize the average loss.
 
+.. hint::
+    A proper definition of IWRM and its empirical results on some deep learning tasks are
+    available in `Jacobian Descent For Multi-Objective Optimization
+    <https://arxiv.org/pdf/2406.16232>`_.
+
 For the sake of the example, we generate a fake dataset consisting of 8 batches of 16 random input
 vectors of dimension 10, and their corresponding scalar labels. We train a very simple regression
 model to retrieve the label from the corresponding input. To minimize the average loss, we use
