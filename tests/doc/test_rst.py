@@ -6,20 +6,21 @@ def test_basic_usage():
     import torchjd
     from torchjd.aggregation import UPGrad
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
     optimizer = SGD(model.parameters(), lr=0.1)
 
     A = UPGrad()
-
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target = input.sum(dim=1, keepdim=True)  # Batch of 16 targets
+    target1 = torch.randn(16, 1)  # First batch of 16 targets
+    target2 = torch.randn(16, 1)  # Second batch of 16 targets
 
-    loss_fn = MSELoss(reduction="none")
+    loss_fn = MSELoss()
     output = model(input)
-    losses = loss_fn(output, target)
+    loss1 = loss_fn(output[:, 0], target1)
+    loss2 = loss_fn(output[:, 1], target2)
 
     optimizer.zero_grad()
-    torchjd.backward(losses, model.parameters(), A)
+    torchjd.backward([loss1, loss2], model.parameters(), A)
     optimizer.step()
 
 
