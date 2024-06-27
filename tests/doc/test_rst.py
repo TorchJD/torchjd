@@ -11,8 +11,8 @@ def test_basic_usage():
 
     A = UPGrad()
     input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target1 = torch.randn(16, 1)  # First batch of 16 targets
-    target2 = torch.randn(16, 1)  # Second batch of 16 targets
+    target1 = torch.randn(16)  # First batch of 16 targets
+    target2 = torch.randn(16)  # Second batch of 16 targets
 
     loss_fn = MSELoss()
     output = model(input)

@@ -2,11 +2,11 @@ Basic Usage
 ===========
 
 This example shows how to use TorchJD to perform an iteration of Jacobian descent on a regression
-model. In this example, a batch of inputs is forwarded through the model and two corresponding
-batches of labels are used to compute two losses. These losses are then backwarded through the
-model. The obtained Jacboain matrix, consisting of the gradients of the two losses with respect to
-the parameters, is then aggregated using doc:`UPGrad <../docs/aggregation/upgrad>`, and the
-parameters are updated using the resulting aggregation.
+model with two objectives. In this example, a batch of inputs is forwarded through the model and two
+corresponding batches of labels are used to compute two losses. These losses are then backwarded
+through the model. The obtained Jacobian matrix, consisting of the gradients of the two losses with
+respect to the parameters, is then aggregated using :doc:`UPGrad <../docs/aggregation/upgrad>`, and
+the parameters are updated using the resulting aggregation.
 
 
 
@@ -35,10 +35,10 @@ negatively affected by the update.
 Now that everything is defined, we can train the model. Define the input and the associated target:
 
 >>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
->>> target1 = torch.randn(16, 1)  # First batch of 16 targets
->>> target2 = torch.randn(16, 1)  # Second batch of 16 targets
+>>> target1 = torch.randn(16)  # First batch of 16 targets
+>>> target2 = torch.randn(16)  # Second batch of 16 targets
 
-Here, we generate fake inputs and fake labels for the sake of the example.
+Here, we generate fake inputs and labels for the sake of the example.
 
 We can now compute the losses associated to each element of the batch.
 
