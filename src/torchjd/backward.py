@@ -41,7 +41,7 @@ def backward(
         The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
 
-    :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobians
+    :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
         matrices will have one row for each value of each of these tensors.
     :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
         their ``requires_grad`` flag set to ``True``.
