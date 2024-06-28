@@ -1,14 +1,9 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
-TorchJD is a library enabling [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch, for optimization of neural networks
-with multiple objectives.
-
-> [!IMPORTANT]
-> This library is currently in an early development stage. The API is subject to significant changes
-> in future versions. Use with caution in production environments and be prepared for potential
-> breaking changes in upcoming releases.
-
-The full documentation is available at [torchjd.org](https://torchjd.org).
+TorchJD is a library enabling Jacobian descent with PyTorch, to train neural networks with multiple
+objectives. It is based on the theory from [Jacobian descent](https://arxiv.org/pdf/2406.16232) and
+several other related publications. The full documentation is available at
+[torchjd.org](https://torchjd.org).
 
 ## Installation
 <!-- start installation -->
