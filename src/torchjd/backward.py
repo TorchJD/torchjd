@@ -43,7 +43,7 @@ def backward(
 
     :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobians
         matrices will have one row for each value of each of these tensors.
-    :param inputs: The tensors with respect to which the Jacobians must be computed. These must have
+    :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
         their ``requires_grad`` flag set to ``True``.
     :param A: Aggregator to use for the aggregation of the Jacobian.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
@@ -54,24 +54,14 @@ def backward(
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
     """
-    if not (parallel_chunk_size is None or parallel_chunk_size > 0):
-        raise ValueError(
-            "`parallel_chunk_size` should be `None` or greater than `0`. (got "
-            f"{parallel_chunk_size})"
-        )
+    _check_optional_positive_chunk_size(parallel_chunk_size)
 
-    if isinstance(tensors, Tensor):
-        tensors = [tensors]
-
-    tensors_numel = sum([tensor.numel() for tensor in tensors])
-    if parallel_chunk_size is not None and parallel_chunk_size < tensors_numel and not retain_graph:
-        raise ValueError(
-            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
-            "large enough to compute all gradients in parallel."
-        )
+    tensors = _as_tensor_list(tensors)
 
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
+
+    _check_retain_graph_compatible_with_chunk_size(tensors, retain_graph, parallel_chunk_size)
 
     inputs = list(inputs)
 
@@ -93,3 +83,32 @@ def backward(
     backward_transform = store << aggregation << jac << diag << init
 
     backward_transform(EmptyTensorDict())
+
+
+def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
+    if not (parallel_chunk_size is None or parallel_chunk_size > 0):
+        raise ValueError(
+            "`parallel_chunk_size` should be `None` or greater than `0`. (got "
+            f"{parallel_chunk_size})"
+        )
+
+
+def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
+    if isinstance(tensors, Tensor):
+        output = [tensors]
+    else:
+        output = tensors
+    return output
+
+
+def _check_retain_graph_compatible_with_chunk_size(
+    tensors: list[Tensor],
+    retain_graph: bool,
+    parallel_chunk_size: int | None,
+) -> None:
+    tensors_numel = sum([tensor.numel() for tensor in tensors])
+    if parallel_chunk_size is not None and parallel_chunk_size < tensors_numel and not retain_graph:
+        raise ValueError(
+            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
+            "large enough to compute all gradients in parallel."
+        )
