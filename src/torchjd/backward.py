@@ -54,7 +54,7 @@ def backward(
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
     """
-    _check_non_negative_optional_chunk_size(parallel_chunk_size)
+    _check_optional_positive_chunk_size(parallel_chunk_size)
 
     tensors = _as_tensor_list(tensors)
 
@@ -85,7 +85,7 @@ def backward(
     backward_transform(EmptyTensorDict())
 
 
-def _check_non_negative_optional_chunk_size(parallel_chunk_size: int | None) -> None:
+def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
     if not (parallel_chunk_size is None or parallel_chunk_size > 0):
         raise ValueError(
             "`parallel_chunk_size` should be `None` or greater than `0`. (got "
