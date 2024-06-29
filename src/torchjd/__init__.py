@@ -1,1 +1,1 @@
-from torchjd.backward import backward
+from torchjd.backward.backward import backward
