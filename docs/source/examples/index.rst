@@ -10,9 +10,13 @@ This section contains some usage examples for TorchJD.
   vector of per-instance losses, using stochastic sub-Jacobian descent (SSJD). It is compared to the
   usual minimization of the average loss, called empirical risk minimization (ERM), using stochastic
   gradient descent (SGD).
+- :doc:`Multi-task Learning (MTL) <multi_task>` provides an example of multi-task learning where the
+  aggregation is performed only on the shared parameters. This is performed by using the dedicated
+  backpropagation function :doc:`torchjd.multi_task_backward <../docs/multi_task_backward>`.
 
 .. toctree::
     :hidden:
 
     basic_usage.rst
     iwrm.rst
+    multi_task.rst
