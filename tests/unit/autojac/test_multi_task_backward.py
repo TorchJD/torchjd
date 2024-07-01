@@ -120,8 +120,8 @@ def test_multi_task_backward_non_positive_chunk_size(chunk_size: int):
 )
 def test_multi_task_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
     """
-    Tests that multi_task_backward raises an error when using retain_graph=False and a chunk size that is not
-    large enough to allow differentiation of all tensors are once.
+    Tests that multi_task_backward raises an error when using retain_graph=False and a chunk size
+    that is not large enough to allow differentiation of all tensors are once.
     """
 
     A = UPGrad()
@@ -226,8 +226,8 @@ def test_multi_task_backward_empty_parameters():
 
 def test_multi_task_backward_partial_parameters():
     """
-    Tests that multi_task_backward fills the right .grad values when only a subset of the parameters are
-    specified as inputs.
+    Tests that multi_task_backward fills the right .grad values when only a subset of the parameters
+    are specified as inputs.
     """
 
     A = Mean()
