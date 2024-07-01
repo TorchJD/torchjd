@@ -3,7 +3,8 @@ from typing import Iterable, Sequence
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
-from torchjd.autojac._transform import (
+
+from ._transform import (
     EmptyTensorDict,
     Grad,
     Gradients,
@@ -15,8 +16,7 @@ from torchjd.autojac._transform import (
     Transform,
     make_aggregation,
 )
-from torchjd.autojac._transform.strategy import UnifyingStrategy
-
+from ._transform.strategy import UnifyingStrategy
 from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
