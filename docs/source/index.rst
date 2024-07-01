@@ -45,6 +45,6 @@ TorchJD is open-source, under MIT License. The source code is available on
     :caption: API Reference
     :hidden:
 
-    docs/backward.rst
-    docs/multi_task_backward.rst
+    docs/autojac/backward.rst
+    docs/autojac/multi_task_backward.rst
     docs/aggregation/index.rst
