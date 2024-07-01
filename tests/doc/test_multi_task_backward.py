@@ -13,7 +13,7 @@ def test_multi_task_backward():
     shared_parameters = [p0]
     tasks_parameters = [[p1], [p2]]
 
-    # Compute arbitrary quantities that are function of param
+    # Compute arbitrary quantities that are function of the parameters
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
     shared_representations = [r1, r2]
