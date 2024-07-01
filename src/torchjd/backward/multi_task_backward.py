@@ -138,12 +138,12 @@ def multi_task_backward(
     jac = Jac(shared_representations, shared_parameters, parallel_chunk_size, retain_graph)
 
     # Transform that defines the aggregation of the jacobians into gradients
-    aggregation = make_aggregation(UnifyingStrategy(A, shared_parameters))
+    aggregate = make_aggregation(UnifyingStrategy(A, shared_parameters))
 
     # Transform that stores the gradients with respect to the shared parameters
     store = Store(shared_parameters)
 
-    backward_transform = store << aggregation << jac << stack
+    backward_transform = store << aggregate << jac << stack
 
     backward_transform(EmptyTensorDict())
 

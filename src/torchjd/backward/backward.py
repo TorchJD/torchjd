@@ -81,11 +81,11 @@ def backward(
     jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
 
     # Transform that defines the aggregation of the jacobians into gradients
-    aggregation = make_aggregation(UnifyingStrategy(A, inputs))
+    aggregate = make_aggregation(UnifyingStrategy(A, inputs))
 
     # Transform that stores the gradients with respect to the inputs
     store = Store(inputs)
 
-    backward_transform = store << aggregation << jac << diag << init
+    backward_transform = store << aggregate << jac << diag << init
 
     backward_transform(EmptyTensorDict())
