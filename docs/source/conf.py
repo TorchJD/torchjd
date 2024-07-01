@@ -63,3 +63,7 @@ html_theme_options = {
     },
     "sidebar_hide_name": True,
 }
+
+html_js_files = [
+    ("https://stats.torchjd.org/js/script.js", {"data-domain": "torchjd.org", "defer": "defer"}),
+]
