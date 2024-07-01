@@ -3,7 +3,7 @@
 backward
 ========
 
-.. automodule:: torchjd.backward.backward
+.. automodule:: torchjd.autojac.backward
     :members:
     :undoc-members:
     :exclude-members:
