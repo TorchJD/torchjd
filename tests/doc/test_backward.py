@@ -14,4 +14,4 @@ def test_backward():
 
     backward([y1, y2], [param], A=UPGrad())
 
-    assert_close(param.grad, torch.tensor([0.5000, 2.5000]))
+    assert_close(param.grad, torch.tensor([0.5000, 2.5000]), rtol=0.0, atol=1e-04)
