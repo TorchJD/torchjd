@@ -136,22 +136,20 @@ def test_multi_task_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     inner product of the shared representation with the task parameter.
     """
 
-    J = torch.randn(shape)
-    input = torch.randn([shape[1]], requires_grad=True)
-
-    r = J @ input
-
+    p0 = torch.randn([shape[1]], requires_grad=True)
     p1 = torch.randn(shape[0], requires_grad=True)
     p2 = torch.randn(shape[0], requires_grad=True)
     p3 = torch.randn(shape[0], requires_grad=True)
 
+    J = torch.randn(shape)
+    r = J @ p0
     y1 = p1 @ r
     y2 = p2 @ r
     y3 = p3 @ r
 
     multi_task_backward(
         tasks_losses=[y1, y2, y3],
-        shared_parameters=[input],
+        shared_parameters=[p0],
         shared_representations=r,
         tasks_parameters=[[p1], [p2], [p3]],
         A=A,
@@ -162,7 +160,7 @@ def test_multi_task_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     assert_close(p3.grad, r)
 
     resulting_J = torch.stack((p1, p2, p3)) @ J
-    assert_close(input.grad, A(resulting_J))
+    assert_close(p0.grad, A(resulting_J))
 
 
 def test_multi_task_backward_empty_parameters():
