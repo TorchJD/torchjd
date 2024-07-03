@@ -75,44 +75,45 @@ def test_iwrm():
     test_iwrm_with_ssjd()
 
 
-def test_multi_task():
+def test_mtl():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import multi_task_backward
+    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
 
     shared_model = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_model = Linear(3, 1)
     task2_model = Linear(3, 1)
-    parameters = (
-        list(shared_model.parameters())
-        + list(task1_model.parameters())
-        + list(task2_model.parameters())
-    )
+    params = [*shared_model.parameters(), *task1_model.parameters(), *task2_model.parameters()]
 
     loss_fn = MSELoss()
-    optimizer = SGD(parameters, lr=0.1)
+    optimizer = SGD(params, lr=0.1)
 
     A = UPGrad()
 
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
-    target1 = torch.randn(16, 1)  # Batch of 16 targets for first task
-    target2 = torch.randn(16, 1)  # Batch of 16 targets for second task
+    inputs = torch.randn(8, 16, 10)  # 8 batches of 16 input random vectors of length 10
+    task1_targets = torch.randn(
+        8,
+        16,
+        1,
+    )  # 8 batches of 16 targets for first task
+    task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for second task
 
-    shared_representation = shared_model(input)
-    output1 = task1_model(shared_representation)
-    output2 = task2_model(shared_representation)
-    loss1 = loss_fn(output1, target1)
-    loss2 = loss_fn(output2, target2)
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+        features = shared_model(input)
+        output1 = task1_model(features)
+        output2 = task2_model(features)
+        loss1 = loss_fn(output1, target1)
+        loss2 = loss_fn(output2, target2)
 
-    optimizer.zero_grad()
-    multi_task_backward(
-        tasks_losses=[loss1, loss2],
-        shared_parameters=shared_model.parameters(),
-        shared_representations=shared_representation,
-        tasks_parameters=[task1_model.parameters(), task2_model.parameters()],
-        A=A,
-    )
-    optimizer.step()
+        optimizer.zero_grad()
+        mtl_backward(
+            features=features,
+            losses=[loss1, loss2],
+            shared_params=shared_model.parameters(),
+            tasks_params=[task1_model.parameters(), task2_model.parameters()],
+            A=A,
+        )
+        optimizer.step()

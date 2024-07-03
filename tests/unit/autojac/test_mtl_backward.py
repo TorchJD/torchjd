@@ -5,14 +5,14 @@ import torch
 from pytest import raises
 from torch.testing import assert_close
 
-from torchjd import multi_task_backward
+from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
-def test_multi_task_backward_various_aggregators(A: Aggregator):
+def test_mtl_backward_various_aggregators(A: Aggregator):
     """
-    Tests that multi_task_backward works for various aggregators.
+    Tests that mtl_backward works for various aggregators.
     """
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -21,14 +21,14 @@ def test_multi_task_backward_various_aggregators(A: Aggregator):
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    multi_task_backward(
-        tasks_losses=[y1, y2],
-        shared_parameters=[p0],
-        shared_representations=[r1, r2],
-        tasks_parameters=[[p1], [p2]],
+    mtl_backward(
+        features=[r1, r2],
+        losses=[y1, y2],
+        shared_params=[p0],
+        tasks_params=[[p1], [p2]],
         A=A,
     )
 
@@ -37,9 +37,9 @@ def test_multi_task_backward_various_aggregators(A: Aggregator):
 
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
-def test_multi_task_backward_valid_chunk_size(chunk_size):
+def test_mtl_backward_valid_chunk_size(chunk_size):
     """
-    Tests that multi_task_backward works for various valid values of the chunk sizes parameter.
+    Tests that mtl_backward works for various valid values of the chunk sizes parameter.
     """
 
     A = UPGrad()
@@ -50,14 +50,14 @@ def test_multi_task_backward_valid_chunk_size(chunk_size):
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    multi_task_backward(
-        tasks_losses=[y1, y2],
-        shared_parameters=[p0],
-        shared_representations=[r1, r2],
-        tasks_parameters=[[p1], [p2]],
+    mtl_backward(
+        features=[r1, r2],
+        losses=[y1, y2],
+        shared_params=[p0],
+        tasks_params=[[p1], [p2]],
         A=A,
         parallel_chunk_size=chunk_size,
         retain_graph=True,
@@ -68,9 +68,9 @@ def test_multi_task_backward_valid_chunk_size(chunk_size):
 
 
 @pytest.mark.parametrize("chunk_size", [0, -1])
-def test_multi_task_backward_non_positive_chunk_size(chunk_size: int):
+def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     """
-    Tests that multi_task_backward raises an error when using invalid chunk sizes.
+    Tests that mtl_backward raises an error when using invalid chunk sizes.
     """
 
     A = UPGrad()
@@ -81,15 +81,15 @@ def test_multi_task_backward_non_positive_chunk_size(chunk_size: int):
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with pytest.raises(ValueError):
-        multi_task_backward(
-            tasks_losses=[y1, y2],
-            shared_parameters=[p0],
-            shared_representations=[r1, r2],
-            tasks_parameters=[[p1], [p2]],
+        mtl_backward(
+            features=[r1, r2],
+            losses=[y1, y2],
+            shared_params=[p0],
+            tasks_params=[[p1], [p2]],
             A=A,
             parallel_chunk_size=chunk_size,
         )
@@ -99,9 +99,9 @@ def test_multi_task_backward_non_positive_chunk_size(chunk_size: int):
     ["chunk_size", "expectation"],
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )
-def test_multi_task_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
+def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
     """
-    Tests that multi_task_backward raises an error when using retain_graph=False and a chunk size
+    Tests that mtl_backward raises an error when using retain_graph=False and a chunk size
     that is not large enough to allow differentiation of all tensors are once.
     """
 
@@ -113,15 +113,15 @@ def test_multi_task_backward_no_retain_graph_small_chunk_size(chunk_size: int, e
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with expectation:
-        multi_task_backward(
-            tasks_losses=[y1, y2],
-            shared_parameters=[p0],
-            shared_representations=[r1, r2],
-            tasks_parameters=[[p1], [p2]],
+        mtl_backward(
+            features=[r1, r2],
+            losses=[y1, y2],
+            shared_params=[p0],
+            tasks_params=[[p1], [p2]],
             A=A,
             parallel_chunk_size=chunk_size,
         )
@@ -129,9 +129,9 @@ def test_multi_task_backward_no_retain_graph_small_chunk_size(chunk_size: int, e
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_multi_task_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
+def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     """
-    Tests that the .grad value filled by multi_task_backward is correct in a simple example of
+    Tests that the .grad value filled by mtl_backward is correct in a simple example of
     matrix-vector product for shared representation and three tasks whose loss are given by a simple
     inner product of the shared representation with the task parameter.
     """
@@ -147,11 +147,11 @@ def test_multi_task_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     y2 = p2 @ r
     y3 = p3 @ r
 
-    multi_task_backward(
-        tasks_losses=[y1, y2, y3],
-        shared_parameters=[p0],
-        shared_representations=r,
-        tasks_parameters=[[p1], [p2], [p3]],
+    mtl_backward(
+        features=r,
+        losses=[y1, y2, y3],
+        shared_params=[p0],
+        tasks_params=[[p1], [p2], [p3]],
         A=A,
     )
 
@@ -163,9 +163,9 @@ def test_multi_task_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     assert_close(p0.grad, A(resulting_J))
 
 
-def test_multi_task_backward_empty_parameters():
+def test_mtl_backward_empty_parameters():
     """
-    Tests that multi_task_backward does not fill the .grad values if no input is specified.
+    Tests that mtl_backward does not fill the .grad values if no input is specified.
     """
 
     A = UPGrad()
@@ -176,14 +176,14 @@ def test_multi_task_backward_empty_parameters():
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    multi_task_backward(
-        tasks_losses=[y1, y2],
-        shared_parameters=[],
-        shared_representations=[r1, r2],
-        tasks_parameters=[[], []],
+    mtl_backward(
+        features=[r1, r2],
+        losses=[y1, y2],
+        shared_params=[],
+        tasks_params=[[], []],
         A=A,
     )
 
@@ -191,9 +191,9 @@ def test_multi_task_backward_empty_parameters():
         assert p.grad is None
 
 
-def test_multi_task_backward_partial_parameters():
+def test_mtl_backward_partial_parameters():
     """
-    Tests that multi_task_backward fills the right .grad values when only a subset of the parameters
+    Tests that mtl_backward fills the right .grad values when only a subset of the parameters
     are specified as inputs.
     """
 
@@ -205,14 +205,14 @@ def test_multi_task_backward_partial_parameters():
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    multi_task_backward(
-        tasks_losses=[y1, y2],
-        shared_parameters=[p0],
-        shared_representations=[r1, r2],
-        tasks_parameters=[[p1], []],
+    mtl_backward(
+        features=[r1, r2],
+        losses=[y1, y2],
+        shared_params=[p0],
+        tasks_params=[[p1], []],
         A=A,
     )
 
@@ -221,9 +221,9 @@ def test_multi_task_backward_partial_parameters():
     assert p2.grad is None
 
 
-def test_multi_task_backward_empty_tasks():
+def test_mtl_backward_empty_tasks():
     """
-    Tests that multi_task_backward raises an error when called with an empty list of tasks.
+    Tests that mtl_backward raises an error when called with an empty list of tasks.
     """
 
     A = UPGrad()
@@ -234,18 +234,18 @@ def test_multi_task_backward_empty_tasks():
     r2 = (p0**2).sum() + p0.norm()
 
     with pytest.raises(ValueError):
-        multi_task_backward(
-            tasks_losses=[],
-            shared_parameters=[p0],
-            shared_representations=[r1, r2],
-            tasks_parameters=[],
+        mtl_backward(
+            features=[r1, r2],
+            losses=[],
+            shared_params=[p0],
+            tasks_params=[],
             A=A,
         )
 
 
-def test_multi_task_backward_incoherent_task_number():
+def test_mtl_backward_incoherent_task_number():
     """
-    Tests that multi_task_backward raises an error when called with the number of tasks losses
+    Tests that mtl_backward raises an error when called with the number of tasks losses
     different from the number of tasks parameters.
     """
 
@@ -257,24 +257,24 @@ def test_multi_task_backward_incoherent_task_number():
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
     r2 = (p0**2).sum() + p0.norm()
-    y1 = torch.stack((r1 * p1[0], r2 * p1[1]))
+    y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with pytest.raises(ValueError):
-        multi_task_backward(
-            tasks_losses=[y1, y2],
-            shared_parameters=[p0],
-            shared_representations=[r1, r2],
-            tasks_parameters=[[p1]],  # Wrong
+        mtl_backward(
+            features=[r1, r2],
+            losses=[y1, y2],
+            shared_params=[p0],
+            tasks_params=[[p1]],  # Wrong
             A=A,
             retain_graph=True,
         )
     with pytest.raises(ValueError):
-        multi_task_backward(
-            tasks_losses=[y1],  # Wrong
-            shared_parameters=[p0],
-            shared_representations=[r1, r2],
-            tasks_parameters=[[p1], [p2]],
+        mtl_backward(
+            features=[r1, r2],
+            losses=[y1],  # Wrong
+            shared_params=[p0],
+            tasks_params=[[p1], [p2]],
             A=A,
             retain_graph=True,
         )

@@ -1,10 +1,10 @@
 from torch.testing import assert_close
 
 
-def test_multi_task_backward():
+def test_mtl_backward():
     import torch
 
-    from torchjd import multi_task_backward
+    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -16,11 +16,11 @@ def test_multi_task_backward():
     y1 = r @ p1
     y2 = r @ p2
 
-    multi_task_backward(
-        tasks_losses=[y1, y2],
-        shared_parameters=[p0],
-        shared_representations=r,
-        tasks_parameters=[[p1], [p2]],
+    mtl_backward(
+        features=r,
+        losses=[y1, y2],
+        shared_params=[p0],
+        tasks_params=[[p1], [p2]],
         A=UPGrad(),
     )
 

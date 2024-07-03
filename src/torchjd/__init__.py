@@ -1,1 +1,1 @@
-from torchjd.autojac import backward, multi_task_backward
+from torchjd.autojac import backward, mtl_backward
