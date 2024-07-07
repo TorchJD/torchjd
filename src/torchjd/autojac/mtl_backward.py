@@ -83,7 +83,7 @@ def mtl_backward(
         raise ValueError("`tasks_losses` and `tasks_params` should have the same size.")
 
     shared_params = list(shared_params)
-    tasks_params = [list(task_input) for task_input in tasks_params]
+    tasks_params = [list(task_params) for task_params in tasks_params]
 
     # Transforms that store gradient of the losses w.r.t. tasks specific parameters into their
     # ``.grad`` fields and backpropagate the gradient of the losses w.r.t. to the shared
