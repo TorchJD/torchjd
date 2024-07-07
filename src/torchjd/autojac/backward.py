@@ -65,7 +65,7 @@ def backward(
     tensors = _as_tensor_list(tensors)
 
     if len(tensors) == 0:
-        raise ValueError("`tensors` cannot be an empty iterable of `Tensor`s.")
+        raise ValueError("`tensors` cannot be empty")
 
     _check_retain_graph_compatible_with_chunk_size(tensors, retain_graph, parallel_chunk_size)
 

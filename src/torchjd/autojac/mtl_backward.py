@@ -71,14 +71,14 @@ def mtl_backward(
     features = _as_tensor_list(features)
 
     if len(features) == 0:
-        raise ValueError("`features` cannot be an empty iterable of `Tensor`s.")
+        raise ValueError("`features` cannot be empty.")
 
     _check_retain_graph_compatible_with_chunk_size(features, retain_graph, parallel_chunk_size)
 
     _check_losses_are_scalar(losses)
 
     if len(losses) == 0:
-        raise ValueError("`tasks_losses` cannot be an empty sequence of `Tensors`s.")
+        raise ValueError("`tasks_losses` cannot be empty")
     if len(losses) != len(tasks_params):
         raise ValueError("`tasks_losses` and `tasks_params` should have the same size.")
 
