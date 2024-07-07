@@ -42,6 +42,26 @@ def mtl_backward(
     with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
     fields.
 
+    :param features: The last shared representation of all tasks as given by the feature extractor,
+        parametrized by ``shared_params``. Should be non-empty.
+    :param losses: The loss or losses of each task. Should contain one tensor per task, and
+        therefore must be non-empty. The tensors need not be scalars as the backpropagation is
+        initialized with 1, it is equivalent to provide their sums.
+    :param shared_params: The tensors with respect to which the Jacobian must be computed, i.e.
+        the Jacobian matrix will have one column per value in these tensors. These must have their
+        ``requires_grad`` flag set to ``True``.
+    :param tasks_params: The tensors with respect to which the gradients must be computed. There
+        must be one collection of parameters per task, therefore the length must match with
+        ``losses``. These must have their ``requires_grad`` flag set to ``True``.
+    :param A: Aggregator to use for the aggregation of the Jacobian.
+    :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
+        ``False``.
+    :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
+        backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
+        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
+        larger value results in faster differentiation, but also higher memory usage. Defaults to
+        ``None``.
+
     .. admonition::
         Example
 
@@ -71,26 +91,6 @@ def mtl_backward(
             >>>
             >>> p0.grad, p1.grad, p2.grad
             (tensor([-2., 3.], tensor([-1., 2.]), tensor([-1., 2.]))
-
-    :param features: The last shared representation of all tasks as given by the feature extractor,
-        parametrized by ``shared_params``. Should be non-empty.
-    :param losses: The loss or losses of each task. Should contain one tensor per task, and
-        therefore must be non-empty. The tensors need not be scalars as the backpropagation is
-        initialized with 1, it is equivalent to provide their sums.
-    :param shared_params: The tensors with respect to which the Jacobian must be computed, i.e.
-        the Jacobian matrix will have one column per value in these tensors. These must have their
-        ``requires_grad`` flag set to ``True``.
-    :param tasks_params: The tensors with respect to which the gradients must be computed. There
-        must be one collection of parameters per task, therefore the length must match with
-        ``losses``. These must have their ``requires_grad`` flag set to ``True``.
-    :param A: Aggregator to use for the aggregation of the Jacobian.
-    :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
-        ``False``.
-    :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
-        backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
-        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
-        larger value results in faster differentiation, but also higher memory usage. Defaults to
-        ``None``.
     """
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
