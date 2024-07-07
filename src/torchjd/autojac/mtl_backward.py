@@ -63,32 +63,8 @@ def mtl_backward(
     .. admonition::
         Example
 
-        The following code snippet showcases a simple usage of ``mtl_backward``.
-
-            >>> import torch
-            >>>
-            >>> from torchjd import mtl_backward
-            >>> from torchjd.aggregation import UPGrad
-            >>>
-            >>> p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-            >>> p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-            >>> p2 = torch.tensor([3.0, 4.0], requires_grad=True)
-            >>>
-            >>> # Compute an arbitrary representation that is function of the shared parameter
-            >>> r = torch.tensor([-1.0, 1.0]) * p0
-            >>> y1 = r @ p1
-            >>> y2 = r @ p2
-            >>>
-            >>> mtl_backward(
-            ...     features=r,
-            ...     losses=[y1, y2],
-            ...     shared_params=[p0],
-            ...     tasks_params=[[p1], [p2]],
-            ...     A=UPGrad(),
-            ... )
-            >>>
-            >>> p0.grad, p1.grad, p2.grad
-            (tensor([-2., 3.], tensor([-1., 2.]), tensor([-1., 2.]))
+        A usage example of ``mtl_backward`` is provided in
+        :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
     """
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
