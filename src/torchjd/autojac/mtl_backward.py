@@ -85,30 +85,30 @@ def mtl_backward(
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
 
-    # Transforms that store gradient of the losses w.r.t. tasks specific parameters into their
-    # ``.grad`` fields and backpropagate the gradient of the losses w.r.t. to the shared
-    # representations.
+    # Task-specific transforms. Each of them computes and stores the gradient of the task's loss
+    # w.r.t. the task's specific parameters, and computes and backpropagates the gradient of the
+    # losses w.r.t. the shared representations.
     task_transforms = [
         _make_task_transform(
             features,
-            task_parameters,
-            tensor,
+            task_params,
+            loss,
             retain_graph,
         )
-        for task_parameters, tensor in zip(tasks_params, losses)
+        for task_params, loss in zip(tasks_params, losses)
     ]
 
-    # Transform that stacks the gradients of the losses w.r.t. shared representations into a
-    # Jacobian
+    # Transform that stacks the gradients of the losses w.r.t. the shared representations into a
+    # Jacobian.
     stack = Stack(task_transforms)
 
-    # Transform that computes the Jacobians of the shared parameters
+    # Transform that computes the Jacobians of the losses w.r.t. the shared parameters.
     jac = Jac(features, shared_params, parallel_chunk_size, retain_graph)
 
-    # Transform that defines the aggregation of the jacobians into gradients
+    # Transform that aggregates the Jacobians.
     aggregate = make_aggregation(UnifyingStrategy(A, shared_params))
 
-    # Transform that stores the gradients with respect to the shared parameters
+    # Transform that stores the result in the .grad field of the shared parameters.
     store = Store(shared_params)
 
     backward_transform = store << aggregate << jac << stack
@@ -119,27 +119,28 @@ def mtl_backward(
 def _make_task_transform(
     features: list[Tensor],
     tasks_params: list[Tensor],
-    losses: Tensor,
+    loss: Tensor,
     retain_graph: bool,
 ) -> Transform[EmptyTensorDict, Gradients]:
     # Tensors with respect to which we compute the gradients.
     to_differentiate = tasks_params + features
 
     # Transform that initializes the gradient output to 1.
-    init = Init([losses])
+    init = Init([loss])
 
-    # Transform that computes the gradients of task losses w.r.t. the task-specific parameters and
+    # Transform that computes the gradients of the loss w.r.t. the task-specific parameters and
     # the features.
-    grad = Grad([losses], to_differentiate, retain_graph)
+    grad = Grad([loss], to_differentiate, retain_graph)
 
-    # Transform that stores the task-specific parameters into their ``.grad`` fields.
+    # Transform that stores the gradients w.r.t. the task-specific parameters into their
+    # .grad fields.
     store = Store(tasks_params) << Subset(tasks_params, to_differentiate)
 
-    # Transform that backpropagate the gradients of the losses w.r.t. the features.
+    # Transform that backpropagates the gradients of the losses w.r.t. the features.
     backpropagate = Subset(features, to_differentiate)
 
-    # Transform that stores gradient of the losses w.r.t. task-specific parameters into their
-    # ``.grad`` fields and backpropagates the gradient of the losses w.r.t. to the features.
+    # Transform that stores the gradient of the losses w.r.t. the task-specific parameters into
+    # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
     backward_task = (backpropagate | store) << grad << init
     return backward_task
 
