@@ -44,8 +44,7 @@ def mtl_backward(
 
     :param features: The last shared representation used for all tasks, as given by the feature
         extractor. Should be non-empty.
-    :param losses: The scalar loss associated to each task. The Jacobian matrix will have one row
-        per loss.
+    :param losses: The task losses. The Jacobian matrix will have one row per loss.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
         to ``True``.
