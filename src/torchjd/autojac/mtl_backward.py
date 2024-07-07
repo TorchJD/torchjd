@@ -35,25 +35,23 @@ def mtl_backward(
 ) -> None:
     r"""
     In the context of Multi-Task Learning (MTL), we often have a shared feature extractor followed
-    by several task-specific heads. A scalar loss can then be computed for each task.
+    by several task-specific heads. A loss can then be computed for each task.
 
     This function computes the gradient of each task-specific loss with respect to its task-specific
     parameters and stores it in their ``.grad`` fields. Then, it computes the Jacobian of all losses
     with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
     fields.
 
-    :param features: The last shared representation of all tasks as given by the feature extractor,
-        parametrized by ``shared_params``. Should be non-empty.
-    :param losses: The loss or losses of each task. Should contain one tensor per task, and
-        therefore must be non-empty. The tensors need not be scalars as the backpropagation is
-        initialized with 1, it is equivalent to provide their sums.
-    :param shared_params: The tensors with respect to which the Jacobian must be computed, i.e.
-        the Jacobian matrix will have one column per value in these tensors. These must have their
-        ``requires_grad`` flag set to ``True``.
-    :param tasks_params: The tensors with respect to which the gradients must be computed. There
-        must be one collection of parameters per task, therefore the length must match with
-        ``losses``. These must have their ``requires_grad`` flag set to ``True``.
     :param A: Aggregator to use for the aggregation of the Jacobian.
+    :param features: The last shared representation used for all tasks, as given by the feature
+        extractor, parametrized by ``shared_params``. Should be non-empty.
+    :param losses: The scalar loss associated to each task. The Jacobian matrix will have one row
+        per loss.
+    :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
+        have one column for each value in these tensors. Their ``requires_grad`` flags must be set
+        to ``True``.
+    :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
+        must be set to ``True``.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
