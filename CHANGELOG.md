@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `autojac` package containing the backward pass functions and their dependencies.
 - `mtl_backward` function to make a backward pass for multi-task learning.
+- Multi-task learning example.
 
 ### Removed
 
