@@ -75,8 +75,6 @@ def mtl_backward(
             >>> p0.grad, p1.grad, p2.grad
             (tensor([-2., 3.], tensor([-1., 2.]), tensor([-1., 2.]))
 
-        The ``.grad`` field of ``param`` are now populated.
-
     :param features: The last shared representation of all tasks as given by the feature extractor,
         parametrized by ``shared_params``. Should be non-empty.
     :param losses: The loss or losses of each task. Should contain one tensor per task, and
