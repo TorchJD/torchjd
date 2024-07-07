@@ -153,8 +153,10 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     assert_close(p2.grad, r)
     assert_close(p3.grad, r)
 
-    resulting_J = torch.stack((p1, p2, p3)) @ J
-    assert_close(p0.grad, A(resulting_J))
+    expected_jacobian = torch.stack((p1, p2, p3)) @ J
+    expected_aggregation = A(expected_jacobian)
+
+    assert_close(p0.grad, expected_aggregation)
 
 
 def test_mtl_backward_empty_parameters():
