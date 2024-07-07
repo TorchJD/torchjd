@@ -33,7 +33,7 @@ def mtl_backward(
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
-    r"""
+    """
     In the context of Multi-Task Learning (MTL), we often have a shared feature extractor followed
     by several task-specific heads. A loss can then be computed for each task.
 
