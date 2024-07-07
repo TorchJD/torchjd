@@ -24,6 +24,19 @@ def backward(
     Computes the Jacobian of all values in ``tensors`` with respect to all ``inputs``. Computes its
     aggregation by ``A`` and stores it in the ``.grad`` fields of the ``inputs``.
 
+    :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
+        matrices will have one row for each value of each of these tensors.
+    :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
+        their ``requires_grad`` flag set to ``True``.
+    :param A: Aggregator to use for the aggregation of the Jacobian.
+    :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
+        ``False``.
+    :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
+        backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
+        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
+        larger value results in faster differentiation, but also higher memory usage. Defaults to
+        ``None``.
+
     .. admonition::
         Example
 
@@ -46,19 +59,6 @@ def backward(
 
         The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
-
-    :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
-        matrices will have one row for each value of each of these tensors.
-    :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
-        their ``requires_grad`` flag set to ``True``.
-    :param A: Aggregator to use for the aggregation of the Jacobian.
-    :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
-        ``False``.
-    :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
-        backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
-        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
-        larger value results in faster differentiation, but also higher memory usage. Defaults to
-        ``None``.
     """
     _check_optional_positive_chunk_size(parallel_chunk_size)
 
