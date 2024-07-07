@@ -33,7 +33,6 @@ def mtl_backward(
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
-    _check_optional_positive_chunk_size(parallel_chunk_size)
     r"""
     In the context of Multi-Task Learning (MTL), we often have a shared feature extractor followed
     by several task-specific heads. A loss can then be computed for each task.
@@ -95,6 +94,8 @@ def mtl_backward(
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
     """
+
+    _check_optional_positive_chunk_size(parallel_chunk_size)
 
     features = _as_tensor_list(features)
 
