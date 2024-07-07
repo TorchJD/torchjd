@@ -10,7 +10,7 @@ def test_basic_usage():
     optimizer = SGD(model.parameters(), lr=0.1)
 
     A = UPGrad()
-    input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
+    input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
     target1 = torch.randn(16)  # First batch of 16 targets
     target2 = torch.randn(16)  # Second batch of 16 targets
 
@@ -96,7 +96,7 @@ def test_mtl():
     optimizer = SGD(params, lr=0.1)
     A = UPGrad()
 
-    inputs = torch.randn(8, 16, 10)  # 8 batches of 16 input random vectors of length 10
+    inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
 
