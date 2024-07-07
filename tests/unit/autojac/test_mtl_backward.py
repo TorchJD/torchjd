@@ -42,8 +42,6 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
     Tests that mtl_backward works for various valid values of the chunk sizes parameter.
     """
 
-    A = UPGrad()
-
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -58,7 +56,7 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
         losses=[y1, y2],
         shared_params=[p0],
         tasks_params=[[p1], [p2]],
-        A=A,
+        A=UPGrad(),
         parallel_chunk_size=chunk_size,
         retain_graph=True,
     )
@@ -72,8 +70,6 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     """
     Tests that mtl_backward raises an error when using invalid chunk sizes.
     """
-
-    A = UPGrad()
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -90,7 +86,7 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
             losses=[y1, y2],
             shared_params=[p0],
             tasks_params=[[p1], [p2]],
-            A=A,
+            A=UPGrad(),
             parallel_chunk_size=chunk_size,
         )
 
@@ -104,8 +100,6 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectat
     Tests that mtl_backward raises an error when using retain_graph=False and a chunk size
     that is not large enough to allow differentiation of all tensors are once.
     """
-
-    A = UPGrad()
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -122,7 +116,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectat
             losses=[y1, y2],
             shared_params=[p0],
             tasks_params=[[p1], [p2]],
-            A=A,
+            A=UPGrad(),
             parallel_chunk_size=chunk_size,
         )
 
@@ -168,8 +162,6 @@ def test_mtl_backward_empty_parameters():
     Tests that mtl_backward does not fill the .grad values if no input is specified.
     """
 
-    A = UPGrad()
-
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -184,7 +176,7 @@ def test_mtl_backward_empty_parameters():
         losses=[y1, y2],
         shared_params=[],
         tasks_params=[[], []],
-        A=A,
+        A=UPGrad(),
     )
 
     for p in [p0, p1, p2]:
@@ -196,8 +188,6 @@ def test_mtl_backward_partial_parameters():
     Tests that mtl_backward fills the right .grad values when only a subset of the parameters
     are specified as inputs.
     """
-
-    A = Mean()
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -213,7 +203,7 @@ def test_mtl_backward_partial_parameters():
         losses=[y1, y2],
         shared_params=[p0],
         tasks_params=[[p1], []],
-        A=A,
+        A=Mean(),
     )
 
     assert (p0.grad is not None) and (p0.shape == p0.grad.shape)
@@ -226,8 +216,6 @@ def test_mtl_backward_empty_tasks():
     Tests that mtl_backward raises an error when called with an empty list of tasks.
     """
 
-    A = UPGrad()
-
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
 
     r1 = torch.tensor([-1.0, 1.0]) @ p0
@@ -239,7 +227,7 @@ def test_mtl_backward_empty_tasks():
             losses=[],
             shared_params=[p0],
             tasks_params=[],
-            A=A,
+            A=UPGrad(),
         )
 
 
@@ -248,8 +236,6 @@ def test_mtl_backward_incoherent_task_number():
     Tests that mtl_backward raises an error when called with the number of tasks losses
     different from the number of tasks parameters.
     """
-
-    A = UPGrad()
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -266,7 +252,7 @@ def test_mtl_backward_incoherent_task_number():
             losses=[y1, y2],
             shared_params=[p0],
             tasks_params=[[p1]],  # Wrong
-            A=A,
+            A=UPGrad(),
             retain_graph=True,
         )
     with pytest.raises(ValueError):
@@ -275,6 +261,6 @@ def test_mtl_backward_incoherent_task_number():
             losses=[y1],  # Wrong
             shared_params=[p0],
             tasks_params=[[p1], [p2]],
-            A=A,
+            A=UPGrad(),
             retain_graph=True,
         )
