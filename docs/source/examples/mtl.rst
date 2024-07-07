@@ -4,13 +4,13 @@ Multi-Task Learning (MTL)
 In the context of multi-task learning, multiple tasks are performed simultaneously on a common
 input. Typically, a feature extractor is applied to the input to obtain a shared representation,
 useful for all tasks. Then, task-specific heads are applied to these features to obtain each task's
-result. A loss can then be computed for each task. Learning a multi-task model is a multi-objective
-optimization problem, in which we minimize the vector of task losses.
+result. A loss can then be computed for each task. Fundamentally, multi-task learning is a
+multi-objective optimization problem in which we minimize the vector of task losses.
 
 A common trick to train multi-task models is to cast the problem as single-objective, by minimizing
 a weighted sum of the losses. This works well in some cases, but sometimes conflict among tasks can
-make the optimization of the shared parameters very hard. Additionally, finding the appropriate
-weight for each loss requires a lot of trials.
+make the optimization of the shared parameters very hard. Besides, the weight associated to each
+loss can be considered as a hyper-parameter. Finding their optimal value is generally expensive.
 
 Alternatively, the vector of losses can be directly minimized using Jacobian descent. The following
 example shows how to use TorchJD to train a very simple multi-task model with two regression tasks.
@@ -27,7 +27,11 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
 >>> shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
 >>> task1_module = Linear(3, 1)
 >>> task2_module = Linear(3, 1)
->>> params = [*shared_module.parameters(), *task1_module.parameters(), *task2_module.parameters()]
+>>> params = [
+>>>     *shared_module.parameters(),
+>>>     *task1_module.parameters(),
+>>>     *task2_module.parameters(),
+>>> ]
 >>>
 >>> loss_fn = MSELoss()
 >>> optimizer = SGD(params, lr=0.1)

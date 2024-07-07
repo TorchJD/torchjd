@@ -86,7 +86,11 @@ def test_mtl():
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)
     task2_module = Linear(3, 1)
-    params = [*shared_module.parameters(), *task1_module.parameters(), *task2_module.parameters()]
+    params = [
+        *shared_module.parameters(),
+        *task1_module.parameters(),
+        *task2_module.parameters(),
+    ]
 
     loss_fn = MSELoss()
     optimizer = SGD(params, lr=0.1)
