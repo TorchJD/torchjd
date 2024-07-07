@@ -1,7 +1,21 @@
 Multi-Task Learning (MTL)
 =========================
 
+In the context of multi-task learning, multiple tasks are performed simultaneously on a common
+input. Typically, a feature extractor is applied to the input to obtain a shared representation,
+useful for all tasks. Then, task-specific heads are applied to these features to obtain each task's
+result. A loss can then be computed for each task. Learning a multi-task model is a multi-objective
+optimization problem, in which we minimize the vector of task losses.
 
+A common trick to train multi-task models is to cast the problem as single-objective, by minimizing
+a weighted sum of the losses. This works well in some cases, but sometimes conflict among tasks can
+make the optimization of the shared parameters very hard. Additionally, finding the appropriate
+weight for each loss requires a lot of trials.
+
+Alternatively, the vector of losses can be directly minimized using Jacobian descent. The following
+example shows how to use TorchJD to train a very simple multi-task model with two regression tasks.
+For the sake of the example, we generate a fake dataset consisting of 8 batches of 16 random input
+vectors of dimension 10, and their corresponding scalar labels for both tasks.
 
 >>> import torch
 >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -39,3 +53,7 @@ Multi-Task Learning (MTL)
 ...         A=A,
 ...     )
 >>>     optimizer.step()
+
+.. note::
+    In this example, the Jacobian is only with respect to the shared parameters. The task-specific
+    parameters are simply updated via the gradient of their task's loss with respect to them.
