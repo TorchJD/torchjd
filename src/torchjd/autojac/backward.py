@@ -71,19 +71,19 @@ def backward(
 
     inputs = list(inputs)
 
-    # Transform that creates gradients containing only ones
+    # Transform that creates gradient outputs containing only ones.
     init = Init(tensors)
 
-    # Transform that turns the gradients into jacobians
+    # Transform that turns the gradients into Jacobians.
     diag = Diagonalize(tensors)
 
-    # Transform that computes the required jacobians
+    # Transform that computes the required Jacobians.
     jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
 
-    # Transform that defines the aggregation of the jacobians into gradients
+    # Transform that aggregates the Jacobians.
     aggregate = make_aggregation(UnifyingStrategy(A, inputs))
 
-    # Transform that stores the gradients with respect to the inputs
+    # Transform that stores the result in the .grad field of the inputs.
     store = Store(inputs)
 
     backward_transform = store << aggregate << jac << diag << init
