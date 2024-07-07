@@ -42,7 +42,6 @@ def mtl_backward(
     with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
     fields.
 
-    :param A: Aggregator to use for the aggregation of the Jacobian.
     :param features: The last shared representation used for all tasks, as given by the feature
         extractor, parametrized by ``shared_params``. Should be non-empty.
     :param losses: The scalar loss associated to each task. The Jacobian matrix will have one row
@@ -52,6 +51,7 @@ def mtl_backward(
         to ``True``.
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
         must be set to ``True``.
+    :param A: Aggregator used to reduce the Jacobian into a vector.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
