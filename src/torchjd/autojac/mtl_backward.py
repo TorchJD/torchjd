@@ -43,7 +43,7 @@ def mtl_backward(
     fields.
 
     :param features: The last shared representation used for all tasks, as given by the feature
-        extractor, parametrized by ``shared_params``. Should be non-empty.
+        extractor. Should be non-empty.
     :param losses: The scalar loss associated to each task. The Jacobian matrix will have one row
         per loss.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
