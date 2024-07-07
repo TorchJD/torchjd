@@ -35,14 +35,12 @@ def mtl_backward(
 ) -> None:
     r"""
     In the context of Multi-Task Learning (MTL), we often have a shared feature extractor followed
-    by several task-specific heads. A loss can then be computed for each task.
+    by several task-specific heads. A scalar loss can then be computed for each task.
 
-    This function computes the gradient of each element of ``losses`` with respect to the
-    corresponding element of ``tasks_params`` and stores it in its ``.grad`` field.
-    It then computes the Jacobian of the ``losses`` with respect to the ``shared_params``. Lastly,
-    it aggregates this Jacobian using ``A`` and stores the result into the ``.grad`` fields of the
-    ``shared_params``.
-
+    This function computes the gradient of each task-specific loss with respect to its task-specific
+    parameters and stores it in their ``.grad`` fields. Then, it computes the Jacobian of all losses
+    with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
+    fields.
 
     .. admonition::
         Example
