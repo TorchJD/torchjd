@@ -109,10 +109,10 @@ def test_mtl():
 
         optimizer.zero_grad()
         mtl_backward(
-            features=features,
             losses=[loss1, loss2],
-            shared_params=shared_module.parameters(),
+            features=features,
             tasks_params=[task1_module.parameters(), task2_module.parameters()],
+            shared_params=shared_module.parameters(),
             A=A,
         )
         optimizer.step()

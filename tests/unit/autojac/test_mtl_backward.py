@@ -25,10 +25,10 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
     y2 = r1 * p2[0] + r2 * p2[1]
 
     mtl_backward(
-        features=[r1, r2],
         losses=[y1, y2],
-        shared_params=[p0],
+        features=[r1, r2],
         tasks_params=[[p1], [p2]],
+        shared_params=[p0],
         A=A,
     )
 
@@ -52,13 +52,13 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
     y2 = r1 * p2[0] + r2 * p2[1]
 
     mtl_backward(
-        features=[r1, r2],
         losses=[y1, y2],
-        shared_params=[p0],
+        features=[r1, r2],
         tasks_params=[[p1], [p2]],
+        shared_params=[p0],
         A=UPGrad(),
-        parallel_chunk_size=chunk_size,
         retain_graph=True,
+        parallel_chunk_size=chunk_size,
     )
 
     for p in [p0, p1, p2]:
@@ -82,10 +82,10 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
 
     with pytest.raises(ValueError):
         mtl_backward(
-            features=[r1, r2],
             losses=[y1, y2],
-            shared_params=[p0],
+            features=[r1, r2],
             tasks_params=[[p1], [p2]],
+            shared_params=[p0],
             A=UPGrad(),
             parallel_chunk_size=chunk_size,
         )
@@ -112,10 +112,10 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectat
 
     with expectation:
         mtl_backward(
-            features=[r1, r2],
             losses=[y1, y2],
-            shared_params=[p0],
+            features=[r1, r2],
             tasks_params=[[p1], [p2]],
+            shared_params=[p0],
             A=UPGrad(),
             parallel_chunk_size=chunk_size,
         )
@@ -142,10 +142,10 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     y3 = p3 @ r
 
     mtl_backward(
-        features=r,
         losses=[y1, y2, y3],
-        shared_params=[p0],
+        features=r,
         tasks_params=[[p1], [p2], [p3]],
+        shared_params=[p0],
         A=A,
     )
 
@@ -174,10 +174,10 @@ def test_mtl_backward_empty_parameters():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     mtl_backward(
-        features=[r1, r2],
         losses=[y1, y2],
-        shared_params=[],
+        features=[r1, r2],
         tasks_params=[[], []],
+        shared_params=[],
         A=UPGrad(),
     )
 
@@ -201,10 +201,10 @@ def test_mtl_backward_partial_parameters():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     mtl_backward(
-        features=[r1, r2],
         losses=[y1, y2],
-        shared_params=[p0],
+        features=[r1, r2],
         tasks_params=[[p1], []],
+        shared_params=[p0],
         A=Mean(),
     )
 
@@ -225,10 +225,10 @@ def test_mtl_backward_empty_tasks():
 
     with pytest.raises(ValueError):
         mtl_backward(
-            features=[r1, r2],
             losses=[],
-            shared_params=[p0],
+            features=[r1, r2],
             tasks_params=[],
+            shared_params=[p0],
             A=UPGrad(),
         )
 
@@ -250,19 +250,19 @@ def test_mtl_backward_incoherent_task_number():
 
     with pytest.raises(ValueError):
         mtl_backward(
-            features=[r1, r2],
             losses=[y1, y2],
-            shared_params=[p0],
+            features=[r1, r2],
             tasks_params=[[p1]],  # Wrong
+            shared_params=[p0],
             A=UPGrad(),
             retain_graph=True,
         )
     with pytest.raises(ValueError):
         mtl_backward(
-            features=[r1, r2],
             losses=[y1],  # Wrong
-            shared_params=[p0],
+            features=[r1, r2],
             tasks_params=[[p1], [p2]],
+            shared_params=[p0],
             A=UPGrad(),
             retain_graph=True,
         )

@@ -25,10 +25,10 @@ from ._utils import (
 
 
 def mtl_backward(
-    features: Sequence[Tensor] | Tensor,
     losses: Sequence[Tensor],
-    shared_params: Iterable[Tensor],
+    features: Sequence[Tensor] | Tensor,
     tasks_params: Sequence[Iterable[Tensor]],
+    shared_params: Iterable[Tensor],
     A: Aggregator,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
@@ -42,14 +42,14 @@ def mtl_backward(
     with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
     fields.
 
+    :param losses: The task losses. The Jacobian matrix will have one row per loss.
     :param features: The last shared representation used for all tasks, as given by the feature
         extractor. Should be non-empty.
-    :param losses: The task losses. The Jacobian matrix will have one row per loss.
+    :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
+        must be set to ``True``.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
         to ``True``.
-    :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
-        must be set to ``True``.
     :param A: Aggregator used to reduce the Jacobian into a vector.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
