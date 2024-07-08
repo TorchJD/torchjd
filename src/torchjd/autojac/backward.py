@@ -33,7 +33,7 @@ def backward(
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
         backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
-        parallel at once. If set to `1`, all coordinates will be differentiated sequentially. A
+        parallel at once. If set to ``1``, all coordinates will be differentiated sequentially. A
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
 
