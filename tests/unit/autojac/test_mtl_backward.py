@@ -246,6 +246,28 @@ def test_mtl_backward_varied_features_list(shapes: list[tuple[int]]):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
+def test_mtl_backward_empty_features():
+    """Tests that mtl_backward expectedly raises an error when no there is no feature."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r2 = (p0**2).sum() + p0.norm()
+    y1 = r1 * p1[0] + r2 * p1[1]
+    y2 = r1 * p2[0] + r2 * p2[1]
+
+    with pytest.raises(ValueError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[],
+            tasks_params=[[p1], [p2]],
+            shared_params=[p0],
+            A=UPGrad(),
+        )
+
+
 def test_mtl_backward_empty_parameters():
     """Tests that mtl_backward does not fill the .grad values if no input is specified."""
 
