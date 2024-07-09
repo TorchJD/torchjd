@@ -432,3 +432,25 @@ def test_mtl_backward_incoherent_task_number():
             shared_params=[p0],
             A=UPGrad(),
         )
+
+
+def test_mtl_backward_non_scalar_losses():
+    """Tests that mtl_backward raises an error when used with a non-scalar loss."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r2 = (p0**2).sum() + p0.norm()
+    y1 = torch.stack([r1 * p1[0], r2 * p1[1]])  # Non-scalar
+    y2 = r1 * p2[0] + r2 * p2[1]
+
+    with pytest.raises(ValueError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[r1, r2],
+            tasks_params=[[p1], [p2]],
+            shared_params=[p0],
+            A=UPGrad(),
+        )
