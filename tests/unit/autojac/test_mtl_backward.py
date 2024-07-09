@@ -319,6 +319,42 @@ def test_mtl_backward_empty_parameters():
         assert p.grad is None
 
 
+@pytest.mark.parametrize(
+    "shared_params_shapes",
+    [
+        [tuple()],
+        [(2,)],
+        [(3, 2)],
+        [(4, 3, 2)],
+        [tuple(), (2,)],
+        [(3, 2), (2,)],
+        [(4, 3, 2), (3, 2), tuple()],
+        [(5, 4, 3, 2), (5, 4, 3, 2)],
+    ],
+)
+def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int]]):
+    """Tests that mtl_backward works correctly with various kinds of shared_params."""
+
+    shared_params = [torch.rand(shape, requires_grad=True) for shape in shared_params_shapes]
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    representations = [shared_param.sum(dim=-1) for shared_param in shared_params]
+    y1 = torch.stack([r.sum() for r in representations]).sum()
+    y2 = torch.stack([r.sum() ** 2 for r in representations]).sum()
+
+    mtl_backward(
+        losses=[y1, y2],
+        features=representations,
+        tasks_params=[[p1], [p2]],
+        shared_params=shared_params,
+        A=UPGrad(),
+    )
+
+    for p in [*shared_params, p1, p2]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+
 def test_mtl_backward_partial_parameters():
     """
     Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
