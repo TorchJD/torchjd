@@ -28,7 +28,7 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_backward_valid_chunk_size(chunk_size):
-    """Tests that backward works for various valid values of the chunk sizes parameter."""
+    """Tests that backward works for various valid values of parallel_chunk_size."""
 
     A = UPGrad()
 

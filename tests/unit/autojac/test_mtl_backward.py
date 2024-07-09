@@ -36,7 +36,7 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_mtl_backward_valid_chunk_size(chunk_size):
-    """Tests that mtl_backward works for various valid values of the chunk sizes parameter."""
+    """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
