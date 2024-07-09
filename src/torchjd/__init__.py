@@ -1,1 +1,1 @@
-from torchjd.backward import backward
+from torchjd.autojac import backward, mtl_backward

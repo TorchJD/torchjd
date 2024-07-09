@@ -34,7 +34,7 @@ negatively affected by the update.
 
 Now that everything is defined, we can train the model. Define the input and the associated target:
 
->>> input = torch.randn(16, 10)  # Batch of 16 input random vectors of length 10
+>>> input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
 >>> target1 = torch.randn(16)  # First batch of 16 targets
 >>> target2 = torch.randn(16)  # Second batch of 16 targets
 
