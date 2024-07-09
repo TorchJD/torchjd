@@ -117,6 +117,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectat
             tasks_params=[[p1], [p2]],
             shared_params=[p0],
             A=UPGrad(),
+            retain_graph=False,
             parallel_chunk_size=chunk_size,
         )
 
@@ -255,7 +256,6 @@ def test_mtl_backward_incoherent_task_number():
             tasks_params=[[p1]],  # Wrong
             shared_params=[p0],
             A=UPGrad(),
-            retain_graph=True,
         )
     with pytest.raises(ValueError):
         mtl_backward(
@@ -264,5 +264,4 @@ def test_mtl_backward_incoherent_task_number():
             tasks_params=[[p1], [p2]],
             shared_params=[p0],
             A=UPGrad(),
-            retain_graph=True,
         )
