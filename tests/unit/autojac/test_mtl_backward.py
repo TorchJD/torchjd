@@ -182,6 +182,76 @@ def test_mtl_backward_single_task():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
+@pytest.mark.parametrize(
+    "shape",
+    [
+        (2,),
+        (3, 2),
+        (4, 3, 2),
+        (5, 4, 3, 2),
+    ],
+)
+def test_mtl_backward_varied_single_feature(shape: tuple[int]):
+    """Tests that mtl_backward works correctly with a single feature tensor of different shapes."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p2 = torch.tensor([5.0, 6.0], requires_grad=True)
+
+    r = torch.rand(shape) @ p0
+
+    y1 = (r * p1[0]).sum() + (r * p1[1]).sum()
+    y2 = (r * p2[0]).sum() * (r * p2[1]).sum()
+
+    mtl_backward(
+        losses=[y1, y2],
+        features=r,
+        tasks_params=[[p1], [p2]],
+        shared_params=[p0],
+        A=UPGrad(),
+    )
+
+    for p in [p0, p1, p2]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+
+@pytest.mark.parametrize(
+    "shapes",
+    [
+        [(2,)],
+        [(3, 2)],
+        [(4, 3, 2)],
+        [(5, 4, 3, 2)],
+        [(2,), (2,)],
+        [(3, 2), (2,)],
+        [(4, 3, 2), (3, 2), (2,)],
+        [(5, 4, 3, 2), (5, 4, 3, 2)],
+    ],
+)
+def test_mtl_backward_varied_features_list(shapes: list[tuple[int]]):
+    """Tests that mtl_backward works correctly with various kinds of features."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True) + 3.0
+    p2 = torch.tensor(5.0, requires_grad=True)
+
+    representations = [torch.rand(shape) @ p0 for shape in shapes]
+
+    y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
+    y2 = (representations[0] * p2).sum()
+
+    mtl_backward(
+        losses=[y1, y2],
+        features=representations,
+        tasks_params=[[p1], [p2]],
+        shared_params=[p0],
+        A=UPGrad(),
+    )
+
+    for p in [p0, p1, p2]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+
 def test_mtl_backward_empty_parameters():
     """
     Tests that mtl_backward does not fill the .grad values if no input is specified.
