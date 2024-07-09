@@ -160,6 +160,28 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     assert_close(p0.grad, expected_aggregation)
 
 
+def test_mtl_backward_single_task():
+    """Tests that mtl_backward works correctly with a single task."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r2 = (p0**2).sum() + p0.norm()
+    y1 = r1 * p1[0] + r2 * p1[1]
+
+    mtl_backward(
+        losses=[y1],
+        features=[r1, r2],
+        tasks_params=[[p1]],
+        shared_params=[p0],
+        A=UPGrad(),
+    )
+
+    for p in [p0, p1]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+
 def test_mtl_backward_empty_parameters():
     """
     Tests that mtl_backward does not fill the .grad values if no input is specified.
