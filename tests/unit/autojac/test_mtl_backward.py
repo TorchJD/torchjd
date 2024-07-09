@@ -34,6 +34,33 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
+def test_mtl_backward_multiple_params_per_task():
+    """Tests that mtl_backward works correctly when the tasks each have several parameters."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1_a = torch.tensor(1.0, requires_grad=True)
+    p1_b = torch.tensor([2.0, 3.0], requires_grad=True)
+    p1_c = torch.tensor([[4.0, 5.0], [6.0, 7.0]], requires_grad=True)
+    p2_a = torch.tensor(8.0, requires_grad=True)
+    p2_b = torch.tensor([9.0, 10.0], requires_grad=True)
+
+    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r2 = (p0**2).sum() + p0.norm()
+    y1 = r1 * p1_a + (r2 * p1_b).sum() + (r1 * p1_c).sum()
+    y2 = r1 * p2_a * (r2 * p2_b).sum()
+
+    mtl_backward(
+        losses=[y1, y2],
+        features=[r1, r2],
+        tasks_params=[[p1_a, p1_b, p1_c], [p2_a, p2_b]],
+        shared_params=[p0],
+        A=UPGrad(),
+    )
+
+    for p in [p0, p1_a, p1_b, p1_c, p2_a, p2_b]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_mtl_backward_valid_chunk_size(chunk_size):
     """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
