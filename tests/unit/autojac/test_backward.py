@@ -11,9 +11,7 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
 def test_backward_various_aggregators(A: Aggregator):
-    """
-    Tests that backward works for various aggregators.
-    """
+    """Tests that backward works for various aggregators."""
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -30,9 +28,7 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_backward_valid_chunk_size(chunk_size):
-    """
-    Tests that backward works for various valid values of the chunk sizes parameter.
-    """
+    """Tests that backward works for various valid values of the chunk sizes parameter."""
 
     A = UPGrad()
 
@@ -51,9 +47,7 @@ def test_backward_valid_chunk_size(chunk_size):
 
 @pytest.mark.parametrize("chunk_size", [0, -1])
 def test_backward_non_positive_chunk_size(chunk_size: int):
-    """
-    Tests that backward raises an error when using invalid chunk sizes.
-    """
+    """Tests that backward raises an error when using invalid chunk sizes."""
 
     A = UPGrad()
 
@@ -109,9 +103,7 @@ def test_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
 
 
 def test_backward_empty_inputs():
-    """
-    Tests that backward does not fill the .grad values if no input is specified.
-    """
+    """Tests that backward does not fill the .grad values if no input is specified."""
 
     A = Mean()
 
@@ -149,9 +141,7 @@ def test_backward_partial_inputs():
 
 
 def test_backward_empty_tensors():
-    """
-    Tests that backward raises an error when called with an empty list of tensors.
-    """
+    """Tests that backward raises an error when called with an empty list of tensors."""
 
     A = UPGrad()
 
