@@ -145,8 +145,8 @@ def test_mtl_backward_incoherent_task_number():
         )
 
 
-def test_mtl_backward_empty_parameters():
-    """Tests that mtl_backward does not fill the .grad values if no input is specified."""
+def test_mtl_backward_empty_params():
+    """Tests that mtl_backward does not fill the .grad values if no parameter is specified."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -232,7 +232,7 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-def test_mtl_backward_partial_parameters():
+def test_mtl_backward_partial_params():
     """
     Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
     specified as inputs.
@@ -291,8 +291,8 @@ def test_mtl_backward_empty_features():
         (5, 4, 3, 2),
     ],
 )
-def test_mtl_backward_varied_single_feature(shape: tuple[int]):
-    """Tests that mtl_backward works correctly with a single feature tensor of different shapes."""
+def test_mtl_backward_various_single_features(shape: tuple[int]):
+    """Tests that mtl_backward works correctly with various kinds of feature tensors."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([3.0, 4.0], requires_grad=True)
@@ -328,8 +328,8 @@ def test_mtl_backward_varied_single_feature(shape: tuple[int]):
         [(5, 4, 3, 2), (5, 4, 3, 2)],
     ],
 )
-def test_mtl_backward_varied_features_list(shapes: list[tuple[int]]):
-    """Tests that mtl_backward works correctly with various kinds of features."""
+def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
+    """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True) + 3.0
@@ -352,7 +352,7 @@ def test_mtl_backward_varied_features_list(shapes: list[tuple[int]]):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-def test_mtl_backward_non_scalar_losses():
+def test_mtl_backward_non_scalar_loss():
     """Tests that mtl_backward raises an error when used with a non-scalar loss."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
