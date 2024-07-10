@@ -36,3 +36,13 @@ repos:
     hooks:
     -   id: black  # Format code.
         args: [--line-length=100]
+
+-   repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.5
+    hooks:
+    -   id: docformatter
+        additional_dependencies: [tomli]
+        args: [
+            '--in-place',
+            '--config=./pyproject.toml'
+        ]
