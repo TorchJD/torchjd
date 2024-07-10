@@ -3,8 +3,8 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform.base import Transform
-from torchjd.autojac._transform.tensor_dict import EmptyTensorDict, Gradients
+from .base import Transform
+from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Init(Transform[EmptyTensorDict, Gradients]):

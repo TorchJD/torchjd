@@ -4,10 +4,11 @@ from typing import Iterable
 from torch import Tensor
 
 from torchjd.aggregation.bases import _WeightedAggregator
-from torchjd.autojac._transform import Transform
-from torchjd.autojac._transform._utils import ordered_set
-from torchjd.autojac._transform.strategy._utils import _combine_group, _select_ordered_subdict
-from torchjd.autojac._transform.tensor_dict import GradientVectors, JacobianMatrices
+
+from .._utils import ordered_set
+from ..base import Transform
+from ..tensor_dict import GradientVectors, JacobianMatrices
+from ._utils import _combine_group, _select_ordered_subdict
 
 
 class ExtrapolatingStrategy(Transform[JacobianMatrices, GradientVectors]):

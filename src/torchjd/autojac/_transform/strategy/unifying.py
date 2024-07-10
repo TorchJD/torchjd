@@ -3,10 +3,11 @@ from typing import Iterable
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
-from torchjd.autojac._transform import Transform
-from torchjd.autojac._transform._utils import ordered_set
-from torchjd.autojac._transform.strategy._utils import _aggregate_group, _select_ordered_subdict
-from torchjd.autojac._transform.tensor_dict import GradientVectors, JacobianMatrices
+
+from .._utils import ordered_set
+from ..base import Transform
+from ..tensor_dict import GradientVectors, JacobianMatrices
+from ._utils import _aggregate_group, _select_ordered_subdict
 
 
 class UnifyingStrategy(Transform[JacobianMatrices, GradientVectors]):

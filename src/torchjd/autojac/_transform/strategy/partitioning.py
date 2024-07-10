@@ -3,16 +3,12 @@ from typing import Iterable, Sequence
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
-from torchjd.autojac._transform import Conjunction, Transform
-from torchjd.autojac._transform._utils import _OrderedSet, ordered_set
-from torchjd.autojac._transform.strategy.unifying import UnifyingStrategy
-from torchjd.autojac._transform.subset import Subset
-from torchjd.autojac._transform.tensor_dict import (
-    Gradients,
-    GradientVectors,
-    JacobianMatrices,
-    Jacobians,
-)
+
+from .._utils import _OrderedSet, ordered_set
+from ..base import Conjunction, Transform
+from ..subset import Subset
+from ..tensor_dict import Gradients, GradientVectors, JacobianMatrices, Jacobians
+from .unifying import UnifyingStrategy
 
 
 class PartitioningStrategy(Transform[JacobianMatrices, GradientVectors]):

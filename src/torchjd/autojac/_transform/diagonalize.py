@@ -3,9 +3,9 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform._utils import ordered_set
-from torchjd.autojac._transform.base import Transform
-from torchjd.autojac._transform.tensor_dict import Gradients, Jacobians
+from ._utils import ordered_set
+from .base import Transform
+from .tensor_dict import Gradients, Jacobians
 
 
 class Diagonalize(Transform[Gradients, Jacobians]):

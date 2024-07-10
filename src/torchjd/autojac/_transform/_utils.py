@@ -4,11 +4,7 @@ from typing import Hashable, Iterable, Sequence, TypeAlias, TypeVar
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform.tensor_dict import (
-    EmptyTensorDict,
-    TensorDict,
-    _least_common_ancestor,
-)
+from .tensor_dict import EmptyTensorDict, TensorDict, _least_common_ancestor
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")

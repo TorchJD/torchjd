@@ -3,7 +3,8 @@ from typing import Iterable
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
-from torchjd.autojac._transform.strategy.partitioning import PartitioningStrategy
+
+from .partitioning import PartitioningStrategy
 
 
 class IsolatingStrategy(PartitioningStrategy):
