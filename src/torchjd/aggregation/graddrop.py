@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Aggregator
+from .bases import Aggregator
 
 
 def _identity(P: Tensor) -> Tensor:

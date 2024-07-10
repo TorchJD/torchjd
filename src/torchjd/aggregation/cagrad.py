@@ -3,8 +3,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._gramian_utils import _compute_normalized_gramian
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from ._gramian_utils import _compute_normalized_gramian
+from .bases import _WeightedAggregator, _Weighting
 
 
 class CAGrad(_WeightedAggregator):

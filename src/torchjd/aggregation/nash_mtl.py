@@ -29,7 +29,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator, _Weighting
 
 
 class NashMTL(_WeightedAggregator):

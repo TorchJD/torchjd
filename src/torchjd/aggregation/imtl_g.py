@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator, _Weighting
 
 
 class IMTLG(_WeightedAggregator):

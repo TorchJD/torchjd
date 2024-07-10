@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator, _Weighting
 
 
 class Krum(_WeightedAggregator):
