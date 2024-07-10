@@ -1,15 +1,16 @@
 import pytest
 import torch
 from torch import Tensor
-from unit.aggregation.utils.inputs import (
+
+from torchjd.aggregation import Constant
+
+from .utils import (
+    ExpectedShapeProperty,
     matrices,
     scaled_matrices,
     stationary_matrices,
     zero_rank_matrices,
 )
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
-
-from torchjd.aggregation import Constant
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
 # applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To

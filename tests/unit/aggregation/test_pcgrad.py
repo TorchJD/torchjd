@@ -1,12 +1,13 @@
 import pytest
 import torch
 from torch.testing import assert_close
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
+
+from .utils import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [PCGrad()])

@@ -1,14 +1,10 @@
 import pytest
 from torch import Tensor
 from torch.testing import assert_close
-from unit.aggregation.utils import (
-    ExpectedShapeProperty,
-    NonConflictingProperty,
-    matrices,
-    stationary_matrices,
-)
 
 from torchjd.aggregation import CAGrad, Mean
+
+from .utils import ExpectedShapeProperty, NonConflictingProperty, matrices, stationary_matrices
 
 
 @pytest.mark.filterwarnings("ignore:np.find_common_type is deprecated:")

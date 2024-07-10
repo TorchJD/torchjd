@@ -1,7 +1,8 @@
 import pytest
-from unit.aggregation.utils import ExpectedShapeProperty, PermutationInvarianceProperty
 
 from torchjd.aggregation import IMTLG
+
+from .utils import ExpectedShapeProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [IMTLG()])

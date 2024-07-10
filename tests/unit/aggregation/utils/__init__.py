@@ -1,4 +1,4 @@
-from unit.aggregation.utils.inputs import (
+from .inputs import (
     matrices,
     matrices_2_plus_rows,
     matrices_and_triples,
@@ -7,7 +7,7 @@ from unit.aggregation.utils.inputs import (
     stationary_matrices,
     zero_rank_matrices,
 )
-from unit.aggregation.utils.property_testers import (
+from .property_testers import (
     ExpectedShapeProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
