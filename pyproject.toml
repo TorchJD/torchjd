@@ -60,3 +60,10 @@ plot = [
     "dash>=2.16.0",  # Recent version to avoid problems, could be relaxed
     "kaleido==0.2.1",  # Only works with locked version
 ]
+
+[tool.docformatter]
+recursive = true
+wrap-summaries = 100
+wrap-descriptions = 100
+pre-summary-newline = true
+force-wrap = true
