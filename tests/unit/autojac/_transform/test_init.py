@@ -1,7 +1,8 @@
 import torch
-from unit.autojac._transform.utils import assert_tensor_dicts_are_close
 
 from torchjd.autojac._transform import EmptyTensorDict, Init
+
+from .utils import assert_tensor_dicts_are_close
 
 
 def test_init_single_input():

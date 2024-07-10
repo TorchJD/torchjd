@@ -1,8 +1,9 @@
 import pytest
-from unit.autojac._transform.strategy.utils import jacobian_matrix_dicts
 
 from torchjd.autojac._transform import Transform
 from torchjd.autojac._transform.tensor_dict import GradientVectors, JacobianMatrices
+
+from .inputs import jacobian_matrix_dicts
 
 
 class ExpectedStructureProperty:

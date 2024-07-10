@@ -2,9 +2,10 @@ from typing import Iterable
 
 import torch
 from torch import Tensor
-from unit.autojac._transform.utils import assert_tensor_dicts_are_close
 
 from torchjd.autojac._transform import Concatenation, EmptyTensorDict, Jacobians, Transform
+
+from .utils import assert_tensor_dicts_are_close
 
 
 class FakeJacobiansTransform(Transform[EmptyTensorDict, Jacobians]):

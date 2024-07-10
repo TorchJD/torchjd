@@ -1,6 +1,5 @@
 import torch
 from torch.testing import assert_close
-from unit.autojac._transform.utils import assert_tensor_dicts_are_close
 
 from torchjd.autojac._transform import (
     Conjunction,
@@ -17,6 +16,8 @@ from torchjd.autojac._transform import (
 )
 from torchjd.autojac._transform.grad import _grad
 from torchjd.autojac._transform.jac import _jac
+
+from .utils import assert_tensor_dicts_are_close
 
 
 def test_jac_is_stack_of_grads():

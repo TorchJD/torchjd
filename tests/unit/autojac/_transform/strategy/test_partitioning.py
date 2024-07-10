@@ -1,11 +1,8 @@
 import pytest
-from unit.autojac._transform.strategy.utils.inputs import aggregator, keys
-from unit.autojac._transform.strategy.utils.property_testers import (
-    EmptyDictProperty,
-    ExpectedStructureProperty,
-)
 
 from torchjd.autojac._transform.strategy import PartitioningStrategy
+
+from .utils import EmptyDictProperty, ExpectedStructureProperty, aggregator, keys
 
 
 @pytest.mark.parametrize(

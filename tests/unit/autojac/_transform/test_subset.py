@@ -1,7 +1,8 @@
 import torch
-from unit.autojac._transform.utils import assert_tensor_dicts_are_close
 
 from torchjd.autojac._transform import Subset, TensorDict
+
+from .utils import assert_tensor_dicts_are_close
 
 
 def test_subset_partition():
