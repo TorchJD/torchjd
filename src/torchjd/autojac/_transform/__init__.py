@@ -6,8 +6,6 @@ from .grad import Grad
 from .identity import Identity
 from .init import Init
 from .jac import Jac
-from .matrixify import Matrixify
-from .reshape import Reshape
 from .scaling import Scaling
 from .stack import Stack
 from .store import Store
