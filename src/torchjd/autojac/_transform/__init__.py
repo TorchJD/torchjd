@@ -1,4 +1,4 @@
-from .aggregation import make_aggregation
+from .aggregate import Aggregate
 from .base import Composition, Conjunction, Transform
 from .concatenation import Concatenation
 from .diagonalize import Diagonalize

@@ -14,18 +14,28 @@ _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
 
 
-def make_aggregation(
-    aggregator: Aggregator, key_order: Iterable[Tensor]
-) -> Transform[Jacobians, Gradients]:
-    """
-    TODO: doc
-    """
+class Aggregate(Transform[Jacobians, Gradients]):
+    def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
+        matrixify = _Matrixify(key_order)
+        strategy = UnifyingStrategy(aggregator, key_order)
+        reshape = _Reshape(key_order)
 
-    matrixify = _Matrixify(key_order)
-    strategy = UnifyingStrategy(aggregator, key_order)
-    reshape = _Reshape(key_order)
+        self._aggregator_str = str(aggregator)
+        self.transform = reshape << strategy << matrixify
 
-    return reshape << strategy << matrixify
+    def _compute(self, input: Jacobians) -> Gradients:
+        return self.transform(input)
+
+    def __str__(self) -> str:
+        raise f"Aggregate {self._aggregator_str}"
+
+    @property
+    def required_keys(self) -> set[Tensor]:
+        return self.transform.required_keys
+
+    @property
+    def output_keys(self) -> set[Tensor]:
+        return self.transform.output_keys
 
 
 class UnifyingStrategy(Transform[JacobianMatrices, GradientVectors]):

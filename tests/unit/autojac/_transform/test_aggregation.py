@@ -4,9 +4,8 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform import Jacobians
-from torchjd.autojac._transform.aggregation import UnifyingStrategy, _KeyType, _Matrixify, _Reshape
-from torchjd.autojac._transform.tensor_dict import GradientVectors
+from torchjd.autojac._transform import GradientVectors, Jacobians
+from torchjd.autojac._transform.aggregate import UnifyingStrategy, _KeyType, _Matrixify, _Reshape
 
 from .utils import (
     EmptyDictProperty,
