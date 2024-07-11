@@ -39,10 +39,6 @@ class Aggregate(Transform[Jacobians, Gradients]):
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
-    """
-    TODO: doc
-    """
-
     def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
         self.key_order = ordered_set(key_order)
         self.aggregator = aggregator
