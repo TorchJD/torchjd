@@ -17,11 +17,11 @@ _ValueType = TypeVar("_ValueType")
 class Aggregate(Transform[Jacobians, Gradients]):
     def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
         matrixify = _Matrixify(key_order)
-        strategy = _UnifyingStrategy(aggregator, key_order)
+        aggregate_matrices = _AggregateMatrices(aggregator, key_order)
         reshape = _Reshape(key_order)
 
         self._aggregator_str = str(aggregator)
-        self.transform = reshape << strategy << matrixify
+        self.transform = reshape << aggregate_matrices << matrixify
 
     def _compute(self, input: Jacobians) -> Gradients:
         return self.transform(input)
@@ -38,7 +38,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
         return self.transform.output_keys
 
 
-class _UnifyingStrategy(Transform[JacobianMatrices, GradientVectors]):
+class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     """
     TODO: doc
     """
@@ -94,9 +94,9 @@ class _UnifyingStrategy(Transform[JacobianMatrices, GradientVectors]):
         if len(jacobian_matrices) == 0:
             return EmptyTensorDict()
 
-        united_jacobian_matrix = _UnifyingStrategy._unite(jacobian_matrices)
+        united_jacobian_matrix = _AggregateMatrices._unite(jacobian_matrices)
         united_gradient_vector = aggregator(united_jacobian_matrix)
-        gradient_vectors = _UnifyingStrategy._disunite(united_gradient_vector, jacobian_matrices)
+        gradient_vectors = _AggregateMatrices._disunite(united_gradient_vector, jacobian_matrices)
         return gradient_vectors
 
     @staticmethod
