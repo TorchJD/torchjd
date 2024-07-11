@@ -3,9 +3,9 @@ from typing import Iterable, Sequence
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform._differentiation import _Differentiation
-from torchjd.autojac._transform._utils import _materialize
-from torchjd.autojac._transform.tensor_dict import Gradients
+from ._differentiation import _Differentiation
+from ._utils import _materialize
+from .tensor_dict import Gradients
 
 
 class Grad(_Differentiation[Gradients]):

@@ -5,7 +5,7 @@ from typing import Generic, Sequence
 
 from torch import Tensor
 
-from torchjd.autojac._transform._utils import _A, _B, _C, _union
+from ._utils import _A, _B, _C, _union
 
 
 class Transform(Generic[_B, _C], ABC):

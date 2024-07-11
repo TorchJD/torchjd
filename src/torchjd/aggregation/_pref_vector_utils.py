@@ -1,7 +1,7 @@
 from torch import Tensor
 
-from torchjd.aggregation.constant import _ConstantWeighting
-from torchjd.aggregation.mean import _MeanWeighting
+from .constant import _ConstantWeighting
+from .mean import _MeanWeighting
 
 
 def _check_pref_vector(pref_vector: Tensor | None) -> None:

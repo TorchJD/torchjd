@@ -2,8 +2,8 @@ from typing import Iterable
 
 from torch import Tensor
 
-from torchjd.autojac._transform.base import Transform
-from torchjd.autojac._transform.tensor_dict import Gradients, GradientVectors
+from .base import Transform
+from .tensor_dict import Gradients, GradientVectors
 
 
 class Reshape(Transform[GradientVectors, Gradients]):

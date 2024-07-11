@@ -2,14 +2,10 @@ import pytest
 import torch
 from torch import Tensor
 from torch.testing import assert_close
-from unit.aggregation.utils import (
-    matrices,
-    scaled_matrices,
-    stationary_matrices,
-    zero_rank_matrices,
-)
 
 from torchjd.aggregation import Aggregator
+
+from .inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
 
 
 class ExpectedShapeProperty:

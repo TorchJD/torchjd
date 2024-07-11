@@ -2,8 +2,8 @@ from typing import Iterable
 
 from torch import Tensor
 
-from torchjd.autojac._transform import Transform
-from torchjd.autojac._transform._utils import _A
+from ._utils import _A
+from .base import Transform
 
 
 class Subset(Transform[_A, _A]):

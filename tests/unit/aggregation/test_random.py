@@ -1,7 +1,8 @@
 import pytest
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
 from torchjd.aggregation import Random
+
+from .utils import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [Random()])

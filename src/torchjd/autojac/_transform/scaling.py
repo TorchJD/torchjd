@@ -1,7 +1,7 @@
 from torch import Tensor
 
-from torchjd.autojac._transform._utils import _A
-from torchjd.autojac._transform.base import Transform
+from ._utils import _A
+from .base import Transform
 
 
 class Scaling(Transform[_A, _A]):

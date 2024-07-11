@@ -1,12 +1,7 @@
-from torchjd.autojac._transform.base import Transform
-from torchjd.autojac._transform.matrixify import Matrixify
-from torchjd.autojac._transform.reshape import Reshape
-from torchjd.autojac._transform.tensor_dict import (
-    Gradients,
-    GradientVectors,
-    JacobianMatrices,
-    Jacobians,
-)
+from .base import Transform
+from .matrixify import Matrixify
+from .reshape import Reshape
+from .tensor_dict import Gradients, GradientVectors, JacobianMatrices, Jacobians
 
 
 def make_aggregation(

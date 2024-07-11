@@ -29,9 +29,9 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from torchjd.aggregation._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
-from torchjd.aggregation._str_utils import _vector_to_str
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from ._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
+from ._str_utils import _vector_to_str
+from .bases import _WeightedAggregator, _Weighting
 
 
 class AlignedMTL(_WeightedAggregator):

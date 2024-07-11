@@ -1,11 +1,8 @@
 import pytest
-from unit.autojac._transform.strategy.utils.inputs import aggregator, keys
-from unit.autojac._transform.strategy.utils.property_testers import (
-    EmptyDictProperty,
-    ExpectedStructureProperty,
-)
 
 from torchjd.autojac._transform.strategy import IsolatingStrategy
+
+from .utils import EmptyDictProperty, ExpectedStructureProperty, aggregator, keys
 
 
 @pytest.mark.parametrize("strategy", [IsolatingStrategy(aggregator, keys)])

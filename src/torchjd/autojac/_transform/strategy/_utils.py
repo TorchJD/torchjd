@@ -5,8 +5,9 @@ import torch
 from torch import Tensor
 
 from torchjd.aggregation.bases import Aggregator, _WeightedAggregator
-from torchjd.autojac._transform._utils import _OrderedSet
-from torchjd.autojac._transform.tensor_dict import EmptyTensorDict, GradientVectors
+
+from .._utils import _OrderedSet
+from ..tensor_dict import EmptyTensorDict, GradientVectors
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")

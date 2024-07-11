@@ -2,9 +2,10 @@ from typing import Iterable
 
 import torch
 from torch import Tensor
-from unit.autojac._transform.utils import assert_tensor_dicts_are_close
 
 from torchjd.autojac._transform import EmptyTensorDict, Gradients, Stack, Transform
+
+from .utils import assert_tensor_dicts_are_close
 
 
 class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
