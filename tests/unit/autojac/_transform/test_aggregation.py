@@ -42,6 +42,11 @@ jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs) for n_outputs in [1,
 
 @pytest.mark.parametrize("jacobian_matrices", jacobian_matrix_dicts)
 def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices):
+    """
+    Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
+    output of the desired structure.
+    """
+
     aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
     gradient_vectors = aggregate_matrices(jacobian_matrices)
 
@@ -54,6 +59,8 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
 
 
 def test_aggregate_matrices_empty_dict():
+    """Tests that applying _AggregateMatrices to an empty input gives an empty output."""
+
     aggregate_matrices = _AggregateMatrices(Random(), key_order=[])
     gradient_vectors = aggregate_matrices(JacobianMatrices({}))
     assert len(gradient_vectors) == 0
@@ -82,6 +89,10 @@ def test_aggregate_matrices_empty_dict():
 def test_disunite_wrong_vector_length(
     united_gradient_vector: Tensor, jacobian_matrices: dict[_KeyType, Tensor]
 ):
+    """
+    Tests that the _disunite method raises a ValueError when used on vectors of the wrong length.
+    """
+
     with pytest.raises(ValueError):
         _AggregateMatrices._disunite(united_gradient_vector, OrderedDict(jacobian_matrices))
 
