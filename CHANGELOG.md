@@ -13,10 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mtl_backward` function to make a backward pass for multi-task learning.
 - Multi-task learning example.
 
-### Removed
-
-- `_NormalizingWrapper` (unused protected class).
-
 ### Changed
 
 - **BREAKING**: Moved the `backward` module to the `autojac` package. Some imports may have to be
