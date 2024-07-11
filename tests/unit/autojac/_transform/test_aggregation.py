@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from torchjd.autojac._transform import GradientVectors, Jacobians
-from torchjd.autojac._transform.aggregate import UnifyingStrategy, _KeyType, _Matrixify, _Reshape
+from torchjd.autojac._transform.aggregate import _KeyType, _Matrixify, _Reshape, _UnifyingStrategy
 
 from .utils import (
     EmptyDictProperty,
@@ -16,12 +16,12 @@ from .utils import (
 )
 
 
-@pytest.mark.parametrize("strategy", [UnifyingStrategy(aggregator, key_order=keys)])
+@pytest.mark.parametrize("strategy", [_UnifyingStrategy(aggregator, key_order=keys)])
 class TestUnifyingStructure(ExpectedStructureProperty):
     pass
 
 
-@pytest.mark.parametrize("strategy", [UnifyingStrategy(aggregator, key_order=[])])
+@pytest.mark.parametrize("strategy", [_UnifyingStrategy(aggregator, key_order=[])])
 class TestUnifyingEmpty(EmptyDictProperty):
     pass
 
@@ -50,7 +50,7 @@ def test_disunite_wrong_vector_length(
     united_gradient_vector: Tensor, jacobian_matrices: dict[_KeyType, Tensor]
 ):
     with pytest.raises(ValueError):
-        UnifyingStrategy._disunite(united_gradient_vector, OrderedDict(jacobian_matrices))
+        _UnifyingStrategy._disunite(united_gradient_vector, OrderedDict(jacobian_matrices))
 
 
 def test_matrixify():
