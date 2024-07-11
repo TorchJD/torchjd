@@ -1,29 +1,62 @@
+import math
 from collections import OrderedDict
 
 import pytest
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform import GradientVectors, Jacobians
+from torchjd.aggregation import Random
+from torchjd.autojac._transform import GradientVectors, JacobianMatrices, Jacobians
 from torchjd.autojac._transform.aggregate import _AggregateMatrices, _KeyType, _Matrixify, _Reshape
 
-from .utils import (
-    EmptyDictProperty,
-    ExpectedStructureProperty,
-    aggregator,
-    assert_tensor_dicts_are_close,
-    keys,
-)
+from .utils import assert_tensor_dicts_are_close
 
 
-@pytest.mark.parametrize("strategy", [_AggregateMatrices(aggregator, key_order=keys)])
-class TestUnifyingStructure(ExpectedStructureProperty):
-    pass
+def _make_jacobian_matrices(n_outputs: int) -> JacobianMatrices:
+    jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
+    jacobian_list = [torch.rand(shape) for shape in jacobian_shapes]
+    jacobian_matrices = JacobianMatrices({key: jac for key, jac in zip(_keys, jacobian_list)})
+    return jacobian_matrices
 
 
-@pytest.mark.parametrize("strategy", [_AggregateMatrices(aggregator, key_order=[])])
-class TestUnifyingEmpty(EmptyDictProperty):
-    pass
+# Fix seed to fix randomness of tensor generation
+torch.manual_seed(0)
+_param_shapes = [
+    [],
+    [1],
+    [2],
+    [5],
+    [1, 1],
+    [2, 3],
+    [5, 5],
+    [1, 1, 1],
+    [2, 3, 4],
+    [5, 5, 5],
+    [1, 1, 1, 1],
+    [2, 3, 4, 5],
+    [5, 5, 5, 5],
+]
+_keys = [torch.zeros(shape) for shape in _param_shapes]
+jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs) for n_outputs in [1, 2, 5]]
+
+
+@pytest.mark.parametrize("jacobian_matrices", jacobian_matrix_dicts)
+def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices):
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
+    gradient_vectors = aggregate_matrices(jacobian_matrices)
+
+    assert set(jacobian_matrices.keys()) == set(gradient_vectors.keys())
+
+    for key in jacobian_matrices.keys():
+        jacobian_matrix = jacobian_matrices[key]
+        gradient_vector = gradient_vectors[key]
+        assert gradient_vector.numel() == jacobian_matrix[0].numel()
+
+
+def test_aggregate_matrices_empty_dict():
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=[])
+    gradient_vectors = aggregate_matrices(JacobianMatrices({}))
+    assert len(gradient_vectors) == 0
 
 
 @pytest.mark.parametrize(
