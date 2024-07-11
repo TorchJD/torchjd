@@ -27,7 +27,7 @@ class Transform(Generic[_B, _C], ABC):
     :class:`~torchjd.transform.tensor_dict.TensorDict`.
 
     As they are mathematical functions, transforms can be composed together as long as their
-    domains and range meaningfully match [TODO]. We also define conjunction of transforms [TODO].
+    domains and range meaningfully match.
     """
 
     def compose(self, other: Transform[_A, _B]) -> Transform[_A, _C]:
