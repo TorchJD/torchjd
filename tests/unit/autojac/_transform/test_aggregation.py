@@ -12,15 +12,13 @@ from torchjd.autojac._transform.aggregate import _AggregateMatrices, _KeyType, _
 from .utils import assert_tensor_dicts_are_close
 
 
-def _make_jacobian_matrices(n_outputs: int) -> JacobianMatrices:
+def _make_jacobian_matrices(n_outputs: int, generator: torch.Generator) -> JacobianMatrices:
     jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
-    jacobian_list = [torch.rand(shape) for shape in jacobian_shapes]
+    jacobian_list = [torch.rand(shape, generator=generator) for shape in jacobian_shapes]
     jacobian_matrices = JacobianMatrices({key: jac for key, jac in zip(_keys, jacobian_list)})
     return jacobian_matrices
 
 
-# Fix seed to fix randomness of tensor generation
-torch.manual_seed(0)
 _param_shapes = [
     [],
     [1],
@@ -37,7 +35,10 @@ _param_shapes = [
     [5, 5, 5, 5],
 ]
 _keys = [torch.zeros(shape) for shape in _param_shapes]
-jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs) for n_outputs in [1, 2, 5]]
+
+rng = torch.Generator()
+rng.manual_seed(0)
+jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs, rng) for n_outputs in [1, 2, 5]]
 
 
 @pytest.mark.parametrize("jacobian_matrices", jacobian_matrix_dicts)
@@ -46,6 +47,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
     Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
     output of the desired structure.
     """
+    print(jacobian_matrices)
 
     aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
     gradient_vectors = aggregate_matrices(jacobian_matrices)
