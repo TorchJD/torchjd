@@ -4,7 +4,7 @@ from typing import Hashable, TypeVar
 import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Aggregator, _WeightedAggregator
+from torchjd.aggregation.bases import Aggregator
 
 from .._utils import _OrderedSet
 from ..tensor_dict import EmptyTensorDict, GradientVectors
@@ -39,26 +39,6 @@ def _aggregate_group(
     united_gradient_vector = aggregator(united_jacobian_matrix)
     gradient_vectors = _disunite(united_gradient_vector, jacobian_matrices)
     return gradient_vectors
-
-
-def _combine_group(
-    jacobian_matrices: OrderedDict[Tensor, Tensor],
-    aggregator: _WeightedAggregator,
-) -> tuple[GradientVectors, Tensor]:
-    """
-    Unites the jacobian matrices and aggregates them using a
-    :class:`~torchjd.aggregation.bases.WeightedAggregator`. Returns the obtained gradient
-    vectors and the associated weights.
-    """
-
-    if len(jacobian_matrices) == 0:
-        return EmptyTensorDict(), torch.empty([0])
-
-    united_jacobian_matrix = _unite(jacobian_matrices)
-    gradient_weights = aggregator.weighting(united_jacobian_matrix)
-    united_gradient_vector = aggregator.combine(united_jacobian_matrix, gradient_weights)
-    gradient_vectors = _disunite(united_gradient_vector, jacobian_matrices)
-    return gradient_vectors, gradient_weights
 
 
 def _unite(jacobian_matrices: OrderedDict[Tensor, Tensor]) -> Tensor:
