@@ -73,7 +73,7 @@ def test_aggregate_matrices_empty_dict():
             torch.ones(10),
             {  # Total number of parameters according to the united gradient vector: 10
                 torch.ones(5): torch.ones(2, 5),
-                torch.ones(4): torch.ones(2, 3),
+                torch.ones(4): torch.ones(2, 4),
             },
         ),  # Total number of parameters according to the jacobian matrices: 9
         (
