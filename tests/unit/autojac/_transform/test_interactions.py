@@ -185,7 +185,7 @@ def test_conjunction_store_subset():
     EmptyDict, which is not the type that the conjunction should return (Gradients).
     """
 
-    key = torch.tensor([1.0, 2.0, 3.0])
+    key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     value = torch.ones_like(key)
     input = Gradients({key: value})
 
