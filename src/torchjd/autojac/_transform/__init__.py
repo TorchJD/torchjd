@@ -1,11 +1,9 @@
-from .aggregation import make_aggregation
+from .aggregate import Aggregate
 from .base import Composition, Conjunction, Transform
 from .diagonalize import Diagonalize
 from .grad import Grad
 from .init import Init
 from .jac import Jac
-from .matrixify import Matrixify
-from .reshape import Reshape
 from .stack import Stack
 from .store import Store
 from .subset import Subset

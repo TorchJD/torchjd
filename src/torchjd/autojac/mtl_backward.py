@@ -5,6 +5,7 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from ._transform import (
+    Aggregate,
     EmptyTensorDict,
     Grad,
     Gradients,
@@ -14,9 +15,7 @@ from ._transform import (
     Store,
     Subset,
     Transform,
-    make_aggregation,
 )
-from ._transform.strategy import UnifyingStrategy
 from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
@@ -106,7 +105,7 @@ def mtl_backward(
     jac = Jac(features, shared_params, parallel_chunk_size, retain_graph)
 
     # Transform that aggregates the Jacobians.
-    aggregate = make_aggregation(UnifyingStrategy(A, shared_params))
+    aggregate = Aggregate(A, shared_params)
 
     # Transform that stores the result in the .grad field of the shared parameters.
     store = Store(shared_params)
