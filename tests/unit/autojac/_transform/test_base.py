@@ -18,6 +18,9 @@ class FakeTransform(Transform[_B, _C]):
         self._required_keys = required_keys
         self._output_keys = output_keys
 
+    def __repr__(self):
+        return "t"
+
     def _compute(self, input: _B) -> _C:
         # ignore the input, create a dictionary with the right keys as an output.
         # cast the type for the purpose of type-checking.
@@ -125,3 +128,16 @@ def test_conjunction_empty_transforms():
     conjunction = Conjunction([])
 
     assert len(conjunction(TensorDict({}))) == 0
+
+
+def test_representation():
+    transform = FakeTransform(set(), set())
+
+    convoluted_transform = (
+        (transform | transform << transform << transform | transform)
+        << transform
+        << (transform | transform)
+    )
+    expected = "(t | t ∘ t ∘ t | t) ∘ t ∘ (t | t)"
+
+    assert repr(convoluted_transform) == expected
