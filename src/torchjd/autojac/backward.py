@@ -4,7 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._transform import Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Store
+from ._transform import Aggregate, Backward, Diagonalize, EmptyTensorDict, Init, Jac
 from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
@@ -21,7 +21,7 @@ def backward(
 ) -> None:
     r"""
     Computes the Jacobian of all values in ``tensors`` with respect to all ``inputs``. Computes its
-    aggregation by ``A`` and stores it in the ``.grad`` fields of the ``inputs``.
+    aggregation by ``A`` and backpropagates through ``inputs`` the obtained gradients.
 
     :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
         matrices will have one row for each value of each of these tensors.
@@ -82,9 +82,9 @@ def backward(
     # Transform that aggregates the Jacobians.
     aggregate = Aggregate(A, inputs)
 
-    # Transform that stores the result in the .grad field of the inputs.
-    store = Store(inputs)
+    # Transform that backwards the result in the .grad field of the inputs.
+    autograd_backward = Backward(inputs)
 
-    backward_transform = store << aggregate << jac << diag << init
+    backward_transform = autograd_backward << aggregate << jac << diag << init
 
     backward_transform(EmptyTensorDict())
