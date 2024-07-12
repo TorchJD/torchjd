@@ -9,9 +9,9 @@ from torchjd.autojac._transform import (
     Gradients,
     Init,
     Jac,
+    Select,
     Stack,
     Store,
-    Subset,
     TensorDict,
 )
 from torchjd.autojac._transform.grad import _grad
@@ -23,7 +23,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 def test_jac_is_stack_of_grads():
     """
     Tests that the Jac transform (composed with a Diagonalize) is equivalent to a Stack of Grad and
-    Subset transforms.
+    Select transforms.
     """
 
     x = torch.tensor(5.0)
@@ -36,8 +36,8 @@ def test_jac_is_stack_of_grads():
     jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True) << Diagonalize(
         [y1, y2]
     )
-    grad1 = Grad(outputs=[y1], inputs=[a1, a2]) << Subset([y1], [y1, y2])
-    grad2 = Grad(outputs=[y2], inputs=[a1, a2]) << Subset([y2], [y1, y2])
+    grad1 = Grad(outputs=[y1], inputs=[a1, a2]) << Select([y1], [y1, y2])
+    grad2 = Grad(outputs=[y2], inputs=[a1, a2]) << Select([y2], [y1, y2])
     stack_of_grads = Stack([grad1, grad2])
 
     jacobians = jac(input)
@@ -78,8 +78,8 @@ def test_multiple_differentiation_with_grad():
     y2 = a2 * 3.0
     input = EmptyTensorDict()
 
-    grad1 = Grad([y1], [a1]) << Subset([y1], [y1, y2])
-    grad2 = Grad([y2], [a2]) << Subset([y2], [y1, y2])
+    grad1 = Grad([y1], [a1]) << Select([y1], [y1, y2])
+    grad2 = Grad([y2], [a2]) << Select([y2], [y1, y2])
     init = Init([y1, y2])
     transform = (grad1 | grad2) << init
 
@@ -105,7 +105,7 @@ def test_repr():
 def test_simple_conjunction():
     """
     Tests that the Conjunction transform works correctly with a simple example involving several
-    Subset transforms, whose keys form a partition of the keys of the input tensor dict.
+    Select transforms, whose keys form a partition of the keys of the input tensor dict.
     Because of this, the output is expected to be the same as the input.
     """
 
@@ -114,10 +114,10 @@ def test_simple_conjunction():
     x3 = torch.tensor(4.0)
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
 
-    subset1 = Subset([x1], [x1, x2, x3])
-    subset2 = Subset([x2], [x1, x2, x3])
-    subset3 = Subset([x3], [x1, x2, x3])
-    conjunction = Conjunction([subset1, subset2, subset3])
+    select1 = Select([x1], [x1, x2, x3])
+    select2 = Select([x2], [x1, x2, x3])
+    select3 = Select([x3], [x1, x2, x3])
+    conjunction = Conjunction([select1, select2, select3])
 
     output = conjunction(input)
     expected_output = input
@@ -135,8 +135,8 @@ def test_conjunction_is_commutative():
     x2 = torch.tensor([1.0, 3.0, 5.0])
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2)})
 
-    a = Subset([x1], [x1, x2])
-    b = Subset([x2], [x1, x2])
+    a = Select([x1], [x1, x2])
+    b = Select([x2], [x1, x2])
     flipped_conjunction = Conjunction([b, a])
     conjunction = Conjunction([a, b])
 
@@ -164,10 +164,10 @@ def test_conjunction_is_associative():
         }
     )
 
-    a = Subset([x1], [x1, x2, x3, x4])
-    b = Subset([x2], [x1, x2, x3, x4])
-    c = Subset([x3], [x1, x2, x3, x4])
-    d = Subset([x4], [x1, x2, x3, x4])
+    a = Select([x1], [x1, x2, x3, x4])
+    b = Select([x2], [x1, x2, x3, x4])
+    c = Select([x3], [x1, x2, x3, x4])
+    d = Select([x4], [x1, x2, x3, x4])
 
     parenthesized_conjunction = Conjunction([a, Conjunction([Conjunction([b, c]), d])])
     conjunction = Conjunction([a, b, c, d])
@@ -178,9 +178,9 @@ def test_conjunction_is_associative():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_conjunction_store_subset():
+def test_conjunction_store_select():
     """
-    Tests that it is possible to conjunct a Store and a Subset in this order.
+    Tests that it is possible to conjunct a Store and a Select in this order.
     It is not trivial since the type of the TensorDict returned by the first transform (Store) is
     EmptyDict, which is not the type that the conjunction should return (Gradients).
     """
@@ -189,9 +189,9 @@ def test_conjunction_store_subset():
     value = torch.ones_like(key)
     input = Gradients({key: value})
 
-    subset = Subset([], [key])
+    select = Select([], [key])
     store = Store([key])
-    conjunction = store | subset
+    conjunction = store | select
 
     output = conjunction(input)
     expected_output = {}

@@ -6,7 +6,7 @@ from ._utils import _A
 from .base import Transform
 
 
-class Subset(Transform[_A, _A]):
+class Select(Transform[_A, _A]):
     def __init__(self, keys: Iterable[Tensor], required_keys: Iterable[Tensor]):
         self.keys = set(keys)
         self._required_keys = set(required_keys)

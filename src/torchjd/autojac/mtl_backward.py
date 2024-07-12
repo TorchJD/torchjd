@@ -11,9 +11,9 @@ from ._transform import (
     Gradients,
     Init,
     Jac,
+    Select,
     Stack,
     Store,
-    Subset,
     Transform,
 )
 from ._utils import (
@@ -133,10 +133,10 @@ def _make_task_transform(
 
     # Transform that stores the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    store = Store(tasks_params) << Subset(tasks_params, to_differentiate)
+    store = Store(tasks_params) << Select(tasks_params, to_differentiate)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
-    backpropagate = Subset(features, to_differentiate)
+    backpropagate = Select(features, to_differentiate)
 
     # Transform that stores the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
