@@ -5,7 +5,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from .inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
+from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
 
 
 class ExpectedShapeProperty:

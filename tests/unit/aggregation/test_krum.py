@@ -3,7 +3,8 @@ from torch import Tensor
 
 from torchjd.aggregation import Krum
 
-from .utils import ExpectedShapeProperty, scaled_matrices_2_plus_rows
+from ._inputs import scaled_matrices_2_plus_rows
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [Krum(n_byzantine=1)])

@@ -1,6 +1,6 @@
 import torch
 
-from .matrix_generation import (
+from ._matrix_generation import (
     generate_matrix,
     generate_positively_oriented_matrix,
     generate_stationary_matrix,

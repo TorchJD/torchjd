@@ -6,7 +6,11 @@ from torchjd.aggregation import UPGrad
 from torchjd.aggregation.mean import _MeanWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
-from .utils import ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty
+from ._property_testers import (
+    ExpectedShapeProperty,
+    NonConflictingProperty,
+    PermutationInvarianceProperty,
+)
 
 
 @pytest.mark.parametrize("aggregator", [UPGrad()])

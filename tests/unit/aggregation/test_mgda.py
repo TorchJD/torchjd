@@ -5,7 +5,11 @@ from torch.testing import assert_close
 from torchjd.aggregation import MGDA
 from torchjd.aggregation.mgda import _MGDAWeighting
 
-from .utils import ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty
+from ._property_testers import (
+    ExpectedShapeProperty,
+    NonConflictingProperty,
+    PermutationInvarianceProperty,
+)
 
 
 @pytest.mark.parametrize("aggregator", [MGDA()])
