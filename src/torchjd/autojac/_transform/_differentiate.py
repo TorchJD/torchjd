@@ -7,7 +7,7 @@ from ._utils import ordered_set
 from .base import _A, Transform
 
 
-class _Differentiation(Transform[_A, _A], ABC):
+class _Differentiate(Transform[_A, _A], ABC):
     def __init__(self, outputs: Iterable[Tensor], inputs: Iterable[Tensor]):
         self.outputs = ordered_set(outputs)
         self.inputs = ordered_set(inputs)
