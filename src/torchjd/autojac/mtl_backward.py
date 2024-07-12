@@ -6,13 +6,13 @@ from torchjd.aggregation import Aggregator
 
 from ._transform import (
     Aggregate,
+    Backward,
     EmptyTensorDict,
     Grad,
     Gradients,
     Init,
     Jac,
     Stack,
-    Store,
     Subset,
     Transform,
 )
@@ -108,9 +108,9 @@ def mtl_backward(
     aggregate = Aggregate(A, shared_params)
 
     # Transform that stores the result in the .grad field of the shared parameters.
-    store = Store(shared_params)
+    backward = Backward(shared_params)
 
-    backward_transform = store << aggregate << jac << stack
+    backward_transform = backward << aggregate << jac << stack
 
     backward_transform(EmptyTensorDict())
 
@@ -133,14 +133,14 @@ def _make_task_transform(
 
     # Transform that stores the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    store = Store(tasks_params) << Subset(tasks_params, to_differentiate)
+    backward = Backward(tasks_params) << Subset(tasks_params, to_differentiate)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
     backpropagate = Subset(features, to_differentiate)
 
     # Transform that stores the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
-    backward_task = (backpropagate | store) << grad << init
+    backward_task = (backpropagate | backward) << grad << init
     return backward_task
 
 

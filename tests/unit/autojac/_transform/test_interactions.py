@@ -2,6 +2,7 @@ import torch
 from torch.testing import assert_close
 
 from torchjd.autojac._transform import (
+    Backward,
     Conjunction,
     Diagonalize,
     EmptyTensorDict,
@@ -10,7 +11,6 @@ from torchjd.autojac._transform import (
     Init,
     Jac,
     Stack,
-    Store,
     Subset,
     TensorDict,
 )
@@ -190,7 +190,7 @@ def test_conjunction_store_subset():
     input = Gradients({key: value})
 
     subset = Subset([], [key])
-    store = Store([key])
+    store = Backward([key])
     conjunction = store | subset
 
     output = conjunction(input)

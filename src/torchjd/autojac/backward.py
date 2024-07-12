@@ -4,7 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._transform import Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Store
+from ._transform import Aggregate, Backward, Diagonalize, EmptyTensorDict, Init, Jac
 from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
@@ -83,8 +83,8 @@ def backward(
     aggregate = Aggregate(A, inputs)
 
     # Transform that stores the result in the .grad field of the inputs.
-    store = Store(inputs)
+    autograd_backward = Backward(inputs)
 
-    backward_transform = store << aggregate << jac << diag << init
+    backward_transform = autograd_backward << aggregate << jac << diag << init
 
     backward_transform(EmptyTensorDict())
