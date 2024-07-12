@@ -1,6 +1,5 @@
 from .aggregation import make_aggregation
 from .base import Composition, Conjunction, Transform
-from .concatenation import Concatenation
 from .diagonalize import Diagonalize
 from .grad import Grad
 from .init import Init
