@@ -332,12 +332,12 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True) + 3.0
+    p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True)
     p2 = torch.tensor(5.0, requires_grad=True)
 
     representations = [torch.rand(shape) @ p0 for shape in shapes]
 
-    y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
+    y1 = sum([(r * p).sum() for r, p in zip(representations, p1 + 3.0)])
     y2 = (representations[0] * p2).sum()
 
     mtl_backward(
