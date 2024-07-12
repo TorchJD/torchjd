@@ -337,7 +337,7 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
 
     representations = [torch.rand(shape) @ p0 for shape in shapes]
 
-    y1 = sum([(r * p).sum() for r, p in zip(representations, p1 + 3.0)])
+    y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
     y2 = (representations[0] * p2).sum()
 
     mtl_backward(
