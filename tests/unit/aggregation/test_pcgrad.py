@@ -7,7 +7,7 @@ from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
-from .utils import ExpectedShapeProperty
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [PCGrad()])

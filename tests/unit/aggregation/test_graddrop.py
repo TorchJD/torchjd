@@ -3,7 +3,7 @@ import torch
 
 from torchjd.aggregation import GradDrop
 
-from .utils import ExpectedShapeProperty
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [GradDrop()])

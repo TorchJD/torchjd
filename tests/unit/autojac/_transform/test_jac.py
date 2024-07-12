@@ -2,7 +2,7 @@ import torch
 
 from torchjd.autojac._transform import Jac, Jacobians
 
-from .utils import assert_tensor_dicts_are_close
+from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def test_single_input():

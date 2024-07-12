@@ -4,13 +4,8 @@ from torch import Tensor
 
 from torchjd.aggregation import Constant
 
-from .utils import (
-    ExpectedShapeProperty,
-    matrices,
-    scaled_matrices,
-    stationary_matrices,
-    zero_rank_matrices,
-)
+from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
+from ._property_testers import ExpectedShapeProperty
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
 # applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To

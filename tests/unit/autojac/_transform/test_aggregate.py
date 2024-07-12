@@ -9,7 +9,7 @@ from torchjd.aggregation import Random
 from torchjd.autojac._transform import GradientVectors, JacobianMatrices, Jacobians
 from torchjd.autojac._transform.aggregate import _AggregateMatrices, _KeyType, _Matrixify, _Reshape
 
-from .utils import assert_tensor_dicts_are_close
+from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> JacobianMatrices:

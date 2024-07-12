@@ -3,12 +3,8 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator, TrimmedMean
 
-from .utils import (
-    ExpectedShapeProperty,
-    PermutationInvarianceProperty,
-    matrices_2_plus_rows,
-    scaled_matrices_2_plus_rows,
-)
+from ._inputs import matrices_2_plus_rows, scaled_matrices_2_plus_rows
+from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [TrimmedMean(trim_number=1)])

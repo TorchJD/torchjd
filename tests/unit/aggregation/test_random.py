@@ -2,7 +2,7 @@ import pytest
 
 from torchjd.aggregation import Random
 
-from .utils import ExpectedShapeProperty
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [Random()])
