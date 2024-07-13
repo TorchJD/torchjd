@@ -36,7 +36,7 @@ class Transform(Generic[_B, _C], ABC):
     def conjunct(self, other: Transform[_B, _C]) -> Transform[_B, _C]:
         return Conjunction([self, other])
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return type(self).__name__
 
     @abstractmethod
@@ -71,8 +71,8 @@ class Composition(Transform[_A, _C]):
         self.outer = outer
         self.inner = inner
 
-    def __repr__(self) -> str:
-        return repr(self.outer) + " ∘ " + repr(self.inner)
+    def __str__(self) -> str:
+        return str(self.outer) + " ∘ " + str(self.inner)
 
     def _compute(self, input: _A) -> _C:
         intermediate = self.inner(input)
