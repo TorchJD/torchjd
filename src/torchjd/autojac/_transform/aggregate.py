@@ -26,9 +26,6 @@ class Aggregate(Transform[Jacobians, Gradients]):
     def _compute(self, input: Jacobians) -> Gradients:
         return self.transform(input)
 
-    def __str__(self) -> str:
-        raise f"Aggregate {self._aggregator_str}"
-
     @property
     def required_keys(self) -> set[Tensor]:
         return self.transform.required_keys
@@ -55,9 +52,6 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         """
         ordered_matrices = self._select_ordered_subdict(jacobian_matrices, self.key_order)
         return self._aggregate_group(ordered_matrices, self.aggregator)
-
-    def __str__(self) -> str:
-        return f"Unifying {self.aggregator}"
 
     @property
     def required_keys(self) -> set[Tensor]:
