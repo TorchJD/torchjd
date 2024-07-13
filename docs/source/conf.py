@@ -67,3 +67,5 @@ html_theme_options = {
 html_js_files = [
     ("https://stats.torchjd.org/js/script.js", {"data-domain": "torchjd.org", "defer": "defer"}),
 ]
+
+html_title = "TorchJD"
