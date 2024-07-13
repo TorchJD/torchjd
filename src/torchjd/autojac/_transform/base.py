@@ -104,6 +104,16 @@ class Conjunction(Transform[_A, _B]):
         if len(self._output_keys) != len(output_keys_with_duplicates):
             raise ValueError("The sets of output keys of transforms should be disjoint.")
 
+    def __str__(self) -> str:
+        strings = []
+        for t in self.transforms:
+            s = str(t)
+            if isinstance(t, Conjunction):
+                strings.append(s[1:-1])  # Remove parentheses
+            else:
+                strings.append(s)
+        return "(" + " | ".join(strings) + ")"
+
     def _compute(self, tensor_dict: _A) -> _B:
         output = _union([transform(tensor_dict) for transform in self.transforms])
         return output
