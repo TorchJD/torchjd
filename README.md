@@ -1,5 +1,7 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
+[![Tests](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml)
+
 TorchJD is a library enabling [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch, to
 train neural networks with multiple objectives. The full documentation is available at
 [torchjd.org](https://torchjd.org).
