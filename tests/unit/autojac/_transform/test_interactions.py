@@ -2,6 +2,7 @@ import torch
 from torch.testing import assert_close
 
 from torchjd.autojac._transform import (
+    Backward,
     Conjunction,
     Diagonalize,
     EmptyTensorDict,
@@ -11,7 +12,6 @@ from torchjd.autojac._transform import (
     Jac,
     Select,
     Stack,
-    Store,
     TensorDict,
 )
 from torchjd.autojac._transform.grad import _grad
@@ -178,10 +178,10 @@ def test_conjunction_is_associative():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_conjunction_store_select():
+def test_conjunction_backward_select():
     """
-    Tests that it is possible to conjunct a Store and a Select in this order.
-    It is not trivial since the type of the TensorDict returned by the first transform (Store) is
+    Tests that it is possible to conjunct a `Backward` and a Select in this order.
+    It is not trivial since the type of the TensorDict returned by the first transform (`Backward`) is
     EmptyDict, which is not the type that the conjunction should return (Gradients).
     """
 
@@ -190,8 +190,8 @@ def test_conjunction_store_select():
     input = Gradients({key: value})
 
     select = Select([], [key])
-    store = Store([key])
-    conjunction = store | select
+    backward = Backward([key])
+    conjunction = backward | select
 
     output = conjunction(input)
     expected_output = {}

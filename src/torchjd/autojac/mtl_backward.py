@@ -6,6 +6,7 @@ from torchjd.aggregation import Aggregator
 
 from ._transform import (
     Aggregate,
+    Backward,
     EmptyTensorDict,
     Grad,
     Gradients,
@@ -13,7 +14,6 @@ from ._transform import (
     Jac,
     Select,
     Stack,
-    Store,
     Transform,
 )
 from ._utils import (
@@ -38,8 +38,9 @@ def mtl_backward(
 
     This function computes the gradient of each task-specific loss with respect to its task-specific
     parameters and stores it in their ``.grad`` fields. Then, it computes the Jacobian of all losses
-    with respect to the shared parameters, aggregates it and stores the result in their ``.grad``
-    fields.
+    with respect to the shared parameters, aggregates it. The results are either stored in the
+    ``.grad`` fields of the parameters requiring it, or backpropagates the obtain gradient through
+    the others.
 
     :param losses: The task losses. The Jacobian matrix will have one row per loss.
     :param features: The last shared representation used for all tasks, as given by the feature
@@ -84,7 +85,7 @@ def mtl_backward(
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
 
-    # Task-specific transforms. Each of them computes and stores the gradient of the task's loss
+    # Task-specific transforms. Each of them computes and backpropagates the gradient of the task's loss
     # w.r.t. the task's specific parameters, and computes and backpropagates the gradient of the
     # losses w.r.t. the shared representations.
     task_transforms = [
@@ -107,10 +108,10 @@ def mtl_backward(
     # Transform that aggregates the Jacobians.
     aggregate = Aggregate(A, shared_params)
 
-    # Transform that stores the result in the .grad field of the shared parameters.
-    store = Store(shared_params)
+    # Transform that backwards the result in the .grad field of the shared parameters.
+    backward = Backward(shared_params)
 
-    backward_transform = store << aggregate << jac << stack
+    backward_transform = backward << aggregate << jac << stack
 
     backward_transform(EmptyTensorDict())
 
@@ -131,16 +132,16 @@ def _make_task_transform(
     # the features.
     grad = Grad([loss], to_differentiate, retain_graph)
 
-    # Transform that stores the gradients w.r.t. the task-specific parameters into their
+    # Transform that backwards the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    store = Store(tasks_params) << Select(tasks_params, to_differentiate)
+    backward = Backward(tasks_params) << Select(tasks_params, to_differentiate)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
     backpropagate = Select(features, to_differentiate)
 
-    # Transform that stores the gradient of the losses w.r.t. the task-specific parameters into
+    # Transform that backwards the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
-    backward_task = (backpropagate | store) << grad << init
+    backward_task = (backpropagate | backward) << grad << init
     return backward_task
 
 
