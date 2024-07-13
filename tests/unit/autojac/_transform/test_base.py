@@ -18,6 +18,9 @@ class FakeTransform(Transform[_B, _C]):
         self._required_keys = required_keys
         self._output_keys = output_keys
 
+    def __str__(self):
+        return "T"
+
     def _compute(self, input: _B) -> _C:
         # ignore the input, create a dictionary with the right keys as an output.
         # cast the type for the purpose of type-checking.
@@ -125,3 +128,15 @@ def test_conjunction_empty_transforms():
     conjunction = Conjunction([])
 
     assert len(conjunction(TensorDict({}))) == 0
+
+
+def test_str():
+    """
+    Tests that the __str__ method works correctly even for transform involving compositions and
+    conjunctions.
+    """
+
+    t = FakeTransform(set(), set())
+    transform = (t | t << t << t | t) << t << (t | t)
+
+    assert str(transform) == "(T | T ∘ T ∘ T | T) ∘ T ∘ (T | T)"
