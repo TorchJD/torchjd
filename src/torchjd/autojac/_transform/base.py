@@ -36,7 +36,7 @@ class Transform(Generic[_B, _C], ABC):
     def conjunct(self, other: Transform[_B, _C]) -> Transform[_B, _C]:
         return Conjunction([self, other])
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return type(self).__name__
 
     @abstractmethod
@@ -71,8 +71,8 @@ class Composition(Transform[_A, _C]):
         self.outer = outer
         self.inner = inner
 
-    def __repr__(self) -> str:
-        return repr(self.outer) + " ∘ " + repr(self.inner)
+    def __str__(self) -> str:
+        return str(self.outer) + " ∘ " + str(self.inner)
 
     def _compute(self, input: _A) -> _C:
         intermediate = self.inner(input)
@@ -103,6 +103,16 @@ class Conjunction(Transform[_A, _B]):
 
         if len(self._output_keys) != len(output_keys_with_duplicates):
             raise ValueError("The sets of output keys of transforms should be disjoint.")
+
+    def __str__(self) -> str:
+        strings = []
+        for t in self.transforms:
+            s = str(t)
+            if isinstance(t, Conjunction):
+                strings.append(s[1:-1])  # Remove parentheses
+            else:
+                strings.append(s)
+        return "(" + " | ".join(strings) + ")"
 
     def _compute(self, tensor_dict: _A) -> _B:
         output = _union([transform(tensor_dict) for transform in self.transforms])

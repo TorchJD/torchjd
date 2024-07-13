@@ -92,14 +92,14 @@ def test_multiple_differentiation_with_grad():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_repr():
-    """Tests that the repr method works correctly even for a complex transform."""
+def test_str():
+    """Tests that the __str__ method works correctly even for a complex transform."""
     init = Init([])
     diag = Diagonalize([])
     jac = Jac([], [], chunk_size=None)
     transform = jac << diag << init
 
-    assert repr(transform) == "Jac ∘ Diagonalize ∘ Init"
+    assert str(transform) == "Jac ∘ Diagonalize ∘ Init"
 
 
 def test_simple_conjunction():
