@@ -98,9 +98,7 @@ def test_stack_overlapping_key_sets():
 
 
 def test_stack_no_transform():
-    """
-    Tests that the Stack transform correctly handles an empty list of transforms
-    """
+    """Tests that the Stack transform correctly handles an empty list of transforms."""
 
     stack = Stack([])
     input = EmptyTensorDict({})
