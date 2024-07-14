@@ -95,3 +95,16 @@ def test_stack_overlapping_key_sets():
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
+
+
+def test_stack_no_transform():
+    """
+    Tests that the Stack transform correctly handles an empty list of transforms
+    """
+
+    stack = Stack([])
+    input = EmptyTensorDict({})
+    output = stack(input)
+    expected_output = EmptyTensorDict({})
+
+    assert_tensor_dicts_are_close(output, expected_output)
