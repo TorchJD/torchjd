@@ -10,15 +10,12 @@ from .tensor_dict import Gradients, Jacobians
 
 class Stack(Transform[_A, Jacobians]):
     def __init__(self, transforms: Sequence[Transform[_A, Gradients]]):
-        if len(transforms) == 0:
-            raise ValueError("Parameter `transforms` cannot be empty.")
-
         self.transforms = transforms
 
-        self._required_keys = transforms[0].required_keys
+        self._required_keys = {key for transform in transforms for key in transform.required_keys}
         self._output_keys = {key for transform in transforms for key in transform.output_keys}
 
-        for transform in transforms[1:]:
+        for transform in transforms:
             if transform.required_keys != self.required_keys:
                 raise ValueError("All transforms should require the same set of keys.")
 
