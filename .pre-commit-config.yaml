@@ -38,7 +38,7 @@ repos:
         args: [--line-length=100]
 
 -   repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.5
+    rev: 886a0329b3949dfb8be9f10f80bc96829923debe  # This can be changed to a numbered version whenever https://github.com/PyCQA/docformatter/commit/a850cf98e8016ae9a36ce5c4ad882e87e9e74b45 is released
     hooks:
     -   id: docformatter
         additional_dependencies: [tomli]
