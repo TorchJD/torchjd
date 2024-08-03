@@ -189,9 +189,9 @@ def make_right_angle(
 
 def compute_2d_dual_cone(matrix: np.ndarray) -> tuple[float, float]:
     """
-    Computes the frontier of the dual cone from a matrix of 2-dimensional rows.
-    Returns the result as an angle in [0, 2pi[ corresponding to the start of the cone, and an
-    opening angle, that is <= pi and that can be negative if the cone is empty.
+    Computes the frontier of the dual cone from a matrix of 2-dimensional rows. Returns the result
+    as an angle in [0, 2pi[ corresponding to the start of the cone, and an opening angle, that is <=
+    pi and that can be negative if the cone is empty.
 
     This method currently does not handle the case where the cone is a straight line passing by the
     origin (when matrix is for instance [[1, 0],[-1, 0]]).
@@ -218,10 +218,8 @@ def combine_bounds(
     opening: float,
     hs_start_angle: float,
 ) -> tuple[float, float]:
-    """
-    Computes the intersection between a cone, defined by a start angle and an opening, and a
-    half-space, defined by a start angle.
-    """
+    """Computes the intersection between a cone, defined by a start angle and an opening, and a
+    half-space, defined by a start angle."""
 
     angle_between_starts = (hs_start_angle - cone_start_angle) % (2 * np.pi)
     if angle_between_starts < np.pi:
@@ -234,10 +232,8 @@ def combine_bounds(
 
 
 def coord_to_angle(x: float, y: float) -> tuple[float, float]:
-    """
-    Converts an (x, y) pair into its angle from the (1, 0) vector, as a value in [0, 2pi[, and its
-    length
-    """
+    """Converts an (x, y) pair into its angle from the (1, 0) vector, as a value in [0, 2pi[, and
+    its length."""
 
     r = np.sqrt(x**2 + y**2)
 
@@ -252,9 +248,7 @@ def coord_to_angle(x: float, y: float) -> tuple[float, float]:
 
 
 def angle_to_coord(angle: float, r: float = 1.0) -> tuple[float, float]:
-    """
-    Converts an angle in [0, 2pi[ from the (1, 0) vector, and a radius, into an (x, y) pair.
-    """
+    """Converts an angle in [0, 2pi[ from the (1, 0) vector, and a radius, into an (x, y) pair."""
 
     x = r * np.cos(angle)
     y = r * np.sin(angle)

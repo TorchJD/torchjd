@@ -5,8 +5,10 @@ from torch import Tensor, nn
 
 class Aggregator(nn.Module, ABC):
     r"""
-    Abstract base class for all aggregators. It has the role of aggregating matrices of dimension
-    :math:`m \times n` into row vectors of dimension :math:`n`.
+    Abstract base class for all aggregators.
+
+    It has the role of aggregating matrices of dimension :math:`m \times n` into row vectors of
+    dimension :math:`n`.
     """
 
     @staticmethod
@@ -35,8 +37,10 @@ class Aggregator(nn.Module, ABC):
 
 class _Weighting(nn.Module, ABC):
     r"""
-    Abstract base class for all weighting methods. It has the role of extracting a vector of weights
-    of dimension :math:`m` from a matrix of dimension :math:`m \times n`.
+    Abstract base class for all weighting methods.
+
+    It has the role of extracting a vector of weights of dimension :math:`m` from a matrix of
+    dimension :math:`m \times n`.
     """
 
     def __init__(self):
@@ -66,10 +70,8 @@ class _WeightedAggregator(Aggregator):
 
     @staticmethod
     def combine(matrix: Tensor, weights: Tensor) -> Tensor:
-        """
-        Aggregates a matrix by making a linear combination of its rows, using the provided vector of
-        weights.
-        """
+        """Aggregates a matrix by making a linear combination of its rows, using the provided vector
+        of weights."""
 
         vector = weights @ matrix
         return vector

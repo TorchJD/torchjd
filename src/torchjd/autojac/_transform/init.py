@@ -13,10 +13,11 @@ class Init(Transform[EmptyTensorDict, Gradients]):
 
     def _compute(self, input: EmptyTensorDict) -> Gradients:
         r"""
-        Computes the gradients of the ``value`` with respect to itself. Returns the result as a
-        dictionary. The only key of the dictionary is ``value``. The corresponding gradient is a
-        tensor of 1s of identical shape, because :math:`\frac{\partial v}{\partial v} = 1` for any
-        :math:`v`.
+        Computes the gradients of the ``value`` with respect to itself.
+
+        Returns the result as a dictionary. The only key of the dictionary is ``value``. The
+        corresponding gradient is a tensor of 1s of identical shape, because :math:`\frac{\partial
+        v}{\partial v} = 1` for any :math:`v`.
         """
 
         return Gradients({value: torch.ones_like(value) for value in self.values})

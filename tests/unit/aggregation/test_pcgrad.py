@@ -31,10 +31,8 @@ class TestPCGrad(ExpectedShapeProperty):
     ],
 )
 def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
-    """
-    Tests that UPGradWrapper of a SumWeighting is equivalent to PCGradWeighting for matrices of 2
-    rows.
-    """
+    """Tests that UPGradWrapper of a SumWeighting is equivalent to PCGradWeighting for matrices of 2
+    rows."""
 
     matrix = torch.randn(shape)
 

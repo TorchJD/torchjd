@@ -36,9 +36,9 @@ from .bases import _WeightedAggregator, _Weighting
 
 class AlignedMTL(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
-    `Independent Component Alignment for Multi-Task Learning
-    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of `Independent
+    Component Alignment for Multi-Task Learning <https://openaccess.thecvf.com/content/CVPR2023/pape
+    rs/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
     :param pref_vector: The preference vector to use.
 
@@ -81,13 +81,13 @@ class AlignedMTL(_WeightedAggregator):
 
 class _AlignedMTLWrapper(_Weighting):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that corrects the extracted
-    weights with the balance transformation defined in Algorithm 1 of `Independent Component
-    Alignment for Multi-Task Learning
-    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that corrects the extracted weights
+    with the balance transformation defined in Algorithm 1 of `Independent Component Alignment for
+    Multi-Task Learning <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent
+    _Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting` responsible for
+        extracting weight vectors from the input matrices.
     """
 
     def __init__(self, weighting: _Weighting):

@@ -6,10 +6,8 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def test_select_partition():
-    """
-    Tests that the Select transform works correctly by applying 2 different Selects to a
-    TensorDict, whose keys form a partition of the keys of the TensorDict.
-    """
+    """Tests that the Select transform works correctly by applying 2 different Selects to a
+    TensorDict, whose keys form a partition of the keys of the TensorDict."""
 
     key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     key2 = torch.tensor([1.0, 3.0, 5.0])
@@ -34,10 +32,8 @@ def test_select_partition():
 
 
 def test_conjunction_of_selects_is_select():
-    """
-    Tests that the conjunction of 2 Select transforms is equivalent to directly using a Select with
-    the union of the keys of the 2 Selects.
-    """
+    """Tests that the conjunction of 2 Select transforms is equivalent to directly using a Select
+    with the union of the keys of the 2 Selects."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)

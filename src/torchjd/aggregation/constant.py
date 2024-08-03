@@ -39,8 +39,7 @@ class Constant(_WeightedAggregator):
 
 class _ConstantWeighting(_Weighting):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that returns constant, pre-determined
-    weights.
+    :class:`~torchjd.aggregation.bases._Weighting` that returns constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
     """

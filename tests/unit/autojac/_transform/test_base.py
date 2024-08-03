@@ -10,9 +10,8 @@ from torchjd.autojac._transform.tensor_dict import TensorDict
 
 
 class FakeTransform(Transform[_B, _C]):
-    """
-    Fake ``Transform`` to test `required_keys` and `output_keys` when composing and conjuncting.
-    """
+    """Fake ``Transform`` to test `required_keys` and `output_keys` when composing and
+    conjuncting."""
 
     def __init__(self, required_keys: set[Tensor], output_keys: set[Tensor]):
         self._required_keys = required_keys
@@ -37,10 +36,8 @@ class FakeTransform(Transform[_B, _C]):
 
 
 def test_apply_keys():
-    """
-    Tests that a ``Transform`` checks that the provided dictionary to the `__apply__` function
-    contains keys that correspond exactly to `required_keys`.
-    """
+    """Tests that a ``Transform`` checks that the provided dictionary to the `__apply__` function
+    contains keys that correspond exactly to `required_keys`."""
 
     t1 = torch.randn([2])
     t2 = torch.randn([3])
@@ -59,10 +56,8 @@ def test_apply_keys():
 
 
 def test_compose_keys_match():
-    """
-    Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
-    match with the outer transform's `required_keys`.
-    """
+    """Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
+    match with the outer transform's `required_keys`."""
 
     t1 = torch.randn([2])
     t2 = torch.randn([3])
@@ -76,10 +71,8 @@ def test_compose_keys_match():
 
 
 def test_conjunct_required_keys():
-    """
-    Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
-    same `required_keys`.
-    """
+    """Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
+    same `required_keys`."""
 
     t1 = torch.randn([2])
     t2 = torch.randn([3])
@@ -98,10 +91,8 @@ def test_conjunct_required_keys():
 
 
 def test_conjunct_wrong_output_keys():
-    """
-    Tests that the conjunction of ``Transform``s checks that the transforms `output_keys` are
-    disjoint.
-    """
+    """Tests that the conjunction of ``Transform``s checks that the transforms `output_keys` are
+    disjoint."""
 
     t1 = torch.randn([2])
     t2 = torch.randn([3])
@@ -121,8 +112,9 @@ def test_conjunct_wrong_output_keys():
 
 def test_conjunction_empty_transforms():
     """
-    Tests that it is possible to take the conjunction of no transform. This should return an empty
-    dictionary.
+    Tests that it is possible to take the conjunction of no transform.
+
+    This should return an empty dictionary.
     """
 
     conjunction = Conjunction([])
@@ -131,10 +123,8 @@ def test_conjunction_empty_transforms():
 
 
 def test_str():
-    """
-    Tests that the __str__ method works correctly even for transform involving compositions and
-    conjunctions.
-    """
+    """Tests that the __str__ method works correctly even for transform involving compositions and
+    conjunctions."""
 
     t = FakeTransform(set(), set())
     transform = (t | t << t << t | t) << t << (t | t)

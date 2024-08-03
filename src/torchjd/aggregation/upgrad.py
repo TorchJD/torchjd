@@ -14,8 +14,8 @@ from .bases import _WeightedAggregator, _Weighting
 class UPGrad(_WeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that projects each row of the input matrix onto
-    the dual cone of all rows of this matrix, and that combines the result, as proposed in
-    `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
+    the dual cone of all rows of this matrix, and that combines the result, as proposed in `Jacobian
+    Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
@@ -81,8 +81,8 @@ class _UPGradWrapper(_Weighting):
     :param weighting: The wrapped weighting.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
-        numerical errors when computing the gramian, it might not exactly be positive definite.
-        This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
+        numerical errors when computing the gramian, it might not exactly be positive definite. This
+        issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem.
     """

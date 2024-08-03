@@ -28,10 +28,8 @@ class Sum(_WeightedAggregator):
 
 
 class _SumWeighting(_Weighting):
-    r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
-    :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
-    """
+    r""":class:`~torchjd.aggregation.bases._Weighting` that gives the weights :math:`\begin{bmatrix}
+    1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`."""
 
     def forward(self, matrix: Tensor) -> Tensor:
         device = matrix.device

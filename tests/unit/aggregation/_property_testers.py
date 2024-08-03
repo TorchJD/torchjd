@@ -11,8 +11,9 @@ from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_m
 class ExpectedShapeProperty:
     """
     This class tests that the vector returned by the `__call__` method of an `Aggregator` has the
-    expected shape. Note that this property implies that the `__call__` method does not raise any
-    exception.
+    expected shape.
+
+    Note that this property implies that the `__call__` method does not raise any exception.
     """
 
     @classmethod
@@ -27,9 +28,8 @@ class ExpectedShapeProperty:
 
 
 class NonConflictingProperty:
-    """
-    This class tests empirically that a given `Aggregator` satisfies the non-conflicting property.
-    """
+    """This class tests empirically that a given `Aggregator` satisfies the non-conflicting
+    property."""
 
     @classmethod
     @pytest.mark.parametrize("matrix", stationary_matrices + matrices)
@@ -52,10 +52,8 @@ class NonConflictingProperty:
 
 
 class PermutationInvarianceProperty:
-    """
-    This class tests empirically that for a given `Aggregator`, randomly permuting rows of the input
-    matrix doesn't change the aggregation.
-    """
+    """This class tests empirically that for a given `Aggregator`, randomly permuting rows of the
+    input matrix doesn't change the aggregation."""
 
     N_PERMUTATIONS = 5
 

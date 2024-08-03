@@ -11,6 +11,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
     """
     Transform that produces gradients filled with ones, for testing purposes.
+
     Note that it does the same thing as Init, but it does not depend on Init.
     """
 
@@ -30,10 +31,8 @@ class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
 
 
 def test_stack_single_key():
-    """
-    Tests that the Stack transform correctly stacks gradients into a jacobian, in a very simple
-    example with 2 transforms sharing the same key.
-    """
+    """Tests that the Stack transform correctly stacks gradients into a jacobian, in a very simple
+    example with 2 transforms sharing the same key."""
 
     key = torch.zeros([3, 4])
     input = EmptyTensorDict()
@@ -50,8 +49,9 @@ def test_stack_single_key():
 def test_stack_disjoint_key_sets():
     """
     Tests that the Stack transform correctly stacks gradients into a jacobian, in an example where
-    the output key sets of all of its transforms are disjoint. The missing values should be replaced
-    by zeros.
+    the output key sets of all of its transforms are disjoint.
+
+    The missing values should be replaced by zeros.
     """
 
     key1 = torch.zeros([1, 2])
@@ -75,7 +75,9 @@ def test_stack_overlapping_key_sets():
     """
     Tests that the Stack transform correctly stacks gradients into a jacobian, in an example where
     the output key sets all of its transforms are overlapping (non-empty intersection, but not
-    equal). The missing values should be replaced by zeros.
+    equal).
+
+    The missing values should be replaced by zeros.
     """
 
     key1 = torch.zeros([1, 2])

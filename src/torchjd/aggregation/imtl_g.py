@@ -7,9 +7,9 @@ from .bases import _WeightedAggregator, _Weighting
 
 class IMTLG(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in
-    `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.
-    This generalization supports matrices with some linearly dependant rows.
+    :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in `Towards
+    Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_. This
+    generalization supports matrices with some linearly dependant rows.
 
     .. admonition::
         Example
@@ -31,12 +31,10 @@ class IMTLG(_WeightedAggregator):
 
 
 class _IMTLGWeighting(_Weighting):
-    """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using a method which is
+    """:class:`~torchjd.aggregation.bases._Weighting` that extracts weights using a method which is
     a generalization of the method described in `Towards Impartial Multi-task Learning
-    <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_, supporting non-linearly independent rows
-    of the matrix.
-    """
+    <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_, supporting non-linearly independent rows of
+    the matrix."""
 
     def forward(self, matrix: Tensor) -> Tensor:
         d = torch.linalg.norm(matrix, dim=1)

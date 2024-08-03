@@ -73,8 +73,8 @@ class Jacobians(TensorDict):
     :class:`~torchjd.transform.tensor_dict.TensorDict` in which the values are jacobians with
     respect to the keys.
 
-    - The values must all have the same first dimension.
-    - The rest of the shape of each value must be the same as the shape of its corresponding key.
+    - The values must all have the same first dimension. - The rest of the shape of each value must
+    be the same as the shape of its corresponding key.
     """
 
     @staticmethod
@@ -110,7 +110,7 @@ class JacobianMatrices(TensorDict):
     (jacobian matrices) with respect to the keys.
 
     - The values must be matrices with a unique first dimension and with a second dimension equal to
-      the number of elements of their corresponding key.
+    the number of elements of their corresponding key.
     """
 
     @staticmethod
@@ -134,9 +134,10 @@ class EmptyTensorDict(
     JacobianMatrices,
 ):
     """
-    :class:`~torchjd.transform.tensor_dict.TensorDict` containing no element. It satisfies the
-    properties of all other :class:`~torchjd.transform.tensor_dict.TensorDict` subclasses without
-    explicitly checking them.
+    :class:`~torchjd.transform.tensor_dict.TensorDict` containing no element.
+
+    It satisfies the properties of all other :class:`~torchjd.transform.tensor_dict.TensorDict`
+    subclasses without explicitly checking them.
     """
 
     def __init__(self, tensor_dict: dict[Tensor, Tensor] | None = None):

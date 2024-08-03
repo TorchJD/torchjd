@@ -21,10 +21,8 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def test_jac_is_stack_of_grads():
-    """
-    Tests that the Jac transform (composed with a Diagonalize) is equivalent to a Stack of Grad and
-    Select transforms.
-    """
+    """Tests that the Jac transform (composed with a Diagonalize) is equivalent to a Stack of Grad
+    and Select transforms."""
 
     x = torch.tensor(5.0)
     a1 = torch.tensor(2.0, requires_grad=True)
@@ -47,10 +45,8 @@ def test_jac_is_stack_of_grads():
 
 
 def test_single_differentiation():
-    """
-    Tests that we can perform a single scalar differentiation with the composition of a Grad and an
-    Init transform.
-    """
+    """Tests that we can perform a single scalar differentiation with the composition of a Grad and
+    an Init transform."""
 
     a = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     y = a * 2.0
@@ -67,10 +63,8 @@ def test_single_differentiation():
 
 
 def test_multiple_differentiation_with_grad():
-    """
-    Tests that we can perform multiple scalar differentiations with the conjunction of multiple Grad
-    transforms, composed with an Init transform.
-    """
+    """Tests that we can perform multiple scalar differentiations with the conjunction of multiple
+    Grad transforms, composed with an Init transform."""
 
     a1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], requires_grad=True)
     a2 = torch.tensor([1.0, 3.0, 5.0], requires_grad=True)
@@ -106,6 +100,7 @@ def test_simple_conjunction():
     """
     Tests that the Conjunction transform works correctly with a simple example involving several
     Select transforms, whose keys form a partition of the keys of the input tensor dict.
+
     Because of this, the output is expected to be the same as the input.
     """
 
@@ -126,10 +121,8 @@ def test_simple_conjunction():
 
 
 def test_conjunction_is_commutative():
-    """
-    Tests that the Conjunction transform gives the same result no matter the order in which its
-    transforms are given.
-    """
+    """Tests that the Conjunction transform gives the same result no matter the order in which its
+    transforms are given."""
 
     x1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     x2 = torch.tensor([1.0, 3.0, 5.0])
@@ -147,9 +140,8 @@ def test_conjunction_is_commutative():
 
 
 def test_conjunction_is_associative():
-    """
-    Tests that the Conjunction transform gives the same result no matter how it is parenthesized.
-    """
+    """Tests that the Conjunction transform gives the same result no matter how it is
+    parenthesized."""
 
     x1 = torch.tensor([[3.0, 11.0], [2.0, 7.0]])
     x2 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -181,6 +173,7 @@ def test_conjunction_is_associative():
 def test_conjunction_store_select():
     """
     Tests that it is possible to conjunct a Store and a Select in this order.
+
     It is not trivial since the type of the TensorDict returned by the first transform (Store) is
     EmptyDict, which is not the type that the conjunction should return (Gradients).
     """
@@ -200,10 +193,8 @@ def test_conjunction_store_select():
 
 
 def test_equivalence_jac_grad():
-    """
-    Tests that differentiation in parallel using `_jac` is equivalent to sequential differentiation
-    using several calls to `_grad` and stacking the resulting gradients.
-    """
+    """Tests that differentiation in parallel using `_jac` is equivalent to sequential
+    differentiation using several calls to `_grad` and stacking the resulting gradients."""
 
     A = torch.tensor([[4.0, 5.0], [6.0, 7.0], [8.0, 9.0]], requires_grad=True)
     b = torch.tensor([0.0, 2.0], requires_grad=True)

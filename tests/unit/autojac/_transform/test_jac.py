@@ -7,10 +7,11 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 def test_single_input():
     """
-    Tests that the Jac transform works correctly for an example of multiple differentiation. Here,
-    the functions considered are: `y1 = a1 * x` and `y2 = a2 * x`. We want to compute the jacobians
-    of `[y1, y2]` with respect to the parameters `a1` and `a2`. These jacobians should be equal to
-    [x, 0] and [0, x], respectively.
+    Tests that the Jac transform works correctly for an example of multiple differentiation.
+
+    Here, the functions considered are: `y1 = a1 * x` and `y2 = a2 * x`. We want to compute the
+    jacobians of `[y1, y2]` with respect to the parameters `a1` and `a2`. These jacobians should be
+    equal to [x, 0] and [0, x], respectively.
     """
 
     x = torch.tensor(5.0)
@@ -33,9 +34,8 @@ def test_single_input():
 
 
 def test_empty_inputs_1():
-    """
-    Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
-    """
+    """Tests that the Jac transform works correctly when the `inputs` parameter is an empty
+    `Iterable`."""
 
     y1 = torch.tensor(1.0, requires_grad=True)
     y2 = torch.tensor(1.0, requires_grad=True)
@@ -51,9 +51,8 @@ def test_empty_inputs_1():
 
 
 def test_empty_inputs_2():
-    """
-    Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
-    """
+    """Tests that the Jac transform works correctly when the `inputs` parameter is an empty
+    `Iterable`."""
 
     x = torch.tensor(5.0)
     a = torch.tensor(1.0, requires_grad=True)
@@ -74,9 +73,10 @@ def test_empty_inputs_2():
 def test_two_levels():
     """
     Tests that the Jac transform works correctly for an example of chained differentiation. Here,
-    the function considered is: `z = a * x1 * x2`, which is computed in 2 parts: `y = a * x1` and
-    `z = y * x2`. We want to compute the derivative of `z` with respect to the parameter `a`, by
-    using chain rule. This derivative should be equal to `x1 * x2`.
+
+    the function considered is: `z = a * x1 * x2`, which is computed in 2 parts: `y = a * x1` and `z
+    = y * x2`. We want to compute the derivative of `z` with respect to the parameter `a`, by using
+    chain rule. This derivative should be equal to `x1 * x2`.
     """
 
     x1 = torch.tensor(5.0)
@@ -101,10 +101,8 @@ def test_two_levels():
 
 
 def test_composition_of_jacs_is_jac():
-    """
-    Tests that the composition of 2 Jac transforms is equivalent to computing the Jac directly in
-    a single transform.
-    """
+    """Tests that the composition of 2 Jac transforms is equivalent to computing the Jac directly in
+    a single transform."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
@@ -128,10 +126,8 @@ def test_composition_of_jacs_is_jac():
 
 
 def test_conjunction_of_jacs_is_jac():
-    """
-    Tests that the conjunction of 2 Jac transforms is equivalent to computing the Jac directly in
-    a single transform.
-    """
+    """Tests that the conjunction of 2 Jac transforms is equivalent to computing the Jac directly in
+    a single transform."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)

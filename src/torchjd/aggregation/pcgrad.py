@@ -6,8 +6,8 @@ from .bases import _WeightedAggregator, _Weighting
 
 class PCGrad(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in algorithm 1 of
-    `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in algorithm 1 of `Gradient Surgery
+    for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. admonition::
         Example
@@ -30,13 +30,13 @@ class PCGrad(_WeightedAggregator):
 
 class _PCGradWeighting(_Weighting):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the PCGrad
-    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the PCGrad algorithm,
+    as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
     <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
-    .. note::
-        This implementation corresponds to the paper's algorithm, which differs from the `official
-        implementation <https://github.com/tianheyu927/PCGrad>`_ in the way randomness is handled.
+    .. note::     This implementation corresponds to the paper's algorithm, which differs from the
+    `official implementation <https://github.com/tianheyu927/PCGrad>`_
+    in the way randomness is handled.
     """
 
     def forward(self, matrix: Tensor) -> Tensor:

@@ -28,11 +28,8 @@ class Mean(_WeightedAggregator):
 
 
 class _MeanWeighting(_Weighting):
-    r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
-    :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
-    \mathbb{R}^m`.
-    """
+    r""":class:`~torchjd.aggregation.bases._Weighting` that gives the weights :math:`\begin{bmatrix}
+    \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`."""
 
     def forward(self, matrix: Tensor) -> Tensor:
         device = matrix.device

@@ -37,10 +37,8 @@ def _grad(
     create_graph: bool,
     allow_unused: bool,
 ) -> tuple[Tensor, ...]:
-    """
-    Wraps `autograd.grad` to give it additional responsibilities that it should have (like being
-    able to work with an empty sequence of `inputs`).
-    """
+    """Wraps `autograd.grad` to give it additional responsibilities that it should have (like being
+    able to work with an empty sequence of `inputs`)."""
 
     if len(inputs) == 0:
         return tuple()

@@ -77,9 +77,8 @@ def test_diagonalize_multiple_inputs():
 
 
 def test_diagonalize_permute_order():
-    """
-    Tests that the Diagonalize transform outputs a permuted mapping when its keys are permuted.
-    """
+    """Tests that the Diagonalize transform outputs a permuted mapping when its keys are
+    permuted."""
 
     key1 = torch.tensor(2.0)
     key2 = torch.tensor(1.0)

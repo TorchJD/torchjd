@@ -17,8 +17,7 @@ class Transform(Generic[_B, _C], ABC):
 
     Formally a transform is a function:
 
-    .. math::
-        f:\mathbb R^{n_1+\dots+n_p}\to \mathbb R^{m_1+\dots+m_q}
+    .. math::     f:\mathbb R^{n_1+\dots+n_p}\to \mathbb R^{m_1+\dots+m_q}
 
     where we have ``p`` `required_keys`, ``q`` `output_keys`, ``n_i`` is the number of elements in
     the value associated to the ``i`` th `required_key` of the input
@@ -26,8 +25,8 @@ class Transform(Generic[_B, _C], ABC):
     value associated to the ``j`` th `output_key` of the output
     :class:`~torchjd.transform.tensor_dict.TensorDict`.
 
-    As they are mathematical functions, transforms can be composed together as long as their
-    domains and range meaningfully match.
+    As they are mathematical functions, transforms can be composed together as long as their domains
+    and range meaningfully match.
     """
 
     def compose(self, other: Transform[_A, _B]) -> Transform[_A, _C]:

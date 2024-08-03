@@ -56,12 +56,7 @@ def mtl_backward(
         backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
         parallel at once. If set to ``1``, all coordinates will be differentiated sequentially. A
         larger value results in faster differentiation, but also higher memory usage. Defaults to
-        ``None``.
-
-    .. admonition::
-        Example
-
-        A usage example of ``mtl_backward`` is provided in
+        ``None``. .. admonition:: Example A usage example of ``mtl_backward`` is provided in
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
     """
 

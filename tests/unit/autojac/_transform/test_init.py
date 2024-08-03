@@ -6,10 +6,8 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def test_init_single_input():
-    """
-    Tests that when there is a single key to initialize, the Init transform creates a TensorDict
-    whose value is a tensor full of ones, of the same shape as its key.
-    """
+    """Tests that when there is a single key to initialize, the Init transform creates a TensorDict
+    whose value is a tensor full of ones, of the same shape as its key."""
 
     key = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     input = EmptyTensorDict()
@@ -23,10 +21,8 @@ def test_init_single_input():
 
 
 def test_init_multiple_input():
-    """
-    Tests that when there are several keys to initialize, the Init transform creates a TensorDict
-    whose values are tensors full of ones, of the same shape as their corresponding keys.
-    """
+    """Tests that when there are several keys to initialize, the Init transform creates a TensorDict
+    whose values are tensors full of ones, of the same shape as their corresponding keys."""
 
     key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     key2 = torch.tensor([1.0, 3.0, 5.0])
@@ -43,10 +39,8 @@ def test_init_multiple_input():
 
 
 def test_conjunction_of_inits_is_init():
-    """
-    Tests that the conjunction of 2 Init transforms is equivalent to a single Init transform with
-    multiple keys.
-    """
+    """Tests that the conjunction of 2 Init transforms is equivalent to a single Init transform with
+    multiple keys."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)

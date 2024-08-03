@@ -37,11 +37,9 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
 def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
-    """
-    Tests that the .grad value filled by mtl_backward is correct in a simple example of
-    matrix-vector product for shared representation and three tasks whose loss are given by a simple
-    inner product of the shared representation with the task parameter.
-    """
+    """Tests that the .grad value filled by mtl_backward is correct in a simple example of matrix-
+    vector product for shared representation and three tasks whose loss are given by a simple inner
+    product of the shared representation with the task parameter."""
 
     p0 = torch.randn([shape[1]], requires_grad=True)
     p1 = torch.randn(shape[0], requires_grad=True)
@@ -113,10 +111,8 @@ def test_mtl_backward_single_task():
 
 
 def test_mtl_backward_incoherent_task_number():
-    """
-    Tests that mtl_backward raises an error when called with the number of tasks losses different
-    from the number of tasks parameters.
-    """
+    """Tests that mtl_backward raises an error when called with the number of tasks losses different
+    from the number of tasks parameters."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -233,10 +229,8 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
 
 
 def test_mtl_backward_partial_params():
-    """
-    Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
-    specified as inputs.
-    """
+    """Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
+    specified as inputs."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -430,10 +424,8 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )
 def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
-    """
-    Tests that mtl_backward raises an error when using retain_graph=False and a chunk size that is
-    not large enough to allow differentiation of all tensors are once.
-    """
+    """Tests that mtl_backward raises an error when using retain_graph=False and a chunk size that
+    is not large enough to allow differentiation of all tensors are once."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)

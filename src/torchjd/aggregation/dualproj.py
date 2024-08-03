@@ -76,18 +76,18 @@ class DualProj(_WeightedAggregator):
 
 class _DualProjWrapper(_Weighting):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
-    weight vector such the corresponding aggregation is projected onto the dual cone of the rows
-    of the input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic
-    Memory for Continual Learning
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted weight
+    vector such the corresponding aggregation is projected onto the dual cone of the rows of the
+    input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic Memory for
+    Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting` responsible for
+        extracting weight vectors from the input matrices.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
-        numerical errors when computing the gramian, it might not exactly be positive definite.
-        This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
+        numerical errors when computing the gramian, it might not exactly be positive definite. This
+        issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem.
     """

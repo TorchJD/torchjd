@@ -11,7 +11,8 @@ class MGDA(_WeightedAggregator):
     `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
     <https://www.sciencedirect.com/science/article/pii/S1631073X12000738>`_. The implementation is
     based on Algorithm 2 of `Multi-Task Learning as Multi-Objective Optimization
-    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-
+    Paper.pdf>`_.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.
@@ -43,9 +44,10 @@ class MGDA(_WeightedAggregator):
 
 class _MGDAWeighting(_Weighting):
     r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm
-    2 of `Multi-Task Learning as Multi-Objective Optimization
-    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm 2 of
+    `Multi-Task Learning as Multi-Objective Optimization
+    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-
+    Paper.pdf>`_.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.

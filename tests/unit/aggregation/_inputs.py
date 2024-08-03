@@ -29,10 +29,8 @@ def _check_valid_rank(n_rows: int, n_cols: int, rank: int) -> None:
 
 
 def _augment_orthogonal_matrix(orthogonal_matrix: Tensor) -> Tensor:
-    """
-    Augments the provided matrix with one more column that is filled with a random unit vector that
-    is orthogonal to the provided orthogonal_matrix.
-    """
+    """Augments the provided matrix with one more column that is filled with a random unit vector
+    that is orthogonal to the provided orthogonal_matrix."""
 
     n_rows = orthogonal_matrix.shape[0]
     projection = orthogonal_matrix @ orthogonal_matrix.T
@@ -50,8 +48,9 @@ def _augment_orthogonal_matrix(orthogonal_matrix: Tensor) -> Tensor:
 def _complete_orthogonal_matrix(orthogonal_matrix: Tensor, n_cols: int) -> Tensor:
     """
     Iteratively augments the input ``orthogonal_matrix`` with columns that are orthogonal to its
-    existing columns, until it has the required number of columns. Returns the obtained
-    orthogonal matrix.
+    existing columns, until it has the required number of columns.
+
+    Returns the obtained orthogonal matrix.
     """
 
     if orthogonal_matrix.shape[1] > n_cols:
@@ -77,10 +76,8 @@ def _generate_unitary_matrix(n_rows: int, n_cols: int) -> Tensor:
 
 
 def _generate_unitary_matrix_with_positive_column(n_rows: int, n_cols: int) -> Tensor:
-    """
-    Generates a unitary matrix of shape [n_rows, n_cols] with the first column consisting of an all
-    positive vector.
-    """
+    """Generates a unitary matrix of shape [n_rows, n_cols] with the first column consisting of an
+    all positive vector."""
     _check_valid_dimensions(n_rows, n_cols)
     partial_matrix = torch.abs(torch.randn([n_rows, 1]))
     partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
@@ -90,9 +87,7 @@ def _generate_unitary_matrix_with_positive_column(n_rows: int, n_cols: int) -> T
 
 
 def _generate_diagonal_singular_values(rank: int) -> Tensor:
-    """
-    generates a diagonal matrix of positive values sorted in descending order.
-    """
+    """Generates a diagonal matrix of positive values sorted in descending order."""
     singular_values = torch.abs(torch.randn([rank]))
     singular_values = torch.sort(singular_values, descending=True)[0]
     S = torch.diag(singular_values)
@@ -100,9 +95,7 @@ def _generate_diagonal_singular_values(rank: int) -> Tensor:
 
 
 def generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
-    """
-    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
-    """
+    """Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``."""
 
     _check_valid_rank(n_rows, n_cols, rank)
 
@@ -124,10 +117,9 @@ def generate_positively_oriented_matrix(
     Generates a random matrix of shape [n_rows, n_cols] with an SVD such that the largest singular
     value corresponds to a left singular vector that is all positive. Also returns the singular
     triple corresponding the largest singular value.
-    If ``M, (u, s, v)`` is the output, we guarantee that:
-    - ``s * u ~= M @ v``
-    - ``u`` is a positive vector.
-    - ``s`` is the largest singular value of ``M``.
+
+    If ``M, (u, s, v)`` is the output, we guarantee that: - ``s * u ~= M @ v`` - ``u`` is a positive
+    vector. - ``s`` is the largest singular value of ``M``.
     """
 
     _check_valid_rank(n_rows, n_cols, rank)
@@ -150,8 +142,9 @@ def generate_positively_oriented_matrix(
 
 def generate_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     """
-    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``. The matrix
-    has a singular triple (u, s, v) such that u is all (strictly) positive and s is 0.
+    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
+
+    The matrix has a singular triple (u, s, v) such that u is all (strictly) positive and s is 0.
     """
 
     _check_valid_rank(n_rows, n_cols, rank)

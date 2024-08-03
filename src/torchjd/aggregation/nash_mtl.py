@@ -34,8 +34,8 @@ from .bases import _WeightedAggregator, _Weighting
 
 class NashMTL(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as proposed in Algorithm 1 of
-    `Multi-Task Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` as proposed in Algorithm 1 of `Multi-Task
+    Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
         matrices.
@@ -98,8 +98,8 @@ class NashMTL(_WeightedAggregator):
 
 class _NashMTLWeighting(_Weighting):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
-    step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the step decision of
+    Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided

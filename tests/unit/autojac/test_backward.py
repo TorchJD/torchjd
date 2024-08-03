@@ -29,10 +29,8 @@ def test_backward_various_aggregators(A: Aggregator):
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
 def test_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
-    """
-    Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
-    product.
-    """
+    """Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
+    product."""
 
     J = torch.randn(shape)
     input = torch.randn([shape[1]], requires_grad=True)
@@ -62,10 +60,8 @@ def test_backward_empty_inputs():
 
 
 def test_backward_partial_inputs():
-    """
-    Tests that backward fills the right .grad values when only a subset of the parameters are
-    specified as inputs.
-    """
+    """Tests that backward fills the right .grad values when only a subset of the parameters are
+    specified as inputs."""
 
     A = Mean()
 
@@ -94,10 +90,8 @@ def test_backward_empty_tensors():
 
 
 def test_backward_multiple_tensors():
-    """
-    Tests that giving multiple tensors to backward is equivalent to giving a single tensor
-    containing the all the values of the original tensors.
-    """
+    """Tests that giving multiple tensors to backward is equivalent to giving a single tensor
+    containing the all the values of the original tensors."""
 
     A = UPGrad()
 
@@ -161,10 +155,8 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )
 def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
-    """
-    Tests that backward raises an error when using retain_graph=False and a chunk size that is not
-    large enough to allow differentiation of all tensors are once.
-    """
+    """Tests that backward raises an error when using retain_graph=False and a chunk size that is
+    not large enough to allow differentiation of all tensors are once."""
 
     A = UPGrad()
 

@@ -9,9 +9,8 @@ from .bases import _WeightedAggregator, _Weighting
 
 class CAGrad(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
-    `Conflict-Averse Gradient Descent for Multi-task Learning
-    <https://arxiv.org/pdf/2110.14048.pdf>`_.
+    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of `Conflict-Averse
+    Gradient Descent for Multi-task Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
 
     :param c: The scale of the radius of the ball constraint.
     :param norm_eps: A small value to avoid division by zero when normalizing.
@@ -49,18 +48,16 @@ class CAGrad(_WeightedAggregator):
 
 class _CAGradWeighting(_Weighting):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the CAGrad
-    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
-    Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the CAGrad algorithm,
+    as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task Learning
+    <https://arxiv.org/pdf/2110.14048.pdf>`_.
 
     :param c: The scale of the radius of the ball constraint.
-    :param norm_eps: A small value to avoid division by zero when normalizing.
-
-    .. note::
-        This implementation differs from the `official implementations
-        <https://github.com/Cranial-XIX/CAGrad/>`_ in the way the underlying optimization problem is
-        solved. This uses the `CLARABEL <https://oxfordcontrol.github.io/ClarabelDocs/stable/>`_
-        solver of `cvxpy <https://www.cvxpy.org/index.html>`_ rather than the `scipy.minimize
+    :param norm_eps: A small value to avoid division by zero when normalizing. .. note:: This
+        implementation differs from the `official implementations <https://github.com/Cranial-
+        XIX/CAGrad/>`_ in the way the underlying optimization problem is solved. This uses the
+        `CLARABEL <https://oxfordcontrol.github.io/ClarabelDocs/stable/>`_ solver of `cvxpy
+        <https://www.cvxpy.org/index.html>`_ rather than the `scipy.minimize
         <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
         function.
     """

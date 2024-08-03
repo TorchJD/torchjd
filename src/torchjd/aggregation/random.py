@@ -8,9 +8,8 @@ from .bases import _WeightedAggregator, _Weighting
 class Random(_WeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` that computes a random combination of the rows of
-    the provided matrices, as defined in algorithm 2 of
-    `Reasonable Effectiveness of Random Weighting: A Litmus Test for Multi-Task Learning
-    <https://arxiv.org/pdf/2111.10603.pdf>`_.
+    the provided matrices, as defined in algorithm 2 of `Reasonable Effectiveness of Random
+    Weighting: A Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
 
     .. admonition::
         Example
@@ -35,11 +34,9 @@ class Random(_WeightedAggregator):
 
 
 class _RandomWeighting(_Weighting):
-    """
-    :class:`~torchjd.aggregation.bases._Weighting` that generates positive random weights
-    at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A
-    Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
-    """
+    """:class:`~torchjd.aggregation.bases._Weighting` that generates positive random weights at each
+    call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A Litmus Test
+    for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_."""
 
     def forward(self, matrix: Tensor) -> Tensor:
         random_vector = torch.randn(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)

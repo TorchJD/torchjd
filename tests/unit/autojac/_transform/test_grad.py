@@ -8,6 +8,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 def test_single_input():
     """
     Tests that the Grad transform works correctly for a very simple example of differentiation.
+
     Here, the function considered is: `y = a * x`. We want to compute the derivative of `y` with
     respect to the parameter `a`. This derivative should be equal to `x`.
     """
@@ -26,10 +27,8 @@ def test_single_input():
 
 
 def test_empty_inputs_1():
-    """
-    Tests that the Grad transform works correctly when the `inputs` parameter is an empty
-    `Iterable`.
-    """
+    """Tests that the Grad transform works correctly when the `inputs` parameter is an empty
+    `Iterable`."""
 
     y = torch.tensor(1.0, requires_grad=True)
     input = Gradients({y: torch.ones_like(y)})
@@ -43,10 +42,8 @@ def test_empty_inputs_1():
 
 
 def test_empty_inputs_2():
-    """
-    Tests that the Grad transform works correctly when the `inputs` parameter is an empty
-    `Iterable`.
-    """
+    """Tests that the Grad transform works correctly when the `inputs` parameter is an empty
+    `Iterable`."""
 
     x = torch.tensor(5.0)
     a = torch.tensor(1.0, requires_grad=True)
@@ -64,6 +61,7 @@ def test_empty_inputs_2():
 def test_single_input_two_levels():
     """
     Tests that the Grad transform works correctly for a very simple example of differentiation.
+
     Here, the function considered is: `z = a * x1 * x2`, which is computed in 2 parts: `y = a * x1`
     and `z = y * x2`. We want to compute the derivative of `z` with respect to the parameter `a`, by
     using chain rule. This derivative should be equal to `x1 * x2`.
@@ -87,10 +85,8 @@ def test_single_input_two_levels():
 
 
 def test_empty_inputs_two_levels():
-    """
-    Tests that the Grad transform works correctly when the `inputs` parameter is an empty
-    `Iterable`, with 2 composed Grad transforms.
-    """
+    """Tests that the Grad transform works correctly when the `inputs` parameter is an empty
+    `Iterable`, with 2 composed Grad transforms."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
@@ -110,10 +106,8 @@ def test_empty_inputs_two_levels():
 
 
 def test_composition_of_grads_is_grad():
-    """
-    Tests that the composition of 2 Grad transforms is equivalent to computing the Grad directly in
-    a single transform.
-    """
+    """Tests that the composition of 2 Grad transforms is equivalent to computing the Grad directly
+    in a single transform."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
@@ -137,10 +131,8 @@ def test_composition_of_grads_is_grad():
 
 
 def test_conjunction_of_grads_is_grad():
-    """
-    Tests that the conjunction of 2 Grad transforms is equivalent to computing the Grad directly in
-    a single transform.
-    """
+    """Tests that the conjunction of 2 Grad transforms is equivalent to computing the Grad directly
+    in a single transform."""
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
