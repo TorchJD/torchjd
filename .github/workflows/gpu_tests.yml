@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Testing:
+    runs-on: "gpu"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install default and test dependencies
+        run: pdm install --group test --frozen-lockfile
+      - name: Run gpu tests
+        run: pdm run pytest tests/gpu
