@@ -3,6 +3,7 @@ import typing
 import pytest
 import torch
 from torch import Tensor
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform._utils import _B, _C
 from torchjd.autojac._transform.base import Conjunction, Transform
@@ -24,7 +25,7 @@ class FakeTransform(Transform[_B, _C]):
     def _compute(self, input: _B) -> _C:
         # ignore the input, create a dictionary with the right keys as an output.
         # cast the type for the purpose of type-checking.
-        output_dict = {key: torch.empty(0) for key in self._output_keys}
+        output_dict = {key: torch.empty(0, device=DEVICE) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
     @property
@@ -42,8 +43,8 @@ def test_apply_keys():
     contains keys that correspond exactly to `required_keys`.
     """
 
-    t1 = torch.randn([2])
-    t2 = torch.randn([3])
+    t1 = torch.randn([2], device=DEVICE)
+    t2 = torch.randn([3], device=DEVICE)
     transform = FakeTransform({t1}, {t1, t2})
 
     transform(TensorDict({t1: t2}))
@@ -64,8 +65,8 @@ def test_compose_keys_match():
     match with the outer transform's `required_keys`.
     """
 
-    t1 = torch.randn([2])
-    t2 = torch.randn([3])
+    t1 = torch.randn([2], device=DEVICE)
+    t2 = torch.randn([3], device=DEVICE)
     transform1 = FakeTransform({t1}, {t1, t2})
     transform2 = FakeTransform({t2}, {t1})
 
@@ -81,8 +82,8 @@ def test_conjunct_required_keys():
     same `required_keys`.
     """
 
-    t1 = torch.randn([2])
-    t2 = torch.randn([3])
+    t1 = torch.randn([2], device=DEVICE)
+    t2 = torch.randn([3], device=DEVICE)
 
     transform1 = FakeTransform({t1}, set())
     transform2 = FakeTransform({t1}, set())
@@ -103,8 +104,8 @@ def test_conjunct_wrong_output_keys():
     disjoint.
     """
 
-    t1 = torch.randn([2])
-    t2 = torch.randn([3])
+    t1 = torch.randn([2], device=DEVICE)
+    t2 = torch.randn([3], device=DEVICE)
 
     transform1 = FakeTransform(set(), {t1, t2})
     transform2 = FakeTransform(set(), {t1})

@@ -1,4 +1,5 @@
 import torch
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Grad, Gradients
 
@@ -12,8 +13,8 @@ def test_single_input():
     respect to the parameter `a`. This derivative should be equal to `x`.
     """
 
-    x = torch.tensor(5.0)
-    a = torch.tensor(2.0, requires_grad=True)
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
@@ -31,7 +32,7 @@ def test_empty_inputs_1():
     `Iterable`.
     """
 
-    y = torch.tensor(1.0, requires_grad=True)
+    y = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     input = Gradients({y: torch.ones_like(y)})
 
     grad = Grad(outputs=[y], inputs=[])
@@ -48,8 +49,8 @@ def test_empty_inputs_2():
     `Iterable`.
     """
 
-    x = torch.tensor(5.0)
-    a = torch.tensor(1.0, requires_grad=True)
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
@@ -69,9 +70,9 @@ def test_single_input_two_levels():
     using chain rule. This derivative should be equal to `x1 * x2`.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     y = a * x1
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
@@ -92,9 +93,9 @@ def test_empty_inputs_two_levels():
     `Iterable`, with 2 composed Grad transforms.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     y = a * x1
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
@@ -115,10 +116,10 @@ def test_composition_of_grads_is_grad():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
-    b = torch.tensor(1.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y1 = a * x1
     y2 = a * x2
     z1 = y1 + x2
@@ -142,10 +143,10 @@ def test_conjunction_of_grads_is_grad():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
     y1 = a1 * x1
     y2 = a2 * x2
     y = torch.stack([y1, y2])

@@ -3,6 +3,7 @@ from typing import ContextManager, Sequence
 
 import pytest
 import torch
+from unit.conftest import DEVICE
 
 from torchjd.aggregation import Aggregator
 
@@ -19,4 +20,4 @@ from torchjd.aggregation import Aggregator
 )
 def test_check_is_matrix(shape: Sequence[int], expectation: ContextManager):
     with expectation:
-        Aggregator._check_is_matrix(torch.randn(shape))
+        Aggregator._check_is_matrix(torch.randn(shape, device=DEVICE))

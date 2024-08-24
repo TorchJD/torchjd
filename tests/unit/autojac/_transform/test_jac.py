@@ -1,4 +1,5 @@
 import torch
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Jac, Jacobians
 
@@ -13,20 +14,20 @@ def test_single_input():
     [x, 0] and [0, x], respectively.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = torch.tensor(5.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
     y1 = a1 * x
     y2 = a2 * x
     y = torch.stack([y1, y2])
-    input = Jacobians({y: torch.eye(2)})
+    input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
     jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None)
 
     jacobians = jac(input)
     expected_jacobians = {
-        a1: torch.stack([x, torch.zeros([])]),
-        a2: torch.stack([torch.zeros([]), x]),
+        a1: torch.stack([x, torch.zeros([], device=DEVICE)]),
+        a2: torch.stack([torch.zeros([], device=DEVICE), x]),
     }
 
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
@@ -37,10 +38,10 @@ def test_empty_inputs_1():
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
 
-    y1 = torch.tensor(1.0, requires_grad=True)
-    y2 = torch.tensor(1.0, requires_grad=True)
+    y1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    y2 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y = torch.stack([y1, y2])
-    input = Jacobians({y: torch.eye(2)})
+    input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
     jac = Jac(outputs=[y], inputs=[], chunk_size=None)
 
@@ -55,13 +56,13 @@ def test_empty_inputs_2():
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
 
-    x = torch.tensor(5.0)
-    a = torch.tensor(1.0, requires_grad=True)
-    b = torch.tensor(1.0, requires_grad=True)
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y1 = a * x
     y2 = b * x
     y = torch.stack([y1, y2])
-    input = Jacobians({y: torch.eye(2)})
+    input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
     jac = Jac(outputs=[y], inputs=[], chunk_size=None)
 
@@ -79,15 +80,15 @@ def test_two_levels():
     using chain rule. This derivative should be equal to `x1 * x2`.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
-    b = torch.tensor(3.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    b = torch.tensor(3.0, requires_grad=True, device=DEVICE)
     y1 = a * x1
     y2 = b * x1
     y = torch.stack([y1, y2])
     z = y * x2
-    input = Jacobians({z: torch.eye(2)})
+    input = Jacobians({z: torch.eye(2, device=DEVICE)})
 
     outer_jac = Jac(outputs=[y], inputs=[a, b], chunk_size=None, retain_graph=True)
     inner_jac = Jac(outputs=[z], inputs=[y], chunk_size=None, retain_graph=True)
@@ -106,15 +107,17 @@ def test_composition_of_jacs_is_jac():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
-    b = torch.tensor(1.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y1 = a * x1
     y2 = a * x2
     z1 = y1 + x2
     z2 = y2 + x1
-    input = Jacobians({z1: torch.tensor([1.0, 0.0]), z2: torch.tensor([0.0, 1.0])})
+    input = Jacobians(
+        {z1: torch.tensor([1.0, 0.0], device=DEVICE), z2: torch.tensor([0.0, 1.0], device=DEVICE)}
+    )
 
     outer_jac = Jac(outputs=[y1, y2], inputs=[a, b], chunk_size=None, retain_graph=True)
     inner_jac = Jac(outputs=[z1, z2], inputs=[y1, y2], chunk_size=None, retain_graph=True)
@@ -133,14 +136,14 @@ def test_conjunction_of_jacs_is_jac():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
     y1 = a1 * x1
     y2 = a2 * x2
     y = torch.stack([y1, y2])
-    input = Jacobians({y: torch.eye(len(y))})
+    input = Jacobians({y: torch.eye(len(y), device=DEVICE)})
 
     jac1 = Jac(outputs=[y], inputs=[a1], chunk_size=None, retain_graph=True)
     jac2 = Jac(outputs=[y], inputs=[a2], chunk_size=None, retain_graph=True)

@@ -4,6 +4,7 @@ import pytest
 import torch
 from pytest import raises
 from torch.testing import assert_close
+from unit.conftest import DEVICE
 
 from torchjd import backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
@@ -13,11 +14,11 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 def test_backward_various_aggregators(A: Aggregator):
     """Tests that backward works for various aggregators."""
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     backward([y1, y2], params, A)
@@ -34,8 +35,8 @@ def test_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     product.
     """
 
-    J = torch.randn(shape)
-    input = torch.randn([shape[1]], requires_grad=True)
+    J = torch.randn(shape, device=DEVICE)
+    input = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
     output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
     backward([output], [input], A)
@@ -48,11 +49,11 @@ def test_backward_empty_inputs():
 
     A = Mean()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     backward([y1, y2], [], A)
@@ -69,10 +70,10 @@ def test_backward_partial_inputs():
 
     A = Mean()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     backward([y1, y2], [p1], A)
@@ -86,8 +87,8 @@ def test_backward_empty_tensors():
 
     A = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     with pytest.raises(ValueError):
         backward([], [p1, p2], A)
@@ -101,11 +102,11 @@ def test_backward_multiple_tensors():
 
     A = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     backward([y1, y2], params, A, retain_graph=True)
@@ -126,11 +127,11 @@ def test_backward_valid_chunk_size(chunk_size):
 
     A = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     backward([y1, y2], params, A, parallel_chunk_size=chunk_size, retain_graph=True)
@@ -145,11 +146,11 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
 
     A = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     with pytest.raises(ValueError):
@@ -168,11 +169,11 @@ def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation)
 
     A = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     params = [p1, p2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ p1 + p2.sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     with expectation:

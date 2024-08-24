@@ -4,6 +4,7 @@ import pytest
 import torch
 from pytest import raises
 from torch import Tensor
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import (
     EmptyTensorDict,
@@ -109,4 +110,7 @@ def _assert_class_checks_properly(
 
 
 def _make_tensor_dict(value_shapes: list[list[int]]) -> dict[Tensor, Tensor]:
-    return {torch.zeros(key): torch.zeros(value) for key, value in zip(_key_shapes, value_shapes)}
+    return {
+        torch.zeros(key, device=DEVICE): torch.zeros(value, device=DEVICE)
+        for key, value in zip(_key_shapes, value_shapes)
+    }
