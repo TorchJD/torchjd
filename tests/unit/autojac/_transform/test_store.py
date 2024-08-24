@@ -1,4 +1,5 @@
 import torch
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Gradients, Store
 
@@ -8,12 +9,12 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 def test_store():
     """Tests that the Store transform correctly stores gradients in .grad fields."""
 
-    key1 = torch.zeros([], requires_grad=True)
-    key2 = torch.zeros([1], requires_grad=True)
-    key3 = torch.zeros([2, 3], requires_grad=True)
-    value1 = torch.ones([])
-    value2 = torch.ones([1])
-    value3 = torch.ones([2, 3])
+    key1 = torch.zeros([], requires_grad=True, device=DEVICE)
+    key2 = torch.zeros([1], requires_grad=True, device=DEVICE)
+    key3 = torch.zeros([2, 3], requires_grad=True, device=DEVICE)
+    value1 = torch.ones([], device=DEVICE)
+    value2 = torch.ones([1], device=DEVICE)
+    value3 = torch.ones([2, 3], device=DEVICE)
     input = Gradients({key1: value1, key2: value2, key3: value3})
 
     store = Store([key1, key2, key3])

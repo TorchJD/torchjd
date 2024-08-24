@@ -22,6 +22,7 @@ class ExpectedShapeProperty:
 
     @staticmethod
     def _assert_expected_shape_property(aggregator: Aggregator, matrix: Tensor) -> None:
+        # matrix = matrix.to(device=DEVICE)
         vector = aggregator(matrix)  # Will fail if the call raises an exception
         assert vector.shape == matrix.shape[1:]
 
@@ -45,6 +46,7 @@ class NonConflictingProperty:
         aggregator: Aggregator,
         matrix: Tensor,
     ) -> None:
+        # matrix = matrix.to(device=DEVICE)
         vector = aggregator(matrix)
         output_direction = matrix @ vector
         positive_directions = output_direction[output_direction >= 0]
@@ -66,6 +68,7 @@ class PermutationInvarianceProperty:
 
     @staticmethod
     def _assert_permutation_invariance_property(aggregator: Aggregator, matrix: Tensor) -> None:
+        # matrix = matrix.to(DEVICE)
         vector = aggregator(matrix)
 
         for _ in range(PermutationInvarianceProperty.N_PERMUTATIONS):

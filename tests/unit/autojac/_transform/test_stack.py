@@ -2,6 +2,7 @@ from typing import Iterable
 
 import torch
 from torch import Tensor
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import EmptyTensorDict, Gradients, Stack, Transform
 
@@ -35,14 +36,14 @@ def test_stack_single_key():
     example with 2 transforms sharing the same key.
     """
 
-    key = torch.zeros([3, 4])
+    key = torch.zeros([3, 4], device=DEVICE)
     input = EmptyTensorDict()
 
     transform = FakeGradientsTransform([key])
     stack = Stack([transform, transform])
 
     output = stack(input)
-    expected_output = {key: torch.ones([2, 3, 4])}
+    expected_output = {key: torch.ones([2, 3, 4], device=DEVICE)}
 
     assert_tensor_dicts_are_close(output, expected_output)
 
@@ -54,8 +55,8 @@ def test_stack_disjoint_key_sets():
     by zeros.
     """
 
-    key1 = torch.zeros([1, 2])
-    key2 = torch.zeros([3])
+    key1 = torch.zeros([1, 2], device=DEVICE)
+    key2 = torch.zeros([3], device=DEVICE)
     input = EmptyTensorDict()
 
     transform1 = FakeGradientsTransform([key1])
@@ -64,8 +65,8 @@ def test_stack_disjoint_key_sets():
 
     output = stack(input)
     expected_output = {
-        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]]),
-        key2: torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
+        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]], device=DEVICE),
+        key2: torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], device=DEVICE),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -78,9 +79,9 @@ def test_stack_overlapping_key_sets():
     equal). The missing values should be replaced by zeros.
     """
 
-    key1 = torch.zeros([1, 2])
-    key2 = torch.zeros([3])
-    key3 = torch.zeros([4])
+    key1 = torch.zeros([1, 2], device=DEVICE)
+    key2 = torch.zeros([3], device=DEVICE)
+    key3 = torch.zeros([4], device=DEVICE)
     input = EmptyTensorDict()
 
     transform12 = FakeGradientsTransform([key1, key2])
@@ -89,9 +90,9 @@ def test_stack_overlapping_key_sets():
 
     output = stack(input)
     expected_output = {
-        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]]),
-        key2: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
-        key3: torch.tensor([[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]]),
+        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]], device=DEVICE),
+        key2: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], device=DEVICE),
+        key3: torch.tensor([[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], device=DEVICE),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)

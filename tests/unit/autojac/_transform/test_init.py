@@ -1,4 +1,5 @@
 import torch
+from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import EmptyTensorDict, Init
 
@@ -11,13 +12,13 @@ def test_init_single_input():
     whose value is a tensor full of ones, of the same shape as its key.
     """
 
-    key = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    key = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], device=DEVICE)
     input = EmptyTensorDict()
 
     init = Init([key])
 
     output = init(input)
-    expected_output = {key: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])}
+    expected_output = {key: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], device=DEVICE)}
 
     assert_tensor_dicts_are_close(output, expected_output)
 
@@ -28,16 +29,16 @@ def test_init_multiple_input():
     whose values are tensors full of ones, of the same shape as their corresponding keys.
     """
 
-    key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    key2 = torch.tensor([1.0, 3.0, 5.0])
+    key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], device=DEVICE)
+    key2 = torch.tensor([1.0, 3.0, 5.0], device=DEVICE)
     input = EmptyTensorDict()
 
     init = Init([key1, key2])
 
     output = init(input)
     expected = {
-        key1: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
-        key2: torch.tensor([1.0, 1.0, 1.0]),
+        key1: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], device=DEVICE),
+        key2: torch.tensor([1.0, 1.0, 1.0], device=DEVICE),
     }
     assert_tensor_dicts_are_close(output, expected)
 
@@ -48,8 +49,8 @@ def test_conjunction_of_inits_is_init():
     multiple keys.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
+    x1 = torch.tensor(5.0, device=DEVICE)
+    x2 = torch.tensor(6.0, device=DEVICE)
     input = EmptyTensorDict()
 
     init1 = Init([x1])

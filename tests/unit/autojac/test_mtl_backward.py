@@ -4,6 +4,7 @@ import pytest
 import torch
 from pytest import raises
 from torch.testing import assert_close
+from unit.conftest import DEVICE
 
 from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
@@ -13,11 +14,11 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 def test_mtl_backward_various_aggregators(A: Aggregator):
     """Tests that mtl_backward works for various aggregators."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -43,12 +44,12 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
     inner product of the shared representation with the task parameter.
     """
 
-    p0 = torch.randn([shape[1]], requires_grad=True)
-    p1 = torch.randn(shape[0], requires_grad=True)
-    p2 = torch.randn(shape[0], requires_grad=True)
-    p3 = torch.randn(shape[0], requires_grad=True)
+    p0 = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
+    p1 = torch.randn(shape[0], requires_grad=True, device=DEVICE)
+    p2 = torch.randn(shape[0], requires_grad=True, device=DEVICE)
+    p3 = torch.randn(shape[0], requires_grad=True, device=DEVICE)
 
-    J = torch.randn(shape)
+    J = torch.randn(shape, device=DEVICE)
     r = J @ p0
     y1 = p1 @ r
     y2 = p2 @ r
@@ -75,9 +76,9 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
 def test_mtl_backward_empty_tasks():
     """Tests that mtl_backward raises an error when called with an empty list of tasks."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
 
     with pytest.raises(ValueError):
@@ -93,10 +94,10 @@ def test_mtl_backward_empty_tasks():
 def test_mtl_backward_single_task():
     """Tests that mtl_backward works correctly with a single task."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
 
@@ -118,11 +119,11 @@ def test_mtl_backward_incoherent_task_number():
     from the number of tasks parameters.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -148,11 +149,11 @@ def test_mtl_backward_incoherent_task_number():
 def test_mtl_backward_empty_params():
     """Tests that mtl_backward does not fill the .grad values if no parameter is specified."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -172,14 +173,14 @@ def test_mtl_backward_empty_params():
 def test_mtl_backward_multiple_params_per_task():
     """Tests that mtl_backward works correctly when the tasks each have several parameters."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1_a = torch.tensor(1.0, requires_grad=True)
-    p1_b = torch.tensor([2.0, 3.0], requires_grad=True)
-    p1_c = torch.tensor([[4.0, 5.0], [6.0, 7.0]], requires_grad=True)
-    p2_a = torch.tensor(8.0, requires_grad=True)
-    p2_b = torch.tensor([9.0, 10.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1_a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    p1_b = torch.tensor([2.0, 3.0], requires_grad=True, device=DEVICE)
+    p1_c = torch.tensor([[4.0, 5.0], [6.0, 7.0]], requires_grad=True, device=DEVICE)
+    p2_a = torch.tensor(8.0, requires_grad=True, device=DEVICE)
+    p2_b = torch.tensor([9.0, 10.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1_a + (r2 * p1_b).sum() + (r1 * p1_c).sum()
     y2 = r1 * p2_a * (r2 * p2_b).sum()
@@ -212,9 +213,11 @@ def test_mtl_backward_multiple_params_per_task():
 def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of shared_params."""
 
-    shared_params = [torch.rand(shape, requires_grad=True) for shape in shared_params_shapes]
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    shared_params = [
+        torch.rand(shape, requires_grad=True, device=DEVICE) for shape in shared_params_shapes
+    ]
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     representations = [shared_param.sum(dim=-1) for shared_param in shared_params]
     y1 = torch.stack([r.sum() for r in representations]).sum()
@@ -238,11 +241,11 @@ def test_mtl_backward_partial_params():
     specified as inputs.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -263,11 +266,11 @@ def test_mtl_backward_partial_params():
 def test_mtl_backward_empty_features():
     """Tests that mtl_backward expectedly raises an error when no there is no feature."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -294,11 +297,11 @@ def test_mtl_backward_empty_features():
 def test_mtl_backward_various_single_features(shape: tuple[int]):
     """Tests that mtl_backward works correctly with various kinds of feature tensors."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
-    p2 = torch.tensor([5.0, 6.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([5.0, 6.0], requires_grad=True, device=DEVICE)
 
-    r = torch.rand(shape) @ p0
+    r = torch.rand(shape, device=DEVICE) @ p0
 
     y1 = (r * p1[0]).sum() + (r * p1[1]).sum()
     y2 = (r * p2[0]).sum() * (r * p2[1]).sum()
@@ -331,11 +334,11 @@ def test_mtl_backward_various_single_features(shape: tuple[int]):
 def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True)
-    p2 = torch.tensor(5.0, requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(5.0, requires_grad=True, device=DEVICE)
 
-    representations = [torch.rand(shape) @ p0 for shape in shapes]
+    representations = [torch.rand(shape, device=DEVICE) @ p0 for shape in shapes]
 
     y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
     y2 = (representations[0] * p2).sum()
@@ -355,11 +358,11 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
 def test_mtl_backward_non_scalar_loss():
     """Tests that mtl_backward raises an error when used with a non-scalar loss."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = torch.stack([r1 * p1[0], r2 * p1[1]])  # Non-scalar
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -378,11 +381,11 @@ def test_mtl_backward_non_scalar_loss():
 def test_mtl_backward_valid_chunk_size(chunk_size):
     """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -405,11 +408,11 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
 def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     """Tests that mtl_backward raises an error when using invalid chunk sizes."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
@@ -435,11 +438,11 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectat
     not large enough to allow differentiation of all tensors are once.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0]) @ p0
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
