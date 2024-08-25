@@ -45,8 +45,8 @@ def _jac(
     """
     Wraps the call to `autograd.grad` to compute the jacobian with respect to each input, in an
     optimized way. The first dimension of the jacobians is equal to the length of the sequence of
-    `outputs`, which should be the same as the length of the sequence of `grad_outputs`. This should
-    be equivalent to calling `_grad(outputs[i], inputs, grad_outputs[i], ...)` for all i
+    `outputs`, which should be the same as the length of the sequence of `jac_outputs`. This should
+    be equivalent to calling `_grad(outputs[i], inputs, jac_outputs[i], ...)` for all i
     sequentially, and stacking the elements of each resulting tuple.
     """
 
