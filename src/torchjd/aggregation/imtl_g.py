@@ -44,7 +44,7 @@ class _IMTLGWeighting(_Weighting):
         try:
             raw_weights = torch.linalg.pinv(matrix @ matrix.T) @ d
         except LinAlgError:  # This can happen when the matrix has extremely large values
-            raw_weights = torch.ones(matrix.shape[0])
+            raw_weights = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
 
         weights = raw_weights / raw_weights.sum()
         return weights
