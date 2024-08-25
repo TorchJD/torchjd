@@ -17,7 +17,7 @@ def test_init_single_input():
     init = Init([key])
 
     output = init(input)
-    expected_output = {key: torch.Tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])}
+    expected_output = {key: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])}
 
     assert_tensor_dicts_are_close(output, expected_output)
 
@@ -36,8 +36,8 @@ def test_init_multiple_input():
 
     output = init(input)
     expected = {
-        key1: torch.Tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
-        key2: torch.Tensor([1.0, 1.0, 1.0]),
+        key1: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
+        key2: torch.tensor([1.0, 1.0, 1.0]),
     }
     assert_tensor_dicts_are_close(output, expected)
 

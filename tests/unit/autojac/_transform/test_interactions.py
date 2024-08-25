@@ -85,8 +85,8 @@ def test_multiple_differentiation_with_grad():
 
     output = transform(input)
     expected_output = {
-        a1: torch.Tensor([[2.0, 2.0, 2.0], [2.0, 2.0, 2.0]]),
-        a2: torch.Tensor([3.0, 3.0, 3.0]),
+        a1: torch.tensor([[2.0, 2.0, 2.0], [2.0, 2.0, 2.0]]),
+        a2: torch.tensor([3.0, 3.0, 3.0]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
