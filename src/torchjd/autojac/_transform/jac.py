@@ -61,7 +61,12 @@ def _jac(
         )
 
     if n_outputs == 0:
-        return tuple([torch.empty((0,) + input.shape) for input in inputs])
+        return tuple(
+            [
+                torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
+                for input in inputs
+            ]
+        )
 
     def get_vjp(v):
         optional_grads = torch.autograd.grad(

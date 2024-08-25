@@ -46,7 +46,9 @@ def _grad(
         return tuple()
 
     if len(outputs) == 0:
-        return tuple([torch.empty(input.shape) for input in inputs])
+        return tuple(
+            [torch.empty(input.shape, device=input.device, dtype=input.dtype) for input in inputs]
+        )
 
     optional_grads = torch.autograd.grad(
         outputs,
