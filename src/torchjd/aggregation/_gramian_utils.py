@@ -32,8 +32,7 @@ def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
     except LinAlgError as error:  # Not sure if this can happen
         raise ValueError(
             f"Unexpected failure of the svd computation on matrix {matrix}. Please open an "
-            "issue on https://github.com/ValerianRey/torchjd and paste this error message in "
-            "it."
+            "issue on https://github.com/TorchJD/torchjd/issues and paste this error message in it."
         ) from error
     max_singular_value = torch.max(singular_values)
     if max_singular_value < norm_eps:
