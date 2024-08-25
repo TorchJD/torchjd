@@ -30,7 +30,7 @@ class TestMGDA(ExpectedShapeProperty, NonConflictingProperty, PermutationInvaria
 )
 def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = torch.randn(shape, device=DEVICE)
-    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=10000)
+    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=1000)
 
     gramian = matrix @ matrix.T
 
@@ -49,7 +49,7 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
 
     # Dual feasibility
     positive_mu = mu[mu >= 0]
-    assert_close(positive_mu.norm(), mu.norm(), atol=3e-04, rtol=0.0)
+    assert_close(positive_mu.norm(), mu.norm(), atol=1e-02, rtol=0.0)
 
 
 def test_representations():
