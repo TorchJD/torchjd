@@ -20,6 +20,10 @@ changes that do not affect the user.
   adapted.
 - Improved documentation of `backward`.
 
+### Fixed
+
+- Fixed wrong tensor device with `IMTLG` in some rare cases.
+
 
 ## [0.1.0] - 2024-06-22
 
