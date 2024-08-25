@@ -33,6 +33,11 @@ before implementing major changes to torchjd.
      pdm run pytest tests/unit
      ```
 
+   - If you have access to a cuda-enabled GPU, you should also check that the unit tests pass on it:
+     ```bash
+     CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTEST_TORCH_DEVICE=cuda pdm run pytest tests/unit
+     ```
+
    - To check that the usage examples from docstrings and `.rst` files are correct, we test their
    behavior in `tests/doc`. To run these tests, do:
      ```bash
