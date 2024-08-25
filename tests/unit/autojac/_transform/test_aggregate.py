@@ -47,7 +47,6 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
     Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
     output of the desired structure.
     """
-    print(jacobian_matrices)
 
     aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
     gradient_vectors = aggregate_matrices(jacobian_matrices)
