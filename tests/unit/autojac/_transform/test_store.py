@@ -1,3 +1,4 @@
+import pytest
 import torch
 from unit.conftest import DEVICE
 
@@ -28,3 +29,36 @@ def test_store():
     expected_stored_grads = {key1: value1, key2: value2, key3: value3}
 
     assert_tensor_dicts_are_close(stored_grads, expected_stored_grads)
+
+
+def test_store_fails_on_no_requires_grad():
+    """
+    Tests that the Store transform raises an error when it tries to populate a .grad of a tensor
+    that does not require grad.
+    """
+
+    key1 = torch.zeros([1], requires_grad=False, device=DEVICE)
+    value1 = torch.ones([1], device=DEVICE)
+    input = Gradients({key1: value1})
+
+    store = Store([key1])
+
+    with pytest.raises(ValueError):
+        store(input)
+
+
+def test_store_fails_on_no_leaf_and_no_retains_grad():
+    """
+    Tests that the Store transform raises an error when it tries to populate a .grad of a tensor
+    that is not a leaf and that does not retain grad.
+    """
+
+    a = torch.tensor([1.0], requires_grad=True, device=DEVICE)
+    key1 = 2 * a  # requires_grad=True, but is_leaf=False and retains_grad=False
+    value1 = torch.ones([1], device=DEVICE)
+    input = Gradients({key1: value1})
+
+    store = Store([key1])
+
+    with pytest.raises(ValueError):
+        store(input)
