@@ -23,6 +23,9 @@ changes that do not affect the user.
 ### Fixed
 
 - Fixed wrong tensor device with `IMTLG` in some rare cases.
+- **BREAKING**: Removed the possibility of populating the `.grad` field of a tensor that does not
+  expect it when calling `backward`. If an input `t` provided to backward does not satisfy
+  `t.requires_grad and (t.is_leaf or t.retains_grad)`, an error is now raised.
 
 
 ## [0.1.0] - 2024-06-22

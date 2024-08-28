@@ -16,6 +16,7 @@ class Store(Transform[Gradients, EmptyTensorDict]):
         """
 
         for key in gradients.keys():
+            _check_expects_grad(key)
             key.grad = gradients[key]
 
         return EmptyTensorDict()
@@ -27,3 +28,20 @@ class Store(Transform[Gradients, EmptyTensorDict]):
     @property
     def output_keys(self) -> set[Tensor]:
         return set()
+
+
+def _check_expects_grad(tensor: Tensor) -> None:
+    if not _expects_grad(tensor):
+        raise ValueError(
+            "Cannot populate the .grad field of a Tensor that does not satisfy:"
+            "`tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)`."
+        )
+
+
+def _expects_grad(tensor: Tensor) -> bool:
+    """
+    Determines whether a Tensor expects its .grad attribute to be populated.
+    See https://pytorch.org/docs/stable/generated/torch.Tensor.is_leaf for more information.
+    """
+
+    return tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)
