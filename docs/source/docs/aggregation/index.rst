@@ -11,8 +11,8 @@ This package provides several aggregators from the literature:
 .. role:: raw-html(raw)
    :format: html
 
-.. |yes| replace:: :raw-html:`<center><font color="green">✔</font></center>`
-.. |no| replace:: :raw-html:`<center><font color="red">✘</font></center>`
+.. |yes| replace:: :raw-html:`<center><font color="#28b528">✔</font></center>`
+.. |no| replace:: :raw-html:`<center><font color="#e63232">✘</font></center>`
 
 .. list-table::
    :widths: 25 15 15 15
