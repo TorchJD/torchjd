@@ -97,7 +97,7 @@ This package provides several aggregators from the literature:
 
     An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be
     *non-conflicting* if for any :math:`J\in\mathbb R^{m\times n}`, :math:`J\cdot\mathcal A(J)` is a
-    vector with non-negative elements.
+    vector with only non-negative elements.
 
     In other words, :math:`\mathcal A` is non-conflicting whenever the aggregation of any matrix has
     non-negative inner product with all rows of that matrix. In the context of JD, this ensures that
