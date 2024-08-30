@@ -89,7 +89,7 @@ This package provides several aggregators from the literature:
 .. hint::
     This table is an adaptation of the one available in `Jacobian Descent For Multi-Objective
     Optimization <https://arxiv.org/pdf/2406.16232>`_. The paper provides precise justification of
-    the properties in Section 2.2 as well as proofs Appendix B.
+    the properties in Section 2.2 as well as proofs in Appendix B.
 
 .. _Non-conflicting:
 .. admonition::
