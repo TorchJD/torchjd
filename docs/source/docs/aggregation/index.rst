@@ -19,6 +19,10 @@ This package provides several aggregators from the literature:
      - :ref:`Non-conflicting <Non-conflicting>`
      - :ref:`Linear under scaling <Linear under scaling>`
      - :ref:`Weighted <Weighted>`
+   * - :doc:`UPGrad <upgrad>` (recommended)
+     - :raw-html:`<center><font color="green">✔</font></center>`
+     - :raw-html:`<center><font color="green">✔</font></center>`
+     - :raw-html:`<center><font color="green">✔</font></center>`
    * - :doc:`Aligned-MTL <aligned_mtl>`
      - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="red">✘</font></center>`
@@ -75,10 +79,6 @@ This package provides several aggregators from the literature:
      - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="red">✘</font></center>`
-   * - :doc:`UPGrad <upgrad>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
 
 .. hint::
     This table is an adaptation of the one available in `Jacobian Descent For Multi-Objective
@@ -125,6 +125,7 @@ This package provides several aggregators from the literature:
     :maxdepth: 1
 
     bases.rst
+    upgrad.rst
     aligned_mtl.rst
     cagrad.rst
     constant.rst
@@ -139,4 +140,3 @@ This package provides several aggregators from the literature:
     random.rst
     sum.rst
     trimmed_mean.rst
-    upgrad.rst
