@@ -109,10 +109,10 @@ This package provides several aggregators from the literature:
     positive :math:`c\in\mathbb R^{n}` to :math:`\mathcal A(\operatorname{diag}(c)\cdot J)` is
     linear in :math:`c`.
 
-    In other words, :math:`\mathcal A` is linear under scaling whenever scaling a row of the
-    aggregated matrix scales its influence accordingly. In the context of JD, this ensures that even
-    when the rows of the matrix are norm-imbalanced, each objective will contribute to the update
-    proportionally to their norm.
+    In other words, :math:`\mathcal A` is linear under scaling whenever scaling a row of the matrix
+    to aggregate scales its influence proportionally. In the context of JD, this ensures that even
+    when the gradient norms are imbalanced, each gradient will contribute to the update
+    proportionally to its norm.
 
 .. _Weighted:
 .. admonition::
