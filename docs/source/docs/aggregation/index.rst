@@ -121,8 +121,8 @@ This package provides several aggregators from the literature:
 .. admonition::
     Weighted
 
-    An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be
-    *weighted* if for any :math:`J\in\mathbb R^{m\times n}`, there exists a weight vector
+    An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be *weighted*
+    if for any :math:`J\in\mathbb R^{m\times n}`, there exists a weight vector
     :math:`w\in\mathbb R^m` such that :math:`\mathcal A(J)=J^\top w`.
 
     In other words, :math:`\mathcal A` is weighted whenever the aggregation of any matrix is always
