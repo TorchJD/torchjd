@@ -44,8 +44,8 @@ This package provides several aggregators from the literature:
      - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="green">✔</font></center>`
    * - :doc:`Krum <krum>`
-     - :raw-html:`<center><font color="yellow">?</font></center>`
-     - :raw-html:`<center><font color="yellow">?</font></center>`
+     - :raw-html:`<center><font color="red">✘</font></center>`
+     - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="green">✔</font></center>`
    * - :doc:`Mean <mean>`
      - :raw-html:`<center><font color="red">✘</font></center>`
@@ -72,8 +72,8 @@ This package provides several aggregators from the literature:
      - :raw-html:`<center><font color="green">✔</font></center>`
      - :raw-html:`<center><font color="green">✔</font></center>`
    * - :doc:`Trimmed Mean <trimmed_mean>`
-     - :raw-html:`<center><font color="yellow">?</font></center>`
-     - :raw-html:`<center><font color="yellow">?</font></center>`
+     - :raw-html:`<center><font color="red">✘</font></center>`
+     - :raw-html:`<center><font color="red">✘</font></center>`
      - :raw-html:`<center><font color="red">✘</font></center>`
    * - :doc:`UPGrad <upgrad>`
      - :raw-html:`<center><font color="green">✔</font></center>`
