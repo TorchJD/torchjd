@@ -122,6 +122,11 @@ This package provides several aggregators from the literature:
     *weighted* if for any :math:`J\in\mathbb R^{m\times n}`, there exists a weight vector
     :math:`w\in\mathbb R^m` such that :math:`\mathcal A(J)=J^\top w`.
 
+    In other words, :math:`\mathcal A` is weighted whenever the aggregation of any matrix is always
+    in the span of the rows of that matrix. This ensures a higher precision of the Taylor
+    approximation that JD relies on.
+
+
 
 .. toctree::
     :hidden:
