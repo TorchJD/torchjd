@@ -11,6 +11,9 @@ This package provides several aggregators from the literature:
 .. role:: raw-html(raw)
    :format: html
 
+.. |yes| replace:: :raw-html:`<center><font color="green">✔</font></center>`
+.. |no| replace:: :raw-html:`<center><font color="red">✘</font></center>`
+
 .. list-table::
    :widths: 25 15 15 15
    :header-rows: 1
@@ -20,65 +23,65 @@ This package provides several aggregators from the literature:
      - :ref:`Linear under scaling <Linear under scaling>`
      - :ref:`Weighted <Weighted>`
    * - :doc:`UPGrad <upgrad>` (recommended)
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |yes|
+     - |yes|
+     - |yes|
    * - :doc:`Aligned-MTL <aligned_mtl>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |no|
+     - |yes|
    * - :doc:`CAGrad <cagrad>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |no|
+     - |yes|
    * - :doc:`Constant <constant>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`DualProj <dualproj>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |yes|
+     - |no|
+     - |yes|
    * - :doc:`GradDrop <graddrop>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
+     - |no|
+     - |no|
+     - |no|
    * - :doc:`IMTL-G <imtl_g>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |no|
+     - |yes|
    * - :doc:`Krum <krum>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |no|
+     - |yes|
    * - :doc:`Mean <mean>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`MGDA <mgda>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |yes|
+     - |no|
+     - |yes|
    * - :doc:`Nash-MTL <nash_mtl>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |yes|
+     - |no|
+     - |yes|
    * - :doc:`PCGrad <pcgrad>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`Random <random>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`Sum <sum>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
-     - :raw-html:`<center><font color="green">✔</font></center>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`Trimmed Mean <trimmed_mean>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
-     - :raw-html:`<center><font color="red">✘</font></center>`
+     - |no|
+     - |no|
+     - |no|
 
 .. hint::
     This table is an adaptation of the one available in `Jacobian Descent For Multi-Objective
