@@ -95,7 +95,7 @@ This package provides several aggregators from the literature:
 
     In other words, :math:`\mathcal A` is non-conflicting whenever the aggregation of any matrix has
     non-negative inner product with all rows of that matrix. In the context of JD, this ensures that
-    no objective locally ascend.
+    no objective locally increases.
 
 .. _Linear under scaling:
 .. admonition::
@@ -108,7 +108,7 @@ This package provides several aggregators from the literature:
 
     In other words, :math:`\mathcal A` is linear under scaling whenever scaling a row of the
     aggregated matrix scales its influence accordingly. In the context of JD, this ensures that even
-    when the rows of the matrix are norm imbalanced, each objective will contribute to the update
+    when the rows of the matrix are norm-imbalanced, each objective will contribute to the update
     proportionally to their norm.
 
 .. _Weighted:
