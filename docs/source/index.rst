@@ -29,12 +29,6 @@ A straightforward application of Jacobian descent is multi-task learning, in whi
 per-task losses has to be minimized. To start using TorchJD for multi-task learning, follow our
 :doc:`MTL example <examples/mtl>`.
 
-
-.. important::
-    This library is currently in an early development stage. The API is subject to significant
-    changes in future versions.
-
-
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
 
