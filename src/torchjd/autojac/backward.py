@@ -34,7 +34,8 @@ def backward(
         backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
         parallel at once. If set to ``1``, all coordinates will be differentiated sequentially. A
         larger value results in faster differentiation, but also higher memory usage. Defaults to
-        ``None``.
+        ``None``. If ``parallel_chunk_size`` is not large enough to differentiate all tensors
+        simultaneously, ``retain_graph`` has to be set to ``True``.
 
     .. admonition::
         Example
