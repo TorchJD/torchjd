@@ -4,6 +4,7 @@ import pytest
 import torch
 from pytest import raises
 from torch import Tensor
+from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import (
@@ -28,7 +29,7 @@ _key_shapes = [[], [1], [2, 3]]
         ([[], [1], [2, 4]], raises(ValueError)),  # Wrong number of elements
     ],
 )
-def test_gradients(value_shapes: list[list[int]], expectation):
+def test_gradients(value_shapes: list[list[int]], expectation: ExceptionContext):
     """Tests that the Gradients class checks properly its inputs."""
 
     _assert_class_checks_properly(Gradients, value_shapes, expectation)
@@ -44,7 +45,7 @@ def test_gradients(value_shapes: list[list[int]], expectation):
         ([[5], [5, 1], [5, 2, 4]], raises(ValueError)),  # Wrong number of elements
     ],
 )
-def test_jacobians(value_shapes: list[list[int]], expectation):
+def test_jacobians(value_shapes: list[list[int]], expectation: ExceptionContext):
     """Tests that the Jacobians class checks properly its inputs."""
 
     _assert_class_checks_properly(Jacobians, value_shapes, expectation)
@@ -59,7 +60,7 @@ def test_jacobians(value_shapes: list[list[int]], expectation):
         ([[2], [1], [6]], raises(ValueError)),  # Wrong number of elements
     ],
 )
-def test_gradient_vectors(value_shapes: list[list[int]], expectation):
+def test_gradient_vectors(value_shapes: list[list[int]], expectation: ExceptionContext):
     """Tests that the GradientVectors class checks properly its inputs."""
 
     _assert_class_checks_properly(GradientVectors, value_shapes, expectation)
@@ -75,7 +76,7 @@ def test_gradient_vectors(value_shapes: list[list[int]], expectation):
         ([[5, 2], [5, 1], [5, 6]], raises(ValueError)),  # Wrong number of elements
     ],
 )
-def test_jacobian_matrices(value_shapes: list[list[int]], expectation):
+def test_jacobian_matrices(value_shapes: list[list[int]], expectation: ExceptionContext):
     """Tests that the JacobianMatrices class checks properly its inputs."""
 
     _assert_class_checks_properly(JacobianMatrices, value_shapes, expectation)
@@ -101,7 +102,7 @@ def test_least_common_ancestor(
 
 
 def _assert_class_checks_properly(
-    class_: type[TensorDict], value_shapes: list[list[int]], expectation
+    class_: type[TensorDict], value_shapes: list[list[int]], expectation: ExceptionContext
 ):
     tensor_mapping = _make_tensor_dict(value_shapes)
 
