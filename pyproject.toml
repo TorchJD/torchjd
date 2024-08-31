@@ -52,7 +52,6 @@ doc = [
 
 test = [
 	"pytest>=7.3",  # Before version 7.3, not all tests are run
-	"contexttimer>=0.3.3, <0.3.4",  # The test requiring contexttimer is not often run, so it could silently break if we uncap this library
 ]
 
 plot = [
