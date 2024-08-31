@@ -223,7 +223,7 @@ def test_equivalence_jac_grad():
     grads_1 = _grad(
         [outputs[0]],
         inputs,
-        grad_outputs[0],
+        [grad_outputs[0]],
         retain_graph=True,
         create_graph=False,
         allow_unused=True,
@@ -232,7 +232,7 @@ def test_equivalence_jac_grad():
     grads_2 = _grad(
         [outputs[1]],
         inputs,
-        grad_outputs[1],
+        [grad_outputs[1]],
         retain_graph=True,
         create_graph=False,
         allow_unused=True,
