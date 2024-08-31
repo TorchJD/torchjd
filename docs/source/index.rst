@@ -18,22 +18,16 @@
 
 TorchJD is a library enabling Jacobian descent with PyTorch, to train neural networks with multiple
 objectives. It is based on the theory from `Jacobian Descent For Multi-Objective Optimization
-<https://arxiv.org/pdf/2406.16232>`_ and several other related publications. The main purpose is to
-jointly optimize multiple objectives without combining them into a single scalar loss. Using TorchJD
-to minimize a vector of objectives comes at the expense of some computational overhead compared to
-directly using PyTorch to minimize a scalarization of the objectives. However when the objectives
-are conflicting, this can be essential. To get started, check out our :doc:`basic usage example
+<https://arxiv.org/pdf/2406.16232>`_ and several other related publications.
+
+The main purpose is to jointly optimize multiple objectives without combining them into a single
+scalar loss. When the objectives are conflicting, this can be the key to a successful and stable
+optimization. To get started, check out our :doc:`basic usage example
 <examples/basic_usage>`.
 
 A straightforward application of Jacobian descent is multi-task learning, in which the vector of
 per-task losses has to be minimized. To start using TorchJD for multi-task learning, follow our
 :doc:`MTL example <examples/mtl>`.
-
-
-.. important::
-    This library is currently in an early development stage. The API is subject to significant
-    changes in future versions.
-
 
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
