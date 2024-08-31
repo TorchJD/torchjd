@@ -14,7 +14,7 @@ class TensorDict(dict[Tensor, Tensor]):
         self._check_all_pairs(tensor_dict)
         super().__init__(tensor_dict)
 
-    def check_keys_are(self, keys: set[Tensor]):
+    def check_keys_are(self, keys: set[Tensor]) -> None:
         """
         Checks that the keys in the mapping are the same as the provided ``keys``.
 
@@ -43,7 +43,7 @@ class TensorDict(dict[Tensor, Tensor]):
     # Make TensorDict immutable, following answer in
     # https://stackoverflow.com/questions/11014262/how-to-create-an-immutable-dictionary-in-python
     # coming from https://peps.python.org/pep-0351/
-    def _raise_immutable_error(self, *args, **kwargs):
+    def _raise_immutable_error(self, *args, **kwargs) -> None:
         raise TypeError(f"{self.__class__.__name__} is immutable.")
 
     __setitem__ = _raise_immutable_error
