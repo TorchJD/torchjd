@@ -68,11 +68,11 @@ def _jac(
             ]
         )
 
-    def get_vjp(v: Sequence[Tensor]) -> Tensor:
+    def get_vjp(grad_outputs: Sequence[Tensor]) -> Tensor:
         optional_grads = torch.autograd.grad(
             outputs,
             inputs,
-            grad_outputs=v,
+            grad_outputs=grad_outputs,
             retain_graph=retain_graph,
             create_graph=create_graph,
             allow_unused=allow_unused,
