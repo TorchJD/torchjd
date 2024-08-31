@@ -138,7 +138,7 @@ class _NashMTLWeighting(_Weighting):
             or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
         )
 
-    def _solve_optimization(self, gtg: np.array):
+    def _solve_optimization(self, gtg: np.ndarray):
         self.G_param.value = gtg
         self.normalization_factor_param.value = self.normalization_factor
 

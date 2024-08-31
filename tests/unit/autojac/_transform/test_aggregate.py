@@ -8,7 +8,7 @@ from unit.conftest import DEVICE
 
 from torchjd.aggregation import Random
 from torchjd.autojac._transform import GradientVectors, JacobianMatrices, Jacobians
-from torchjd.autojac._transform.aggregate import _AggregateMatrices, _KeyType, _Matrixify, _Reshape
+from torchjd.autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -89,7 +89,7 @@ def test_aggregate_matrices_empty_dict():
     ],
 )
 def test_disunite_wrong_vector_length(
-    united_gradient_vector: Tensor, jacobian_matrices: dict[_KeyType, Tensor]
+    united_gradient_vector: Tensor, jacobian_matrices: dict[Tensor, Tensor]
 ):
     """
     Tests that the _disunite method raises a ValueError when used on vectors of the wrong length.

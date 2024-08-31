@@ -37,7 +37,7 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int]):
+def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     """
     Tests that the .grad value filled by mtl_backward is correct in a simple example of
     matrix-vector product for shared representation and three tasks whose loss are given by a simple
@@ -294,7 +294,7 @@ def test_mtl_backward_empty_features():
         (5, 4, 3, 2),
     ],
 )
-def test_mtl_backward_various_single_features(shape: tuple[int]):
+def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
     """Tests that mtl_backward works correctly with various kinds of feature tensors."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
