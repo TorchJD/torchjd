@@ -23,8 +23,8 @@ class Jac(_Differentiate[Jacobians]):
 
     def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         return _jac(
-            outputs=self.outputs,
-            inputs=self.inputs,
+            outputs=list(self.outputs),
+            inputs=list(self.inputs),
             jac_outputs=jac_outputs,
             chunk_size=self.chunk_size,
             retain_graph=self.retain_graph,

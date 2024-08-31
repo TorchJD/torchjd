@@ -20,8 +20,8 @@ class Grad(_Differentiate[Gradients]):
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         return _grad(
-            outputs=self.outputs,
-            inputs=self.inputs,
+            outputs=list(self.outputs),
+            inputs=list(self.inputs),
             grad_outputs=grad_outputs,
             retain_graph=self.retain_graph,
             create_graph=False,
