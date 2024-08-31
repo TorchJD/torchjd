@@ -1,3 +1,5 @@
+from typing import Callable
+
 import torch
 from torch import Tensor
 
@@ -34,7 +36,7 @@ class GradDrop(Aggregator):
         tensor([6., 2., 2.])
     """
 
-    def __init__(self, f: callable = _identity, leak: Tensor | None = None):
+    def __init__(self, f: Callable = _identity, leak: Tensor | None = None):
         if leak is not None and leak.dim() != 1:
             raise ValueError(
                 "Parameter `leak` should be a 1-dimensional tensor. Found `weights.shape = "
