@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Library for Jacobian Descent with PyTorch."
 readme = "README.md"
 authors = [
-	{name = "Valerian Rey", email = "valerian.rey@gmail.com"},
-	{name = "Pierre Quinton", email = "pierre.quinton@gmail.com"}
+    {name = "Valerian Rey", email = "valerian.rey@gmail.com"},
+    {name = "Pierre Quinton", email = "pierre.quinton@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -16,18 +16,18 @@ dependencies = [
     "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
 ]
 classifiers = [
-	"Development Status :: 4 - Beta",
-	"Intended Audience :: Developers",
-	"Intended Audience :: Science/Research",
-	"License :: OSI Approved :: MIT License",
-	"Operating System :: OS Independent",
-	"Programming Language :: Python",
-	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.10",
-	"Programming Language :: Python :: 3.11",
-	"Programming Language :: Python :: 3.12",
-	"Topic :: Scientific/Engineering",
-	"Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 [project.urls]
@@ -38,20 +38,20 @@ Changelog = "https://github.com/TorchJD/torchjd/blob/main/CHANGELOG.md"
 
 [tool.pdm.dev-dependencies]
 check = [
-	"pre-commit>=2.9.2"  # isort doesn't work before 2.9.2
+    "pre-commit>=2.9.2"  # isort doesn't work before 2.9.2
 ]
 
 doc = [
-	"sphinx>=6.0, !=7.2.0, !=7.2.1, !=7.2.3, !=7.2.4, !=7.2.5",  # Versions in [7.2.0, 7.2.5] have a bug with an internal torch import from _C
-	"furo>=2023.0, <2024.04.27",  # Force it to be recent so that the theme looks better, 2024.04.27 seems to have bugged link colors
-	"tomli>=1.1",  # The load function doesn't work similarly before 1.1
-	"sphinx-autodoc-typehints>=1.16.0",  # Some problems with TypeVars before 1.16
-	"myst-parser>=3.0.1",  # Never tested lower versions
-	"sphinx-design>=0.6.0",  # Never tested lower versions
+    "sphinx>=6.0, !=7.2.0, !=7.2.1, !=7.2.3, !=7.2.4, !=7.2.5",  # Versions in [7.2.0, 7.2.5] have a bug with an internal torch import from _C
+    "furo>=2023.0, <2024.04.27",  # Force it to be recent so that the theme looks better, 2024.04.27 seems to have bugged link colors
+    "tomli>=1.1",  # The load function doesn't work similarly before 1.1
+    "sphinx-autodoc-typehints>=1.16.0",  # Some problems with TypeVars before 1.16
+    "myst-parser>=3.0.1",  # Never tested lower versions
+    "sphinx-design>=0.6.0",  # Never tested lower versions
 ]
 
 test = [
-	"pytest>=7.3",  # Before version 7.3, not all tests are run
+    "pytest>=7.3",  # Before version 7.3, not all tests are run
 ]
 
 plot = [
