@@ -15,7 +15,7 @@ def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     if isinstance(tensors, Tensor):
         output = [tensors]
     else:
-        output = tensors
+        output = list(tensors)
     return output
 
 
