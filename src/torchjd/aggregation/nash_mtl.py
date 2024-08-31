@@ -216,6 +216,6 @@ class _NashMTLWeighting(_Weighting):
 
         self.prvs_alpha_param = None
         self.normalization_factor = np.ones((1,))
-        self.init_gtg = self.init_gtg = np.eye(self.n_tasks)
+        self.init_gtg = np.eye(self.n_tasks)
         self.step = 0.0
         self.prvs_alpha = np.ones(self.n_tasks, dtype=np.float32)
