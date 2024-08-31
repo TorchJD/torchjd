@@ -1,8 +1,9 @@
 from contextlib import nullcontext as does_not_raise
-from typing import ContextManager, Sequence
+from typing import Sequence
 
 import pytest
 import torch
+from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd.aggregation import Aggregator
@@ -18,6 +19,6 @@ from torchjd.aggregation import Aggregator
         ([1, 2, 3, 4], pytest.raises(ValueError)),
     ],
 )
-def test_check_is_matrix(shape: Sequence[int], expectation: ContextManager):
+def test_check_is_matrix(shape: Sequence[int], expectation: ExceptionContext):
     with expectation:
         Aggregator._check_is_matrix(torch.randn(shape, device=DEVICE))

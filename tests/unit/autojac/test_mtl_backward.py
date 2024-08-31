@@ -4,6 +4,7 @@ import pytest
 import torch
 from pytest import raises
 from torch.testing import assert_close
+from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd import mtl_backward
@@ -432,7 +433,9 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     ["chunk_size", "expectation"],
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )
-def test_mtl_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation):
+def test_mtl_backward_no_retain_graph_small_chunk_size(
+    chunk_size: int, expectation: ExceptionContext
+):
     """
     Tests that mtl_backward raises an error when using retain_graph=False and a chunk size that is
     not large enough to allow differentiation of all tensors are once.
