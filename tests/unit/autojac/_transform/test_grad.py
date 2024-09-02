@@ -182,3 +182,17 @@ def test_conjunction_of_grads_is_grad():
     expected_gradients = grad(input)
 
     assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
+def test_create_graph():
+    """Tests that the Grad transform behaves correctly when `create_graph` is set to `True`."""
+
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    b = a * a
+    input = Gradients({b: torch.ones_like(b)})
+
+    grad = Grad(outputs=[b], inputs=[a], create_graph=True)
+
+    gradients = grad(input)
+
+    assert gradients[a].requires_grad
