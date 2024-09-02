@@ -26,7 +26,9 @@ changes that do not affect the user.
 - **BREAKING**: Removed the possibility of populating the `.grad` field of a tensor that does not
   expect it when calling `backward`. If an input `t` provided to backward does not satisfy
   `t.requires_grad and (t.is_leaf or t.retains_grad)`, an error is now raised.
-
+- **BREAKING**: When using `backward`, aggregations are now accumulated into the `.grad` fields
+  of the inputs rather than replacing those fields if they already existed. This is in line with the
+  behavior of `torch.autograd.backward`.
 
 ## [0.1.0] - 2024-06-22
 
