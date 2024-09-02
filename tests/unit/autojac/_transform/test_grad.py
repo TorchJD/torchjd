@@ -1,4 +1,5 @@
 import torch
+from pytest import raises
 from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Grad, Gradients
@@ -60,6 +61,26 @@ def test_empty_inputs_2():
     expected_gradients = {}
 
     assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
+def test_retain_graph():
+    """Tests that the `Grad` transform behaves as expected with the `retain_graph` flag."""
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y = a * x
+    input = Gradients({y: torch.ones_like(y)})
+
+    grad_retain_graph = Grad(outputs=[y], inputs=[a], retain_graph=True)
+    grad_discard_graph = Grad(outputs=[y], inputs=[a], retain_graph=False)
+
+    grad_retain_graph(input)
+    grad_retain_graph(input)
+    grad_discard_graph(input)
+    with raises(RuntimeError):
+        grad_retain_graph(input)
+    with raises(RuntimeError):
+        grad_discard_graph(input)
 
 
 def test_single_input_two_levels():
