@@ -8,9 +8,10 @@ from .base import _A, Transform
 
 
 class _Differentiate(Transform[_A, _A], ABC):
-    def __init__(self, outputs: Iterable[Tensor], inputs: Iterable[Tensor]):
+    def __init__(self, outputs: Iterable[Tensor], inputs: Iterable[Tensor], retain_graph: bool):
         self.outputs = ordered_set(outputs)
         self.inputs = ordered_set(inputs)
+        self.retain_graph = retain_graph
 
     def _compute(self, tensors: _A) -> _A:
         tensor_outputs = [tensors[output] for output in self.outputs]
