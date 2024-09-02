@@ -1,4 +1,5 @@
 import torch
+from pytest import raises
 from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Jac, Jacobians
@@ -70,6 +71,29 @@ def test_empty_inputs_2():
     expected_jacobians = {}
 
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
+
+
+def test_retain_graph():
+    """Tests that the `Jac` transform behaves as expected with the `retain_graph` flag."""
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    y1 = a1 * x
+    y2 = a2 * x
+    y = torch.stack([y1, y2])
+    input = Jacobians({y: torch.eye(2, device=DEVICE)})
+
+    jac_retain_graph = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None, retain_graph=True)
+    jac_discard_graph = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None, retain_graph=False)
+
+    jac_retain_graph(input)
+    jac_retain_graph(input)
+    jac_discard_graph(input)
+    with raises(RuntimeError):
+        jac_retain_graph(input)
+    with raises(RuntimeError):
+        jac_discard_graph(input)
 
 
 def test_two_levels():
