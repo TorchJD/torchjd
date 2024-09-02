@@ -17,7 +17,14 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
 
         for key in gradients.keys():
             _check_expects_grad(key)
-            key.grad = gradients[key]
+            if hasattr(key, "grad") and key.grad is not None:
+                key.grad += gradients[key]
+            else:
+                # We clone the value because we do not want subsequent accumulations to also affect
+                # this value (in case it is still used outside). We do not detach from the
+                # computation graph because the value can have grad_fn that we want to keep track of
+                # (in case it was obtained via create_graph=True and a differentiable aggregator).
+                key.grad = gradients[key].clone()
 
         return EmptyTensorDict()
 
