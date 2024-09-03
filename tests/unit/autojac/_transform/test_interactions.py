@@ -3,6 +3,7 @@ from torch.testing import assert_close
 from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import (
+    Accumulate,
     Conjunction,
     Diagonalize,
     EmptyTensorDict,
@@ -12,7 +13,6 @@ from torchjd.autojac._transform import (
     Jac,
     Select,
     Stack,
-    Store,
     TensorDict,
 )
 from torchjd.autojac._transform.grad import _grad
@@ -179,11 +179,11 @@ def test_conjunction_is_associative():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_conjunction_store_select():
+def test_conjunction_accumulate_select():
     """
-    Tests that it is possible to conjunct a Store and a Select in this order.
-    It is not trivial since the type of the TensorDict returned by the first transform (Store) is
-    EmptyDict, which is not the type that the conjunction should return (Gradients).
+    Tests that it is possible to conjunct an Accumulate and a Select in this order.
+    It is not trivial since the type of the TensorDict returned by the first transform (Accumulate)
+    is EmptyDict, which is not the type that the conjunction should return (Gradients).
     """
 
     key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True, device=DEVICE)
@@ -191,8 +191,8 @@ def test_conjunction_store_select():
     input = Gradients({key: value})
 
     select = Select([], [key])
-    store = Store([key])
-    conjunction = store | select
+    accumulate = Accumulate([key])
+    conjunction = accumulate | select
 
     output = conjunction(input)
     expected_output = {}

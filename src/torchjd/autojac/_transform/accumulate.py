@@ -6,18 +6,25 @@ from .base import Transform
 from .tensor_dict import EmptyTensorDict, Gradients
 
 
-class Store(Transform[Gradients, EmptyTensorDict]):
+class Accumulate(Transform[Gradients, EmptyTensorDict]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
     def _compute(self, gradients: Gradients) -> EmptyTensorDict:
         """
-        Stores gradients with respect to keys in their ``.grad`` field.
+        Accumulates gradients with respect to keys in their ``.grad`` field.
         """
 
         for key in gradients.keys():
             _check_expects_grad(key)
-            key.grad = gradients[key]
+            if hasattr(key, "grad") and key.grad is not None:
+                key.grad += gradients[key]
+            else:
+                # We clone the value because we do not want subsequent accumulations to also affect
+                # this value (in case it is still used outside). We do not detach from the
+                # computation graph because the value can have grad_fn that we want to keep track of
+                # (in case it was obtained via create_graph=True and a differentiable aggregator).
+                key.grad = gradients[key].clone()
 
         return EmptyTensorDict()
 
