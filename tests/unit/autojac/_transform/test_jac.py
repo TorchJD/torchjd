@@ -178,3 +178,22 @@ def test_conjunction_of_jacs_is_jac():
     expected_jacobians = jac(input)
 
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
+
+
+def test_create_graph():
+    """Tests that the Jac transform behaves correctly when `create_graph` is set to `True`."""
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    y1 = a1 * a2
+    y2 = a2 * x
+    y = torch.stack([y1, y2])
+    input = Jacobians({y: torch.eye(2, device=DEVICE)})
+
+    jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None, create_graph=True)
+
+    jacobians = jac(input)
+
+    assert jacobians[a1].requires_grad
+    assert jacobians[a2].requires_grad

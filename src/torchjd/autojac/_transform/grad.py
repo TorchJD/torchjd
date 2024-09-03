@@ -14,8 +14,9 @@ class Grad(_Differentiate[Gradients]):
         outputs: Iterable[Tensor],
         inputs: Iterable[Tensor],
         retain_graph: bool = False,
+        create_graph: bool = False,
     ):
-        super().__init__(outputs, inputs, retain_graph)
+        super().__init__(outputs, inputs, retain_graph, create_graph)
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         return _grad(
@@ -23,7 +24,7 @@ class Grad(_Differentiate[Gradients]):
             inputs=list(self.inputs),
             grad_outputs=grad_outputs,
             retain_graph=self.retain_graph,
-            create_graph=False,
+            create_graph=self.create_graph,
             allow_unused=True,
         )
 
