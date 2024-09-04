@@ -9,7 +9,8 @@ In the context of JD, the matrix to aggregate is a Jacobian whose rows are the g
 individual objectives. The aggregator is used to reduce this matrix into an update vector for the
 parameters of the model
 
-This package provides several aggregators from the literature:
+In TorchJD, an aggregator is a class that inherits from the abstract class
+:ref:`Aggregator <Aggregator>`. We provide the following list of aggregators from the literature:
 
 .. role:: raw-html(raw)
    :format: html
@@ -21,7 +22,7 @@ This package provides several aggregators from the literature:
    :widths: 25 15 15 15
    :header-rows: 1
 
-   * - :doc:`Aggregator (abstract) <bases>`
+   * - :ref:`Aggregator <Aggregator>`
      - :ref:`Non-conflicting <Non-conflicting>`
      - :ref:`Linear under scaling <Linear under scaling>`
      - :ref:`Weighted <Weighted>`
@@ -91,6 +92,13 @@ This package provides several aggregators from the literature:
     Optimization <https://arxiv.org/pdf/2406.16232>`_. The paper provides precise justification of
     the properties in Section 2.2 as well as proofs in Appendix B.
 
+.. _Aggregator:
+.. automodule:: torchjd.aggregation.bases
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: forward
+
 .. _Non-conflicting:
 .. admonition::
     Non-conflicting
@@ -135,7 +143,6 @@ This package provides several aggregators from the literature:
     :hidden:
     :maxdepth: 1
 
-    bases.rst
     upgrad.rst
     aligned_mtl.rst
     cagrad.rst
