@@ -25,6 +25,14 @@ scalar loss. When the objectives are conflicting, this can be the key to a succe
 optimization. To get started, check out our :doc:`basic usage example
 <examples/basic_usage>`.
 
+Gradient descent relies on gradients to optimize a single objective. Jacobian descent takes this
+idea a step further, using the Jacobian to optimize multiple objectives. An important component of
+Jacobian descent is the aggregator, which maps the Jacobian to an optimization step. In the page
+:doc:`Aggregation <docs/aggregation/index>`, we provide an overview of the various aggregators available
+in TorchJD, along with some of their key characteristics. A precise description of this formalism
+along with the :doc:`UPGrad <docs/aggregation/upgrad>` aggregator is available in Section 2 of `Jacobian
+Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
+
 A straightforward application of Jacobian descent is multi-task learning, in which the vector of
 per-task losses has to be minimized. To start using TorchJD for multi-task learning, follow our
 :doc:`MTL example <examples/mtl>`.
