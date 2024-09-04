@@ -1,15 +1,12 @@
 import pytest
 import torch
 from torch import Tensor
-from unit.aggregation.utils.inputs import (
-    matrices,
-    scaled_matrices,
-    stationary_matrices,
-    zero_rank_matrices,
-)
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
+from unit.conftest import DEVICE
 
 from torchjd.aggregation import Constant
+
+from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
+from ._property_testers import ExpectedShapeProperty
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
 # applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To
@@ -19,7 +16,8 @@ from torchjd.aggregation import Constant
 
 def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    return Constant(torch.tensor([1.0 / n_rows] * n_rows))
+    weights = torch.tensor([1.0 / n_rows] * n_rows, device=DEVICE)
+    return Constant(weights)
 
 
 _matrices_1 = scaled_matrices + zero_rank_matrices

@@ -1,9 +1,10 @@
 import pytest
 from torch import Tensor
-from unit.aggregation.utils.inputs import scaled_matrices_2_plus_rows
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
 
 from torchjd.aggregation import Krum
+
+from ._inputs import scaled_matrices_2_plus_rows
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [Krum(n_byzantine=1)])

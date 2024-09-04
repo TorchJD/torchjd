@@ -3,8 +3,11 @@
 [![Tests](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml)
 
 TorchJD is a library enabling [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch, to
-train neural networks with multiple objectives. The full documentation is available at
-[torchjd.org](https://torchjd.org).
+train neural networks with multiple objectives. In particular, it can be used for multi-task
+learning, with a wide variety of algorithms from the literature. It also enables the instance-wise
+risk minimization paradigm, as proposed in
+[Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232). The full
+documentation is available at [torchjd.org](https://torchjd.org), with several usage examples.
 
 ## Installation
 <!-- start installation -->

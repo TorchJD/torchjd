@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._gramian_utils import _compute_gramian
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from ._gramian_utils import _compute_gramian
+from .bases import _WeightedAggregator, _Weighting
 
 
 class MGDA(_WeightedAggregator):

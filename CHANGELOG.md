@@ -3,13 +3,32 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
+changes that do not affect the user.
 
-## [Unreleased]
+## [0.2.0] - 2024-09-05
 
-### Removed
+### Added
 
-- `_NormalizingWrapper` (unused protected class).
+- `autojac` package containing the backward pass functions and their dependencies.
+- `mtl_backward` function to make a backward pass for multi-task learning.
+- Multi-task learning example.
+
+### Changed
+
+- **BREAKING**: Moved the `backward` module to the `autojac` package. Some imports may have to be
+  adapted.
+- Improved documentation of `backward`.
+
+### Fixed
+
+- Fixed wrong tensor device with `IMTLG` in some rare cases.
+- **BREAKING**: Removed the possibility of populating the `.grad` field of a tensor that does not
+  expect it when calling `backward`. If an input `t` provided to backward does not satisfy
+  `t.requires_grad and (t.is_leaf or t.retains_grad)`, an error is now raised.
+- **BREAKING**: When using `backward`, aggregations are now accumulated into the `.grad` fields
+  of the inputs rather than replacing those fields if they already existed. This is in line with the
+  behavior of `torch.autograd.backward`.
 
 ## [0.1.0] - 2024-06-22
 

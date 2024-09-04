@@ -1,12 +1,14 @@
 import pytest
 import torch
 from torch.testing import assert_close
-from unit.aggregation.utils.property_testers import ExpectedShapeProperty
+from unit.conftest import DEVICE
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
+
+from ._property_testers import ExpectedShapeProperty
 
 
 @pytest.mark.parametrize("aggregator", [PCGrad()])
@@ -35,7 +37,7 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     rows.
     """
 
-    matrix = torch.randn(shape)
+    matrix = torch.randn(shape, device=DEVICE)
 
     pc_grad_weighting = _PCGradWeighting()
     upgrad_sum_weighting = _UPGradWrapper(

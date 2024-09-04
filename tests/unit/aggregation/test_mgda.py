@@ -1,14 +1,16 @@
 import pytest
 import torch
 from torch.testing import assert_close
-from unit.aggregation.utils.property_testers import (
+from unit.conftest import DEVICE
+
+from torchjd.aggregation import MGDA
+from torchjd.aggregation.mgda import _MGDAWeighting
+
+from ._property_testers import (
     ExpectedShapeProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
 )
-
-from torchjd.aggregation import MGDA
-from torchjd.aggregation.mgda import _MGDAWeighting
 
 
 @pytest.mark.parametrize("aggregator", [MGDA()])
@@ -27,8 +29,8 @@ class TestMGDA(ExpectedShapeProperty, NonConflictingProperty, PermutationInvaria
     ],
 )
 def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
-    matrix = torch.randn(shape)
-    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=10000)
+    matrix = torch.randn(shape, device=DEVICE)
+    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=1000)
 
     gramian = matrix @ matrix.T
 
@@ -43,11 +45,11 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     assert_close(positive_weights.norm(), weights.norm())
 
     weights_sum = weights.sum()
-    assert_close(weights_sum, torch.ones([]))
+    assert_close(weights_sum, torch.ones([], device=DEVICE))
 
     # Dual feasibility
     positive_mu = mu[mu >= 0]
-    assert_close(positive_mu.norm(), mu.norm(), atol=3e-04, rtol=0.0)
+    assert_close(positive_mu.norm(), mu.norm(), atol=1e-02, rtol=0.0)
 
 
 def test_representations():

@@ -1,10 +1,8 @@
 import pytest
-from unit.aggregation.utils.property_testers import (
-    ExpectedShapeProperty,
-    PermutationInvarianceProperty,
-)
 
 from torchjd.aggregation import Mean
+
+from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [Mean()])

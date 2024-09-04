@@ -29,7 +29,7 @@ MIN_LENGTH = 0.01
 MAX_LENGTH = 25.0
 
 
-def main():
+def main() -> None:
     log = logging.getLogger("werkzeug")
     log.setLevel(logging.CRITICAL)
 
@@ -173,7 +173,7 @@ def make_gradient_div(i: int, initial_gradient: torch.Tensor) -> html.Div:
     return div
 
 
-def open_browser():
+def open_browser() -> None:
     if not os.environ.get("WERKZEUG_RUN_MAIN"):
         webbrowser.open_new("http://127.0.0.1:1222/")
 

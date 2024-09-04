@@ -27,9 +27,10 @@
 import cvxpy as cp
 import numpy as np
 import torch
+from cvxpy import Expression
 from torch import Tensor
 
-from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator, _Weighting
 
 
 class NashMTL(_WeightedAggregator):
@@ -88,7 +89,7 @@ class NashMTL(_WeightedAggregator):
             )
         )
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the internal state of the algorithm."""
         self.weighting.reset()
 
@@ -131,14 +132,14 @@ class _NashMTLWeighting(_Weighting):
         self.step = 0.0
         self.prvs_alpha = np.ones(self.n_tasks, dtype=np.float32)
 
-    def _stop_criteria(self, gtg, alpha_t):
+    def _stop_criteria(self, gtg: np.ndarray, alpha_t: np.ndarray) -> bool:
         return (
             (self.alpha_param.value is None)
             or (np.linalg.norm(gtg @ alpha_t - 1 / (alpha_t + 1e-10)) < 1e-3)
             or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
         )
 
-    def _solve_optimization(self, gtg: np.array):
+    def _solve_optimization(self, gtg: np.ndarray) -> np.ndarray:
         self.G_param.value = gtg
         self.normalization_factor_param.value = self.normalization_factor
 
@@ -162,13 +163,13 @@ class _NashMTLWeighting(_Weighting):
 
         return self.prvs_alpha
 
-    def _calc_phi_alpha_linearization(self):
+    def _calc_phi_alpha_linearization(self) -> Expression:
         G_prvs_alpha = self.G_param @ self.prvs_alpha_param
         prvs_phi_tag = 1 / self.prvs_alpha_param + (1 / G_prvs_alpha) @ self.G_param
         phi_alpha = prvs_phi_tag @ (self.alpha_param - self.prvs_alpha_param)
         return phi_alpha
 
-    def _init_optim_problem(self):
+    def _init_optim_problem(self) -> None:
         self.alpha_param = cp.Variable(shape=(self.n_tasks,), nonneg=True)
         self.prvs_alpha_param = cp.Parameter(shape=(self.n_tasks,), value=self.prvs_alpha)
         self.G_param = cp.Parameter(shape=(self.n_tasks, self.n_tasks), value=self.init_gtg)
@@ -211,11 +212,11 @@ class _NashMTLWeighting(_Weighting):
 
         return alpha
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the internal state of the algorithm."""
 
         self.prvs_alpha_param = None
         self.normalization_factor = np.ones((1,))
-        self.init_gtg = self.init_gtg = np.eye(self.n_tasks)
+        self.init_gtg = np.eye(self.n_tasks)
         self.step = 0.0
         self.prvs_alpha = np.ones(self.n_tasks, dtype=np.float32)

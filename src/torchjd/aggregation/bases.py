@@ -29,6 +29,10 @@ class Aggregator(nn.Module, ABC):
     def forward(self, matrix: Tensor) -> Tensor:
         raise NotImplementedError
 
+    # Override to make type hints more specific
+    def __call__(self, matrix: Tensor) -> Tensor:
+        return super().__call__(matrix)
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
@@ -44,6 +48,10 @@ class _Weighting(nn.Module, ABC):
 
     def forward(self, matrix: Tensor) -> Tensor:
         raise NotImplementedError
+
+    # Override to make type hints more specific
+    def __call__(self, matrix: Tensor) -> Tensor:
+        return super().__call__(matrix)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"

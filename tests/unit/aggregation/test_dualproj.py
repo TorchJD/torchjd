@@ -1,11 +1,12 @@
 import pytest
-from unit.aggregation.utils.property_testers import (
+
+from torchjd.aggregation import DualProj
+
+from ._property_testers import (
     ExpectedShapeProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
 )
-
-from torchjd.aggregation import DualProj
 
 
 @pytest.mark.parametrize("aggregator", [DualProj()])
