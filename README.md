@@ -22,6 +22,8 @@ pip install torchjd
 > [pyproject.toml](./pyproject.toml).
 
 ## Supported Aggregators
+TorchJD provides many existing aggregators from the literature, listed in the following table.
+
 <!-- recommended aggregators first, then alphabetical order -->
 | Aggregator                                                           | Publication                                                                                                                                                         |
 |----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
