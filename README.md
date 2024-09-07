@@ -56,9 +56,10 @@ A(J)
 # Output: tensor([0.2929, 1.9004, 1.9004])
 ```
 
-When using TorchJD, you generally don't have to use aggregators directly. You simply instantiate one
-and pass it to the backward function (`torchjd.backward` or `torchjd.mtl_backward`), which will in
-turn apply it to the Jacobian matrix that it will compute.
+> [!TIP]
+> When using TorchJD, you generally don't have to use aggregators directly. You simply instantiate
+> one and pass it to the backward function (`torchjd.backward` or `torchjd.mtl_backward`), which
+> will in turn apply it to the Jacobian matrix that it will compute.
 
 ## Contribution
 
