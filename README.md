@@ -16,10 +16,8 @@ TorchJD can be installed directly with pip:
 pip install torchjd
 ```
 <!-- end installation -->
-
-## Compatibility
-TorchJD requires python 3.10, 3.11 or 3.12. It is only compatible with recent versions of PyTorch
-(>= 2.0). For more information, read the `dependencies` in [pyproject.toml](./pyproject.toml).
+Note that TorchJD requires python 3.10, 3.11 or 3.12. It is only compatible with recent versions of
+PyTorch (>= 2.0). For more information, read the `dependencies` in [pyproject.toml](./pyproject.toml).
 
 ## Contribution
 
