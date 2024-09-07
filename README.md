@@ -43,6 +43,23 @@ TorchJD provides many existing aggregators from the literature, listed in the fo
 | [Sum](https://torchjd.org/docs/aggregation/sum/)                     | -                                                                                                                                                                   |
 | [Trimmed Mean](https://torchjd.org/docs/aggregation/trimmed_mean/)   | [Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates](https://proceedings.mlr.press/v80/yin18a/yin18a.pdf)                                     |
 
+The following example shows how to instantiate
+[UPGrad](https://torchjd.org/docs/aggregation/upgrad/) and aggregate a simple matrix `J` with it.
+```python
+from torch import tensor
+from torchjd.aggregation import UPGrad
+
+A = UPGrad()
+J = tensor([[-4., 1., 1.], [6., 1., 1.]])
+
+A(J)
+# Output: tensor([0.2929, 1.9004, 1.9004])
+```
+
+When using TorchJD, you generally don't have to use aggregators directly. You simply instantiate one
+and pass it to the backward function (`torchjd.backward` or `torchjd.mtl_backward`), which will in
+turn apply it to the Jacobian matrix that it will compute.
+
 ## Contribution
 
 Please read the [Contribution page](CONTRIBUTING.md).
