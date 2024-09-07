@@ -22,6 +22,8 @@ TorchJD requires python 3.10, 3.11 or 3.12. It is only compatible with recent ve
 (>= 2.0). For more information, read the `dependencies` in [pyproject.toml](./pyproject.toml).
 
 ## Supported Aggregators
+TorchJD provides many existing aggregators from the literature, listed in the following table.
+
 <!-- recommended aggregators first, then alphabetical order -->
 | Aggregator                                                           | Publication                                                                                                                                                         |
 |----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
