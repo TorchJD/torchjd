@@ -438,7 +438,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
 ):
     """
     Tests that mtl_backward raises an error when using retain_graph=False and a chunk size that is
-    not large enough to allow differentiation of all tensors are once.
+    not large enough to allow differentiation of all tensors at once.
     """
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
