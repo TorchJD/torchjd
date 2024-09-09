@@ -1,6 +1,5 @@
 import torch
 from torch import Tensor
-from torch.linalg import LinAlgError
 
 from .bases import _WeightedAggregator, _Weighting
 
@@ -42,8 +41,8 @@ class _IMTLGWeighting(_Weighting):
         d = torch.linalg.norm(matrix, dim=1)
 
         try:
-            raw_weights = torch.linalg.pinv(matrix @ matrix.T) @ d
-        except LinAlgError:  # This can happen when the matrix has extremely large values
+            raw_weights = torch.linalg.lstsq(matrix @ matrix.T, d).solution
+        except RuntimeError:  # This can happen when the matrix has extremely large values
             raw_weights = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
 
         weights = raw_weights / raw_weights.sum()
