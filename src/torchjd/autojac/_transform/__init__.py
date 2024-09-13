@@ -1,4 +1,5 @@
 from .accumulate import Accumulate
+from .accumulate_gramian import AccumulateGramian
 from .aggregate import Aggregate
 from .base import Composition, Conjunction, Transform
 from .diagonalize import Diagonalize
