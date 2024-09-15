@@ -41,9 +41,7 @@ class _IMTLGWeighting(_Weighting):
         d = torch.linalg.norm(matrix, dim=1)
 
         try:
-            # Equivalent to `alpha_star = torch.linalg.pinv(matrix @ matrix.T) @ d`, but safer
-            # according to https://pytorch.org/docs/stable/generated/torch.linalg.pinv.html
-            alpha_star = torch.linalg.lstsq(matrix @ matrix.T, d).solution
+            alpha_star = torch.linalg.pinv(matrix @ matrix.T) @ d
         except RuntimeError:  # This can happen when the matrix has extremely large values
             alpha_star = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
 
