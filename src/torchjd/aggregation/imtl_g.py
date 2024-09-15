@@ -41,6 +41,8 @@ class _IMTLGWeighting(_Weighting):
         d = torch.linalg.norm(matrix, dim=1)
 
         try:
+            # Equivalent to `raw_weights = torch.linalg.pinv(matrix @ matrix.T) @ d`, but safer
+            # according to https://pytorch.org/docs/stable/generated/torch.linalg.pinv.html
             raw_weights = torch.linalg.lstsq(matrix @ matrix.T, d).solution
         except RuntimeError:  # This can happen when the matrix has extremely large values
             raw_weights = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
