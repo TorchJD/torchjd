@@ -6,14 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
 changes that do not affect the user.
 
-## [Unreleased]
-
-### Changed
-
-- **BREAKING** Changed `IMTLG` implementation to use `torch.linalg.lstsq` instead of
-  `torch.linalg.pinv`. It should be faster and more numerically stable, but it could slightly modify
-  the results of `IMTLG` (see https://github.com/TorchJD/torchjd/issues/132 for the discussion).
-
 ## [0.2.0] - 2024-09-05
 
 ### Added
