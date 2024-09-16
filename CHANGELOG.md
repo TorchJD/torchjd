@@ -6,17 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
 changes that do not affect the user.
 
-## [Unreleased]
+## [0.2.1] - 2024-09-17
 
 ### Changed
 
-- Removed upper cap on numpy version in the dependencies. This makes `torchjd` compatible with
+- Removed upper cap on `numpy` version in the dependencies. This makes `torchjd` compatible with
   the most recent numpy versions too.
 
 ### Fixed
 
-- **BREAKING** Prevented IMTLG from dividing by zero during its weight rescaling step. If the input
-  matrix consists only of zeros, it will now return a vector of zeros instead of a vector of `nan`.
+- Prevented `IMTLG` from dividing by zero during its weight rescaling step. If the input matrix
+  consists only of zeros, it will now return a vector of zeros instead of a vector of `nan`.
 
 ## [0.2.0] - 2024-09-05
 
