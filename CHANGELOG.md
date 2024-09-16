@@ -8,6 +8,11 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Changed
+
+- Removed upper cap on numpy version in the dependencies. This makes `torchjd` compatible with
+  the most recent numpy versions too.
+
 ### Fixed
 
 - **BREAKING** Prevented IMTLG from dividing by zero during its weight rescaling step. If the input
