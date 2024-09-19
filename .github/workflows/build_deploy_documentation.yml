@@ -6,8 +6,8 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# Cancels jobs that are in progress if a new job arrives.
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest
+# queued. Cancels jobs that are in progress if a new job arrives.
 concurrency:
   group: "pages"
   cancel-in-progress: true
