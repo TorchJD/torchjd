@@ -6,7 +6,7 @@ from unit.conftest import DEVICE
 from torchjd.aggregation import Constant
 
 from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
-from ._property_testers import ExpectedShapeProperty
+from ._property_testers import ExpectedStructureProperty
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
 # applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To
@@ -27,14 +27,14 @@ _matrices_2 = matrices + stationary_matrices
 _aggregators_2 = [_make_aggregator(matrix) for matrix in _matrices_2]
 
 
-class TestConstant(ExpectedShapeProperty):
-    # Override the parametrization of `test_expected_shape_property` to make the test use the right
-    # aggregator with each matrix.
+class TestConstant(ExpectedStructureProperty):
+    # Override the parametrization of `test_expected_structure_property` to make the test use the
+    # right aggregator with each matrix.
 
     @classmethod
     @pytest.mark.parametrize(["aggregator", "matrix"], zip(_aggregators_1, _matrices_1))
-    def test_expected_shape_property(cls, aggregator: Constant, matrix: Tensor):
-        cls._assert_expected_shape_property(aggregator, matrix)
+    def test_expected_structure_property(cls, aggregator: Constant, matrix: Tensor):
+        cls._assert_expected_structure_property(aggregator, matrix)
 
 
 def test_representations():

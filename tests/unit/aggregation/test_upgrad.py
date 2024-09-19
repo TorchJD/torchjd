@@ -8,14 +8,14 @@ from torchjd.aggregation.mean import _MeanWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
 from ._property_testers import (
-    ExpectedShapeProperty,
+    ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
 )
 
 
 @pytest.mark.parametrize("aggregator", [UPGrad()])
-class TestUPGrad(ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty):
+class TestUPGrad(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 

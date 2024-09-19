@@ -8,22 +8,24 @@ from torchjd.aggregation import Aggregator
 from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
 
 
-class ExpectedShapeProperty:
+class ExpectedStructureProperty:
     """
     This class tests that the vector returned by the `__call__` method of an `Aggregator` has the
-    expected shape. Note that this property implies that the `__call__` method does not raise any
-    exception.
+    expected structure: it should return a vector whose dimension should be the number of columns of
+    the input matrix, and that should only contain finite values (no `nan`, `inf` or `-inf`). Note
+    that this property implies that the `__call__` method does not raise any exception.
     """
 
     @classmethod
     @pytest.mark.parametrize("matrix", scaled_matrices + zero_rank_matrices)
-    def test_expected_shape_property(cls, aggregator: Aggregator, matrix: Tensor):
-        cls._assert_expected_shape_property(aggregator, matrix)
+    def test_expected_structure_property(cls, aggregator: Aggregator, matrix: Tensor):
+        cls._assert_expected_structure_property(aggregator, matrix)
 
     @staticmethod
-    def _assert_expected_shape_property(aggregator: Aggregator, matrix: Tensor) -> None:
+    def _assert_expected_structure_property(aggregator: Aggregator, matrix: Tensor) -> None:
         vector = aggregator(matrix)  # Will fail if the call raises an exception
         assert vector.shape == matrix.shape[1:]
+        assert vector.isfinite().all()
 
 
 class NonConflictingProperty:

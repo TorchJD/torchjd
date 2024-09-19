@@ -2,11 +2,11 @@ import pytest
 
 from torchjd.aggregation import AlignedMTL
 
-from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
+from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [AlignedMTL()])
-class TestAlignedMTL(ExpectedShapeProperty, PermutationInvarianceProperty):
+class TestAlignedMTL(ExpectedStructureProperty, PermutationInvarianceProperty):
     pass
 
 

@@ -7,14 +7,14 @@ from torchjd.aggregation import MGDA
 from torchjd.aggregation.mgda import _MGDAWeighting
 
 from ._property_testers import (
-    ExpectedShapeProperty,
+    ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
 )
 
 
 @pytest.mark.parametrize("aggregator", [MGDA()])
-class TestMGDA(ExpectedShapeProperty, NonConflictingProperty, PermutationInvarianceProperty):
+class TestMGDA(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 

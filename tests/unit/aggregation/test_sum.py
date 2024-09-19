@@ -2,11 +2,11 @@ import pytest
 
 from torchjd.aggregation import Sum
 
-from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
+from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [Sum()])
-class TestSum(ExpectedShapeProperty, PermutationInvarianceProperty):
+class TestSum(ExpectedStructureProperty, PermutationInvarianceProperty):
     pass
 
 
