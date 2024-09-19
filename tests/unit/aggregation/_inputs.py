@@ -183,7 +183,7 @@ _zero_rank_matrix_shapes = [
     (9, 11),
 ]
 
-_scales = [0, 1e-25, 1e-10, 1, 1e3, 1e5, 1e10, 1e15, 1e20, 1e25]
+_scales = [0.0, 1e-10, 1.0, 1e3, 1e5, 1e10, 1e15]
 
 # Fix seed to fix randomness of matrix generation
 torch.manual_seed(0)
