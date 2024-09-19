@@ -41,14 +41,14 @@ class _IMTLGWeighting(_Weighting):
         d = torch.linalg.norm(matrix, dim=1)
 
         try:
-            alpha_star = torch.linalg.pinv(matrix @ matrix.T) @ d
+            v = torch.linalg.pinv(matrix @ matrix.T) @ d
         except RuntimeError:  # This can happen when the matrix has extremely large values
-            alpha_star = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
+            v = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
 
-        alpha_star_sum = alpha_star.sum()
-        if alpha_star_sum.abs() < 1e-12:
-            weights = torch.zeros_like(alpha_star)
+        v_sum = v.sum()
+        if v_sum.abs() < 1e-12:
+            weights = torch.zeros_like(v)
         else:
-            weights = alpha_star / alpha_star_sum
+            weights = v / v_sum
 
         return weights
