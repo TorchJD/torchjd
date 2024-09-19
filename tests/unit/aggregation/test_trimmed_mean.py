@@ -4,17 +4,17 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator, TrimmedMean
 
 from ._inputs import matrices_2_plus_rows, scaled_matrices_2_plus_rows
-from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
+from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [TrimmedMean(trim_number=1)])
-class TestTrimmedMean(ExpectedShapeProperty, PermutationInvarianceProperty):
+class TestTrimmedMean(ExpectedStructureProperty, PermutationInvarianceProperty):
     # Override the parametrization of some property-testing methods because `TrimmedMean` with
     # `trim_number=1` only works on matrices with >= 2 rows.
     @classmethod
     @pytest.mark.parametrize("matrix", scaled_matrices_2_plus_rows)
-    def test_expected_shape_property(cls, aggregator: TrimmedMean, matrix: Tensor):
-        cls._assert_expected_shape_property(aggregator, matrix)
+    def test_expected_structure_property(cls, aggregator: TrimmedMean, matrix: Tensor):
+        cls._assert_expected_structure_property(aggregator, matrix)
 
     @classmethod
     @pytest.mark.parametrize("matrix", matrices_2_plus_rows)

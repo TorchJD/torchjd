@@ -2,11 +2,11 @@ import pytest
 
 from torchjd.aggregation import Random
 
-from ._property_testers import ExpectedShapeProperty
+from ._property_testers import ExpectedStructureProperty
 
 
 @pytest.mark.parametrize("aggregator", [Random()])
-class TestRGW(ExpectedShapeProperty):
+class TestRGW(ExpectedStructureProperty):
     pass
 
 

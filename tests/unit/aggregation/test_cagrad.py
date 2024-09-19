@@ -5,12 +5,12 @@ from torch.testing import assert_close
 from torchjd.aggregation import CAGrad, Mean
 
 from ._inputs import matrices, stationary_matrices
-from ._property_testers import ExpectedShapeProperty, NonConflictingProperty
+from ._property_testers import ExpectedStructureProperty, NonConflictingProperty
 
 
 @pytest.mark.filterwarnings("ignore:np.find_common_type is deprecated:")
 @pytest.mark.parametrize("aggregator", [CAGrad(c=0.5)])
-class TestCAGrad(ExpectedShapeProperty):
+class TestCAGrad(ExpectedStructureProperty):
     pass
 
 

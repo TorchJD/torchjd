@@ -5,11 +5,11 @@ from unit.conftest import DEVICE
 
 from torchjd.aggregation import IMTLG
 
-from ._property_testers import ExpectedShapeProperty, PermutationInvarianceProperty
+from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
 
 
 @pytest.mark.parametrize("aggregator", [IMTLG()])
-class TestIMTLG(ExpectedShapeProperty, PermutationInvarianceProperty):
+class TestIMTLG(ExpectedStructureProperty, PermutationInvarianceProperty):
     pass
 
 
