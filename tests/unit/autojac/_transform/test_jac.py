@@ -7,6 +7,23 @@ from torchjd.autojac._transform import Jac, Jacobians
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
+def test_compiled():
+    x = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+
+    @torch.compile
+    def f(x):
+        return 2 * x
+
+    y = f(x)
+    input = Jacobians({y: torch.tensor([1.0], device=DEVICE)})
+    jac = Jac(outputs=[y], inputs=[x], chunk_size=None)
+
+    jacobians = jac(input)
+    expected_jacobians = {x: torch.tensor([2.0], device=DEVICE)}
+
+    assert_tensor_dicts_are_close(jacobians, expected_jacobians)
+
+
 def test_single_input():
     """
     Tests that the Jac transform works correctly for an example of multiple differentiation. Here,
