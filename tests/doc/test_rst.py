@@ -168,10 +168,13 @@ def test_lightning_integration():
             return optimizer
 
     model = Model()
+
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
+
     dataset = TensorDataset(inputs, task1_targets, task2_targets)
     train_loader = DataLoader(dataset)
     trainer = Trainer(accelerator="cpu", max_epochs=1, enable_checkpointing=False, logger=False)
+
     trainer.fit(model=model, train_dataloaders=train_loader)
