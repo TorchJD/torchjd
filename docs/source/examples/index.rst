@@ -13,6 +13,9 @@ This section contains some usage examples for TorchJD.
 - :doc:`Multi-Task Learning (MTL) <mtl>` provides an example of multi-task learning where Jacobian
   descent is used to optimize the vector of per-task losses of a multi-task model, using the
   dedicated backpropagation function :doc:`mtl_backward <../docs/autojac/mtl_backward>`.
+- :doc:`PyTorch Lightning Integration <lightning_integration>` showcases how to combine
+  TorchJD with PyTorch Lightning, by providing an example implementation of a multi-task
+  ``LightningModule`` optimized by Jacobian descent.
 
 .. toctree::
     :hidden:
@@ -20,3 +23,4 @@ This section contains some usage examples for TorchJD.
     basic_usage.rst
     iwrm.rst
     mtl.rst
+    lightning_integration.rst
