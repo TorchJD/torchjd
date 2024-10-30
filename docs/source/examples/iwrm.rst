@@ -66,7 +66,7 @@ each Jacobian matrix consists of one gradient per loss. In this example, we use 
         IWRM with SSJD
         ^^^^^^^^^^^^^^
         .. code-block:: python
-            :emphasize-lines: 10, 11, 21, 25, 29, 31
+            :emphasize-lines: 10-11, 21, 25, 29, 31
 
             import torch
             from torch.nn import (
