@@ -59,6 +59,11 @@ def backward(
 
         The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
+
+    .. warning::
+        ``backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
+        functions. The arguments of ``backward`` should thus not come from a compiled model. Check
+        https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
     """
     _check_optional_positive_chunk_size(parallel_chunk_size)
 
