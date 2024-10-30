@@ -1,11 +1,14 @@
 PyTorch Lightning Integration
 =============================
 
-To make a step of Jacobian descent with TorchJD in a :class:`~lightning.LightningModule`, you simply
-have to disable ``automatic_optimization`` and to override the ``training_step`` method.
+To use Jacobian descent with TorchJD in a :class:`~lightning.LightningModule`, you need to turn off
+automatic optimization by setting ``automatic_optimization`` to ``False`` and to customize the
+``training_step`` method to make it call the appropriate TorchJD method (:doc:`backward
+<../docs/autojac/backward>` or :doc:`mtl_backward <../docs/autojac/mtl_backward>`).
 
-The following code provides an example implementation for multi-task learning using a
-:class:`~lightning.LightningModule`.
+The following code example demonstrates a basic multi-task learning setup using a
+:class:`~lightning.LightningModule` that will call :doc:`mtl_backward
+<../docs/autojac/mtl_backward>` at each training iteration.
 
 .. code-block:: python
     :emphasize-lines: 9-10, 18, 32-38
@@ -67,7 +70,9 @@ The following code provides an example implementation for multi-task learning us
     trainer.fit(model=model, train_dataloaders=train_loader)
 
 .. warning::
-    This will not handle scaling in low-precision settings. There is currently no easy fix.
+    This will not handle automatic scaling in low-precision settings. There is currently no easy
+    fix.
 
 .. warning::
-    Make sure that your model is not compiled. TorchJD is not compatible with compiled models.
+    TorchJD is incompatible with compiled models, so you must ensure that your model is not
+    compiled.
