@@ -64,6 +64,11 @@ def mtl_backward(
 
         A usage example of ``mtl_backward`` is provided in
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
+
+    .. warning::
+        ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
+        functions. The arguments of ``mtl_backward`` should thus not come from a compiled model.
+        Check https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
     """
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
