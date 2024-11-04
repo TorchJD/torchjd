@@ -1,7 +1,7 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
 [![Tests](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/torchjd)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/torchjd)](https://pypistats.org/packages/torchjd)
 
 
 TorchJD is a library extending autograd to enable
