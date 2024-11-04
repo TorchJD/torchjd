@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/torchjd)](https://pypistats.org/packages/torchjd)
-
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/torchjd)](https://pypi.org/project/torchjd/)
 
 TorchJD is a library extending autograd to enable
 [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch. In can be used to train neural
