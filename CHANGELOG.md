@@ -11,6 +11,7 @@ changes that do not affect the user.
 ### Added
 
 - PyTorch Lightning integration example.
+- Explanation about Jacobian descent in the README.
 
 ## [0.2.1] - 2024-09-17
 
