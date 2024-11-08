@@ -6,7 +6,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/torchjd)](https://pypi.org/project/torchjd/)
 
 TorchJD is a library extending autograd to enable
-[Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch. In can be used to train neural
+[Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch. It can be used to train neural
 networks with multiple objectives. In particular, it supports multi-task learning, with a wide
 variety of aggregators from the literature. It also enables the instance-wise risk minimization
 paradigm. The full documentation is available at [torchjd.org](https://torchjd.org), with several usage examples.
