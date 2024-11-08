@@ -9,7 +9,8 @@ TorchJD is a library extending autograd to enable
 [Jacobian descent](https://arxiv.org/pdf/2406.16232) with PyTorch. It can be used to train neural
 networks with multiple objectives. In particular, it supports multi-task learning, with a wide
 variety of aggregators from the literature. It also enables the instance-wise risk minimization
-paradigm. The full documentation is available at [torchjd.org](https://torchjd.org), with several usage examples.
+paradigm. The full documentation is available at [torchjd.org](https://torchjd.org), with several
+usage examples.
 
 ## Installation
 <!-- start installation -->
@@ -18,17 +19,12 @@ TorchJD can be installed directly with pip:
 pip install torchjd
 ```
 <!-- end installation -->
-> [!NOTE]
-> TorchJD requires python 3.10, 3.11 or 3.12. It is only compatible with recent versions of
-> PyTorch (>= 2.0). For more information, read the `dependencies` in
-> [pyproject.toml](./pyproject.toml).
 
 ## Usage
-
 The main way to use TorchJD is to replace the usual call to `loss.backward()` by a call to
 `torchjd.backward` or `torchjd.mtl_backward`, depending on the use-case.
 
-The following example shows how to use TorchJD to train a multi-task model with Jacobian Descent,
+The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
 using [UPGrad](https://torchjd.org/docs/aggregation/upgrad/).
 
 ```python
@@ -121,7 +117,6 @@ A(J)
 > will in turn apply it to the Jacobian matrix that it will compute.
 
 ## Contribution
-
 Please read the [Contribution page](CONTRIBUTING.md).
 
 ## Citation
