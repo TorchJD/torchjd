@@ -24,7 +24,7 @@ pip install torchjd
 The main way to use TorchJD is to replace the usual call to `loss.backward()` by a call to
 `torchjd.backward` or `torchjd.mtl_backward`, depending on the use-case.
 
-The following example shows how to use TorchJD to train a multi-task model with Jacobian Descent,
+The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
 using [UPGrad](https://torchjd.org/docs/aggregation/upgrad/).
 
 ```python
