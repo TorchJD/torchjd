@@ -12,6 +12,36 @@ variety of aggregators from the literature. It also enables the instance-wise ri
 paradigm. The full documentation is available at [torchjd.org](https://torchjd.org), with several
 usage examples.
 
+## Jacobian descent (JD)
+Jacobian descent is an extension of gradient descent supporting the optimization of vector-valued
+functions. This algorithm can be used to train neural networks with multiple loss functions. In this
+context, JD iteratively updates the parameters of the model using the Jacobian matrix of the vector
+of losses (the matrix stacking each individual loss' gradient). For more details, please refer to
+Section 2.1 of the [paper](https://arxiv.org/pdf/2406.16232).
+
+### How does this compare to averaging the different losses and using gradient descent?
+
+Averaging the losses and computing the gradient of the mean is mathematically equivalent to
+computing the Jacobian and averaging its rows. However, this approach has limitations. If two
+gradients are conflicting (they have a negative inner product), simply averaging them can result in
+an update vector that is conflicting with one of the two gradients. Averaging the losses and making
+a step of gradient descent can thus lead to an increase of one of the losses.
+
+This is illustrated in the following picture, in which the two objectives' gradients $g_1$ and $g_2$
+are conflicting, and averaging them gives an update direction that is detrimental to the first
+objective. Note that in this picture, the dual cone, represented in green, is the set of vectors
+that have a non-negative inner product with both $g_1$ and $g_2$.
+
+![image](docs/source/_static/direction_upgrad_mean.svg)
+
+With Jacobian descent, $g_1$ and $g_2$ are computed individually and carefully aggregated using an
+aggregator $\mathcal A$. In this example, the aggregator is the Unconflicting Projection of
+Gradients $\mathcal A_{\text{UPGrad}}$: it
+projects each gradient onto the dual cone, and averages the projections. This ensures that the
+update will always be beneficial to each individual objective (given a sufficiently small step
+size). In addition to $\mathcal A_{\text{UPGrad}}$, TorchJD supports
+[more than 10 aggregators from the literature](https://torchjd.org/docs/aggregation).
+
 ## Installation
 <!-- start installation -->
 TorchJD can be installed directly with pip:
