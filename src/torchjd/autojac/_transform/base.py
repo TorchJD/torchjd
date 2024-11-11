@@ -41,6 +41,8 @@ class Transform(Generic[_B, _C], ABC):
 
     @abstractmethod
     def _compute(self, input: _B) -> _C:
+        """Applies the transform to the input and returns its result."""
+
         raise NotImplementedError
 
     def __call__(self, input: _B) -> _C:
