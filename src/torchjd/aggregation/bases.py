@@ -52,6 +52,8 @@ class _Weighting(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
+        """Computes and returns the vector of weights from the input matrix."""
+
         raise NotImplementedError
 
     # Override to make type hints and documentation more specific
