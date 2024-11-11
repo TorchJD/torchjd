@@ -27,6 +27,8 @@ class Aggregator(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
+        """Computes and returns the aggregation from the input matrix."""
+
         raise NotImplementedError
 
     # Override to make type hints and documentation more specific
