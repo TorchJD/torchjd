@@ -66,3 +66,21 @@ tests necessary to check the correctness of their implementations. Besides, when
 are provided, we require the example's code to be tested in `tests/doc`.
 Lastly, make sure that new modules are imported by the `__init__.py` file of the package they are
 located into. This makes them easier to import for the user.
+
+## Release
+
+To release a new torchjd version, you have to:
+- Make sure that all tests, including those on cuda, pass (for this, you need access to a machine
+  that has a cuda-enabled GPU).
+- Make sure that all important changes since the last release have been reported in the [Unreleased]
+  section at the top of the changelog.
+- Change the [Unreleased] section to a [vX.Y.Z] section in the changelog with the current date.
+- Change the version in `pyproject.toml`.
+- Make a pull request with those changes and merge it.
+- Make a draft of the release on GitHub (click on `Releases`, then `Draft a new release`, then fill
+  the details.
+- Publish the release (click on  `Publish release`). This should trigger the deployment of the new
+  version on PyPI and the building and deployment of the documentation on github-pages.
+- Check that the new version is correctly deployed to PyPI, that it is installable and that it
+  works.
+- Check that the documentation has been correctly deployed.
