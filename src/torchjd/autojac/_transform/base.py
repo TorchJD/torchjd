@@ -41,7 +41,7 @@ class Transform(Generic[_B, _C], ABC):
 
     @abstractmethod
     def _compute(self, input: _B) -> _C:
-        """Applies the transform to the input and returns its result."""
+        """Applies the transform to the input."""
 
     def __call__(self, input: _B) -> _C:
         input.check_keys_are(self.required_keys)
@@ -51,15 +51,13 @@ class Transform(Generic[_B, _C], ABC):
     @abstractmethod
     def required_keys(self) -> set[Tensor]:
         """
-        Returns the set of keys that the transform expects to be present in its input TensorDicts.
+        Returns the set of keys that the transform requires to be present in its input TensorDicts.
         """
 
     @property
     @abstractmethod
     def output_keys(self) -> set[Tensor]:
-        """
-        Returns the set of keys that will be present in the TensorDicts returned by the transform.
-        """
+        """Returns the set of keys that will be present in the output of the transform."""
 
     __lshift__ = compose
     __or__ = conjunct
