@@ -52,6 +52,10 @@ class Transform(Generic[_B, _C], ABC):
     @property
     @abstractmethod
     def required_keys(self) -> set[Tensor]:
+        """
+        Returns the set of keys that the transform expects to be present in its input TensorDicts.
+        """
+
         raise NotImplementedError
 
     @property
