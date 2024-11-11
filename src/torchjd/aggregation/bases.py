@@ -46,6 +46,7 @@ class _Weighting(nn.Module, ABC):
     def __init__(self):
         super().__init__()
 
+    @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
         raise NotImplementedError
 
