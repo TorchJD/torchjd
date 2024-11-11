@@ -61,6 +61,10 @@ class Transform(Generic[_B, _C], ABC):
     @property
     @abstractmethod
     def output_keys(self) -> set[Tensor]:
+        """
+        Returns the set of keys that will be present in the TensorDicts returned by the transform.
+        """
+
         raise NotImplementedError
 
     __lshift__ = compose
