@@ -19,6 +19,17 @@ class Grad(_Differentiate[Gradients]):
         super().__init__(outputs, inputs, retain_graph, create_graph)
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+        """
+        Computes the gradient of each output with respect to each input, scaled using the
+        corresponding grad_output.
+
+        Returns one gradient per input.
+
+        :param grad_outputs: The sequence of scalar tensors to scale the obtained gradients with.
+            Its length should be equal to the length of ``outputs``. Each grad_output should have
+            the same shape as the corresponding output.
+        """
+
         outputs = list(self.outputs)
         inputs = list(self.inputs)
 

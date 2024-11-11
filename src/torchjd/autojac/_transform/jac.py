@@ -22,6 +22,19 @@ class Jac(_Differentiate[Jacobians]):
         self.chunk_size = chunk_size
 
     def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+        """
+        Computes the jacobian of each output with respect to each input, scaled using the
+        appropriate values from the jac_outputs.
+
+        Returns one jacobian per input. The ith jacobian will be of shape
+        ``(m,) + inputs[i].shape``, where ``m`` is the first dimension of the jac_outputs.
+
+        :param jac_outputs: The sequence of tensors indicating how to scale the obtained jacobians.
+            Its length should be equal to the length of ``outputs``. ``jac_outputs[i]`` should be of
+            shape ``(m,) + outputs[i].shape``, where ``m`` is any value constant over the
+            jac_outputs.
+        """
+
         outputs = list(self.outputs)
         inputs = list(self.inputs)
 
