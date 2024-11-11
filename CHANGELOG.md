@@ -13,6 +13,11 @@ changes that do not affect the user.
 - PyTorch Lightning integration example.
 - Explanation about Jacobian descent in the README.
 
+### Fixed
+
+- Made the dependency on [ecos](https://github.com/embotech/ecos-python) explicit in pyproject.toml
+  (before `cvxpy` 1.16.0, it was installed automatically when installing `cvxpy`).
+
 ## [0.2.1] - 2024-09-17
 
 ### Changed
