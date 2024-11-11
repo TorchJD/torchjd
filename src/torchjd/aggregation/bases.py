@@ -50,8 +50,13 @@ class _Weighting(nn.Module, ABC):
     def forward(self, matrix: Tensor) -> Tensor:
         raise NotImplementedError
 
-    # Override to make type hints more specific
+    # Override to make type hints and documentation more specific
     def __call__(self, matrix: Tensor) -> Tensor:
+        """
+        Applies all registered hooks and computes and returns the vector of weights from the input
+        matrix.
+        """
+
         return super().__call__(matrix)
 
     def __repr__(self) -> str:
