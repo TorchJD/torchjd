@@ -19,6 +19,11 @@ class Grad(_Differentiate[Gradients]):
         super().__init__(outputs, inputs, retain_graph, create_graph)
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+        """
+        Differentiates the outputs with respect to the inputs, and right-multiplies them with the
+        provided grad_outputs. Returns the obtained tuple of gradients.
+        """
+
         return _grad(
             outputs=list(self.outputs),
             inputs=list(self.inputs),

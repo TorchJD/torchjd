@@ -22,6 +22,11 @@ class Jac(_Differentiate[Jacobians]):
         self.chunk_size = chunk_size
 
     def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+        """
+        Differentiates the outputs with respect to the inputs, and right-multiplies them with the
+        provided jac_outputs. Returns the obtained tuple of Jacobians.
+        """
+
         return _jac(
             outputs=list(self.outputs),
             inputs=list(self.inputs),
