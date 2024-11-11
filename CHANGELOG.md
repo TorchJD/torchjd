@@ -6,12 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
 changes that do not affect the user.
 
-## [Unreleased]
+## [0.2.2] - 2024-11-11
 
 ### Added
 
 - PyTorch Lightning integration example.
 - Explanation about Jacobian descent in the README.
+
+### Fixed
+
+- Made the dependency on [ecos](https://github.com/embotech/ecos-python) explicit in pyproject.toml
+  (before `cvxpy` 1.16.0, it was installed automatically when installing `cvxpy`).
 
 ## [0.2.1] - 2024-09-17
 
