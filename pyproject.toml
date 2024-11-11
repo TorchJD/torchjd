@@ -37,7 +37,7 @@ Documentation = "https://torchjd.org/"
 Source = "https://github.com/TorchJD/torchjd"
 Changelog = "https://github.com/TorchJD/torchjd/blob/main/CHANGELOG.md"
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 check = [
     "pre-commit>=2.9.2"  # isort doesn't work before 2.9.2
 ]
