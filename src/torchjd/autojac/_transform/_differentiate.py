@@ -37,8 +37,6 @@ class _Differentiate(Transform[_A, _A], ABC):
         (whether gradients, Jacobians, etc. are computed).
         """
 
-        raise NotImplementedError
-
     @property
     def required_keys(self) -> set[Tensor]:
         # outputs in the forward direction become inputs in the backward direction, and vice-versa
