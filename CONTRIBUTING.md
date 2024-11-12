@@ -1,22 +1,19 @@
-# Contributing to torchjd
+# Contributing to TorchJD
 
-This document explains how to contribute to torchjd. We try to keep the quality of the codebase as
-high as possible. Even if this slows down development in the short term, it helps a lot in the long
-term. To make the code understandable by everyone, we try to keep it simple, and to stick as much as
-possible to the single-responsibility principle. Please use issues to communicate with maintainers
-before implementing major changes to torchjd.
+This document explains how to contribute to TorchJD. Please use issues or discussions to communicate
+with maintainers before implementing major changes.
 
 ## Installation
 
-1) Pre-requisites: To work with torchjd, you need python to be installed. In the following, we
-   suggest to use python 3.12.3, but you can work with any python version supported by torchjd. We
+1) Pre-requisites: To work with TorchJD, you need python to be installed. In the following, we
+   suggest to use python 3.12.3, but you can work with any python version supported by `torchjd`. We
    use [pyenv](https://github.com/pyenv/pyenv) to install python and
    [pdm](https://pdm-project.org/en/latest/) to manage dependencies. While the desired python
-   version can also be installed without pyenv, the installation of torchjd for development purposes
-   requires pdm. To install it, follow their
+   version can also be installed without pyenv, the installation of `torchjd` for development
+   purposes requires `pdm`. To install it, follow their
    [installation steps](https://pdm-project.org/en/latest/#installation).
 
-2) Create a virtual environment and install the project in it. From the root of torchjd, run:
+2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    pdm venv create 3.12.3  # Requires python 3.12.3 to be installed
    pdm use -i .venv/bin/python
@@ -44,6 +41,12 @@ before implementing major changes to torchjd.
      pdm run pytest tests/doc
      ```
 
+  - To compute the code coverage locally, you should run the unit tests and the doc tests together,
+  with the `--cov` flag:
+    ```bash
+    pdm run pytest tests/unit tests/doc --cov=src
+    ```
+
 ## Building the documentation locally
    - From the `docs` folder, run:
      ```bash
@@ -58,23 +61,44 @@ before implementing major changes to torchjd.
 
 ## Development guidelines
 
-Most source python files in torchjd have a corresponding `.rst` in `docs/source`. Please make sure
+The following guidelines should help preserve a good code quality in TorchJD. Contributions that do
+not respect these guidelines will still be greatly appreciated but will require more work from
+maintainers to be merged.
+
+### Documentation
+
+Most source python files in TorchJD have a corresponding `.rst` in `docs/source`. Please make sure
 to add such a documentation entry whenever you add a new public module. In most cases, public
-classes should contain a usage example in their docstring.
-We ask contributors to implement the unit
-tests necessary to check the correctness of their implementations. Besides, whenever usage examples
-are provided, we require the example's code to be tested in `tests/doc`.
-Lastly, make sure that new modules are imported by the `__init__.py` file of the package they are
-located into. This makes them easier to import for the user.
+classes should contain a usage example in their docstring. We also ask contributors to add an entry
+in the `[Unreleased]` section of the changelog whenever they make a change that may affect users (we
+do not report internal changes). If this section does not exist yet (right after a release), you
+should create it.
+
+### Testing
+
+We ask contributors to implement the unit tests necessary to check the correctness of their
+implementations. Besides, whenever usage examples are provided, we require the example's code to be
+tested in `tests/doc`. We require a very high code coverage for newly introduced sources (~95-100%).
+
+### Coding
+
+We try to keep the quality of the codebase as high as possible. Even if this slows down development
+in the short term, it helps a lot in the long term. To make the code easy to understand and to
+maintain, we try to keep it simple, and to stick as much as possible to the
+[SOLID principles](https://en.wikipedia.org/wiki/SOLID). Try to preserve the existing coding style
+of the library when adding new sources. Also, please make sure that new modules are imported by the
+`__init__.py` file of the package they are located into. This makes them easier to import for the
+user.
 
 ## Release
 
-To release a new torchjd version, you have to:
+To release a new `torchjd` version, you have to:
 - Make sure that all tests, including those on cuda, pass (for this, you need access to a machine
   that has a cuda-enabled GPU).
-- Make sure that all important changes since the last release have been reported in the [Unreleased]
+- Make sure that all important changes since the last release have been reported in the
+  `[Unreleased]`
   section at the top of the changelog.
-- Change the [Unreleased] section to a [vX.Y.Z] section in the changelog with the current date.
+- Change the `[Unreleased]` section to a `[vX.Y.Z]` section in the changelog with the current date.
 - Change the version in `pyproject.toml`.
 - Make a pull request with those changes and merge it.
 - Make a draft of the release on GitHub (click on `Releases`, then `Draft a new release`, then fill
