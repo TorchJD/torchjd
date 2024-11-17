@@ -131,6 +131,26 @@ def test_empty_inputs_two_levels():
     assert_tensor_dicts_are_close(gradients, expected_gradients)
 
 
+def test_vector_output():
+    """
+    Tests that the Grad transform works correctly when the `outputs` contains a single vector.
+    The input (grad_outputs) is not the same for both values of the output, so that this test also
+    checks that the scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y = torch.stack([a * x, a**2])
+    input = Gradients({y: torch.tensor([3.0, 1.0], device=DEVICE)})
+
+    grad = Grad(outputs=[y], inputs=[a])
+
+    gradients = grad(input)
+    expected_gradients = {a: x * 3 + 2 * a}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
 def test_multiple_outputs():
     """
     Tests that the Grad transform works correctly when the `outputs` contains 2 scalars.
