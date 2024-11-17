@@ -11,11 +11,11 @@ from torchjd.autojac._transform import (
     Gradients,
     Init,
     Jac,
+    Jacobians,
     Select,
     Stack,
     TensorDict,
 )
-from torchjd.autojac._transform.jac import _jac
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -219,19 +219,19 @@ def test_equivalence_jac_grad():
     outputs = [y1, y2]
     grad_outputs = [torch.ones_like(output) for output in outputs]
 
-    grads_1 = Grad(
+    grad_dict_1 = Grad(
         outputs=[outputs[0]],
         inputs=inputs,
         retain_graph=True,
     )(Gradients({outputs[0]: grad_outputs[0]}))
-    grad_1_A, grad_1_b, grad_1_c = grads_1[A], grads_1[b], grads_1[c]
+    grad_1_A, grad_1_b, grad_1_c = grad_dict_1[A], grad_dict_1[b], grad_dict_1[c]
 
-    grads_2 = Grad(
+    grad_dict_2 = Grad(
         outputs=[outputs[1]],
         inputs=inputs,
         retain_graph=True,
     )(Gradients({outputs[1]: grad_outputs[1]}))
-    grad_2_A, grad_2_b, grad_2_c = grads_2[A], grads_2[b], grads_2[c]
+    grad_2_A, grad_2_b, grad_2_c = grad_dict_2[A], grad_dict_2[b], grad_dict_2[c]
 
     n_outputs = len(outputs)
     batched_grad_outputs = [
@@ -240,15 +240,12 @@ def test_equivalence_jac_grad():
     for i, grad_output in enumerate(grad_outputs):
         batched_grad_outputs[i][i] = grad_output
 
-    jac_A, jac_b, jac_c = _jac(
-        outputs,
-        inputs,
-        batched_grad_outputs,
+    jac_dict = Jac(
+        outputs=outputs,
+        inputs=inputs,
         chunk_size=None,
-        retain_graph=False,
-        create_graph=False,
-        allow_unused=True,
-    )
+    )(Jacobians({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]}))
+    jac_A, jac_b, jac_c = jac_dict[A], jac_dict[b], jac_dict[c]
 
     assert_close(jac_A, torch.stack([grad_1_A, grad_2_A]))
     assert_close(jac_b, torch.stack([grad_1_b, grad_2_b]))
