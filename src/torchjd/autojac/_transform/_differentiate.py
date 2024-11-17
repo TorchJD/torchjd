@@ -38,8 +38,6 @@ class _Differentiate(Transform[_A, _A], ABC):
         tensor_outputs should be.
         """
 
-        raise NotImplementedError
-
     @property
     def required_keys(self) -> set[Tensor]:
         # outputs in the forward direction become inputs in the backward direction, and vice-versa

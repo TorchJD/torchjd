@@ -29,8 +29,6 @@ class Aggregator(nn.Module, ABC):
     def forward(self, matrix: Tensor) -> Tensor:
         """Computes the aggregation from the input matrix."""
 
-        raise NotImplementedError
-
     # Override to make type hints and documentation more specific
     def __call__(self, matrix: Tensor) -> Tensor:
         """Computes the aggregation from the input matrix and applies all registered hooks."""
@@ -53,8 +51,6 @@ class _Weighting(nn.Module, ABC):
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
         """Computes the vector of weights from the input matrix."""
-
-        raise NotImplementedError
 
     # Override to make type hints and documentation more specific
     def __call__(self, matrix: Tensor) -> Tensor:
