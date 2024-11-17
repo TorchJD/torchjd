@@ -131,6 +131,27 @@ def test_empty_inputs_two_levels():
     assert_tensor_dicts_are_close(gradients, expected_gradients)
 
 
+def test_multiple_outputs():
+    """
+    Tests that the Grad transform works correctly when the `outputs` contains 2 scalars.
+    The input (grad_outputs) is not the same for both outputs, so that this test also checks that
+    the scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y1 = a * x
+    y2 = a**2
+    input = Gradients({y1: torch.ones_like(y1) * 3, y2: torch.ones_like(y2)})
+
+    grad = Grad(outputs=[y1, y2], inputs=[a])
+
+    gradients = grad(input)
+    expected_gradients = {a: x * 3 + 2 * a}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
 def test_composition_of_grads_is_grad():
     """
     Tests that the composition of 2 Grad transforms is equivalent to computing the Grad directly in
