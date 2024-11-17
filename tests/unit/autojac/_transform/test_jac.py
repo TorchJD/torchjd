@@ -125,6 +125,39 @@ def test_two_levels():
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
 
 
+def test_multiple_outputs():
+    """
+    Tests that the Jac transform works correctly when the `outputs` contains 3 vectors.
+    The input (jac_outputs) is not the same for all outputs, so that this test also checks that the
+    scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    y1 = torch.stack([a1 * x, a2 * x])
+    y2 = torch.stack([a2**2, a1**2])
+    y3 = torch.stack([a2**3, a1**3])
+
+    identity_2x2 = torch.eye(2, device=DEVICE)
+    zeros_2x2 = torch.zeros(2, 2, device=DEVICE)
+    jac_output1 = torch.cat([identity_2x2 * 7, zeros_2x2, zeros_2x2])
+    jac_output2 = torch.cat([zeros_2x2, identity_2x2, zeros_2x2])
+    jac_output3 = torch.cat([zeros_2x2, zeros_2x2, identity_2x2])
+    input = Jacobians({y1: jac_output1, y2: jac_output2, y3: jac_output3})
+
+    jac = Jac(outputs=[y1, y2, y3], inputs=[a1, a2], chunk_size=None)
+
+    jacobians = jac(input)
+    zero_scalar = torch.tensor(0.0, device=DEVICE)
+    expected_jacobians = {
+        a1: torch.stack([x * 7, zero_scalar, zero_scalar, 2 * a1, zero_scalar, 3 * a1**2]),
+        a2: torch.stack([zero_scalar, x * 7, 2 * a2, zero_scalar, 3 * a2**2, zero_scalar]),
+    }
+
+    assert_tensor_dicts_are_close(jacobians, expected_jacobians)
+
+
 def test_composition_of_jacs_is_jac():
     """
     Tests that the composition of 2 Jac transforms is equivalent to computing the Jac directly in
