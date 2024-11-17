@@ -15,7 +15,6 @@ from torchjd.autojac._transform import (
     Stack,
     TensorDict,
 )
-from torchjd.autojac._transform.grad import _grad
 from torchjd.autojac._transform.jac import _jac
 
 from ._dict_assertions import assert_tensor_dicts_are_close
@@ -220,24 +219,19 @@ def test_equivalence_jac_grad():
     outputs = [y1, y2]
     grad_outputs = [torch.ones_like(output) for output in outputs]
 
-    grads_1 = _grad(
-        [outputs[0]],
-        inputs,
-        [grad_outputs[0]],
+    grads_1 = Grad(
+        outputs=[outputs[0]],
+        inputs=inputs,
         retain_graph=True,
-        create_graph=False,
-        allow_unused=True,
-    )
-    grad_1_A, grad_1_b, grad_1_c = grads_1
-    grads_2 = _grad(
-        [outputs[1]],
-        inputs,
-        [grad_outputs[1]],
+    )(Gradients({outputs[0]: grad_outputs[0]}))
+    grad_1_A, grad_1_b, grad_1_c = grads_1[A], grads_1[b], grads_1[c]
+
+    grads_2 = Grad(
+        outputs=[outputs[1]],
+        inputs=inputs,
         retain_graph=True,
-        create_graph=False,
-        allow_unused=True,
-    )
-    grad_2_A, grad_2_b, grad_2_c = grads_2
+    )(Gradients({outputs[1]: grad_outputs[1]}))
+    grad_2_A, grad_2_b, grad_2_c = grads_2[A], grads_2[b], grads_2[c]
 
     n_outputs = len(outputs)
     batched_grad_outputs = [
