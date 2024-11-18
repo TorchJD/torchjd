@@ -85,10 +85,6 @@ class Jacobians(TensorDict):
     def _check_key_value_pair(key: Tensor, value: Tensor) -> None:
         _check_value_has_jacobian_shape(key, value)
 
-    @property
-    def first_dimension(self) -> int:
-        return _get_first_dimension(self)
-
 
 class GradientVectors(TensorDict):
     """
@@ -122,10 +118,6 @@ class JacobianMatrices(TensorDict):
         _check_value_n_dim(value, expected_n_dim=2)
         _check_corresponding_numel(key, value, dim=1)
 
-    @property
-    def first_dimension(self) -> int:
-        return _get_first_dimension(self)
-
 
 class EmptyTensorDict(
     Gradients,
@@ -153,16 +145,6 @@ def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) ->
             output = candidate_type
             break
     return output
-
-
-def _get_first_dimension(tensor_dict: dict[Tensor, Tensor]) -> int:
-    if len([tensor_dict.keys()]) == 0:
-        first_dimension = 0  # By convention, a dict without any keys has a first dimension of 0
-    else:
-        value = next(iter(tensor_dict.values()))
-        first_dimension = value.shape[0]
-
-    return first_dimension
 
 
 def _check_values_have_unique_first_dim(tensor_dict: dict[Tensor, Tensor]) -> None:
