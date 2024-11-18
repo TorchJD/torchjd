@@ -41,6 +41,8 @@ class Transform(Generic[_B, _C], ABC):
 
     @abstractmethod
     def _compute(self, input: _B) -> _C:
+        """Applies the transform to the input."""
+
         raise NotImplementedError
 
     def __call__(self, input: _B) -> _C:
@@ -50,11 +52,17 @@ class Transform(Generic[_B, _C], ABC):
     @property
     @abstractmethod
     def required_keys(self) -> set[Tensor]:
+        """
+        Returns the set of keys that the transform requires to be present in its input TensorDicts.
+        """
+
         raise NotImplementedError
 
     @property
     @abstractmethod
     def output_keys(self) -> set[Tensor]:
+        """Returns the set of keys that will be present in the output of the transform."""
+
         raise NotImplementedError
 
     __lshift__ = compose

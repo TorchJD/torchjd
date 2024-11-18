@@ -27,10 +27,14 @@ class Aggregator(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
+        """Computes the aggregation from the input matrix."""
+
         raise NotImplementedError
 
-    # Override to make type hints more specific
+    # Override to make type hints and documentation more specific
     def __call__(self, matrix: Tensor) -> Tensor:
+        """Computes the aggregation from the input matrix and applies all registered hooks."""
+
         return super().__call__(matrix)
 
     def __repr__(self) -> str:
@@ -48,10 +52,14 @@ class _Weighting(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
+        """Computes the vector of weights from the input matrix."""
+
         raise NotImplementedError
 
-    # Override to make type hints more specific
+    # Override to make type hints and documentation more specific
     def __call__(self, matrix: Tensor) -> Tensor:
+        """Computes the vector of weights from the input matrix and applies all registered hooks."""
+
         return super().__call__(matrix)
 
     def __repr__(self) -> str:

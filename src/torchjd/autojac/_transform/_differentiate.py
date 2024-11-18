@@ -29,6 +29,15 @@ class _Differentiate(Transform[_A, _A], ABC):
 
     @abstractmethod
     def _differentiate(self, tensor_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+        """
+        Abstract method for differentiating the outputs with respect to the inputs, and applying the
+        linear transformations represented by the tensor_outputs to the results.
+
+        The implementation of this method should define what kind of differentiation is performed:
+        whether gradients, Jacobians, etc. are computed, and what the dimension of the
+        tensor_outputs should be.
+        """
+
         raise NotImplementedError
 
     @property
