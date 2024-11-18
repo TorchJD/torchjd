@@ -131,6 +131,76 @@ def test_empty_inputs_two_levels():
     assert_tensor_dicts_are_close(gradients, expected_gradients)
 
 
+def test_vector_output():
+    """
+    Tests that the Grad transform works correctly when the `outputs` contains a single vector.
+    The input (grad_outputs) is not the same for both values of the output, so that this test also
+    checks that the scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y = torch.stack([a * x, a**2])
+    input = Gradients({y: torch.tensor([3.0, 1.0], device=DEVICE)})
+
+    grad = Grad(outputs=[y], inputs=[a])
+
+    gradients = grad(input)
+    expected_gradients = {a: x * 3 + 2 * a}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
+def test_multiple_outputs():
+    """
+    Tests that the Grad transform works correctly when the `outputs` contains 2 scalars.
+    The input (grad_outputs) is not the same for both outputs, so that this test also checks that
+    the scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y1 = a * x
+    y2 = a**2
+    input = Gradients({y1: torch.ones_like(y1) * 3, y2: torch.ones_like(y2)})
+
+    grad = Grad(outputs=[y1, y2], inputs=[a])
+
+    gradients = grad(input)
+    expected_gradients = {a: x * 3 + 2 * a}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
+def test_multiple_tensor_outputs():
+    """
+    Tests that the Grad transform works correctly when the `outputs` contains several tensors of
+    different shapes. The input (grad_outputs) is not the same for all values of the outputs, so
+    that this test also checks that the scaling is performed correctly.
+    """
+
+    x = torch.tensor(5.0, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    y1 = a * x
+    y2 = torch.stack([a**2, 2 * a**2])
+    y3 = torch.stack([a**3, 2 * a**3]).unsqueeze(0)
+    input = Gradients(
+        {
+            y1: torch.tensor(3.0, device=DEVICE),
+            y2: torch.tensor([6.0, 7.0], device=DEVICE),
+            y3: torch.tensor([[9.0, 10.0]], device=DEVICE),
+        }
+    )
+
+    grad = Grad(outputs=[y1, y2, y3], inputs=[a])
+
+    gradients = grad(input)
+    g = x * 3 + 2 * a * 6 + 2 * a * 2 * 7 + 3 * a**2 * 9 + 3 * a**2 * 2 * 10.0
+    expected_gradients = {a: g}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
 def test_composition_of_grads_is_grad():
     """
     Tests that the composition of 2 Grad transforms is equivalent to computing the Grad directly in
