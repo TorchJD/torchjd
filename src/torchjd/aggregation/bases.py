@@ -97,9 +97,3 @@ class _WeightedAggregator(Aggregator):
         weights = self.weighting(matrix)
         vector = self.combine(matrix, weights)
         return vector
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}"
