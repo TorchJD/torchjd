@@ -23,8 +23,8 @@ class Jac(_Differentiate[Jacobians]):
 
     def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         """
-        Computes the jacobian of each output with respect to each input, scaled using the
-        appropriate values from the jac_outputs.
+        Computes the jacobian of each output with respect to each input, and applies the linear
+        transformations represented by the jac_outputs to the results.
 
         Returns one jacobian per input. The ith jacobian will be of shape
         ``(m,) + inputs[i].shape``, where ``m`` is the first dimension of the jac_outputs.

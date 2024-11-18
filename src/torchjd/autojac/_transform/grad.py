@@ -20,8 +20,8 @@ class Grad(_Differentiate[Gradients]):
 
     def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
         """
-        Computes the gradient of each output with respect to each input, scaled using the
-        corresponding grad_output.
+        Computes the gradient of each output with respect to each input, and applies the linear
+        transformations represented by the grad_outputs to the results.
 
         Returns one gradient per input.
 
