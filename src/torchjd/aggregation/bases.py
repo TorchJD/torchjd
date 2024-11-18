@@ -58,12 +58,6 @@ class _Weighting(nn.Module, ABC):
 
         return super().__call__(matrix)
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}"
-
 
 class _WeightedAggregator(Aggregator):
     """
