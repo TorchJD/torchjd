@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Sequence, Tuple
 
 from torch import Tensor
@@ -61,15 +62,12 @@ def _determine_shared_not_shared(
     @param tensor_list: list of list containing pytorch Tensor objects
     @return: a tuple containing all shared tensors as a list and a list of list of all individual tensors
     """
-    count_map = {}
+    count_map = Counter()
     for tensors in tensor_list:
         for memory_address in set(
             [id(tensor) for tensor in tensors]
         ):  # we use set to ensure uniqueness
-            if memory_address in count_map:
-                count_map[memory_address] += 1
-            else:
-                count_map[memory_address] = 1
+            count_map[memory_address] += 1
 
     shared_tensors = []
     shared_already_appended = set()
