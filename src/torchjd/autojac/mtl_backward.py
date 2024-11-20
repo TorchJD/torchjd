@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from torch import Tensor
 
@@ -20,14 +20,13 @@ from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
     _check_retain_graph_compatible_with_chunk_size,
+    get_tasks_shared_params,
 )
 
 
 def mtl_backward(
     losses: Sequence[Tensor],
     features: Sequence[Tensor] | Tensor,
-    tasks_params: Sequence[Iterable[Tensor]],
-    shared_params: Iterable[Tensor],
     A: Aggregator,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
@@ -70,6 +69,8 @@ def mtl_backward(
         functions. The arguments of ``mtl_backward`` should thus not come from a compiled model.
         Check https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
     """
+
+    shared_params, tasks_params = get_tasks_shared_params(losses)
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
 

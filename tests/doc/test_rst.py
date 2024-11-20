@@ -111,8 +111,6 @@ def test_mtl():
         mtl_backward(
             losses=[loss1, loss2],
             features=features,
-            tasks_params=[task1_module.parameters(), task2_module.parameters()],
-            shared_params=shared_module.parameters(),
             A=A,
         )
         optimizer.step()
@@ -157,8 +155,6 @@ def test_lightning_integration():
             mtl_backward(
                 losses=[loss1, loss2],
                 features=features,
-                tasks_params=[self.task1_head.parameters(), self.task2_head.parameters()],
-                shared_params=self.feature_extractor.parameters(),
                 A=UPGrad(),
             )
             opt.step()

@@ -27,8 +27,6 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        tasks_params=[[p1], [p2]],
-        shared_params=[p0],
         A=A,
     )
 
@@ -59,8 +57,6 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     mtl_backward(
         losses=[y1, y2, y3],
         features=r,
-        tasks_params=[[p1], [p2], [p3]],
-        shared_params=[p0],
         A=A,
     )
 
@@ -86,8 +82,6 @@ def test_mtl_backward_empty_tasks():
         mtl_backward(
             losses=[],
             features=[r1, r2],
-            tasks_params=[],
-            shared_params=[p0],
             A=UPGrad(),
         )
 
@@ -105,70 +99,11 @@ def test_mtl_backward_single_task():
     mtl_backward(
         losses=[y1],
         features=[r1, r2],
-        tasks_params=[[p1]],
-        shared_params=[p0],
         A=UPGrad(),
     )
 
     for p in [p0, p1]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
-
-
-def test_mtl_backward_incoherent_task_number():
-    """
-    Tests that mtl_backward raises an error when called with the number of tasks losses different
-    from the number of tasks parameters.
-    """
-
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    r2 = (p0**2).sum() + p0.norm()
-    y1 = r1 * p1[0] + r2 * p1[1]
-    y2 = r1 * p2[0] + r2 * p2[1]
-
-    with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[y1, y2],
-            features=[r1, r2],
-            tasks_params=[[p1]],  # Wrong
-            shared_params=[p0],
-            A=UPGrad(),
-        )
-    with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[y1],  # Wrong
-            features=[r1, r2],
-            tasks_params=[[p1], [p2]],
-            shared_params=[p0],
-            A=UPGrad(),
-        )
-
-
-def test_mtl_backward_empty_params():
-    """Tests that mtl_backward does not fill the .grad values if no parameter is specified."""
-
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    r2 = (p0**2).sum() + p0.norm()
-    y1 = r1 * p1[0] + r2 * p1[1]
-    y2 = r1 * p2[0] + r2 * p2[1]
-
-    mtl_backward(
-        losses=[y1, y2],
-        features=[r1, r2],
-        tasks_params=[[], []],
-        shared_params=[],
-        A=UPGrad(),
-    )
-
-    for p in [p0, p1, p2]:
-        assert p.grad is None
 
 
 def test_mtl_backward_multiple_params_per_task():
@@ -189,8 +124,6 @@ def test_mtl_backward_multiple_params_per_task():
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        tasks_params=[[p1_a, p1_b, p1_c], [p2_a, p2_b]],
-        shared_params=[p0],
         A=UPGrad(),
     )
 
@@ -217,8 +150,6 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     shared_params = [
         torch.rand(shape, requires_grad=True, device=DEVICE) for shape in shared_params_shapes
     ]
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     representations = [shared_param.sum(dim=-1) for shared_param in shared_params]
     y1 = torch.stack([r.sum() for r in representations]).sum()
@@ -227,41 +158,11 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     mtl_backward(
         losses=[y1, y2],
         features=representations,
-        tasks_params=[[p1], [p2]],
-        shared_params=shared_params,
         A=UPGrad(),
     )
 
-    for p in [*shared_params, p1, p2]:
+    for p in [*shared_params]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
-
-
-def test_mtl_backward_partial_params():
-    """
-    Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
-    specified as inputs.
-    """
-
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    r2 = (p0**2).sum() + p0.norm()
-    y1 = r1 * p1[0] + r2 * p1[1]
-    y2 = r1 * p2[0] + r2 * p2[1]
-
-    mtl_backward(
-        losses=[y1, y2],
-        features=[r1, r2],
-        tasks_params=[[p1], []],
-        shared_params=[p0],
-        A=Mean(),
-    )
-
-    assert (p0.grad is not None) and (p0.shape == p0.grad.shape)
-    assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
-    assert p2.grad is None
 
 
 def test_mtl_backward_empty_features():
@@ -280,8 +181,6 @@ def test_mtl_backward_empty_features():
         mtl_backward(
             losses=[y1, y2],
             features=[],
-            tasks_params=[[p1], [p2]],
-            shared_params=[p0],
             A=UPGrad(),
         )
 
@@ -310,8 +209,6 @@ def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
     mtl_backward(
         losses=[y1, y2],
         features=r,
-        tasks_params=[[p1], [p2]],
-        shared_params=[p0],
         A=UPGrad(),
     )
 
@@ -347,8 +244,6 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
     mtl_backward(
         losses=[y1, y2],
         features=representations,
-        tasks_params=[[p1], [p2]],
-        shared_params=[p0],
         A=UPGrad(),
     )
 
@@ -372,8 +267,6 @@ def test_mtl_backward_non_scalar_loss():
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
-            tasks_params=[[p1], [p2]],
-            shared_params=[p0],
             A=UPGrad(),
         )
 
@@ -394,8 +287,6 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        tasks_params=[[p1], [p2]],
-        shared_params=[p0],
         A=UPGrad(),
         retain_graph=True,
         parallel_chunk_size=chunk_size,
@@ -422,8 +313,6 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
-            tasks_params=[[p1], [p2]],
-            shared_params=[p0],
             A=UPGrad(),
             parallel_chunk_size=chunk_size,
         )
@@ -454,8 +343,6 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
-            tasks_params=[[p1], [p2]],
-            shared_params=[p0],
             A=UPGrad(),
             retain_graph=False,
             parallel_chunk_size=chunk_size,
