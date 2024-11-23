@@ -56,8 +56,6 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
         mtl_backward(
             losses=[loss1, loss2],
             features=features,
-            tasks_params=[task1_module.parameters(), task2_module.parameters()],
-            shared_params=shared_module.parameters(),
             A=A,
         )
         optimizer.step()

@@ -251,6 +251,34 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
+def test_mtl_backward_partial_params():
+    """
+    Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
+    specified as inputs.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+
+    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    r2 = (p0**2).sum() + p0.norm()
+    y1 = r1 * p1[0] + r2 * p1[1]
+    y2 = r1 * p2[0] + r2 * p2[1]
+
+    mtl_backward(
+        losses=[y1, y2],
+        features=[r1, r2],
+        tasks_params=[[p1], []],
+        shared_params=[p0],
+        A=Mean(),
+    )
+
+    assert (p0.grad is not None) and (p0.shape == p0.grad.shape)
+    assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
+    assert p2.grad is None
+
+
 def test_mtl_backward_non_scalar_loss():
     """Tests that mtl_backward raises an error when used with a non-scalar loss."""
 
