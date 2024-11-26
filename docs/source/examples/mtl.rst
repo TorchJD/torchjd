@@ -19,7 +19,7 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
 
 
 .. code-block:: python
-    :emphasize-lines: 5-6, 19, 33-39
+    :emphasize-lines: 5-6, 19, 33-37
 
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
