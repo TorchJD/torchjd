@@ -13,7 +13,6 @@ paradigm. The full documentation is available at [torchjd.org](https://torchjd.o
 usage examples.
 
 ## Jacobian descent (JD)
-
 Jacobian descent is an extension of gradient descent supporting the optimization of vector-valued
 functions. This algorithm can be used to train neural networks with multiple loss functions. In this
 context, JD iteratively updates the parameters of the model using the Jacobian matrix of the vector
@@ -44,18 +43,14 @@ size). In addition to $\mathcal A_{\text{UPGrad}}$, TorchJD supports
 [more than 10 aggregators from the literature](https://torchjd.org/docs/aggregation).
 
 ## Installation
-
 <!-- start installation -->
 TorchJD can be installed directly with pip:
-
 ```bash
 pip install torchjd
 ```
-
 <!-- end installation -->
 
 ## Usage
-
 The main way to use TorchJD is to replace the usual call to `loss.backward()` by a call to
 `torchjd.backward` or `torchjd.mtl_backward`, depending on the use-case.
 
@@ -110,11 +105,9 @@ for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
 More usage examples can be found [here](https://torchjd.org/examples/).
 
 ## Supported Aggregators
-
 TorchJD provides many existing aggregators from the literature, listed in the following table.
 
 <!-- recommended aggregators first, then alphabetical order -->
-
 | Aggregator                                                           | Publication                                                                                                                                                         |
 |----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [UPGrad](https://torchjd.org/docs/aggregation/upgrad/) (recommended) | [Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232)                                                                               |
@@ -135,7 +128,6 @@ TorchJD provides many existing aggregators from the literature, listed in the fo
 
 The following example shows how to instantiate
 [UPGrad](https://torchjd.org/docs/aggregation/upgrad/) and aggregate a simple matrix `J` with it.
-
 ```python
 from torch import tensor
 from torchjd.aggregation import UPGrad
@@ -153,13 +145,10 @@ A(J)
 > will in turn apply it to the Jacobian matrix that it will compute.
 
 ## Contribution
-
 Please read the [Contribution page](CONTRIBUTING.md).
 
 ## Citation
-
 If you use TorchJD for your research, please cite:
-
 ```
 @article{jacobian_descent,
   title={Jacobian Descent For Multi-Objective Optimization},
