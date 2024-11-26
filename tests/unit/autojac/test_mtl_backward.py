@@ -207,6 +207,8 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     shared_params = [
         torch.rand(shape, requires_grad=True, device=DEVICE) for shape in shared_params_shapes
     ]
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     representations = [shared_param.sum(dim=-1) for shared_param in shared_params]
     y1 = torch.stack([r.sum() for r in representations]).sum()
@@ -215,10 +217,12 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     mtl_backward(
         losses=[y1, y2],
         features=representations,
+        tasks_params=[[p1], [p2]],  # Enforce differentiation w.r.t. params that haven't been used
+        shared_params=shared_params,
         A=UPGrad(),
     )
 
-    for p in [*shared_params]:
+    for p in [*shared_params, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
