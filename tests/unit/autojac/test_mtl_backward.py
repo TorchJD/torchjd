@@ -36,11 +36,20 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
+@pytest.mark.parametrize("manually_specify_shared_params", [True, False])
+@pytest.mark.parametrize("manually_specify_tasks_params", [True, False])
+def test_mtl_backward_value_is_correct(
+    A: Aggregator,
+    shape: tuple[int, int],
+    manually_specify_shared_params: bool,
+    manually_specify_tasks_params: bool,
+):
     """
     Tests that the .grad value filled by mtl_backward is correct in a simple example of
     matrix-vector product for shared representation and three tasks whose loss are given by a simple
     inner product of the shared representation with the task parameter.
+
+    This test should work with or without manually specifying the parameters.
     """
 
     p0 = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
@@ -54,9 +63,21 @@ def test_mtl_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     y2 = p2 @ r
     y3 = p3 @ r
 
+    if manually_specify_shared_params:
+        shared_params = [p0]
+    else:
+        shared_params = None
+
+    if manually_specify_tasks_params:
+        tasks_params = [[p1], [p2], [p3]]
+    else:
+        tasks_params = None
+
     mtl_backward(
         losses=[y1, y2, y3],
         features=r,
+        shared_params=shared_params,
+        tasks_params=tasks_params,
         A=A,
     )
 
