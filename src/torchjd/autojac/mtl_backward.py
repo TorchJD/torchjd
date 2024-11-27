@@ -25,15 +25,15 @@ from ._utils import (
 )
 
 
-def _get_tensors_memory_id(tensor_list: list[Tensor]) -> set[int]:
+def _get_tensors_memory_id(tensors_collection: set[Tensor]) -> set[int]:
     """
-    Based on a list of lists of tensor objects returns the unique memory adress of all
-    :param tensor_list: list containing pytorch Tensor objects
+    Based on a list of lists of tensor objects returns the unique memory address of all
+    :param tensors_collection: set containing pytorch Tensor objects
     """
-    return set([id(tensor) for tensor in tensor_list])
+    return set([id(tensor) for tensor in tensors_collection])
 
 
-def _traverse_ag_graph(grad_graph: Node) -> list[Tensor]:
+def _traverse_ag_graph(grad_graph: Node) -> set[Tensor]:
     """
     Traverses an autograd graph iteratively and extracts all variables (trainable parameters)
     that lead to the given node.
@@ -42,7 +42,7 @@ def _traverse_ag_graph(grad_graph: Node) -> list[Tensor]:
     :return: A list of tensors representing the variables that lead to the given node.
     """
     stack = [grad_graph]
-    output_params = []
+    output_params = set()
 
     while stack:
         current_node = stack.pop()
@@ -53,7 +53,7 @@ def _traverse_ag_graph(grad_graph: Node) -> list[Tensor]:
                 # Skip constants in the calculation
                 continue
             if hasattr(child[0], "variable"):
-                output_params.append(child[0].variable)
+                output_params.add(child[0].variable)
             else:
                 stack.append(child[0])
 
@@ -61,42 +61,42 @@ def _traverse_ag_graph(grad_graph: Node) -> list[Tensor]:
 
 
 def _determine_shared_not_shared(
-    tensor_list: list[list[Tensor]],
-) -> Tuple[list[Tensor], list[list[Tensor]]]:
+    tensors_collection: list[set[Tensor]],
+) -> Tuple[set[Tensor], list[set[Tensor]]]:
     """
-    Based on a list of lists of tensor objects we identify the tensors that are shared in all tensor lists
+    Based on a list of sets of tensor objects we identify the tensors that are shared in all tensor lists
     and the tensor objects that only appear in a tensor list.
-    :param tensor_list: list of list containing pytorch Tensor objects
+    :param tensors_collection: list of list containing pytorch Tensor objects
     """
     usage_counter = Counter()
-    for tensors in tensor_list:
+    for tensors in tensors_collection:
         unique_addresses = _get_tensors_memory_id(tensors)
         usage_counter += Counter(unique_addresses)
-    shared_tensors = []
+    shared_tensors = set()
     shared_already_appended = set()
     task_parameters = []
     search_shared = True
-    for tensors in tensor_list:
-        non_shared_tensors = []
+    for tensors in tensors_collection:
+        non_shared_tensors = set()
         non_shared_already_appended = set()
         for tensor in tensors:
             memory_address = id(tensor)
-            if usage_counter[memory_address] == len(tensor_list):
+            if usage_counter[memory_address] == len(tensors_collection):
                 # shared param
                 if search_shared:
                     if memory_address not in shared_already_appended:
-                        shared_tensors.append(tensor)
+                        shared_tensors.add(tensor)
                         shared_already_appended.add(memory_address)
             else:
                 if memory_address not in non_shared_already_appended:
-                    non_shared_tensors.append(tensor)
+                    non_shared_tensors.add(tensor)
                     non_shared_already_appended.add(memory_address)
         task_parameters.append(non_shared_tensors)
         search_shared = False  # we already know all shared params after first iteration
     return shared_tensors, task_parameters
 
 
-def _get_tasks_shared_params(losses: list[Tensor]) -> Tuple[list[Tensor], list[list[Tensor]]]:
+def _get_tasks_shared_params(losses: list[Tensor]) -> Tuple[set[Tensor], list[set[Tensor]]]:
     """
     Based on a list of pytorch calculations this function identifies the shared parameters and the indvidual parameters
     for each calculation.
@@ -155,8 +155,10 @@ def mtl_backward(
         functions. The arguments of ``mtl_backward`` should thus not come from a compiled model.
         Check https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
     """
-    if shared_params is None or tasks_params is None:
-        shared_params, tasks_params = _get_tasks_shared_params(losses)
+    if shared_params is None:
+        shared_params, _ = _get_tasks_shared_params(losses)
+    if tasks_params is None:
+        _, tasks_params = _get_tasks_shared_params(losses)
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
 
