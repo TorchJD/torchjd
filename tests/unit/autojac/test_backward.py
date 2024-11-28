@@ -30,7 +30,10 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
+@pytest.mark.parametrize("manually_specify_tasks_inputs", [True, False])
+def test_backward_value_is_correct(
+    A: Aggregator, shape: tuple[int, int], manually_specify_tasks_inputs: bool
+):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
     product.
@@ -40,7 +43,12 @@ def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     input = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
     output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
-    backward([output], A)
+    if manually_specify_tasks_inputs:
+        inputs = [input]
+    else:
+        inputs = None
+
+    backward([output], A, inputs)
 
     assert_close(input.grad, A(J))
 
