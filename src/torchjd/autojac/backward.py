@@ -80,7 +80,7 @@ def backward(
     if inputs is None:
         inputs = _get_leafs_of_autograd_graph(tensors, set())
     else:
-        inputs = list(inputs)
+        inputs = set(inputs)
 
     # Transform that creates gradient outputs containing only ones.
     init = Init(tensors)
