@@ -30,3 +30,30 @@ def _check_retain_graph_compatible_with_chunk_size(
             "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
             "large enough to compute all gradients in parallel."
         )
+
+
+def _get_leafs_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) -> set[Tensor]:
+    """
+    Gets the leafs of the autograd graph of all tensors in `roots`, excludes leafs that are in the
+    autograd graph of any tensor in `excluded`.
+    :param roots: Roots of the autograd graphs.
+    :param excluded: Tensors excluded from the search.
+    :return: A list of tensors representing the variables that lead to the given node.
+    """
+    node_stack = [tensor.grad_fn for tensor in roots if tensor not in excluded]
+    excluded_nodes = {tensor.grad_fn for tensor in excluded}
+    leafs = set()
+
+    while node_stack:
+        current_node = node_stack.pop()
+
+        if hasattr(current_node, "variable"):
+            leafs.add(current_node.variable)
+        else:
+            node_stack += [
+                child[0]
+                for child in current_node.next_functions
+                if child[0] is not None and child[0] not in excluded_nodes
+            ]
+
+    return leafs
