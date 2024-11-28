@@ -55,7 +55,7 @@ def backward(
             >>> y1 = torch.tensor([-1., 1.]) @ param
             >>> y2 = (param ** 2).sum()
             >>>
-            >>> backward([y1, y2], UPGrad(), [param])
+            >>> backward([y1, y2], UPGrad())
             >>>
             >>> param.grad
             tensor([0.5000, 2.5000])
