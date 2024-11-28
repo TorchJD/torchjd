@@ -30,7 +30,7 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
+def test_backward_value_is_correct_1(A: Aggregator, shape: tuple[int, int]):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
     product.
@@ -43,6 +43,37 @@ def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     backward([output], [input], A)
 
     assert_close(input.grad, A(J))
+
+
+@pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
+@pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
+def test_backward_value_is_correct_2(A: Aggregator, shape: tuple[int, int]):
+    """
+    Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
+    product.
+    """
+
+    p1 = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
+    p2 = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
+
+    J1 = torch.randn(shape, device=DEVICE)
+    J2 = torch.randn(shape, device=DEVICE)
+    J3 = torch.randn(shape, device=DEVICE)
+    y1 = J1 @ p1 + J2 @ p2
+    y2 = J3 @ p2
+
+    backward(tensors=[y1, y2], A=A, inputs=[p1, p2])
+
+    zeros = torch.zeros_like(J1)
+
+    expected_jacobian = torch.vstack([torch.hstack([J1, J2]), torch.hstack([zeros, J3])])
+    # J1 J2
+    # 0  J3
+
+    expected_aggregation = A(expected_jacobian)
+
+    assert_close(p1.grad, expected_aggregation[: shape[0]])
+    assert_close(p2.grad, expected_aggregation[shape[0] :])
 
 
 def test_backward_empty_inputs():
