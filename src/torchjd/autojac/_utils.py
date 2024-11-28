@@ -48,8 +48,7 @@ def _get_leafs_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) -> 
         current_node = node_stack.pop()
 
         if hasattr(current_node, "variable"):
-            if current_node.variable not in excluded:
-                leafs.add(current_node.variable)
+            leafs.add(current_node.variable)
         else:
             node_stack += [
                 child[0]
@@ -57,4 +56,4 @@ def _get_leafs_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) -> 
                 if child[0] is not None and child[0] not in excluded_nodes
             ]
 
-    return leafs
+    return leafs - excluded
