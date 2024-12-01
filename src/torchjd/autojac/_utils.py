@@ -52,7 +52,7 @@ def _get_leaves_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) ->
     while nodes_to_traverse:
         current_node = nodes_to_traverse.pop()
 
-        if hasattr(current_node, "variable"):
+        if hasattr(current_node, "variable") and current_node.variable not in excluded:
             leaves.add(current_node.variable)
         else:
             nodes_to_traverse += [
@@ -61,7 +61,4 @@ def _get_leaves_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) ->
                 if child[0] is not None and child[0] not in excluded_nodes
             ]
 
-    # Even though the nodes corresponding to `excluded` cannot be traversed, these tensors can still
-    # be the variables of other nodes. We thus need to remove the set of excluded tensors from the
-    # obtained set of leaves.
-    return leaves - excluded
+    return leaves
