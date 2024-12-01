@@ -170,3 +170,39 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded={y})
 
     assert leaves == expected
+
+
+def test_get_leaves_of_autograd_graph_single_root():
+    """Tests that _get_leaves_of_autograd_graph returns no leaves when roots is the empty set."""
+
+    p = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    y = p * 2
+
+    expected = {p}
+    leaves = _get_leaves_of_autograd_graph(roots=[y], excluded=set())
+
+    assert leaves == expected
+
+
+def test_get_leaves_of_autograd_graph_empty_roots():
+    """Tests that _get_leaves_of_autograd_graph returns no leaves when roots is the empty set."""
+
+    expected = set()
+    leaves = _get_leaves_of_autograd_graph(roots=[], excluded=set())
+
+    assert leaves == expected
+
+
+def test_get_leaves_of_autograd_graph_excluded_root():
+    """Tests that _get_leaves_of_autograd_graph correctly excludes the root."""
+
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
+    y2 = (p1**2).sum()
+
+    expected = {p1}
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={y1})
+
+    assert leaves == expected
