@@ -45,6 +45,11 @@ def _get_leaves_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) ->
     excluded_nodes = {tensor.grad_fn for tensor in excluded}
     leaves = set()
 
+    # This implementation more or less follows what is advised
+    # [here](https://discuss.pytorch.org/t/how-to-access-the-computational-graph/112887), but it is
+    # not necessarily robust to future changes, and it's not guaranteed to work.
+    # See [this](https://discuss.pytorch.org/t/autograd-graph-traversal/213658) for another question
+    # about how to implement this.
     while nodes_to_traverse:
         current_node = nodes_to_traverse.pop()
 
