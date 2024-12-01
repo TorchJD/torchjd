@@ -13,7 +13,7 @@ def test_simple_get_leaves_of_autograd_graph():
     y2 = (p1**2).sum() + p2.norm()
 
     expected = {p1, p2}
-    leaves = _get_leaves_of_autograd_graph([y1, y2], set())
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
 
     assert leaves == expected
 
@@ -29,7 +29,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_1():
     y2 = x1
 
     expected = {p1}
-    leaves = _get_leaves_of_autograd_graph([y1, y2], {x1, x2})
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
 
     assert leaves == expected
 
@@ -45,7 +45,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_2():
     y2 = x1
 
     expected = {p1, p2}
-    leaves = _get_leaves_of_autograd_graph([y1, y2], {x1, x2})
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
 
     assert leaves == expected
 
@@ -59,7 +59,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_3():
     y2 = (p1**2).sum() + p2.norm() + p3.sum()
 
     expected = {p1, p2}
-    leaves = _get_leaves_of_autograd_graph([y1, y2], {p3})
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={p3})
 
     assert leaves == expected
 
@@ -72,7 +72,7 @@ def test_simple_get_leaves_of_autograd_graph_with_leaf_not_requiring_grad():
     y2 = (p1**2).sum() + p2.norm()
 
     expected = {p1}
-    leaves = _get_leaves_of_autograd_graph([y1, y2], set())
+    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
 
     assert leaves == expected
 
@@ -88,7 +88,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model():
     losses = loss_fn(y_hat, y)
 
     expected = set(model.parameters())
-    leaves = _get_leaves_of_autograd_graph([losses], set())
+    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set())
 
     assert leaves == expected
 
@@ -104,7 +104,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_1():
     losses = loss_fn(y_hat, y)
 
     expected = set(model[2].parameters())
-    leaves = _get_leaves_of_autograd_graph([losses], set(model[0].parameters()))
+    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set(model[0].parameters()))
 
     assert leaves == expected
 
@@ -122,6 +122,6 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     losses = loss_fn(z_hat, z)
 
     expected = set(model2.parameters())
-    leaves = _get_leaves_of_autograd_graph([losses], {y})
+    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded={y})
 
     assert leaves == expected
