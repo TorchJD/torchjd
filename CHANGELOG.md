@@ -8,8 +8,18 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added a default value to the `inputs` parameter of `backward`. If not provided, the `inputs` will
+  default to all leaf tensors that were used to compute the `tensors` parameter. This is in line
+  with the behavior of
+  [torch.autograd.backward](https://pytorch.org/docs/stable/generated/torch.autograd.backward.html).
+
 ### Changed
 
+- **BREAKING**: Changed the order of the parameters of `backward` to make it possible to have a
+  default value for `inputs`. Usages of `backward` that rely on the order between `inputs` and `A`
+  must be updated.
 - Switched to the [PEP 735](https://peps.python.org/pep-0735/) dependency groups format in
   `pyproject.toml` (from a `[tool.pdm.dev-dependencies]` to a `[dependency-groups]` section). This
   should only affect development dependencies.
