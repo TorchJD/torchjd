@@ -9,7 +9,7 @@ from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
     _check_retain_graph_compatible_with_chunk_size,
-    _get_leafs_of_autograd_graph,
+    _get_leaves_of_autograd_graph,
 )
 
 
@@ -77,7 +77,7 @@ def backward(
     _check_retain_graph_compatible_with_chunk_size(tensors, retain_graph, parallel_chunk_size)
 
     if inputs is None:
-        inputs = _get_leafs_of_autograd_graph(tensors, set())
+        inputs = _get_leaves_of_autograd_graph(tensors, set())
     else:
         inputs = set(inputs)
 

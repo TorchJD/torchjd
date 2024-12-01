@@ -2,10 +2,10 @@ import torch
 from torch.nn import Linear, MSELoss, ReLU, Sequential
 from unit.conftest import DEVICE
 
-from torchjd.autojac._utils import _get_leafs_of_autograd_graph
+from torchjd.autojac._utils import _get_leaves_of_autograd_graph
 
 
-def test_simple_get_leafs_of_autograd_graph():
+def test_simple_get_leaves_of_autograd_graph():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -13,12 +13,12 @@ def test_simple_get_leafs_of_autograd_graph():
     y2 = (p1**2).sum() + p2.norm()
 
     expected = {p1, p2}
-    leafs = _get_leafs_of_autograd_graph([y1, y2], set())
+    leaves = _get_leaves_of_autograd_graph([y1, y2], set())
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_excluded1():
+def test_simple_get_leaves_of_autograd_graph_excluded1():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -29,12 +29,12 @@ def test_simple_get_leafs_of_autograd_graph_excluded1():
     y2 = x1
 
     expected = {p1}
-    leafs = _get_leafs_of_autograd_graph([y1, y2], {x1, x2})
+    leaves = _get_leaves_of_autograd_graph([y1, y2], {x1, x2})
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_excluded2():
+def test_simple_get_leaves_of_autograd_graph_excluded2():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -45,12 +45,12 @@ def test_simple_get_leafs_of_autograd_graph_excluded2():
     y2 = x1
 
     expected = {p1, p2}
-    leafs = _get_leafs_of_autograd_graph([y1, y2], {x1, x2})
+    leaves = _get_leaves_of_autograd_graph([y1, y2], {x1, x2})
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_excluded3():
+def test_simple_get_leaves_of_autograd_graph_excluded3():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     p3 = torch.tensor([5.0, 6.0], requires_grad=True, device=DEVICE)
@@ -59,12 +59,12 @@ def test_simple_get_leafs_of_autograd_graph_excluded3():
     y2 = (p1**2).sum() + p2.norm() + p3.sum()
 
     expected = {p1, p2}
-    leafs = _get_leafs_of_autograd_graph([y1, y2], {p3})
+    leaves = _get_leaves_of_autograd_graph([y1, y2], {p3})
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_with_leaf_not_requiring_grad():
+def test_simple_get_leaves_of_autograd_graph_with_leaf_not_requiring_grad():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=False, device=DEVICE)
 
@@ -72,12 +72,12 @@ def test_simple_get_leafs_of_autograd_graph_with_leaf_not_requiring_grad():
     y2 = (p1**2).sum() + p2.norm()
 
     expected = {p1}
-    leafs = _get_leafs_of_autograd_graph([y1, y2], set())
+    leaves = _get_leaves_of_autograd_graph([y1, y2], set())
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_with_model():
+def test_simple_get_leaves_of_autograd_graph_with_model():
     x = torch.randn(16, 10)
     y = torch.randn(16, 1)
 
@@ -88,12 +88,12 @@ def test_simple_get_leafs_of_autograd_graph_with_model():
     losses = loss_fn(y_hat, y)
 
     expected = set(model.parameters())
-    leafs = _get_leafs_of_autograd_graph([losses], set())
+    leaves = _get_leaves_of_autograd_graph([losses], set())
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_with_model_excluded():
+def test_simple_get_leaves_of_autograd_graph_with_model_excluded():
     x = torch.randn(16, 10)
     y = torch.randn(16, 1)
 
@@ -104,12 +104,12 @@ def test_simple_get_leafs_of_autograd_graph_with_model_excluded():
     losses = loss_fn(y_hat, y)
 
     expected = set(model[2].parameters())
-    leafs = _get_leafs_of_autograd_graph([losses], set(model[0].parameters()))
+    leaves = _get_leaves_of_autograd_graph([losses], set(model[0].parameters()))
 
-    assert leafs == expected
+    assert leaves == expected
 
 
-def test_simple_get_leafs_of_autograd_graph_with_model_excluded2():
+def test_simple_get_leaves_of_autograd_graph_with_model_excluded2():
     x = torch.randn(16, 10)
     z = torch.randn(16, 1)
 
@@ -125,6 +125,6 @@ def test_simple_get_leafs_of_autograd_graph_with_model_excluded2():
     losses = loss_fn(z_hat, z)
 
     expected = set(model2.parameters())
-    leafs = _get_leafs_of_autograd_graph([losses], {y})
+    leaves = _get_leaves_of_autograd_graph([losses], {y})
 
-    assert leafs == expected
+    assert leaves == expected
