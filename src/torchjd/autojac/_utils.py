@@ -34,8 +34,7 @@ def _check_retain_graph_compatible_with_chunk_size(
 
 def _get_leaves_of_autograd_graph(roots: list[Tensor], excluded: set[Tensor]) -> set[Tensor]:
     """
-    Gets the leaves of the autograd graph of all specified ``tensors``, excluding the ``excluded``
-    tensors and their descendants.
+    Gets the leaves of the autograd graph of all specified ``tensors``.
 
     :param roots: Tensors from which the graph traversal should start.
     :param excluded: Tensors excluded from the graph traversal and from the results.
