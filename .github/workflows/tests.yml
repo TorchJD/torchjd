@@ -10,6 +10,7 @@ jobs:
   Testing:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false  # Ensure matrix jobs keep running even if one fails
       matrix:
         python-version: ['3.10', '3.11', '3.12']
         os: [ubuntu-latest, macOS-latest, windows-latest]
