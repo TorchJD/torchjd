@@ -18,7 +18,7 @@ jobs:
       - name: Install check dependencies
         run: pdm install --no-default --group check --frozen-lockfile
       - name: Cache pre-commit hooks
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
