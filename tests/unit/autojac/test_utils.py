@@ -113,10 +113,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     x = torch.randn(16, 10)
     z = torch.randn(16, 1)
 
-    model1 = Sequential(
-        Linear(10, 5),
-        ReLU(),
-    )
+    model1 = Sequential(Linear(10, 5), ReLU())
     model2 = Linear(5, 1)
     loss_fn = MSELoss(reduction="none")
 
