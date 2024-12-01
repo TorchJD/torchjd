@@ -14,10 +14,8 @@ def test_simple_get_leaves_of_autograd_graph():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    expected = {p1, p2}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
-
-    assert leaves == expected
+    assert leaves == {p1, p2}
 
 
 def test_simple_get_leaves_of_autograd_graph_excluded_1():
@@ -38,10 +36,8 @@ def test_simple_get_leaves_of_autograd_graph_excluded_1():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + x2
     y2 = x1
 
-    expected = {p1}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
-
-    assert leaves == expected
+    assert leaves == {p1}
 
 
 def test_simple_get_leaves_of_autograd_graph_excluded_2():
@@ -62,10 +58,8 @@ def test_simple_get_leaves_of_autograd_graph_excluded_2():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = x1
 
-    expected = {p1, p2}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
-
-    assert leaves == expected
+    assert leaves == {p1, p2}
 
 
 def test_simple_get_leaves_of_autograd_graph_excluded_3():
@@ -83,10 +77,8 @@ def test_simple_get_leaves_of_autograd_graph_excluded_3():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm() + p3.sum()
 
-    expected = {p1, p2}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={p3})
-
-    assert leaves == expected
+    assert leaves == {p1, p2}
 
 
 def test_simple_get_leaves_of_autograd_graph_with_leaf_not_requiring_grad():
@@ -101,10 +93,8 @@ def test_simple_get_leaves_of_autograd_graph_with_leaf_not_requiring_grad():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    expected = {p1}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
-
-    assert leaves == expected
+    assert leaves == {p1}
 
 
 def test_simple_get_leaves_of_autograd_graph_with_model():
@@ -122,10 +112,8 @@ def test_simple_get_leaves_of_autograd_graph_with_model():
     y_hat = model(x)
     losses = loss_fn(y_hat, y)
 
-    expected = set(model.parameters())
     leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set())
-
-    assert leaves == expected
+    assert leaves == set(model.parameters())
 
 
 def test_simple_get_leaves_of_autograd_graph_with_model_excluded_1():
@@ -143,10 +131,8 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_1():
     y_hat = model(x)
     losses = loss_fn(y_hat, y)
 
-    expected = set(model[2].parameters())
     leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set(model[0].parameters()))
-
-    assert leaves == expected
+    assert leaves == set(model[2].parameters())
 
 
 def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
@@ -166,10 +152,8 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     z_hat = model2(y)
     losses = loss_fn(z_hat, z)
 
-    expected = set(model2.parameters())
     leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded={y})
-
-    assert leaves == expected
+    assert leaves == set(model2.parameters())
 
 
 def test_get_leaves_of_autograd_graph_single_root():
@@ -178,19 +162,15 @@ def test_get_leaves_of_autograd_graph_single_root():
     p = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     y = p * 2
 
-    expected = {p}
     leaves = _get_leaves_of_autograd_graph(roots=[y], excluded=set())
-
-    assert leaves == expected
+    assert leaves == {p}
 
 
 def test_get_leaves_of_autograd_graph_empty_roots():
     """Tests that _get_leaves_of_autograd_graph returns no leaves when roots is the empty set."""
 
-    expected = set()
     leaves = _get_leaves_of_autograd_graph(roots=[], excluded=set())
-
-    assert leaves == expected
+    assert leaves == set()
 
 
 def test_get_leaves_of_autograd_graph_excluded_root():
@@ -202,7 +182,5 @@ def test_get_leaves_of_autograd_graph_excluded_root():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum()
 
-    expected = {p1}
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={y1})
-
-    assert leaves == expected
+    assert leaves == {p1}
