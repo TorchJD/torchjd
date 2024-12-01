@@ -41,17 +41,17 @@ def _get_leaves_of_autograd_graph(tensors: list[Tensor], excluded: set[Tensor]) 
     :param excluded: Tensors excluded from the graph traversal and from the results.
     """
 
-    node_stack = [tensor.grad_fn for tensor in tensors if tensor not in excluded]
+    nodes_to_traverse = [tensor.grad_fn for tensor in tensors if tensor not in excluded]
     excluded_nodes = {tensor.grad_fn for tensor in excluded}
     leaves = set()
 
-    while node_stack:
-        current_node = node_stack.pop()
+    while nodes_to_traverse:
+        current_node = nodes_to_traverse.pop()
 
         if hasattr(current_node, "variable"):
             leaves.add(current_node.variable)
         else:
-            node_stack += [
+            nodes_to_traverse += [
                 child[0]
                 for child in current_node.next_functions
                 if child[0] is not None and child[0] not in excluded_nodes
