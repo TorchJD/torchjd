@@ -29,7 +29,7 @@ def backward(
     :param A: Aggregator used to reduce the Jacobian into a vector.
     :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
         their ``requires_grad`` flag set to ``True``. If not provided, defaults to the leaf tensors
-        and the tensors retaining grad that were used to compute the `tensors`.
+        that were used to compute the ``tensors`` parameter.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
