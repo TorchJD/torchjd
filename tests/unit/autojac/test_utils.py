@@ -18,7 +18,7 @@ def test_simple_get_leaves_of_autograd_graph():
     assert leaves == expected
 
 
-def test_simple_get_leaves_of_autograd_graph_excluded1():
+def test_simple_get_leaves_of_autograd_graph_excluded_1():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -34,7 +34,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded1():
     assert leaves == expected
 
 
-def test_simple_get_leaves_of_autograd_graph_excluded2():
+def test_simple_get_leaves_of_autograd_graph_excluded_2():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -50,7 +50,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded2():
     assert leaves == expected
 
 
-def test_simple_get_leaves_of_autograd_graph_excluded3():
+def test_simple_get_leaves_of_autograd_graph_excluded_3():
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
     p3 = torch.tensor([5.0, 6.0], requires_grad=True, device=DEVICE)
@@ -93,7 +93,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model():
     assert leaves == expected
 
 
-def test_simple_get_leaves_of_autograd_graph_with_model_excluded():
+def test_simple_get_leaves_of_autograd_graph_with_model_excluded_1():
     x = torch.randn(16, 10)
     y = torch.randn(16, 1)
 
@@ -109,7 +109,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded():
     assert leaves == expected
 
 
-def test_simple_get_leaves_of_autograd_graph_with_model_excluded2():
+def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     x = torch.randn(16, 10)
     z = torch.randn(16, 1)
 
