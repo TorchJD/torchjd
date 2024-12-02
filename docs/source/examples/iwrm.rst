@@ -98,7 +98,7 @@ each Jacobian matrix consists of one gradient per loss. In this example, we use 
                 y_hat = model(x)
                 losses = loss_fn(y_hat, y)
                 optimizer.zero_grad()
-                backward(losses, params, A)
+                backward(losses, A)
                 optimizer.step()
 
 Note that in both cases, we use the `torch.optim.SGD

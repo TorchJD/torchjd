@@ -69,7 +69,7 @@ Perform the Jacobian descent backward pass:
 
 .. code-block:: python
 
-    torchjd.backward([loss1, loss2], model.parameters(), A)
+    torchjd.backward([loss1, loss2], A)
 
 This will populate the ``.grad`` field of each model parameter with the corresponding aggregated
 Jacobian matrix.

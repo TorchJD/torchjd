@@ -20,7 +20,7 @@ def test_basic_usage():
     loss2 = loss_fn(output[:, 1], target2)
 
     optimizer.zero_grad()
-    torchjd.backward([loss1, loss2], model.parameters(), A)
+    torchjd.backward([loss1, loss2], A)
     optimizer.step()
 
 
@@ -68,7 +68,7 @@ def test_iwrm():
             y_hat = model(x)
             losses = loss_fn(y_hat, y)
             optimizer.zero_grad()
-            backward(losses, params, A)
+            backward(losses, A)
             optimizer.step()
 
     test_erm_with_sgd()
