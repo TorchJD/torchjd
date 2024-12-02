@@ -1,6 +1,7 @@
-from typing import Sequence
+from typing import Iterable, Sequence
 
 from torch import Tensor
+from torch.autograd.graph import Node
 
 
 def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
@@ -30,3 +31,54 @@ def _check_retain_graph_compatible_with_chunk_size(
             "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
             "large enough to compute all gradients in parallel."
         )
+
+
+def _get_leaves_of_autograd_graph(
+    tensors: Iterable[Tensor], excluded: Iterable[Tensor]
+) -> set[Tensor]:
+    """
+    Gets the leaves of the autograd graph of all specified ``tensors``.
+
+    :param tensors: Tensors from which the graph traversal should start.
+    :param excluded: Tensors that should be excluded from the results and whose grad_fn should be
+        excluded from the graph traversal.
+    """
+
+    accumulate_grads = _get_descendant_accumulate_grads(
+        roots={tensor.grad_fn for tensor in tensors},
+        excluded_nodes={tensor.grad_fn for tensor in excluded},
+    )
+    leaves = {g.variable for g in accumulate_grads}
+
+    return leaves - set(excluded)
+
+
+def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]) -> set[Node]:
+    """
+    Gets the AccumulateGrad descendants of the specified nodes.
+
+    :param roots: Root nodes from which the graph traversal should start.
+    :param excluded_nodes: Nodes excluded from the graph traversal.
+    """
+
+    result = set()
+    nodes_to_traverse = [node for node in roots if node not in excluded_nodes]
+
+    # This implementation more or less follows what is advised
+    # [here](https://discuss.pytorch.org/t/how-to-access-the-computational-graph/112887), but it is
+    # not necessarily robust to future changes, and it's not guaranteed to work.
+    # See [this](https://discuss.pytorch.org/t/autograd-graph-traversal/213658) for another question
+    # about how to implement this.
+    while nodes_to_traverse:
+        current_node = nodes_to_traverse.pop()
+
+        if current_node.__class__.__name__ == "AccumulateGrad":
+            result.add(current_node)
+
+        nodes_to_traverse += [
+            child[0]
+            for child in current_node.next_functions
+            if child[0] is not None and child[0] not in excluded_nodes
+        ]
+
+    return result

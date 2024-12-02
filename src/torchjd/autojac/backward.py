@@ -9,13 +9,14 @@ from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
     _check_retain_graph_compatible_with_chunk_size,
+    _get_leaves_of_autograd_graph,
 )
 
 
 def backward(
     tensors: Sequence[Tensor] | Tensor,
-    inputs: Iterable[Tensor],
     A: Aggregator,
+    inputs: Iterable[Tensor] | None = None,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
@@ -25,9 +26,10 @@ def backward(
 
     :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
         matrices will have one row for each value of each of these tensors.
-    :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
-        their ``requires_grad`` flag set to ``True``.
     :param A: Aggregator used to reduce the Jacobian into a vector.
+    :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
+        their ``requires_grad`` flag set to ``True``. If not provided, defaults to the leaf tensors
+        that were used to compute the ``tensors`` parameter.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
@@ -52,7 +54,7 @@ def backward(
             >>> y1 = torch.tensor([-1., 1.]) @ param
             >>> y2 = (param ** 2).sum()
             >>>
-            >>> backward([y1, y2], [param], A=UPGrad())
+            >>> backward([y1, y2], UPGrad())
             >>>
             >>> param.grad
             tensor([0.5000, 2.5000])
@@ -78,7 +80,10 @@ def backward(
 
     _check_retain_graph_compatible_with_chunk_size(tensors, retain_graph, parallel_chunk_size)
 
-    inputs = list(inputs)
+    if inputs is None:
+        inputs = _get_leaves_of_autograd_graph(tensors=tensors, excluded=set())
+    else:
+        inputs = set(inputs)
 
     # Transform that creates gradient outputs containing only ones.
     init = Init(tensors)

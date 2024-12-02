@@ -22,7 +22,7 @@ def test_backward_various_aggregators(A: Aggregator):
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], params, A)
+    backward([y1, y2], A)
 
     for p in params:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -30,7 +30,10 @@ def test_backward_various_aggregators(A: Aggregator):
 
 @pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
 @pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
+@pytest.mark.parametrize("manually_specify_inputs", [True, False])
+def test_backward_value_is_correct(
+    A: Aggregator, shape: tuple[int, int], manually_specify_inputs: bool
+):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
     product.
@@ -40,7 +43,12 @@ def test_backward_value_is_correct(A: Aggregator, shape: tuple[int, int]):
     input = torch.randn([shape[1]], requires_grad=True, device=DEVICE)
     output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
-    backward([output], [input], A)
+    if manually_specify_inputs:
+        inputs = [input]
+    else:
+        inputs = None
+
+    backward([output], A, inputs=inputs)
 
     assert_close(input.grad, A(J))
 
@@ -57,7 +65,7 @@ def test_backward_empty_inputs():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], [], A)
+    backward([y1, y2], A, inputs=[])
 
     for p in params:
         assert p.grad is None
@@ -77,7 +85,7 @@ def test_backward_partial_inputs():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], [p1], A)
+    backward([y1, y2], A, inputs=[p1])
 
     assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
     assert p2.grad is None
@@ -92,7 +100,7 @@ def test_backward_empty_tensors():
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     with pytest.raises(ValueError):
-        backward([], [p1, p2], A)
+        backward([], A, inputs=[p1, p2])
 
 
 def test_backward_multiple_tensors():
@@ -110,13 +118,13 @@ def test_backward_multiple_tensors():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], params, A, retain_graph=True)
+    backward([y1, y2], A, retain_graph=True)
 
     param_to_grad = {p: p.grad for p in params}
     for p in params:
         p.grad = None
 
-    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]), params, A)
+    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]), A)
 
     for p in params:
         assert (p.grad == param_to_grad[p]).all()
@@ -135,7 +143,7 @@ def test_backward_valid_chunk_size(chunk_size):
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], params, A, parallel_chunk_size=chunk_size, retain_graph=True)
+    backward([y1, y2], A, parallel_chunk_size=chunk_size, retain_graph=True)
 
     for p in params:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -149,13 +157,12 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     with pytest.raises(ValueError):
-        backward([y1, y2], params, A, parallel_chunk_size=chunk_size)
+        backward([y1, y2], A, parallel_chunk_size=chunk_size)
 
 
 @pytest.mark.parametrize(
@@ -172,13 +179,12 @@ def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation:
 
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
     with expectation:
-        backward([y1, y2], params, A, retain_graph=False, parallel_chunk_size=chunk_size)
+        backward([y1, y2], A, retain_graph=False, parallel_chunk_size=chunk_size)
 
 
 def test_backward_fails_with_input_retaining_grad():
@@ -193,7 +199,7 @@ def test_backward_fails_with_input_retaining_grad():
     c = 3 * b
 
     with raises(RuntimeError):
-        backward(tensors=c, inputs=[b], A=UPGrad())
+        backward(tensors=c, A=UPGrad(), inputs=[b])
 
 
 def test_backward_fails_with_non_input_retaining_grad():
@@ -208,7 +214,7 @@ def test_backward_fails_with_non_input_retaining_grad():
     c = 3 * b
 
     # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
-    backward(tensors=c, inputs=[a], A=UPGrad())
+    backward(tensors=c, A=UPGrad(), inputs=[a])
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
