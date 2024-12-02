@@ -48,7 +48,7 @@ def test_backward_value_is_correct(
     else:
         inputs = None
 
-    backward([output], A, inputs)
+    backward([output], A, inputs=inputs)
 
     assert_close(input.grad, A(J))
 
@@ -65,7 +65,7 @@ def test_backward_empty_inputs():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], A, [])
+    backward([y1, y2], A, inputs=[])
 
     for p in params:
         assert p.grad is None
@@ -85,7 +85,7 @@ def test_backward_partial_inputs():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    backward([y1, y2], A, [p1])
+    backward([y1, y2], A, inputs=[p1])
 
     assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
     assert p2.grad is None
@@ -100,7 +100,7 @@ def test_backward_empty_tensors():
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     with pytest.raises(ValueError):
-        backward([], A, [p1, p2])
+        backward([], A, inputs=[p1, p2])
 
 
 def test_backward_multiple_tensors():
