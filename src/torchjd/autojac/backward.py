@@ -64,6 +64,10 @@ def backward(
         ``backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
         functions. The arguments of ``backward`` should thus not come from a compiled model. Check
         https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
+
+    .. warning::
+        Because of a limitation of ``torch.vmap``, tensors in the computation graph of the
+        ``tensors`` parameter should not have their ``retains_grad`` parameter set to ``True``.
     """
     _check_optional_positive_chunk_size(parallel_chunk_size)
 

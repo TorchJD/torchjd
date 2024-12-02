@@ -457,3 +457,59 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
             retain_graph=False,
             parallel_chunk_size=chunk_size,
         )
+
+
+def test_mtl_backward_fails_with_shared_param_retaining_grad():
+    """
+    Tests that mtl_backward raises an error when some shared_params in the computation graph of the
+    ``features`` parameter retains grad.
+    """
+
+    p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    a = 2 * p0
+    a.retain_grad()
+    features = 3 * a
+    y1 = p1 * features
+    y2 = p2 * features
+
+    with raises(RuntimeError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[features],
+            tasks_params=[[p1], [p2]],
+            shared_params=[a, p0],
+            A=UPGrad(),
+        )
+
+
+def test_mtl_backward_fails_with_shared_activation_retaining_grad():
+    """
+    Tests that mtl_backward fails to fill a valid `.grad` when some tensors in the computation graph
+    of the ``features`` parameter retains grad.
+    """
+
+    p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    a = 2 * p0
+    a.retain_grad()
+    features = 3 * a
+    y1 = p1 * features
+    y2 = p2 * features
+
+    # mtl_backward itself doesn't raise the error, but it fills a.grad with a BatchedTensor
+    mtl_backward(
+        losses=[y1, y2],
+        features=[features],
+        tasks_params=[[p1], [p2]],
+        shared_params=[p0],
+        A=UPGrad(),
+    )
+
+    with raises(RuntimeError):
+        # Using such a BatchedTensor should result in an error
+        _ = -a.grad

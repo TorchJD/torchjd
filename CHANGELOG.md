@@ -8,6 +8,10 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Note in the documentation about the incompatibility of `backward` and `mtl_backward` with tensors that retain grad.
+
 ### Changed
 
 - Switched to the [PEP 735](https://peps.python.org/pep-0735/) dependency groups format in

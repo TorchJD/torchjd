@@ -68,6 +68,9 @@ class Jac(_Differentiate[Jacobians]):
             grads = _materialize(optional_grads, inputs=inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
+        # Because of a limitation of vmap, this breaks when some tensors have `retains_grad=True`.
+        # See https://pytorch.org/functorch/stable/ux_limitations.html for more information.
+        # This also breaks when some tensors have been produced by compiled functions.
         grouped_jacobian_matrix = torch.vmap(get_vjp, chunk_size=self.chunk_size)(jac_outputs)
 
         lengths = [input.numel() for input in inputs]
