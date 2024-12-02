@@ -1,3 +1,4 @@
+import pytest
 import torch
 from torch.nn import Linear, MSELoss, ReLU, Sequential
 from unit.conftest import DEVICE
@@ -184,3 +185,16 @@ def test_get_leaves_of_autograd_graph_excluded_root():
 
     leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={y1})
     assert leaves == {p1}
+
+
+@pytest.mark.parametrize("depth", [100, 1000, 10000])
+def test_get_leaves_of_autograd_graph_deep(depth: int):
+    """Tests that _get_leaves_of_autograd_graph works when the graph is very deep."""
+
+    one = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    sum_ = torch.tensor(0.0, requires_grad=False, device=DEVICE)
+    for i in range(depth):
+        sum_ = sum_ + one
+
+    leaves = _get_leaves_of_autograd_graph(roots=[sum_], excluded=set())
+    assert leaves == {one}
