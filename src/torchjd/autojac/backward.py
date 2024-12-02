@@ -81,7 +81,7 @@ def backward(
     _check_retain_graph_compatible_with_chunk_size(tensors, retain_graph, parallel_chunk_size)
 
     if inputs is None:
-        inputs = _get_leaves_of_autograd_graph(tensors=tensors, excluded=set())
+        inputs = _get_leaves_of_autograd_graph(tensors=tensors)
     else:
         inputs = set(inputs)
 
