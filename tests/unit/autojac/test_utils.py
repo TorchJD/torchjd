@@ -15,7 +15,7 @@ def test_simple_get_leaves_of_autograd_graph():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded=set())
     assert leaves == {p1, p2}
 
 
@@ -37,7 +37,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_1():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + x2
     y2 = x1
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded={x1, x2})
     assert leaves == {p1}
 
 
@@ -59,7 +59,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_2():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = x1
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={x1, x2})
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded={x1, x2})
     assert leaves == {p1, p2}
 
 
@@ -78,7 +78,7 @@ def test_simple_get_leaves_of_autograd_graph_excluded_3():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm() + p3.sum()
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={p3})
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded={p3})
     assert leaves == {p1, p2}
 
 
@@ -94,7 +94,7 @@ def test_simple_get_leaves_of_autograd_graph_with_leaf_not_requiring_grad():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum() + p2.norm()
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded=set())
     assert leaves == {p1}
 
 
@@ -113,7 +113,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model():
     y_hat = model(x)
     losses = loss_fn(y_hat, y)
 
-    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[losses], excluded=set())
     assert leaves == set(model.parameters())
 
 
@@ -132,7 +132,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_1():
     y_hat = model(x)
     losses = loss_fn(y_hat, y)
 
-    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded=set(model[0].parameters()))
+    leaves = _get_leaves_of_autograd_graph(tensors=[losses], excluded=set(model[0].parameters()))
     assert leaves == set(model[2].parameters())
 
 
@@ -153,7 +153,7 @@ def test_simple_get_leaves_of_autograd_graph_with_model_excluded_2():
     z_hat = model2(y)
     losses = loss_fn(z_hat, z)
 
-    leaves = _get_leaves_of_autograd_graph(roots=[losses], excluded={y})
+    leaves = _get_leaves_of_autograd_graph(tensors=[losses], excluded={y})
     assert leaves == set(model2.parameters())
 
 
@@ -163,14 +163,14 @@ def test_get_leaves_of_autograd_graph_single_root():
     p = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     y = p * 2
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[y], excluded=set())
     assert leaves == {p}
 
 
 def test_get_leaves_of_autograd_graph_empty_roots():
     """Tests that _get_leaves_of_autograd_graph returns no leaves when roots is the empty set."""
 
-    leaves = _get_leaves_of_autograd_graph(roots=[], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[], excluded=set())
     assert leaves == set()
 
 
@@ -183,7 +183,7 @@ def test_get_leaves_of_autograd_graph_excluded_root():
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
     y2 = (p1**2).sum()
 
-    leaves = _get_leaves_of_autograd_graph(roots=[y1, y2], excluded={y1})
+    leaves = _get_leaves_of_autograd_graph(tensors=[y1, y2], excluded={y1})
     assert leaves == {p1}
 
 
@@ -196,5 +196,5 @@ def test_get_leaves_of_autograd_graph_deep(depth: int):
     for i in range(depth):
         sum_ = sum_ + one
 
-    leaves = _get_leaves_of_autograd_graph(roots=[sum_], excluded=set())
+    leaves = _get_leaves_of_autograd_graph(tensors=[sum_], excluded=set())
     assert leaves == {one}
