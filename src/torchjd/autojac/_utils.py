@@ -34,7 +34,7 @@ def _check_retain_graph_compatible_with_chunk_size(
 
 
 def _get_leaves_of_autograd_graph(
-    tensors: Iterable[Tensor], excluded: Iterable[Tensor] | None = None
+    tensors: Iterable[Tensor], excluded: Iterable[Tensor]
 ) -> set[Tensor]:
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.
@@ -43,9 +43,6 @@ def _get_leaves_of_autograd_graph(
     :param excluded: Tensors that should be excluded from the results and whose grad_fn should be
         excluded from the graph traversal.
     """
-
-    if excluded is None:
-        excluded = []
 
     accumulate_grads = _get_descendant_accumulate_grads(
         roots={tensor.grad_fn for tensor in tensors},
