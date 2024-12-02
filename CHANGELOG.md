@@ -14,6 +14,7 @@ changes that do not affect the user.
   default to all leaf tensors that were used to compute the `tensors` parameter. This is in line
   with the behavior of
   [torch.autograd.backward](https://pytorch.org/docs/stable/generated/torch.autograd.backward.html).
+- Note in the documentation about the incompatibility of `backward` and `mtl_backward` with tensors that retain grad.
 
 ### Changed
 

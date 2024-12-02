@@ -185,3 +185,37 @@ def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation:
 
     with expectation:
         backward([y1, y2], A, retain_graph=False, parallel_chunk_size=chunk_size)
+
+
+def test_backward_fails_with_input_retaining_grad():
+    """
+    Tests that backward raises an error when some input in the computation graph of the ``tensors``
+    parameter retains grad.
+    """
+
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    b = 2 * a
+    b.retain_grad()
+    c = 3 * b
+
+    with raises(RuntimeError):
+        backward(tensors=c, A=UPGrad(), inputs=[b])
+
+
+def test_backward_fails_with_non_input_retaining_grad():
+    """
+    Tests that backward fails to fill a valid `.grad` when some tensor in the computation graph of
+    the ``tensors`` parameter retains grad.
+    """
+
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    b = 2 * a
+    b.retain_grad()
+    c = 3 * b
+
+    # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
+    backward(tensors=c, A=UPGrad(), inputs=[a])
+
+    with raises(RuntimeError):
+        # Using such a BatchedTensor should result in an error
+        _ = -b.grad
