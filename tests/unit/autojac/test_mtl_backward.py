@@ -476,3 +476,79 @@ def test_mtl_backward_fails_with_shared_activation_retaining_grad():
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
         _ = -a.grad
+
+
+def test_mtl_backward_task_params_have_some_overlap():
+    """Tests that mtl_backward works correctly when tasks params have some overlap."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    p1_and_2 = torch.tensor(4.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1 * p1_and_2
+    y2 = r * p2 * p1_and_2
+
+    mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
+
+    for p in [p0, p1, p2, p1_and_2]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+    assert_close(p2.grad, r * p1_and_2)
+    assert_close(p1.grad, r * p1_and_2)
+    assert_close(p1_and_2.grad, r * p1 + r * p2)
+
+    dy1_dp0 = torch.hstack([-1 * p1 * p1_and_2, 1 * p1 * p1_and_2])
+    dy2_dp0 = torch.hstack([-1 * p2 * p1_and_2, 1 * p2 * p1_and_2])
+    J = torch.vstack([dy1_dp0, dy2_dp0])
+    assert_close(p0.grad, UPGrad()(J))
+
+
+def test_mtl_backward_task_params_are_the_same():
+    """Tests that mtl_backward works correctly when the tasks have the same params."""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1
+    y2 = r + p1
+
+    mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
+
+    for p in [p0, p1]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+    assert_close(p1.grad, r + 1)
+
+    J = torch.tensor([[-p1, p1], [-1.0, 1.0]], device=DEVICE)
+    assert_close(p0.grad, UPGrad()(J))
+
+
+def test_mtl_backward_task_params_are_subset_of_other_task_params():
+    """
+    Tests that mtl_backward works correctly when one task's params are a subset of another task's
+    params.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1
+    y2 = y1 * p2
+
+    mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
+
+    for p in [p0, p1, p2]:
+        assert (p.grad is not None) and (p.shape == p.grad.shape)
+
+    assert_close(p2.grad, y1)
+    assert_close(p1.grad, p2 * r + r)
+
+    dy1_dp0 = torch.hstack([-1 * p1, 1 * p1])
+    dy2_dp0 = torch.hstack([-1 * p1 * p2, 1 * p1 * p2])
+    J = torch.vstack([dy1_dp0, dy2_dp0])
+    assert_close(p0.grad, UPGrad()(J))
