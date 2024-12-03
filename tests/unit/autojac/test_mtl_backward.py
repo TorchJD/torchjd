@@ -484,21 +484,19 @@ def test_mtl_backward_task_params_have_some_overlap():
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
-    p1_and_2 = torch.tensor(4.0, requires_grad=True, device=DEVICE)
+    p12 = torch.tensor(4.0, requires_grad=True, device=DEVICE)
 
     r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    y1 = r * p1 * p1_and_2
-    y2 = r * p2 * p1_and_2
+    y1 = r * p1 * p12
+    y2 = r * p2 * p12
 
     mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
 
-    assert_close(p2.grad, r * p1_and_2)
-    assert_close(p1.grad, r * p1_and_2)
-    assert_close(p1_and_2.grad, r * p1 + r * p2)
+    assert_close(p2.grad, r * p12)
+    assert_close(p1.grad, r * p12)
+    assert_close(p12.grad, r * p1 + r * p2)
 
-    dy1_dp0 = torch.hstack([-1 * p1 * p1_and_2, 1 * p1 * p1_and_2])
-    dy2_dp0 = torch.hstack([-1 * p2 * p1_and_2, 1 * p2 * p1_and_2])
-    J = torch.vstack([dy1_dp0, dy2_dp0])
+    J = torch.tensor([[-p1 * p12, p1 * p12], [-p2 * p12, p2 * p12]], device=DEVICE)
     assert_close(p0.grad, UPGrad()(J))
 
 
@@ -539,7 +537,5 @@ def test_mtl_backward_task_params_are_subset_of_other_task_params():
     assert_close(p2.grad, y1)
     assert_close(p1.grad, p2 * r + r)
 
-    dy1_dp0 = torch.hstack([-1 * p1, 1 * p1])
-    dy2_dp0 = torch.hstack([-1 * p1 * p2, 1 * p1 * p2])
-    J = torch.vstack([dy1_dp0, dy2_dp0])
+    J = torch.tensor([[-p1, p1], [-p1 * p2, p1 * p2]], device=DEVICE)
     assert_close(p0.grad, UPGrad()(J))
