@@ -72,9 +72,9 @@ def test_mtl_backward_value_is_correct(
     mtl_backward(
         losses=[y1, y2, y3],
         features=r,
-        shared_params=shared_params,
-        tasks_params=tasks_params,
         A=A,
+        tasks_params=tasks_params,
+        shared_params=shared_params,
     )
 
     assert_close(p1.grad, r)
@@ -134,17 +134,17 @@ def test_mtl_backward_incoherent_task_number():
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
+            A=UPGrad(),
             tasks_params=[[p1]],  # Wrong
             shared_params=[p0],
-            A=UPGrad(),
         )
     with pytest.raises(ValueError):
         mtl_backward(
             losses=[y1],  # Wrong
             features=[r1, r2],
+            A=UPGrad(),
             tasks_params=[[p1], [p2]],
             shared_params=[p0],
-            A=UPGrad(),
         )
 
 
@@ -163,9 +163,9 @@ def test_mtl_backward_empty_params():
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
+        A=UPGrad(),
         tasks_params=[[], []],
         shared_params=[],
-        A=UPGrad(),
     )
 
     for p in [p0, p1, p2]:
@@ -222,9 +222,9 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     mtl_backward(
         losses=[y1, y2],
         features=representations,
+        A=UPGrad(),
         tasks_params=[[p1], [p2]],  # Enforce differentiation w.r.t. params that haven't been used
         shared_params=shared_params,
-        A=UPGrad(),
     )
 
     for p in [*shared_params, p1, p2]:
@@ -249,9 +249,9 @@ def test_mtl_backward_partial_params():
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
+        A=Mean(),
         tasks_params=[[p1], []],
         shared_params=[p0],
-        A=Mean(),
     )
 
     assert (p0.grad is not None) and (p0.shape == p0.grad.shape)
@@ -442,9 +442,9 @@ def test_mtl_backward_fails_with_shared_param_retaining_grad():
         mtl_backward(
             losses=[y1, y2],
             features=[features],
+            A=UPGrad(),
             tasks_params=[[p1], [p2]],
             shared_params=[a, p0],
-            A=UPGrad(),
         )
 
 
@@ -468,9 +468,9 @@ def test_mtl_backward_fails_with_shared_activation_retaining_grad():
     mtl_backward(
         losses=[y1, y2],
         features=[features],
+        A=UPGrad(),
         tasks_params=[[p1], [p2]],
         shared_params=[p0],
-        A=UPGrad(),
     )
 
     with raises(RuntimeError):
