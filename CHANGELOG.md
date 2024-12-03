@@ -14,13 +14,18 @@ changes that do not affect the user.
   default to all leaf tensors that were used to compute the `tensors` parameter. This is in line
   with the behavior of
   [torch.autograd.backward](https://pytorch.org/docs/stable/generated/torch.autograd.backward.html).
+- Added a default value to the `shared_params` and to the `tasks_params` arguments of
+  `mtl_backward`. If not provided, the `shared_params` will default to all leaf tensors that were
+  used to compute the `features`, and the `tasks_params` will default to all leaf tensors that were
+  used to compute each of the `losses`, excluding those used to compute the `features`.
 - Note in the documentation about the incompatibility of `backward` and `mtl_backward` with tensors
   that retain grad.
 
 ### Changed
 
-- **BREAKING**: Changed the order of the parameters of `backward` to make it possible to have a
-  default value for `inputs`. Usages of `backward` that rely on the order between `inputs` and `A`
+- **BREAKING**: Changed the order of the parameters of `backward` and `mtl_backward` to make it
+  possible to have a default value for `inputs` and for `shared_params` and `tasks_params`,
+  respectively. Usages of `backward` and `mtl_backward` that rely on the order between arguments
   must be updated.
 - Switched to the [PEP 735](https://peps.python.org/pep-0735/) dependency groups format in
   `pyproject.toml` (from a `[tool.pdm.dev-dependencies]` to a `[dependency-groups]` section). This
