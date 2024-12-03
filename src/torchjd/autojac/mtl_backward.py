@@ -20,7 +20,7 @@ from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
     _check_retain_graph_compatible_with_chunk_size,
-    _get_leaves_of_autograd_graph,
+    _get_leaf_tensors,
 )
 
 
@@ -84,9 +84,9 @@ def mtl_backward(
     features = _as_tensor_list(features)
 
     if shared_params is None:
-        shared_params = _get_leaves_of_autograd_graph(tensors=features, excluded=[])
+        shared_params = _get_leaf_tensors(tensors=features, excluded=[])
     if tasks_params is None:
-        tasks_params = [_get_leaves_of_autograd_graph([loss], excluded=features) for loss in losses]
+        tasks_params = [_get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
 
     if len(features) == 0:
         raise ValueError("`features` cannot be empty.")
