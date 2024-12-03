@@ -108,11 +108,7 @@ def test_mtl():
         loss2 = loss_fn(output2, target2)
 
         optimizer.zero_grad()
-        mtl_backward(
-            losses=[loss1, loss2],
-            features=features,
-            A=A,
-        )
+        mtl_backward(losses=[loss1, loss2], features=features, A=A)
         optimizer.step()
 
 
@@ -152,11 +148,7 @@ def test_lightning_integration():
 
             opt = self.optimizers()
             opt.zero_grad()
-            mtl_backward(
-                losses=[loss1, loss2],
-                features=features,
-                A=UPGrad(),
-            )
+            mtl_backward(losses=[loss1, loss2], features=features, A=UPGrad())
             opt.step()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:

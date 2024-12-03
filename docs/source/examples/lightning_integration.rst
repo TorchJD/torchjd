@@ -11,7 +11,7 @@ The following code example demonstrates a basic multi-task learning setup using 
 <../docs/autojac/mtl_backward>` at each training iteration.
 
 .. code-block:: python
-    :emphasize-lines: 9-10, 18, 32-38
+    :emphasize-lines: 9-10, 18, 32
 
     import torch
     from lightning import LightningModule, Trainer
@@ -44,11 +44,7 @@ The following code example demonstrates a basic multi-task learning setup using 
 
             opt = self.optimizers()
             opt.zero_grad()
-            mtl_backward(
-                losses=[loss1, loss2],
-                features=features,
-                A=UPGrad(),
-            )
+            mtl_backward(losses=[loss1, loss2], features=features, A=UPGrad())
             opt.step()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:

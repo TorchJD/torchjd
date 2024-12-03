@@ -24,11 +24,7 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    mtl_backward(
-        losses=[y1, y2],
-        features=[r1, r2],
-        A=A,
-    )
+    mtl_backward(losses=[y1, y2], features=[r1, r2], A=A)
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -100,11 +96,7 @@ def test_mtl_backward_empty_tasks():
     r2 = (p0**2).sum() + p0.norm()
 
     with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[],
-            features=[r1, r2],
-            A=UPGrad(),
-        )
+        mtl_backward(losses=[], features=[r1, r2], A=UPGrad())
 
 
 def test_mtl_backward_single_task():
@@ -117,11 +109,7 @@ def test_mtl_backward_single_task():
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
 
-    mtl_backward(
-        losses=[y1],
-        features=[r1, r2],
-        A=UPGrad(),
-    )
+    mtl_backward(losses=[y1], features=[r1, r2], A=UPGrad())
 
     for p in [p0, p1]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -199,11 +187,7 @@ def test_mtl_backward_multiple_params_per_task():
     y1 = r1 * p1_a + (r2 * p1_b).sum() + (r1 * p1_c).sum()
     y2 = r1 * p2_a * (r2 * p2_b).sum()
 
-    mtl_backward(
-        losses=[y1, y2],
-        features=[r1, r2],
-        A=UPGrad(),
-    )
+    mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad())
 
     for p in [p0, p1_a, p1_b, p1_c, p2_a, p2_b]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -288,11 +272,7 @@ def test_mtl_backward_empty_features():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[y1, y2],
-            features=[],
-            A=UPGrad(),
-        )
+        mtl_backward(losses=[y1, y2], features=[], A=UPGrad())
 
 
 @pytest.mark.parametrize(
@@ -316,11 +296,7 @@ def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
     y1 = (r * p1[0]).sum() + (r * p1[1]).sum()
     y2 = (r * p2[0]).sum() * (r * p2[1]).sum()
 
-    mtl_backward(
-        losses=[y1, y2],
-        features=r,
-        A=UPGrad(),
-    )
+    mtl_backward(losses=[y1, y2], features=r, A=UPGrad())
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -351,11 +327,7 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
     y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
     y2 = (representations[0] * p2).sum()
 
-    mtl_backward(
-        losses=[y1, y2],
-        features=representations,
-        A=UPGrad(),
-    )
+    mtl_backward(losses=[y1, y2], features=representations, A=UPGrad())
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -374,11 +346,7 @@ def test_mtl_backward_non_scalar_loss():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[y1, y2],
-            features=[r1, r2],
-            A=UPGrad(),
-        )
+        mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad())
 
 
 @pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
@@ -420,12 +388,7 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with pytest.raises(ValueError):
-        mtl_backward(
-            losses=[y1, y2],
-            features=[r1, r2],
-            A=UPGrad(),
-            parallel_chunk_size=chunk_size,
-        )
+        mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad(), parallel_chunk_size=chunk_size)
 
 
 @pytest.mark.parametrize(
