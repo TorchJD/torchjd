@@ -45,7 +45,7 @@ def _get_leaves_of_autograd_graph(
     """
 
     accumulate_grads = _get_descendant_accumulate_grads(
-        roots={tensor.grad_fn for tensor in tensors},
+        roots={tensor.grad_fn for tensor in tensors if tensor.grad_fn is not None},
         excluded_nodes={tensor.grad_fn for tensor in excluded},
     )
     leaves = {g.variable for g in accumulate_grads}

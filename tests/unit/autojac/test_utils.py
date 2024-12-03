@@ -198,3 +198,14 @@ def test_get_leaves_of_autograd_graph_deep(depth: int):
 
     leaves = _get_leaves_of_autograd_graph(tensors=[sum_], excluded=set())
     assert leaves == {one}
+
+
+def test_get_leaves_of_autograd_graph_leaf():
+    """
+    Tests that _get_leaves_of_autograd_graph correctly returns an empty set when the provided
+    tensors are leaves.
+    """
+
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    leaves = _get_leaves_of_autograd_graph(tensors=[a], excluded=set())
+    assert leaves == set()
