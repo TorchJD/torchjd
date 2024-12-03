@@ -492,9 +492,6 @@ def test_mtl_backward_task_params_have_some_overlap():
 
     mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
 
-    for p in [p0, p1, p2, p1_and_2]:
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
-
     assert_close(p2.grad, r * p1_and_2)
     assert_close(p1.grad, r * p1_and_2)
     assert_close(p1_and_2.grad, r * p1 + r * p2)
@@ -517,9 +514,6 @@ def test_mtl_backward_task_params_are_the_same():
 
     mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
 
-    for p in [p0, p1]:
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
-
     assert_close(p1.grad, r + 1)
 
     J = torch.tensor([[-p1, p1], [-1.0, 1.0]], device=DEVICE)
@@ -541,9 +535,6 @@ def test_mtl_backward_task_params_are_subset_of_other_task_params():
     y2 = y1 * p2
 
     mtl_backward(losses=[y1, y2], features=[r], A=UPGrad(), retain_graph=True)
-
-    for p in [p0, p1, p2]:
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
 
     assert_close(p2.grad, y1)
     assert_close(p1.grad, p2 * r + r)
