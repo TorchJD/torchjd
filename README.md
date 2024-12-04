@@ -91,13 +91,7 @@ for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
     loss2 = loss_fn(output2, target2)
 
     optimizer.zero_grad()
-    mtl_backward(
-        losses=[loss1, loss2],
-        features=features,
-        tasks_params=[task1_module.parameters(), task2_module.parameters()],
-        shared_params=shared_module.parameters(),
-        A=A,
-    )
+    mtl_backward(losses=[loss1, loss2], features=features, A=A)
     optimizer.step()
 ```
 

@@ -20,15 +20,16 @@ from ._utils import (
     _as_tensor_list,
     _check_optional_positive_chunk_size,
     _check_retain_graph_compatible_with_chunk_size,
+    _get_leaf_tensors,
 )
 
 
 def mtl_backward(
     losses: Sequence[Tensor],
     features: Sequence[Tensor] | Tensor,
-    tasks_params: Sequence[Iterable[Tensor]],
-    shared_params: Iterable[Tensor],
     A: Aggregator,
+    tasks_params: Sequence[Iterable[Tensor]] | None = None,
+    shared_params: Iterable[Tensor] | None = None,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
@@ -44,12 +45,15 @@ def mtl_backward(
     :param losses: The task losses. The Jacobian matrix will have one row per loss.
     :param features: The last shared representation used for all tasks, as given by the feature
         extractor. Should be non-empty.
+    :param A: Aggregator used to reduce the Jacobian into a vector.
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
-        must be set to ``True``.
+        must be set to ``True``. If not provided, the parameters considered for each task will
+        default to the leaf tensors that are in the computation graph of its loss, but that were not
+        used to compute the `features`.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
-        to ``True``.
-    :param A: Aggregator used to reduce the Jacobian into a vector.
+        to ``True``. If not provided, defaults to the leaf tensors that are in the computation graph
+        of the `features`.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
@@ -78,6 +82,11 @@ def mtl_backward(
     _check_optional_positive_chunk_size(parallel_chunk_size)
 
     features = _as_tensor_list(features)
+
+    if shared_params is None:
+        shared_params = _get_leaf_tensors(tensors=features, excluded=[])
+    if tasks_params is None:
+        tasks_params = [_get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
 
     if len(features) == 0:
         raise ValueError("`features` cannot be empty.")

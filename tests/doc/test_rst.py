@@ -108,13 +108,7 @@ def test_mtl():
         loss2 = loss_fn(output2, target2)
 
         optimizer.zero_grad()
-        mtl_backward(
-            losses=[loss1, loss2],
-            features=features,
-            tasks_params=[task1_module.parameters(), task2_module.parameters()],
-            shared_params=shared_module.parameters(),
-            A=A,
-        )
+        mtl_backward(losses=[loss1, loss2], features=features, A=A)
         optimizer.step()
 
 
@@ -154,13 +148,7 @@ def test_lightning_integration():
 
             opt = self.optimizers()
             opt.zero_grad()
-            mtl_backward(
-                losses=[loss1, loss2],
-                features=features,
-                tasks_params=[self.task1_head.parameters(), self.task2_head.parameters()],
-                shared_params=self.feature_extractor.parameters(),
-                A=UPGrad(),
-            )
+            mtl_backward(losses=[loss1, loss2], features=features, A=UPGrad())
             opt.step()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:
