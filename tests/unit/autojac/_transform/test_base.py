@@ -1,7 +1,7 @@
 import typing
 
-import pytest
 import torch
+from pytest import raises
 from torch import Tensor
 from unit.conftest import DEVICE
 
@@ -49,13 +49,13 @@ def test_apply_keys():
 
     transform(TensorDict({t1: t2}))
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform(TensorDict({t2: t1}))
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform(TensorDict({}))
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform(TensorDict({t1: t2, t2: t1}))
 
 
@@ -72,7 +72,7 @@ def test_compose_keys_match():
 
     transform1 << transform2
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform2 << transform1
 
 
@@ -91,10 +91,10 @@ def test_conjunct_required_keys():
 
     transform1 | transform2
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform2 | transform3
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform1 | transform2 | transform3
 
 
@@ -113,10 +113,10 @@ def test_conjunct_wrong_output_keys():
 
     transform2 | transform3
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform1 | transform3
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         transform1 | transform2 | transform3
 
 

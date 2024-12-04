@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch.testing import assert_close
 from unit.conftest import DEVICE
 
@@ -11,12 +11,12 @@ from torchjd.aggregation.upgrad import _UPGradWrapper
 from ._property_testers import ExpectedStructureProperty
 
 
-@pytest.mark.parametrize("aggregator", [PCGrad()])
+@mark.parametrize("aggregator", [PCGrad()])
 class TestPCGrad(ExpectedStructureProperty):
     pass
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     "shape",
     [
         (2, 5),

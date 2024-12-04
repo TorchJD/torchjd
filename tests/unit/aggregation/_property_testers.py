@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
 
@@ -17,7 +17,7 @@ class ExpectedStructureProperty:
     """
 
     @classmethod
-    @pytest.mark.parametrize("matrix", scaled_matrices + zero_rank_matrices)
+    @mark.parametrize("matrix", scaled_matrices + zero_rank_matrices)
     def test_expected_structure_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_expected_structure_property(aggregator, matrix)
 
@@ -34,7 +34,7 @@ class NonConflictingProperty:
     """
 
     @classmethod
-    @pytest.mark.parametrize("matrix", stationary_matrices + matrices)
+    @mark.parametrize("matrix", stationary_matrices + matrices)
     def test_non_conflicting_property(
         cls,
         aggregator: Aggregator,
@@ -62,7 +62,7 @@ class PermutationInvarianceProperty:
     N_PERMUTATIONS = 5
 
     @classmethod
-    @pytest.mark.parametrize("matrix", matrices)
+    @mark.parametrize("matrix", matrices)
     def test_permutation_invariance_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_permutation_invariance_property(aggregator, matrix)
 

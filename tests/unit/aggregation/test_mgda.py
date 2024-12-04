@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch.testing import assert_close
 from unit.conftest import DEVICE
 
@@ -13,12 +13,12 @@ from ._property_testers import (
 )
 
 
-@pytest.mark.parametrize("aggregator", [MGDA()])
+@mark.parametrize("aggregator", [MGDA()])
 class TestMGDA(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     "shape",
     [
         (5, 7),

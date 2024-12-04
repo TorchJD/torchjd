@@ -1,4 +1,4 @@
-import pytest
+from pytest import mark
 
 from torchjd.aggregation import DualProj
 
@@ -9,7 +9,7 @@ from ._property_testers import (
 )
 
 
-@pytest.mark.parametrize("aggregator", [DualProj()])
+@mark.parametrize("aggregator", [DualProj()])
 class TestDualProj(
     ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty
 ):

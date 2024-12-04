@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark, raises
 from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Accumulate, Gradients
@@ -34,7 +34,7 @@ def test_single_accumulation():
     assert_tensor_dicts_are_close(grads, expected_grads)
 
 
-@pytest.mark.parametrize("iterations", [1, 2, 4, 10, 13])
+@mark.parametrize("iterations", [1, 2, 4, 10, 13])
 def test_multiple_accumulation(iterations: int):
     """
     Tests that the Accumulate transform correctly accumulates gradients in .grad fields when run
@@ -76,7 +76,7 @@ def test_accumulate_fails_on_no_requires_grad():
 
     accumulate = Accumulate([key1])
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         accumulate(input)
 
 
@@ -93,5 +93,5 @@ def test_accumulate_fails_on_no_leaf_and_no_retains_grad():
 
     accumulate = Accumulate([key1])
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         accumulate(input)
