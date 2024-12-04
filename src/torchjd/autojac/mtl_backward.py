@@ -47,9 +47,9 @@ def mtl_backward(
         extractor. Should be non-empty.
     :param A: Aggregator used to reduce the Jacobian into a vector.
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
-        must be set to ``True``. If not provided, the params considered for each task will default
-        to the leaf tensors that are in the computation graph of its loss, but that were not used to
-        compute the `features`.
+        must be set to ``True``. If not provided, the parameters considered for each task will
+        default to the leaf tensors that are in the computation graph of its loss, but that were not
+        used to compute the `features`.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
         to ``True``. If not provided, defaults to the leaf tensors that are in the computation graph

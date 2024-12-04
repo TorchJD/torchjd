@@ -479,7 +479,7 @@ def test_mtl_backward_fails_with_shared_activation_retaining_grad():
 
 
 def test_mtl_backward_task_params_have_some_overlap():
-    """Tests that mtl_backward works correctly when tasks params have some overlap."""
+    """Tests that mtl_backward works correctly when the tasks' parameters have some overlap."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
