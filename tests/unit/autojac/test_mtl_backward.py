@@ -423,7 +423,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
 
 def test_mtl_backward_fails_with_shared_param_retaining_grad():
     """
-    Tests that mtl_backward raises an error when some shared_params in the computation graph of the
+    Tests that mtl_backward raises an error when some shared param in the computation graph of the
     ``features`` parameter retains grad.
     """
 
@@ -449,7 +449,7 @@ def test_mtl_backward_fails_with_shared_param_retaining_grad():
 
 def test_mtl_backward_fails_with_shared_activation_retaining_grad():
     """
-    Tests that mtl_backward fails to fill a valid `.grad` when some tensors in the computation graph
+    Tests that mtl_backward fails to fill a valid `.grad` when some tensor in the computation graph
     of the ``features`` parameter retains grad.
     """
 
