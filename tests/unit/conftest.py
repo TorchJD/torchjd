@@ -1,8 +1,8 @@
 import os
 import random as rand
 
-import pytest
 import torch
+from pytest import fixture
 
 try:
     DEVICE = os.environ["PYTEST_TORCH_DEVICE"]
@@ -16,7 +16,7 @@ if DEVICE == "cuda" and not torch.cuda.is_available():
     raise ValueError('Requested device "cuda" but cuda is not available.')
 
 
-@pytest.fixture(autouse=True)
+@fixture(autouse=True)
 def fix_randomness() -> None:
     rand.seed(0)
     torch.manual_seed(0)

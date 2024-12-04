@@ -1,12 +1,12 @@
-import pytest
 import torch
+from pytest import mark
 
 from torchjd.aggregation import GradDrop
 
 from ._property_testers import ExpectedStructureProperty
 
 
-@pytest.mark.parametrize("aggregator", [GradDrop()])
+@mark.parametrize("aggregator", [GradDrop()])
 class TestGradDrop(ExpectedStructureProperty):
     pass
 

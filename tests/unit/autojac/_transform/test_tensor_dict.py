@@ -1,8 +1,7 @@
 from contextlib import nullcontext as does_not_raise
 
-import pytest
 import torch
-from pytest import raises
+from pytest import mark, raises
 from torch import Tensor
 from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
@@ -20,7 +19,7 @@ from torchjd.autojac._transform.tensor_dict import _least_common_ancestor
 _key_shapes = [[], [1], [2, 3]]
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["value_shapes", "expectation"],
     [
         ([[], [1], [2, 3]], does_not_raise()),
@@ -35,7 +34,7 @@ def test_gradients(value_shapes: list[list[int]], expectation: ExceptionContext)
     _assert_class_checks_properly(Gradients, value_shapes, expectation)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["value_shapes", "expectation"],
     [
         ([[5], [5, 1], [5, 2, 3]], does_not_raise()),
@@ -51,7 +50,7 @@ def test_jacobians(value_shapes: list[list[int]], expectation: ExceptionContext)
     _assert_class_checks_properly(Jacobians, value_shapes, expectation)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["value_shapes", "expectation"],
     [
         ([[1], [1], [6]], does_not_raise()),
@@ -66,7 +65,7 @@ def test_gradient_vectors(value_shapes: list[list[int]], expectation: ExceptionC
     _assert_class_checks_properly(GradientVectors, value_shapes, expectation)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["value_shapes", "expectation"],
     [
         ([[5, 1], [5, 1], [5, 6]], does_not_raise()),
@@ -82,7 +81,7 @@ def test_jacobian_matrices(value_shapes: list[list[int]], expectation: Exception
     _assert_class_checks_properly(JacobianMatrices, value_shapes, expectation)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["first", "second", "result"],
     [
         (EmptyTensorDict, EmptyTensorDict, EmptyTensorDict),

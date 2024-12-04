@@ -1,8 +1,7 @@
 from contextlib import nullcontext as does_not_raise
 
-import pytest
 import torch
-from pytest import raises
+from pytest import mark, raises
 from torch.testing import assert_close
 from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
@@ -11,7 +10,7 @@ from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 
-@pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
+@mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
 def test_mtl_backward_various_aggregators(A: Aggregator):
     """Tests that mtl_backward works for various aggregators."""
 
@@ -30,10 +29,10 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@pytest.mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
-@pytest.mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
-@pytest.mark.parametrize("manually_specify_shared_params", [True, False])
-@pytest.mark.parametrize("manually_specify_tasks_params", [True, False])
+@mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
+@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
+@mark.parametrize("manually_specify_shared_params", [True, False])
+@mark.parametrize("manually_specify_tasks_params", [True, False])
 def test_mtl_backward_value_is_correct(
     A: Aggregator,
     shape: tuple[int, int],
@@ -95,7 +94,7 @@ def test_mtl_backward_empty_tasks():
     r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
     r2 = (p0**2).sum() + p0.norm()
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(losses=[], features=[r1, r2], A=UPGrad())
 
 
@@ -130,7 +129,7 @@ def test_mtl_backward_incoherent_task_number():
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
@@ -138,7 +137,7 @@ def test_mtl_backward_incoherent_task_number():
             tasks_params=[[p1]],  # Wrong
             shared_params=[p0],
         )
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(
             losses=[y1],  # Wrong
             features=[r1, r2],
@@ -193,7 +192,7 @@ def test_mtl_backward_multiple_params_per_task():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     "shared_params_shapes",
     [
         [tuple()],
@@ -271,11 +270,11 @@ def test_mtl_backward_empty_features():
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(losses=[y1, y2], features=[], A=UPGrad())
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     "shape",
     [
         (2,),
@@ -302,7 +301,7 @@ def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     "shapes",
     [
         [(2,)],
@@ -345,11 +344,11 @@ def test_mtl_backward_non_scalar_loss():
     y1 = torch.stack([r1 * p1[0], r2 * p1[1]])  # Non-scalar
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad())
 
 
-@pytest.mark.parametrize("chunk_size", [None, 1, 2, 4])
+@mark.parametrize("chunk_size", [None, 1, 2, 4])
 def test_mtl_backward_valid_chunk_size(chunk_size):
     """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
 
@@ -374,7 +373,7 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@pytest.mark.parametrize("chunk_size", [0, -1])
+@mark.parametrize("chunk_size", [0, -1])
 def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     """Tests that mtl_backward raises an error when using invalid chunk sizes."""
 
@@ -387,11 +386,11 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad(), parallel_chunk_size=chunk_size)
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["chunk_size", "expectation"],
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )

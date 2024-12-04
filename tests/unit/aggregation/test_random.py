@@ -1,11 +1,11 @@
-import pytest
+from pytest import mark
 
 from torchjd.aggregation import Random
 
 from ._property_testers import ExpectedStructureProperty
 
 
-@pytest.mark.parametrize("aggregator", [Random()])
+@mark.parametrize("aggregator", [Random()])
 class TestRGW(ExpectedStructureProperty):
     pass
 

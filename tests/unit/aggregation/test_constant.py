@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch import Tensor
 from unit.conftest import DEVICE
 
@@ -32,7 +32,7 @@ class TestConstant(ExpectedStructureProperty):
     # right aggregator with each matrix.
 
     @classmethod
-    @pytest.mark.parametrize(["aggregator", "matrix"], zip(_aggregators_1, _matrices_1))
+    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_1, _matrices_1))
     def test_expected_structure_property(cls, aggregator: Constant, matrix: Tensor):
         cls._assert_expected_structure_property(aggregator, matrix)
 

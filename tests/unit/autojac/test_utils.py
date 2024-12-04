@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch.nn import Linear, MSELoss, ReLU, Sequential
 from unit.conftest import DEVICE
 
@@ -183,7 +183,7 @@ def test_get_leaf_tensors_excluded_root():
     assert leaves == {p1}
 
 
-@pytest.mark.parametrize("depth", [100, 1000, 10000])
+@mark.parametrize("depth", [100, 1000, 10000])
 def test_get_leaf_tensors_deep(depth: int):
     """Tests that _get_leaf_tensors works when the graph is very deep."""
 

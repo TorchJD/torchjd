@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch.testing import assert_close
 from unit.conftest import DEVICE
 
@@ -14,12 +14,12 @@ from ._property_testers import (
 )
 
 
-@pytest.mark.parametrize("aggregator", [UPGrad()])
+@mark.parametrize("aggregator", [UPGrad()])
 class TestUPGrad(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 
-@pytest.mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
+@mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
 def test_upgrad_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = torch.randn(shape, device=DEVICE)
     weights = torch.rand(shape[0], device=DEVICE)

@@ -1,5 +1,5 @@
-import pytest
 import torch
+from pytest import mark
 from torch.testing import assert_close
 from unit.conftest import DEVICE
 
@@ -8,7 +8,7 @@ from torchjd.aggregation import IMTLG
 from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
 
 
-@pytest.mark.parametrize("aggregator", [IMTLG()])
+@mark.parametrize("aggregator", [IMTLG()])
 class TestIMTLG(ExpectedStructureProperty, PermutationInvarianceProperty):
     pass
 

@@ -1,8 +1,8 @@
 import math
 from collections import OrderedDict
 
-import pytest
 import torch
+from pytest import mark, raises
 from torch import Tensor
 from unit.conftest import DEVICE
 
@@ -42,7 +42,7 @@ _rng.manual_seed(0)
 _jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs, _rng) for n_outputs in [1, 2, 5]]
 
 
-@pytest.mark.parametrize("jacobian_matrices", _jacobian_matrix_dicts)
+@mark.parametrize("jacobian_matrices", _jacobian_matrix_dicts)
 def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices):
     """
     Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
@@ -68,7 +68,7 @@ def test_aggregate_matrices_empty_dict():
     assert len(gradient_vectors) == 0
 
 
-@pytest.mark.parametrize(
+@mark.parametrize(
     ["united_gradient_vector", "jacobian_matrices"],
     [
         (
@@ -95,7 +95,7 @@ def test_disunite_wrong_vector_length(
     Tests that the _disunite method raises a ValueError when used on vectors of the wrong length.
     """
 
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         _AggregateMatrices._disunite(united_gradient_vector, OrderedDict(jacobian_matrices))
 
 
