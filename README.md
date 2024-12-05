@@ -1,5 +1,6 @@
 # ![image](docs/source/icons/favicon-32x32.png) TorchJD
 
+[![Doc](https://img.shields.io/badge/Doc-torchjd.org-blue)](https://torchjd.org)
 [![Tests](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/TorchJD/torchjd/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/TorchJD/torchjd/graph/badge.svg?token=8AUCZE76QH)](https://codecov.io/gh/TorchJD/torchjd)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/TorchJD/torchjd/main.svg)](https://results.pre-commit.ci/latest/github/TorchJD/torchjd/main)
