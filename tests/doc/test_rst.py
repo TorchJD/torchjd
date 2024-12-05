@@ -113,9 +113,11 @@ def test_mtl():
 
 
 def test_lightning_integration():
+    import logging
     import warnings
 
     warnings.filterwarnings("ignore")
+    logging.disable(logging.INFO)
 
     import torch
     from lightning import LightningModule, Trainer
@@ -163,6 +165,12 @@ def test_lightning_integration():
 
     dataset = TensorDataset(inputs, task1_targets, task2_targets)
     train_loader = DataLoader(dataset)
-    trainer = Trainer(accelerator="cpu", max_epochs=1, enable_checkpointing=False, logger=False)
+    trainer = Trainer(
+        accelerator="cpu",
+        max_epochs=1,
+        enable_checkpointing=False,
+        logger=False,
+        enable_progress_bar=False,
+    )
 
     trainer.fit(model=model, train_dataloaders=train_loader)
