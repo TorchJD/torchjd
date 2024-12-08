@@ -40,7 +40,7 @@ class NashMTL(_WeightedAggregator):
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
         matrices.
-    :param max_norm: Maximum value of the norm of :math:`A^T w`.
+    :param max_norm: Maximum value of the norm of :math:`J^T w`.
     :param update_weights_every: A parameter determining how often the actual weighting should be
         performed. A larger value means that the same weights will be re-used for more calls to the
         aggregator.
@@ -105,7 +105,7 @@ class _NashMTLWeighting(_Weighting):
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided
         matrices.
-    :param max_norm: Maximum value of the norm of :math:`A^T w`.
+    :param max_norm: Maximum value of the norm of :math:`J^T w`.
     :param update_weights_every: A parameter determining how often the actual weighting should be
         performed. A larger value means that the same weights will be re-used for more calls to the
         weighting.
