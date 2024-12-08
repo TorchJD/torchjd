@@ -10,8 +10,8 @@ from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 
-@mark.parametrize("A", [Mean(), UPGrad(), MGDA(), Random()])
-def test_mtl_backward_various_aggregators(A: Aggregator):
+@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
+def test_mtl_backward_various_aggregators(aggregator: Aggregator):
     """Tests that mtl_backward works for various aggregators."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -23,18 +23,18 @@ def test_mtl_backward_various_aggregators(A: Aggregator):
     y1 = r1 * p1[0] + r2 * p1[1]
     y2 = r1 * p2[0] + r2 * p2[1]
 
-    mtl_backward(losses=[y1, y2], features=[r1, r2], A=A)
+    mtl_backward(losses=[y1, y2], features=[r1, r2], aggregator=aggregator)
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@mark.parametrize("A", [Mean(), UPGrad(), MGDA()])
+@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA()])
 @mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
 @mark.parametrize("manually_specify_shared_params", [True, False])
 @mark.parametrize("manually_specify_tasks_params", [True, False])
 def test_mtl_backward_value_is_correct(
-    A: Aggregator,
+    aggregator: Aggregator,
     shape: tuple[int, int],
     manually_specify_shared_params: bool,
     manually_specify_tasks_params: bool,
@@ -71,7 +71,7 @@ def test_mtl_backward_value_is_correct(
     mtl_backward(
         losses=[y1, y2, y3],
         features=r,
-        A=A,
+        aggregator=aggregator,
         tasks_params=tasks_params,
         shared_params=shared_params,
     )
@@ -81,7 +81,7 @@ def test_mtl_backward_value_is_correct(
     assert_close(p3.grad, r)
 
     expected_jacobian = torch.stack((p1, p2, p3)) @ J
-    expected_aggregation = A(expected_jacobian)
+    expected_aggregation = aggregator(expected_jacobian)
 
     assert_close(p0.grad, expected_aggregation)
 
@@ -95,7 +95,7 @@ def test_mtl_backward_empty_tasks():
     r2 = (p0**2).sum() + p0.norm()
 
     with raises(ValueError):
-        mtl_backward(losses=[], features=[r1, r2], A=UPGrad())
+        mtl_backward(losses=[], features=[r1, r2], aggregator=UPGrad())
 
 
 def test_mtl_backward_single_task():
@@ -108,7 +108,7 @@ def test_mtl_backward_single_task():
     r2 = (p0**2).sum() + p0.norm()
     y1 = r1 * p1[0] + r2 * p1[1]
 
-    mtl_backward(losses=[y1], features=[r1, r2], A=UPGrad())
+    mtl_backward(losses=[y1], features=[r1, r2], aggregator=UPGrad())
 
     for p in [p0, p1]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -133,7 +133,7 @@ def test_mtl_backward_incoherent_task_number():
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
-            A=UPGrad(),
+            aggregator=UPGrad(),
             tasks_params=[[p1]],  # Wrong
             shared_params=[p0],
         )
@@ -141,7 +141,7 @@ def test_mtl_backward_incoherent_task_number():
         mtl_backward(
             losses=[y1],  # Wrong
             features=[r1, r2],
-            A=UPGrad(),
+            aggregator=UPGrad(),
             tasks_params=[[p1], [p2]],
             shared_params=[p0],
         )
@@ -162,7 +162,7 @@ def test_mtl_backward_empty_params():
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        A=UPGrad(),
+        aggregator=UPGrad(),
         tasks_params=[[], []],
         shared_params=[],
     )
@@ -186,7 +186,7 @@ def test_mtl_backward_multiple_params_per_task():
     y1 = r1 * p1_a + (r2 * p1_b).sum() + (r1 * p1_c).sum()
     y2 = r1 * p2_a * (r2 * p2_b).sum()
 
-    mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad())
+    mtl_backward(losses=[y1, y2], features=[r1, r2], aggregator=UPGrad())
 
     for p in [p0, p1_a, p1_b, p1_c, p2_a, p2_b]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -221,7 +221,7 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
     mtl_backward(
         losses=[y1, y2],
         features=representations,
-        A=UPGrad(),
+        aggregator=UPGrad(),
         tasks_params=[[p1], [p2]],  # Enforce differentiation w.r.t. params that haven't been used
         shared_params=shared_params,
     )
@@ -248,7 +248,7 @@ def test_mtl_backward_partial_params():
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        A=Mean(),
+        aggregator=Mean(),
         tasks_params=[[p1], []],
         shared_params=[p0],
     )
@@ -271,7 +271,7 @@ def test_mtl_backward_empty_features():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with raises(ValueError):
-        mtl_backward(losses=[y1, y2], features=[], A=UPGrad())
+        mtl_backward(losses=[y1, y2], features=[], aggregator=UPGrad())
 
 
 @mark.parametrize(
@@ -295,7 +295,7 @@ def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
     y1 = (r * p1[0]).sum() + (r * p1[1]).sum()
     y2 = (r * p2[0]).sum() * (r * p2[1]).sum()
 
-    mtl_backward(losses=[y1, y2], features=r, A=UPGrad())
+    mtl_backward(losses=[y1, y2], features=r, aggregator=UPGrad())
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -326,7 +326,7 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
     y1 = sum([(r * p).sum() for r, p in zip(representations, p1)])
     y2 = (representations[0] * p2).sum()
 
-    mtl_backward(losses=[y1, y2], features=representations, A=UPGrad())
+    mtl_backward(losses=[y1, y2], features=representations, aggregator=UPGrad())
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -345,7 +345,7 @@ def test_mtl_backward_non_scalar_loss():
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with raises(ValueError):
-        mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad())
+        mtl_backward(losses=[y1, y2], features=[r1, r2], aggregator=UPGrad())
 
 
 @mark.parametrize("chunk_size", [None, 1, 2, 4])
@@ -364,7 +364,7 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
     mtl_backward(
         losses=[y1, y2],
         features=[r1, r2],
-        A=UPGrad(),
+        aggregator=UPGrad(),
         retain_graph=True,
         parallel_chunk_size=chunk_size,
     )
@@ -387,7 +387,12 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     y2 = r1 * p2[0] + r2 * p2[1]
 
     with raises(ValueError):
-        mtl_backward(losses=[y1, y2], features=[r1, r2], A=UPGrad(), parallel_chunk_size=chunk_size)
+        mtl_backward(
+            losses=[y1, y2],
+            features=[r1, r2],
+            aggregator=UPGrad(),
+            parallel_chunk_size=chunk_size,
+        )
 
 
 @mark.parametrize(
@@ -415,7 +420,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
         mtl_backward(
             losses=[y1, y2],
             features=[r1, r2],
-            A=UPGrad(),
+            aggregator=UPGrad(),
             retain_graph=False,
             parallel_chunk_size=chunk_size,
         )
@@ -441,7 +446,7 @@ def test_mtl_backward_fails_with_shared_param_retaining_grad():
         mtl_backward(
             losses=[y1, y2],
             features=[features],
-            A=UPGrad(),
+            aggregator=UPGrad(),
             tasks_params=[[p1], [p2]],
             shared_params=[a, p0],
         )
@@ -467,7 +472,7 @@ def test_mtl_backward_fails_with_shared_activation_retaining_grad():
     mtl_backward(
         losses=[y1, y2],
         features=[features],
-        A=UPGrad(),
+        aggregator=UPGrad(),
         tasks_params=[[p1], [p2]],
         shared_params=[p0],
     )
@@ -489,15 +494,15 @@ def test_mtl_backward_task_params_have_some_overlap():
     y1 = r * p1 * p12
     y2 = r * p2 * p12
 
-    A = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[r], A=A, retain_graph=True)
+    aggregator = UPGrad()
+    mtl_backward(losses=[y1, y2], features=[r], aggregator=aggregator, retain_graph=True)
 
     assert_close(p2.grad, r * p12)
     assert_close(p1.grad, r * p12)
     assert_close(p12.grad, r * p1 + r * p2)
 
     J = torch.tensor([[-p1 * p12, p1 * p12], [-p2 * p12, p2 * p12]], device=DEVICE)
-    assert_close(p0.grad, A(J))
+    assert_close(p0.grad, aggregator(J))
 
 
 def test_mtl_backward_task_params_are_the_same():
@@ -510,13 +515,13 @@ def test_mtl_backward_task_params_are_the_same():
     y1 = r * p1
     y2 = r + p1
 
-    A = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[r], A=A, retain_graph=True)
+    aggregator = UPGrad()
+    mtl_backward(losses=[y1, y2], features=[r], aggregator=aggregator, retain_graph=True)
 
     assert_close(p1.grad, r + 1)
 
     J = torch.tensor([[-p1, p1], [-1.0, 1.0]], device=DEVICE)
-    assert_close(p0.grad, A(J))
+    assert_close(p0.grad, aggregator(J))
 
 
 def test_mtl_backward_task_params_are_subset_of_other_task_params():
@@ -533,11 +538,11 @@ def test_mtl_backward_task_params_are_subset_of_other_task_params():
     y1 = r * p1
     y2 = y1 * p2
 
-    A = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[r], A=A, retain_graph=True)
+    aggregator = UPGrad()
+    mtl_backward(losses=[y1, y2], features=[r], aggregator=aggregator, retain_graph=True)
 
     assert_close(p2.grad, y1)
     assert_close(p1.grad, p2 * r + r)
 
     J = torch.tensor([[-p1, p1], [-p1 * p2, p1 * p2]], device=DEVICE)
-    assert_close(p0.grad, A(J))
+    assert_close(p0.grad, aggregator(J))

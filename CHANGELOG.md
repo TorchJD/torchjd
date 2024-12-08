@@ -23,6 +23,8 @@ changes that do not affect the user.
 
 ### Changed
 
+- **BREAKING**: Changed the name of the parameter `A` to `aggregator` in `backward` and
+  `mtl_backward`.
 - **BREAKING**: Changed the order of the parameters of `backward` and `mtl_backward` to make it
   possible to have a default value for `inputs` and for `shared_params` and `tasks_params`,
   respectively. Usages of `backward` and `mtl_backward` that rely on the order between arguments
