@@ -96,9 +96,9 @@ def mtl_backward(
     _check_losses_are_scalar(losses)
 
     if len(losses) == 0:
-        raise ValueError("`tasks_losses` cannot be empty")
+        raise ValueError("`losses` cannot be empty")
     if len(losses) != len(tasks_params):
-        raise ValueError("`tasks_losses` and `tasks_params` should have the same size.")
+        raise ValueError("`losses` and `tasks_params` should have the same size.")
 
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
