@@ -31,6 +31,11 @@ changes that do not affect the user.
   `pyproject.toml` (from a `[tool.pdm.dev-dependencies]` to a `[dependency-groups]` section). This
   should only affect development dependencies.
 
+### Fixed
+
+- **BREAKING**: Added a check in `mtl_backward` to ensure that `tasks_params` and `shared_params`
+  have no overlap. Previously, the behavior in this scenario was quite arbitrary.
+
 ## [0.2.2] - 2024-11-11
 
 ### Added
