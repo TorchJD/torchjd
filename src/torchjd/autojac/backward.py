@@ -15,18 +15,19 @@ from ._utils import (
 
 def backward(
     tensors: Sequence[Tensor] | Tensor,
-    A: Aggregator,
+    aggregator: Aggregator,
     inputs: Iterable[Tensor] | None = None,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
     r"""
     Computes the Jacobian of all values in ``tensors`` with respect to all ``inputs``. Computes its
-    aggregation by ``A`` and accumulates it in the ``.grad`` fields of the ``inputs``.
+    aggregation by the provided ``aggregator`` and accumulates it in the ``.grad`` fields of the
+    ``inputs``.
 
     :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
         matrices will have one row for each value of each of these tensors.
-    :param A: Aggregator used to reduce the Jacobian into a vector.
+    :param aggregator: Aggregator used to reduce the Jacobian into a vector.
     :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
         their ``requires_grad`` flag set to ``True``. If not provided, defaults to the leaf tensors
         that were used to compute the ``tensors`` parameter.
@@ -95,7 +96,7 @@ def backward(
     jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
 
     # Transform that aggregates the Jacobians.
-    aggregate = Aggregate(A, inputs)
+    aggregate = Aggregate(aggregator, inputs)
 
     # Transform that accumulates the result in the .grad field of the inputs.
     accumulate = Accumulate(inputs)

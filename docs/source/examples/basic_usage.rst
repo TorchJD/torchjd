@@ -32,7 +32,7 @@ Define the aggregator that will be used to combine the Jacobian matrix:
 
 .. code-block:: python
 
-    A = UPGrad()
+    aggregator = UPGrad()
 
 In essence, :doc:`UPGrad <../docs/aggregation/upgrad>` projects each gradient onto the dual cone of
 the rows of the Jacobian and averages the results. This ensures that locally, no loss will be
@@ -69,7 +69,7 @@ Perform the Jacobian descent backward pass:
 
 .. code-block:: python
 
-    torchjd.backward([loss1, loss2], A)
+    torchjd.backward([loss1, loss2], aggregator)
 
 This will populate the ``.grad`` field of each model parameter with the corresponding aggregated
 Jacobian matrix.
