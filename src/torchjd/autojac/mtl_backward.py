@@ -92,7 +92,7 @@ def mtl_backward(
         raise ValueError("`features` cannot be empty.")
 
     _check_retain_graph_compatible_with_chunk_size(features, retain_graph, parallel_chunk_size)
-
+    _check_no_overlap(shared_params, tasks_params)
     _check_losses_are_scalar(losses)
 
     if len(losses) == 0:
@@ -167,3 +167,12 @@ def _check_losses_are_scalar(losses: Sequence[Tensor]) -> None:
     for loss in losses:
         if loss.ndim > 0:
             raise ValueError("`losses` should contain only scalars.")
+
+
+def _check_no_overlap(shared_params: Iterable[Tensor], tasks_params: Sequence[Iterable[Tensor]]):
+    task_param_set = {param for task_params in tasks_params for param in task_params}
+    shared_param_set = set(shared_params)
+    intersection = task_param_set.intersection(shared_param_set)
+
+    if len(intersection) != 0:
+        raise ValueError("`tasks_params` should contain no tensor in common with `shared_params`.")
