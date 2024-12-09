@@ -39,7 +39,7 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
 
     loss_fn = MSELoss()
     optimizer = SGD(params, lr=0.1)
-    A = UPGrad()
+    aggregator = UPGrad()
 
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
@@ -53,7 +53,7 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
         loss2 = loss_fn(output2, target2)
 
         optimizer.zero_grad()
-        mtl_backward(losses=[loss1, loss2], features=features, A=A)
+        mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
         optimizer.step()
 
 .. note::

@@ -44,7 +44,7 @@ The following code example demonstrates a basic multi-task learning setup using 
 
             opt = self.optimizers()
             opt.zero_grad()
-            mtl_backward(losses=[loss1, loss2], features=features, A=UPGrad())
+            mtl_backward(losses=[loss1, loss2], features=features, aggregator=UPGrad())
             opt.step()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:
