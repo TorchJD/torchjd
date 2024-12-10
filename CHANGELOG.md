@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-12-10
+
 ### Added
 
 - Added a default value to the `inputs` parameter of `backward`. If not provided, the `inputs` will
