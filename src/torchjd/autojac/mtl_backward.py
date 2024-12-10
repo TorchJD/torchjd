@@ -69,6 +69,9 @@ def mtl_backward(
         A usage example of ``mtl_backward`` is provided in
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
 
+    .. note::
+        `shared_params` and `tasks_params` must be disjoint.
+
     .. warning::
         ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
         functions. The arguments of ``mtl_backward`` should thus not come from a compiled model.
