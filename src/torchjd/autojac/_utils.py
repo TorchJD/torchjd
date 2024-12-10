@@ -37,18 +37,26 @@ def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> 
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.
 
-    :param tensors: Tensors from which the graph traversal should start.
-    :param excluded: Tensors that should be excluded from the results and whose grad_fn should be
-        excluded from the graph traversal.
+    :param tensors: Tensors from which the graph traversal should start. They should all require
+        grad and not be leaves.
+    :param excluded: Tensors whose grad_fn should be excluded from the graph traversal. They should
+        all require grad and not be leaves.
+
     """
 
+    if any([tensor.grad_fn is None for tensor in tensors]):
+        raise ValueError("All `tensors` should have a `grad_fn`.")
+
+    if any([tensor.grad_fn is None for tensor in excluded]):
+        raise ValueError("All `excluded` tensors should have a `grad_fn`.")
+
     accumulate_grads = _get_descendant_accumulate_grads(
-        roots={tensor.grad_fn for tensor in tensors if tensor.grad_fn is not None},
+        roots={tensor.grad_fn for tensor in tensors},
         excluded_nodes={tensor.grad_fn for tensor in excluded},
     )
     leaves = {g.variable for g in accumulate_grads}
 
-    return leaves - set(excluded)
+    return leaves
 
 
 def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]) -> set[Node]:
