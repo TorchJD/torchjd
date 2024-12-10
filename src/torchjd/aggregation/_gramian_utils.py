@@ -12,14 +12,14 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
 
 def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
     r"""
-    Computes :math:`\frac{1}{\sigma_\max^2} A A^T` for an input matrix :math:`A`, where
-    :math:`{\sigma_\max^2}` is :math:`A`'s largest singular value.
+    Computes :math:`\frac{1}{\sigma_\max^2} J J^T` for an input matrix :math:`J`, where
+    :math:`{\sigma_\max^2}` is :math:`J`'s largest singular value.
     .. hint::
-        :math:`A A^T` is the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of
-        :math:`A`
-    For a given matrix :math:`A` with SVD: :math:`A = U S V^T`, we can see that:
+        :math:`J J^T` is the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of
+        :math:`J`
+    For a given matrix :math:`J` with SVD: :math:`J = U S V^T`, we can see that:
     .. math::
-        \frac{1}{\sigma_\max^2} A A^T = \frac{1}{\sigma_\max^2} U S V^T V S^T U^T = U
+        \frac{1}{\sigma_\max^2} J J^T = \frac{1}{\sigma_\max^2} U S V^T V S^T U^T = U
         \left( \frac{S}{\sigma_\max} \right)^2 U^T
     This is the quantity we compute.
     .. note::

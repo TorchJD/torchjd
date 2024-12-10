@@ -546,3 +546,51 @@ def test_mtl_backward_task_params_are_subset_of_other_task_params():
 
     J = torch.tensor([[-p1, p1], [-p1 * p2, p1 * p2]], device=DEVICE)
     assert_close(p0.grad, aggregator(J))
+
+
+def test_mtl_backward_shared_params_overlap_with_tasks_params():
+    """
+    Tests that mtl_backward raises an error when the set of shared params overlaps with the set of
+    task-specific params.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1
+    y2 = p0.sum() * r * p2
+
+    with raises(ValueError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[r],
+            aggregator=UPGrad(),
+            tasks_params=[[p1], [p0, p2]],  # Problem: p0 is also shared
+            shared_params=[p0],
+            retain_graph=True,
+        )
+
+
+def test_mtl_backward_default_shared_params_overlap_with_default_tasks_params():
+    """
+    Tests that mtl_backward raises an error when the set of shared params obtained by default
+    overlaps with the set of task-specific params obtained by default.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1
+    y2 = p0.sum() * r * p2
+
+    with raises(ValueError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[r],
+            aggregator=UPGrad(),
+            retain_graph=True,
+        )

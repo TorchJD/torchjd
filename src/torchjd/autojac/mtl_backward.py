@@ -49,11 +49,11 @@ def mtl_backward(
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
         must be set to ``True``. If not provided, the parameters considered for each task will
         default to the leaf tensors that are in the computation graph of its loss, but that were not
-        used to compute the `features`.
+        used to compute the ``features``.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
         to ``True``. If not provided, defaults to the leaf tensors that are in the computation graph
-        of the `features`.
+        of the ``features``.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
@@ -68,6 +68,11 @@ def mtl_backward(
 
         A usage example of ``mtl_backward`` is provided in
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
+
+    .. note::
+        ``shared_params`` should contain no parameter in common with ``tasks_params``. The different
+        tasks may have some parameters in common. In this case, the sum of the gradients with
+        respect to those parameters will be accumulated into their ``.grad`` fields.
 
     .. warning::
         ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
@@ -92,7 +97,7 @@ def mtl_backward(
         raise ValueError("`features` cannot be empty.")
 
     _check_retain_graph_compatible_with_chunk_size(features, retain_graph, parallel_chunk_size)
-
+    _check_no_overlap(shared_params, tasks_params)
     _check_losses_are_scalar(losses)
 
     if len(losses) == 0:
@@ -167,3 +172,12 @@ def _check_losses_are_scalar(losses: Sequence[Tensor]) -> None:
     for loss in losses:
         if loss.ndim > 0:
             raise ValueError("`losses` should contain only scalars.")
+
+
+def _check_no_overlap(shared_params: Iterable[Tensor], tasks_params: Sequence[Iterable[Tensor]]):
+    task_param_set = {param for task_params in tasks_params for param in task_params}
+    shared_param_set = set(shared_params)
+    intersection = task_param_set.intersection(shared_param_set)
+
+    if len(intersection) != 0:
+        raise ValueError("`tasks_params` should contain no tensor in common with `shared_params`.")
