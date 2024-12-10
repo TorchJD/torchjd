@@ -566,3 +566,26 @@ def test_mtl_backward_shared_params_overlap_with_tasks_params():
             shared_params=[p0],
             retain_graph=True,
         )
+
+
+def test_mtl_backward_default_shared_params_overlap_with_default_tasks_params():
+    """
+    Tests that mtl_backward raises an error when the set of shared params obtained by default
+    overlaps with the set of task-specific params obtained by default.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    p2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+
+    r = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    y1 = r * p1
+    y2 = p0.sum() * r * p2
+
+    with raises(ValueError):
+        mtl_backward(
+            losses=[y1, y2],
+            features=[r],
+            A=UPGrad(),
+            retain_graph=True,
+        )
