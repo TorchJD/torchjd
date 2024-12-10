@@ -70,7 +70,7 @@ def mtl_backward(
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
 
     .. note::
-        `shared_params` and `tasks_params` must be disjoint.
+        ``shared_params`` should contain no parameter in common with ``tasks_params``.
 
     .. warning::
         ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
