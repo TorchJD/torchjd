@@ -27,7 +27,7 @@ from ._utils import (
 def mtl_backward(
     losses: Sequence[Tensor],
     features: Sequence[Tensor] | Tensor,
-    A: Aggregator,
+    aggregator: Aggregator,
     tasks_params: Sequence[Iterable[Tensor]] | None = None,
     shared_params: Iterable[Tensor] | None = None,
     retain_graph: bool = False,
@@ -45,7 +45,7 @@ def mtl_backward(
     :param losses: The task losses. The Jacobian matrix will have one row per loss.
     :param features: The last shared representation used for all tasks, as given by the feature
         extractor. Should be non-empty.
-    :param A: Aggregator used to reduce the Jacobian into a vector.
+    :param aggregator: Aggregator used to reduce the Jacobian into a vector.
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
         must be set to ``True``. If not provided, the parameters considered for each task will
         default to the leaf tensors that are in the computation graph of its loss, but that were not
@@ -129,7 +129,7 @@ def mtl_backward(
     jac = Jac(features, shared_params, parallel_chunk_size, retain_graph)
 
     # Transform that aggregates the Jacobians.
-    aggregate = Aggregate(A, shared_params)
+    aggregate = Aggregate(aggregator, shared_params)
 
     # Transform that accumulates the result in the .grad field of the shared parameters.
     accumulate = Accumulate(shared_params)
