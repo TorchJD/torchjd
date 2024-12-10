@@ -70,7 +70,9 @@ def mtl_backward(
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
 
     .. note::
-        ``shared_params`` should contain no parameter in common with ``tasks_params``.
+        ``shared_params`` should contain no parameter in common with ``tasks_params``. The different
+        tasks may have some parameters in common. In this case, the sum of the gradients with
+        respect to those parameters will be accumulated into their ``.grad`` fields.
 
     .. warning::
         ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
