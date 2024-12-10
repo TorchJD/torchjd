@@ -49,11 +49,11 @@ def mtl_backward(
     :param tasks_params: The parameters of each task-specific head. Their ``requires_grad`` flags
         must be set to ``True``. If not provided, the parameters considered for each task will
         default to the leaf tensors that are in the computation graph of its loss, but that were not
-        used to compute the `features`.
+        used to compute the ``features``.
     :param shared_params: The parameters of the shared feature extractor. The Jacobian matrix will
         have one column for each value in these tensors. Their ``requires_grad`` flags must be set
         to ``True``. If not provided, defaults to the leaf tensors that are in the computation graph
-        of the `features`.
+        of the ``features``.
     :param retain_graph: If ``False``, the graph used to compute the grad will be freed. Defaults to
         ``False``.
     :param parallel_chunk_size: The number of scalars to differentiate simultaneously in the
@@ -70,7 +70,9 @@ def mtl_backward(
         :doc:`Multi-Task Learning (MTL) <../../examples/mtl>`.
 
     .. note::
-        `shared_params` and `tasks_params` must be disjoint.
+        ``shared_params`` should contain no parameter in common with ``tasks_params``. The different
+        tasks may have some parameters in common. In this case, the sum of the gradients with
+        respect to those parameters will be accumulated into their ``.grad`` fields.
 
     .. warning::
         ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
