@@ -4,7 +4,7 @@ build-backend = "pdm.backend"
 
 [project]
 name = "torchjd"
-version = "0.2.2"
+version = "0.3.0"
 description = "Library for Jacobian Descent with PyTorch."
 readme = "README.md"
 authors = [
