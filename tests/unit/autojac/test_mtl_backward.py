@@ -403,8 +403,8 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
     chunk_size: int, expectation: ExceptionContext
 ):
     """
-    Tests that mtl_backward raises an error when using retain_graph=False and a chunk size that is
-    not large enough to allow differentiation of all tensors at once.
+    Tests that when using retain_graph=False, mtl_backward only works if the chunk size is large
+    enough to allow differentiation of all tensors at once.
     """
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -526,7 +526,7 @@ def test_mtl_backward_task_params_are_the_same():
 
 def test_mtl_backward_task_params_are_subset_of_other_task_params():
     """
-    Tests that mtl_backward works correctly when one task's params are a subset of another task's
+    Tests that mtl_backward works correctly when one task's params is a subset of another task's
     params.
     """
 

@@ -85,7 +85,7 @@ def test_retain_graph():
 
 def test_single_input_two_levels():
     """
-    Tests that the Grad transform works correctly for a very simple example of differentiation.
+    Tests that the Grad transform works correctly when composed with another Grad transform.
     Here, the function considered is: `z = a * x1 * x2`, which is computed in 2 parts: `y = a * x1`
     and `z = y * x2`. We want to compute the derivative of `z` with respect to the parameter `a`, by
     using chain rule. This derivative should be equal to `x1 * x2`.

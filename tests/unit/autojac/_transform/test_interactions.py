@@ -182,7 +182,8 @@ def test_conjunction_accumulate_select():
     """
     Tests that it is possible to conjunct an Accumulate and a Select in this order.
     It is not trivial since the type of the TensorDict returned by the first transform (Accumulate)
-    is EmptyDict, which is not the type that the conjunction should return (Gradients).
+    is EmptyDict, which is not the type that the conjunction should return (Gradients), but a
+    subclass of it.
     """
 
     key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True, device=DEVICE)

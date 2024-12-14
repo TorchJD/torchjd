@@ -11,8 +11,8 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
     """
-    Transform that produces gradients filled with ones, for testing purposes.
-    Note that it does the same thing as Init, but it does not depend on Init.
+    Transform that produces gradients filled with ones, for testing purposes. Note that it does the
+    same thing as Init, but it does not depend on Init.
     """
 
     def __init__(self, keys: Iterable[Tensor]):

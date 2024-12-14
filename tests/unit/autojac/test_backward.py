@@ -170,8 +170,8 @@ def test_backward_non_positive_chunk_size(chunk_size: int):
 )
 def test_backward_no_retain_graph_small_chunk_size(chunk_size: int, expectation: ExceptionContext):
     """
-    Tests that backward raises an error when using retain_graph=False and a chunk size that is not
-    large enough to allow differentiation of all tensors at once.
+    Tests that when using retain_graph=False, backward only works if the chunk size is large enough
+    to allow differentiation of all tensors at once.
     """
 
     aggregator = UPGrad()

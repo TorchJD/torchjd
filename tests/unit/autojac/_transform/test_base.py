@@ -23,8 +23,8 @@ class FakeTransform(Transform[_B, _C]):
         return "T"
 
     def _compute(self, input: _B) -> _C:
-        # ignore the input, create a dictionary with the right keys as an output.
-        # cast the type for the purpose of type-checking.
+        # Ignore the input, create a dictionary with the right keys as an output.
+        # Cast the type for the purpose of type-checking.
         output_dict = {key: torch.empty(0, device=DEVICE) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
@@ -39,7 +39,7 @@ class FakeTransform(Transform[_B, _C]):
 
 def test_apply_keys():
     """
-    Tests that a ``Transform`` checks that the provided dictionary to the `__apply__` function
+    Tests that a ``Transform`` checks that the provided dictionary to the `__call__` function
     contains keys that correspond exactly to `required_keys`.
     """
 
