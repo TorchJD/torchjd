@@ -33,14 +33,17 @@ def test_jac_is_stack_of_grads():
     y2 = a2 * x
     input = Gradients({y1: torch.ones_like(y1), y2: torch.ones_like(y2)})
 
-    jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True) << Diagonalize(
-        [y1, y2]
-    )
-    grad1 = Grad(outputs=[y1], inputs=[a1, a2]) << Select([y1], [y1, y2])
-    grad2 = Grad(outputs=[y2], inputs=[a1, a2]) << Select([y2], [y1, y2])
-    stack_of_grads = Stack([grad1, grad2])
+    jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True)
+    diag = Diagonalize([y1, y2])
+    jac_diag = jac << diag
 
-    jacobians = jac(input)
+    grad1 = Grad(outputs=[y1], inputs=[a1, a2])
+    grad2 = Grad(outputs=[y2], inputs=[a1, a2])
+    select1 = Select([y1], [y1, y2])
+    select2 = Select([y2], [y1, y2])
+    stack_of_grads = Stack([grad1 << select1, grad2 << select2])
+
+    jacobians = jac_diag(input)
     expected_jacobians = stack_of_grads(input)
 
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
@@ -66,7 +69,7 @@ def test_single_differentiation():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_multiple_differentiation_with_grad():
+def test_multiple_differentiations():
     """
     Tests that we can perform multiple scalar differentiations with the conjunction of multiple Grad
     transforms, composed with an Init transform.
@@ -78,10 +81,12 @@ def test_multiple_differentiation_with_grad():
     y2 = a2 * 3.0
     input = EmptyTensorDict()
 
-    grad1 = Grad([y1], [a1]) << Select([y1], [y1, y2])
-    grad2 = Grad([y2], [a2]) << Select([y2], [y1, y2])
+    grad1 = Grad([y1], [a1])
+    grad2 = Grad([y2], [a2])
+    select1 = Select([y1], [y1, y2])
+    select2 = Select([y2], [y1, y2])
     init = Init([y1, y2])
-    transform = (grad1 | grad2) << init
+    transform = ((grad1 << select1) | (grad2 << select2)) << init
 
     output = transform(input)
     expected_output = {
@@ -182,7 +187,8 @@ def test_conjunction_accumulate_select():
     """
     Tests that it is possible to conjunct an Accumulate and a Select in this order.
     It is not trivial since the type of the TensorDict returned by the first transform (Accumulate)
-    is EmptyDict, which is not the type that the conjunction should return (Gradients).
+    is EmptyDict, which is not the type that the conjunction should return (Gradients), but a
+    subclass of it.
     """
 
     key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True, device=DEVICE)
@@ -199,7 +205,7 @@ def test_conjunction_accumulate_select():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_equivalence_jac_grad():
+def test_equivalence_jac_grads():
     """
     Tests that differentiation in parallel using `_jac` is equivalent to sequential differentiation
     using several calls to `_grad` and stacking the resulting gradients.
@@ -219,18 +225,12 @@ def test_equivalence_jac_grad():
     outputs = [y1, y2]
     grad_outputs = [torch.ones_like(output) for output in outputs]
 
-    grad_dict_1 = Grad(
-        outputs=[outputs[0]],
-        inputs=inputs,
-        retain_graph=True,
-    )(Gradients({outputs[0]: grad_outputs[0]}))
+    grad1 = Grad(outputs=[outputs[0]], inputs=inputs, retain_graph=True)
+    grad_dict_1 = grad1(Gradients({outputs[0]: grad_outputs[0]}))
     grad_1_A, grad_1_b, grad_1_c = grad_dict_1[A], grad_dict_1[b], grad_dict_1[c]
 
-    grad_dict_2 = Grad(
-        outputs=[outputs[1]],
-        inputs=inputs,
-        retain_graph=True,
-    )(Gradients({outputs[1]: grad_outputs[1]}))
+    grad2 = Grad(outputs=[outputs[1]], inputs=inputs, retain_graph=True)
+    grad_dict_2 = grad2(Gradients({outputs[1]: grad_outputs[1]}))
     grad_2_A, grad_2_b, grad_2_c = grad_dict_2[A], grad_dict_2[b], grad_dict_2[c]
 
     n_outputs = len(outputs)
@@ -240,11 +240,10 @@ def test_equivalence_jac_grad():
     for i, grad_output in enumerate(grad_outputs):
         batched_grad_outputs[i][i] = grad_output
 
-    jac_dict = Jac(
-        outputs=outputs,
-        inputs=inputs,
-        chunk_size=None,
-    )(Jacobians({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]}))
+    jac = Jac(outputs=outputs, inputs=inputs, chunk_size=None)
+    jac_dict = jac(
+        Jacobians({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]})
+    )
     jac_A, jac_b, jac_c = jac_dict[A], jac_dict[b], jac_dict[c]
 
     assert_close(jac_A, torch.stack([grad_1_A, grad_2_A]))

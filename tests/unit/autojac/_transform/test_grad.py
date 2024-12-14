@@ -85,7 +85,7 @@ def test_retain_graph():
 
 def test_single_input_two_levels():
     """
-    Tests that the Grad transform works correctly for a very simple example of differentiation.
+    Tests that the Grad transform works correctly when composed with another Grad transform.
     Here, the function considered is: `z = a * x1 * x2`, which is computed in 2 parts: `y = a * x1`
     and `z = y * x2`. We want to compute the derivative of `z` with respect to the parameter `a`, by
     using chain rule. This derivative should be equal to `x1 * x2`.
@@ -238,9 +238,7 @@ def test_conjunction_of_grads_is_grad():
     x2 = torch.tensor(6.0, device=DEVICE)
     a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
-    y1 = a1 * x1
-    y2 = a2 * x2
-    y = torch.stack([y1, y2])
+    y = torch.stack([a1 * x1, a2 * x2])
     input = Gradients({y: torch.ones_like(y)})
 
     grad1 = Grad(outputs=[y], inputs=[a1], retain_graph=True)
@@ -258,10 +256,10 @@ def test_create_graph():
     """Tests that the Grad transform behaves correctly when `create_graph` is set to `True`."""
 
     a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    b = a * a
-    input = Gradients({b: torch.ones_like(b)})
+    y = a * a
+    input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[b], inputs=[a], create_graph=True)
+    grad = Grad(outputs=[y], inputs=[a], create_graph=True)
 
     gradients = grad(input)
 

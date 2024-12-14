@@ -23,8 +23,8 @@ class FakeTransform(Transform[_B, _C]):
         return "T"
 
     def _compute(self, input: _B) -> _C:
-        # ignore the input, create a dictionary with the right keys as an output.
-        # cast the type for the purpose of type-checking.
+        # Ignore the input, create a dictionary with the right keys as an output.
+        # Cast the type for the purpose of type-checking.
         output_dict = {key: torch.empty(0, device=DEVICE) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
@@ -37,90 +37,90 @@ class FakeTransform(Transform[_B, _C]):
         return self._output_keys
 
 
-def test_apply_keys():
+def test_call_checks_keys():
     """
-    Tests that a ``Transform`` checks that the provided dictionary to the `__apply__` function
+    Tests that a ``Transform`` checks that the provided dictionary to the `__call__` function
     contains keys that correspond exactly to `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
-    transform = FakeTransform({t1}, {t1, t2})
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
+    t = FakeTransform(required_keys={a1}, output_keys={a1, a2})
 
-    transform(TensorDict({t1: t2}))
-
-    with raises(ValueError):
-        transform(TensorDict({t2: t1}))
+    t(TensorDict({a1: a2}))
 
     with raises(ValueError):
-        transform(TensorDict({}))
+        t(TensorDict({a2: a1}))
 
     with raises(ValueError):
-        transform(TensorDict({t1: t2, t2: t1}))
+        t(TensorDict({}))
+
+    with raises(ValueError):
+        t(TensorDict({a1: a2, a2: a1}))
 
 
-def test_compose_keys_match():
+def test_compose_checks_keys():
     """
     Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
     match with the outer transform's `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
-    transform1 = FakeTransform({t1}, {t1, t2})
-    transform2 = FakeTransform({t2}, {t1})
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
+    t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
+    t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
-    transform1 << transform2
+    t1 << t2
 
     with raises(ValueError):
-        transform2 << transform1
+        t2 << t1
 
 
-def test_conjunct_required_keys():
+def test_conjunct_checks_required_keys():
     """
     Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
     same `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform({t1}, set())
-    transform2 = FakeTransform({t1}, set())
-    transform3 = FakeTransform({t2}, set())
+    t1 = FakeTransform(required_keys={a1}, output_keys=set())
+    t2 = FakeTransform(required_keys={a1}, output_keys=set())
+    t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
-    transform1 | transform2
-
-    with raises(ValueError):
-        transform2 | transform3
+    t1 | t2
 
     with raises(ValueError):
-        transform1 | transform2 | transform3
+        t2 | t3
+
+    with raises(ValueError):
+        t1 | t2 | t3
 
 
-def test_conjunct_wrong_output_keys():
+def test_conjunct_checks_output_keys():
     """
     Tests that the conjunction of ``Transform``s checks that the transforms `output_keys` are
     disjoint.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform(set(), {t1, t2})
-    transform2 = FakeTransform(set(), {t1})
-    transform3 = FakeTransform(set(), {t2})
+    t1 = FakeTransform(required_keys=set(), output_keys={a1, a2})
+    t2 = FakeTransform(required_keys=set(), output_keys={a1})
+    t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
-    transform2 | transform3
-
-    with raises(ValueError):
-        transform1 | transform3
+    t2 | t3
 
     with raises(ValueError):
-        transform1 | transform2 | transform3
+        t1 | t3
+
+    with raises(ValueError):
+        t1 | t2 | t3
 
 
-def test_conjunction_empty_transforms():
+def test_empty_conjunction():
     """
     Tests that it is possible to take the conjunction of no transform. This should return an empty
     dictionary.
@@ -137,7 +137,7 @@ def test_str():
     conjunctions.
     """
 
-    t = FakeTransform(set(), set())
+    t = FakeTransform(required_keys=set(), output_keys=set())
     transform = (t | t << t << t | t) << t << (t | t)
 
     assert str(transform) == "(T | T ∘ T ∘ T | T) ∘ T ∘ (T | T)"

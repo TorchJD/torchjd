@@ -9,56 +9,56 @@ from torchjd.autojac._utils import _get_leaf_tensors
 def test_simple_get_leaf_tensors():
     """Tests that _get_leaf_tensors works correctly in a very simple setting."""
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
-    assert leaves == {p1, p2}
+    assert leaves == {a1, a2}
 
 
 def test_get_leaf_tensors_excluded_1():
     """
     Tests that _get_leaf_tensors works correctly when some tensors are excluded from the search.
 
-    Note that `p2` itself is not in `excluded`, but it is not accessible from `y1` or `y2` when `x2`
+    Note that `a2` itself is not in `excluded`, but it is not accessible from `y1` or `y2` when `b2`
     is excluded from the graph traversal.
     """
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    x1 = (p1**2).sum()
-    x2 = (p2**2).sum()
+    b1 = (a1**2).sum()
+    b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + x2
-    y2 = x1
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + b2
+    y2 = b1
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={x1, x2})
-    assert leaves == {p1}
+    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
+    assert leaves == {a1}
 
 
 def test_get_leaf_tensors_excluded_2():
     """
     Tests that _get_leaf_tensors works correctly when some tensors are excluded from the search.
 
-    Even though `x1` and `x2`, that have `p1` and `p2` as descendants, are excluded, `y1` depends on
-    `p1` and `p2` from another path, so these two tensors should be in the result.
+    Even though `b1` and `b2`, that have `a1` and `a2` as descendants, are excluded, `y1` depends on
+    `a1` and `a2` from another path, so these two tensors should be in the result.
     """
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    x1 = (p1**2).sum()
-    x2 = (p2**2).sum()
+    b1 = (a1**2).sum()
+    b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = x1
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = b1
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={x1, x2})
-    assert leaves == {p1, p2}
+    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
+    assert leaves == {a1, a2}
 
 
 def test_get_leaf_tensors_leaf_not_requiring_grad():
@@ -66,14 +66,14 @@ def test_get_leaf_tensors_leaf_not_requiring_grad():
     Tests that _get_leaf_tensors does not include tensors that do not require grad in its results.
     """
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=False, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=False, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
-    assert leaves == {p1}
+    assert leaves == {a1}
 
 
 def test_get_leaf_tensors_model():
@@ -136,14 +136,14 @@ def test_get_leaf_tensors_empty_roots():
 def test_get_leaf_tensors_excluded_root():
     """Tests that _get_leaf_tensors correctly excludes the root."""
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={y1})
-    assert leaves == {p1}
+    assert leaves == {a1}
 
 
 @mark.parametrize("depth", [100, 1000, 10000])

@@ -64,34 +64,33 @@ def test_multiple_accumulation(iterations: int):
     assert_tensor_dicts_are_close(grads, expected_grads)
 
 
-def test_accumulate_fails_on_no_requires_grad():
+def test_no_requires_grad_fails():
     """
     Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
     tensor that does not require grad.
     """
 
-    key1 = torch.zeros([1], requires_grad=False, device=DEVICE)
-    value1 = torch.ones([1], device=DEVICE)
-    input = Gradients({key1: value1})
+    key = torch.zeros([1], requires_grad=False, device=DEVICE)
+    value = torch.ones([1], device=DEVICE)
+    input = Gradients({key: value})
 
-    accumulate = Accumulate([key1])
+    accumulate = Accumulate([key])
 
     with raises(ValueError):
         accumulate(input)
 
 
-def test_accumulate_fails_on_no_leaf_and_no_retains_grad():
+def test_no_leaf_and_no_retains_grad_fails():
     """
     Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
     tensor that is not a leaf and that does not retain grad.
     """
 
-    a = torch.tensor([1.0], requires_grad=True, device=DEVICE)
-    key1 = 2 * a  # requires_grad=True, but is_leaf=False and retains_grad=False
-    value1 = torch.ones([1], device=DEVICE)
-    input = Gradients({key1: value1})
+    key = torch.tensor([1.0], requires_grad=True, device=DEVICE) * 2
+    value = torch.ones([1], device=DEVICE)
+    input = Gradients({key: value})
 
-    accumulate = Accumulate([key1])
+    accumulate = Accumulate([key])
 
     with raises(ValueError):
         accumulate(input)

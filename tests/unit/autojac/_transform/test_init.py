@@ -6,7 +6,7 @@ from torchjd.autojac._transform import EmptyTensorDict, Init
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-def test_init_single_input():
+def test_single_input():
     """
     Tests that when there is a single key to initialize, the Init transform creates a TensorDict
     whose value is a tensor full of ones, of the same shape as its key.
@@ -23,7 +23,7 @@ def test_init_single_input():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_init_multiple_input():
+def test_multiple_inputs():
     """
     Tests that when there are several keys to initialize, the Init transform creates a TensorDict
     whose values are tensors full of ones, of the same shape as their corresponding keys.
