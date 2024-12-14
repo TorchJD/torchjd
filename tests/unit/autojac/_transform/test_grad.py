@@ -238,9 +238,7 @@ def test_conjunction_of_grads_is_grad():
     x2 = torch.tensor(6.0, device=DEVICE)
     a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
     a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
-    y1 = a1 * x1
-    y2 = a2 * x2
-    y = torch.stack([y1, y2])
+    y = torch.stack([a1 * x1, a2 * x2])
     input = Gradients({y: torch.ones_like(y)})
 
     grad1 = Grad(outputs=[y], inputs=[a1], retain_graph=True)
