@@ -55,9 +55,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
     assert set(jacobian_matrices.keys()) == set(gradient_vectors.keys())
 
     for key in jacobian_matrices.keys():
-        jacobian_matrix = jacobian_matrices[key]
-        gradient_vector = gradient_vectors[key]
-        assert gradient_vector.numel() == jacobian_matrix[0].numel()
+        assert gradient_vectors[key].numel() == jacobian_matrices[key][0].numel()
 
 
 def test_aggregate_matrices_empty_dict():
