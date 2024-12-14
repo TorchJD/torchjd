@@ -177,13 +177,13 @@ def test_input_retaining_grad_fails():
     parameter retains grad.
     """
 
-    a1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    a2 = 2 * a1
-    a2.retain_grad()
-    y = 3 * a2
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    b = 2 * a
+    b.retain_grad()
+    y = 3 * b
 
     with raises(RuntimeError):
-        backward(tensors=y, aggregator=UPGrad(), inputs=[a2])
+        backward(tensors=y, aggregator=UPGrad(), inputs=[b])
 
 
 def test_non_input_retaining_grad_fails():
@@ -192,14 +192,14 @@ def test_non_input_retaining_grad_fails():
     the ``tensors`` parameter retains grad.
     """
 
-    a1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    a2 = 2 * a1
-    a2.retain_grad()
-    y = 3 * a2
+    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    b = 2 * a
+    b.retain_grad()
+    y = 3 * b
 
     # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
-    backward(tensors=y, aggregator=UPGrad(), inputs=[a1])
+    backward(tensors=y, aggregator=UPGrad(), inputs=[a])
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -a2.grad
+        _ = -b.grad
