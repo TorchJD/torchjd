@@ -29,10 +29,10 @@ each Jacobian matrix consists of one gradient per loss. In this example, we use 
 
             import torch
             from torch.nn import (
-                MSELoss,
-                Sequential,
                 Linear,
-                ReLU
+                MSELoss,
+                ReLU,
+                Sequential
             )
             from torch.optim import SGD
 
@@ -70,10 +70,10 @@ each Jacobian matrix consists of one gradient per loss. In this example, we use 
 
             import torch
             from torch.nn import (
-                MSELoss,
-                Sequential,
                 Linear,
-                ReLU
+                MSELoss,
+                ReLU,
+                Sequential
             )
             from torch.optim import SGD
 
