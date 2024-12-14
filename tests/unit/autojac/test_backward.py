@@ -14,17 +14,17 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 def test_various_aggregators(aggregator: Aggregator):
     """Tests that backward works for various aggregators."""
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    inputs = [a1, a2]
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator)
 
-    for p in params:
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
+    for a in inputs:
+        assert (a.grad is not None) and (a.shape == a.grad.shape)
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA()])
@@ -57,37 +57,37 @@ def test_empty_inputs():
 
     aggregator = Mean()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    inputs = [a1, a2]
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator, inputs=[])
 
-    for p in params:
-        assert p.grad is None
+    for a in inputs:
+        assert a.grad is None
 
 
 def test_partial_inputs():
     """
-    Tests that backward fills the right .grad values when only a subset of the parameters are
+    Tests that backward fills the right .grad values when only a subset of the actual inputs are
     specified as inputs.
     """
 
     aggregator = Mean()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator, inputs=[p1])
+    backward([y1, y2], aggregator, inputs=[a1])
 
-    assert (p1.grad is not None) and (p1.shape == p1.grad.shape)
-    assert p2.grad is None
+    assert (a1.grad is not None) and (a1.shape == a1.grad.shape)
+    assert a2.grad is None
 
 
 def test_empty_tensors_fails():
@@ -95,11 +95,11 @@ def test_empty_tensors_fails():
 
     aggregator = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     with raises(ValueError):
-        backward([], aggregator, inputs=[p1, p2])
+        backward([], aggregator, inputs=[a1, a2])
 
 
 def test_multiple_tensors():
@@ -110,23 +110,23 @@ def test_multiple_tensors():
 
     aggregator = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    inputs = [a1, a2]
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator, retain_graph=True)
 
-    param_to_grad = {p: p.grad for p in params}
-    for p in params:
-        p.grad = None
+    input_to_grad = {a: a.grad for a in inputs}
+    for a in inputs:
+        a.grad = None
 
     backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]), aggregator)
 
-    for p in params:
-        assert (p.grad == param_to_grad[p]).all()
+    for a in inputs:
+        assert (a.grad == input_to_grad[a]).all()
 
 
 @mark.parametrize("chunk_size", [None, 1, 2, 4])
@@ -135,17 +135,17 @@ def test_various_valid_chunk_sizes(chunk_size):
 
     aggregator = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    params = [p1, p2]
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    inputs = [a1, a2]
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator, parallel_chunk_size=chunk_size, retain_graph=True)
 
-    for p in params:
-        assert (p.grad is not None) and (p.shape == p.grad.shape)
+    for a in inputs:
+        assert (a.grad is not None) and (a.shape == a.grad.shape)
 
 
 @mark.parametrize("chunk_size", [0, -1])
@@ -154,11 +154,11 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
 
     aggregator = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     with raises(ValueError):
         backward([y1, y2], aggregator, parallel_chunk_size=chunk_size)
@@ -176,11 +176,11 @@ def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: Excep
 
     aggregator = UPGrad()
 
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p1 + p2.sum()
-    y2 = (p1**2).sum() + p2.norm()
+    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
 
     with expectation:
         backward([y1, y2], aggregator, retain_graph=False, parallel_chunk_size=chunk_size)
@@ -192,13 +192,13 @@ def test_input_retaining_grad_fails():
     parameter retains grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    b = 2 * a
-    b.retain_grad()
-    c = 3 * b
+    a1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a2 = 2 * a1
+    a2.retain_grad()
+    y = 3 * a2
 
     with raises(RuntimeError):
-        backward(tensors=c, aggregator=UPGrad(), inputs=[b])
+        backward(tensors=y, aggregator=UPGrad(), inputs=[a2])
 
 
 def test_non_input_retaining_grad_fails():
@@ -207,14 +207,14 @@ def test_non_input_retaining_grad_fails():
     the ``tensors`` parameter retains grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    b = 2 * a
-    b.retain_grad()
-    c = 3 * b
+    a1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a2 = 2 * a1
+    a2.retain_grad()
+    y = 3 * a2
 
     # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
-    backward(tensors=c, aggregator=UPGrad(), inputs=[a])
+    backward(tensors=y, aggregator=UPGrad(), inputs=[a1])
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -b.grad
+        _ = -a2.grad

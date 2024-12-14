@@ -70,11 +70,11 @@ def test_no_requires_grad_fails():
     tensor that does not require grad.
     """
 
-    key1 = torch.zeros([1], requires_grad=False, device=DEVICE)
-    value1 = torch.ones([1], device=DEVICE)
-    input = Gradients({key1: value1})
+    key = torch.zeros([1], requires_grad=False, device=DEVICE)
+    value = torch.ones([1], device=DEVICE)
+    input = Gradients({key: value})
 
-    accumulate = Accumulate([key1])
+    accumulate = Accumulate([key])
 
     with raises(ValueError):
         accumulate(input)
@@ -86,11 +86,11 @@ def test_no_leaf_and_no_retains_grad_fails():
     tensor that is not a leaf and that does not retain grad.
     """
 
-    key1 = torch.tensor([1.0], requires_grad=True, device=DEVICE) * 2
-    value1 = torch.ones([1], device=DEVICE)
-    input = Gradients({key1: value1})
+    key = torch.tensor([1.0], requires_grad=True, device=DEVICE) * 2
+    value = torch.ones([1], device=DEVICE)
+    input = Gradients({key: value})
 
-    accumulate = Accumulate([key1])
+    accumulate = Accumulate([key])
 
     with raises(ValueError):
         accumulate(input)

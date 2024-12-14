@@ -55,10 +55,10 @@ def test_empty_inputs_2():
     """
 
     x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    y1 = a * x
-    y2 = b * x
+    a1 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    y1 = a1 * x
+    y2 = a2 * x
     y = torch.stack([y1, y2])
     input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
@@ -103,18 +103,18 @@ def test_two_levels():
 
     x1 = torch.tensor(5.0, device=DEVICE)
     x2 = torch.tensor(6.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    b = torch.tensor(3.0, requires_grad=True, device=DEVICE)
-    y1 = a * x1
-    y2 = b * x1
+    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    y1 = a1 * x1
+    y2 = a2 * x1
     y = torch.stack([y1, y2])
     z = y * x2
     input = Jacobians({z: torch.eye(2, device=DEVICE)})
 
-    outer_jac = Jac(outputs=[y], inputs=[a, b], chunk_size=None, retain_graph=True)
+    outer_jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None, retain_graph=True)
     inner_jac = Jac(outputs=[z], inputs=[y], chunk_size=None, retain_graph=True)
     composed_jac = outer_jac << inner_jac
-    jac = Jac(outputs=[z], inputs=[a, b], chunk_size=None)
+    jac = Jac(outputs=[z], inputs=[a1, a2], chunk_size=None)
 
     jacobians = composed_jac(input)
     expected_jacobians = jac(input)

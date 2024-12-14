@@ -256,10 +256,10 @@ def test_create_graph():
     """Tests that the Grad transform behaves correctly when `create_graph` is set to `True`."""
 
     a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    b = a * a
-    input = Gradients({b: torch.ones_like(b)})
+    y = a * a
+    input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[b], inputs=[a], create_graph=True)
+    grad = Grad(outputs=[y], inputs=[a], create_graph=True)
 
     gradients = grad(input)
 
