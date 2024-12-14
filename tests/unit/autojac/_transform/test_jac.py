@@ -195,7 +195,6 @@ def test_composition_of_jacs_is_jac():
     x1 = torch.tensor(5.0, device=DEVICE)
     x2 = torch.tensor(6.0, device=DEVICE)
     a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
     y1 = a * x1
     y2 = a * x2
     z1 = y1 + x2
@@ -204,10 +203,10 @@ def test_composition_of_jacs_is_jac():
         {z1: torch.tensor([1.0, 0.0], device=DEVICE), z2: torch.tensor([0.0, 1.0], device=DEVICE)}
     )
 
-    outer_jac = Jac(outputs=[y1, y2], inputs=[a, b], chunk_size=None, retain_graph=True)
+    outer_jac = Jac(outputs=[y1, y2], inputs=[a], chunk_size=None, retain_graph=True)
     inner_jac = Jac(outputs=[z1, z2], inputs=[y1, y2], chunk_size=None, retain_graph=True)
     composed_jac = outer_jac << inner_jac
-    jac = Jac(outputs=[z1, z2], inputs=[a, b], chunk_size=None)
+    jac = Jac(outputs=[z1, z2], inputs=[a], chunk_size=None)
 
     jacobians = composed_jac(input)
     expected_jacobians = jac(input)
