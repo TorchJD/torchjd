@@ -21,11 +21,7 @@ def test_imtlg_zero():
 
     A = IMTLG()
     J = torch.zeros(2, 3, device=DEVICE)
-
-    aggregation = A(J)
-    expected = torch.zeros(3, device=DEVICE)
-
-    assert_close(aggregation, expected)
+    assert_close(A(J), torch.zeros(3, device=DEVICE))
 
 
 def test_representations():
