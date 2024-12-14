@@ -1,3 +1,10 @@
+"""
+This file contains tests for the usage examples provided in the Aggregator subclasses. Each
+Aggregator's usage example, including its imports, should be copied in a function here, with the
+only difference that the advertised output should be replaced by a call to `assert_close`. The
+functions should be in alphabetical order.
+"""
+
 import torch
 from torch.testing import assert_close
 
