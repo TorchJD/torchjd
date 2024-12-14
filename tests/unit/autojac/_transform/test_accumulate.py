@@ -86,8 +86,7 @@ def test_no_leaf_and_no_retains_grad_fails():
     tensor that is not a leaf and that does not retain grad.
     """
 
-    a = torch.tensor([1.0], requires_grad=True, device=DEVICE)
-    key1 = 2 * a  # requires_grad=True, but is_leaf=False and retains_grad=False
+    key1 = torch.tensor([1.0], requires_grad=True, device=DEVICE) * 2
     value1 = torch.ones([1], device=DEVICE)
     input = Gradients({key1: value1})
 
