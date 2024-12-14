@@ -33,7 +33,7 @@ class TestPCGrad(ExpectedStructureProperty):
 )
 def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     """
-    Tests that UPGradWrapper of a SumWeighting is equivalent to PCGradWeighting for matrices of 2
+    Tests that _UPGradWrapper of a _SumWeighting is equivalent to _PCGradWeighting for matrices of 2
     rows.
     """
 
