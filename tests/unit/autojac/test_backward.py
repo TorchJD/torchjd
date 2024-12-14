@@ -16,14 +16,13 @@ def test_various_aggregators(aggregator: Aggregator):
 
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    inputs = [a1, a2]
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator)
 
-    for a in inputs:
+    for a in [a1, a2]:
         assert (a.grad is not None) and (a.shape == a.grad.shape)
 
 
@@ -55,18 +54,15 @@ def test_value_is_correct(
 def test_empty_inputs():
     """Tests that backward does not fill the .grad values if no input is specified."""
 
-    aggregator = Mean()
-
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    inputs = [a1, a2]
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator, inputs=[])
+    backward([y1, y2], Mean(), inputs=[])
 
-    for a in inputs:
+    for a in [a1, a2]:
         assert a.grad is None
 
 
@@ -76,15 +72,13 @@ def test_partial_inputs():
     specified as inputs.
     """
 
-    aggregator = Mean()
-
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator, inputs=[a1])
+    backward([y1, y2], Mean(), inputs=[a1])
 
     assert (a1.grad is not None) and (a1.shape == a1.grad.shape)
     assert a2.grad is None
@@ -93,13 +87,11 @@ def test_partial_inputs():
 def test_empty_tensors_fails():
     """Tests that backward raises an error when called with an empty list of tensors."""
 
-    aggregator = UPGrad()
-
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
     with raises(ValueError):
-        backward([], aggregator, inputs=[a1, a2])
+        backward([], UPGrad(), inputs=[a1, a2])
 
 
 def test_multiple_tensors():
@@ -133,26 +125,21 @@ def test_multiple_tensors():
 def test_various_valid_chunk_sizes(chunk_size):
     """Tests that backward works for various valid values of parallel_chunk_size."""
 
-    aggregator = UPGrad()
-
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-    inputs = [a1, a2]
 
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator, parallel_chunk_size=chunk_size, retain_graph=True)
+    backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size, retain_graph=True)
 
-    for a in inputs:
+    for a in [a1, a2]:
         assert (a.grad is not None) and (a.shape == a.grad.shape)
 
 
 @mark.parametrize("chunk_size", [0, -1])
 def test_non_positive_chunk_size_fails(chunk_size: int):
     """Tests that backward raises an error when using invalid chunk sizes."""
-
-    aggregator = UPGrad()
 
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
@@ -161,7 +148,7 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
     y2 = (a1**2).sum() + a2.norm()
 
     with raises(ValueError):
-        backward([y1, y2], aggregator, parallel_chunk_size=chunk_size)
+        backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
 
 
 @mark.parametrize(
@@ -174,8 +161,6 @@ def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: Excep
     to allow differentiation of all tensors at once.
     """
 
-    aggregator = UPGrad()
-
     a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
@@ -183,7 +168,7 @@ def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: Excep
     y2 = (a1**2).sum() + a2.norm()
 
     with expectation:
-        backward([y1, y2], aggregator, retain_graph=False, parallel_chunk_size=chunk_size)
+        backward([y1, y2], UPGrad(), retain_graph=False, parallel_chunk_size=chunk_size)
 
 
 def test_input_retaining_grad_fails():
