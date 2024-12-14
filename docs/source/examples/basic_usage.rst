@@ -15,7 +15,7 @@ Import several classes from ``torch`` and ``torchjd``:
 .. code-block:: python
 
     import torch
-    from torch.nn import MSELoss, Sequential, Linear, ReLU
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
     import torchjd

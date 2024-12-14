@@ -1,3 +1,10 @@
+"""
+This file contains the tests corresponding to the extra usage examples contained in the `.rst` files
+of the documentation. When there are multiple examples within a single `.rst` file, we use nested
+functions here to test them.
+"""
+
+
 def test_basic_usage():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -113,11 +120,13 @@ def test_mtl():
 
 
 def test_lightning_integration():
+    # Extra ----------------------------------------------------------------------------------------
     import logging
     import warnings
 
     warnings.filterwarnings("ignore")
     logging.disable(logging.INFO)
+    # ----------------------------------------------------------------------------------------------
 
     import torch
     from lightning import LightningModule, Trainer

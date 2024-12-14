@@ -25,10 +25,10 @@ class TrimmedMean(Aggregator):
         >>>
         >>> A = TrimmedMean(trim_number=1)
         >>> J = tensor([
-        ...     [ 1e11,     3],
-        ...     [    1, -1e11],
+        ...     [ 1e11,    3.],
+        ...     [   1., -1e11],
         ...     [-1e10,  1e10],
-        ...     [    2,     2],
+        ...     [   2.,    2.],
         ... ])
         >>>
         >>> A(J)
