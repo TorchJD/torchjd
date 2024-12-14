@@ -18,12 +18,12 @@ def test_various_aggregators(aggregator: Aggregator):
     p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
 
-    r1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    r2 = (p0**2).sum() + p0.norm()
-    y1 = r1 * p1[0] + r2 * p1[1]
-    y2 = r1 * p2[0] + r2 * p2[1]
+    f1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
 
-    mtl_backward(losses=[y1, y2], features=[r1, r2], aggregator=aggregator)
+    mtl_backward(losses=[y1, y2], features=[f1, f2], aggregator=aggregator)
 
     for p in [p0, p1, p2]:
         assert (p.grad is not None) and (p.shape == p.grad.shape)
@@ -41,8 +41,8 @@ def test_value_is_correct(
 ):
     """
     Tests that the .grad value filled by mtl_backward is correct in a simple example of
-    matrix-vector product for shared representation and three tasks whose loss are given by a simple
-    inner product of the shared representation with the task parameter.
+    matrix-vector product for three tasks whose loss are given by a simple inner product of the
+    shared representation with the task parameter.
 
     This test should work with or without manually specifying the parameters.
     """
