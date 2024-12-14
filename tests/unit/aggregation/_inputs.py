@@ -118,37 +118,6 @@ def generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     return matrix
 
 
-def generate_positively_oriented_matrix(
-    n_rows: int, n_cols: int, rank: int
-) -> tuple[Tensor, tuple[Tensor, Tensor, Tensor]]:
-    """
-    Generates a random matrix of shape [n_rows, n_cols] with an SVD such that the largest singular
-    value corresponds to a left singular vector that is all positive. Also returns the singular
-    triple corresponding the largest singular value.
-    If ``M, (u, s, v)`` is the output, we guarantee that:
-    - ``s * u ~= M @ v``
-    - ``u`` is a positive vector.
-    - ``s`` is the largest singular value of ``M``.
-    """
-
-    _check_valid_rank(n_rows, n_cols, rank)
-    if rank == 0:
-        matrix = torch.zeros([n_rows, n_cols], device=DEVICE)
-        largest_singular_value_triple = (
-            torch.zeros([n_rows], device=DEVICE),
-            torch.zeros([], device=DEVICE),
-            torch.zeros([n_cols], device=DEVICE),
-        )
-    else:
-        U = _generate_unitary_matrix_with_positive_column(n_rows, rank)
-        V = _generate_unitary_matrix(n_cols, rank)
-        S = _generate_diagonal_singular_values(rank)
-        matrix = U @ S @ V.T
-        largest_singular_value_triple = (U[:, 0], S[0, 0], V[:, 0])
-
-    return matrix, largest_singular_value_triple
-
-
 def generate_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``. The matrix
@@ -198,10 +167,6 @@ zero_rank_matrices = [
 matrices_2_plus_rows = [matrix for matrix in matrices + zero_rank_matrices if matrix.shape[0] >= 2]
 scaled_matrices_2_plus_rows = [
     matrix for matrix in scaled_matrices + zero_rank_matrices if matrix.shape[0] >= 2
-]
-matrices_and_triples = [
-    generate_positively_oriented_matrix(n_rows, n_cols, rank)
-    for n_rows, n_cols, rank in _matrix_dimension_triples
 ]
 stationary_matrices = [
     generate_stationary_matrix(n_rows, n_cols, rank)

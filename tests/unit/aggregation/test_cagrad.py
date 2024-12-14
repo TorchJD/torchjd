@@ -8,13 +8,11 @@ from ._inputs import matrices, stationary_matrices
 from ._property_testers import ExpectedStructureProperty, NonConflictingProperty
 
 
-@mark.filterwarnings("ignore:np.find_common_type is deprecated:")
 @mark.parametrize("aggregator", [CAGrad(c=0.5)])
 class TestCAGrad(ExpectedStructureProperty):
     pass
 
 
-@mark.filterwarnings("ignore:np.find_common_type is deprecated:")
 @mark.parametrize("aggregator", [CAGrad(c=1.0), CAGrad(c=2.0)])
 class TestCAGradNonConflicting(NonConflictingProperty):
     """Tests that CAGrad is non-conflicting when c >= 1 (it should not hold when c < 1)"""
@@ -22,7 +20,6 @@ class TestCAGradNonConflicting(NonConflictingProperty):
     pass
 
 
-@mark.filterwarnings("ignore:np.find_common_type is deprecated:")
 @mark.parametrize("matrix", stationary_matrices + matrices)
 def test_equivalence_mean(matrix: Tensor):
     """Tests that CAGrad is equivalent to Mean when c=0."""
