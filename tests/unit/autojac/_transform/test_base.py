@@ -43,20 +43,20 @@ def test_call_checks_keys():
     contains keys that correspond exactly to `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
-    transform = FakeTransform(required_keys={t1}, output_keys={t1, t2})
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
+    t = FakeTransform(required_keys={a1}, output_keys={a1, a2})
 
-    transform(TensorDict({t1: t2}))
-
-    with raises(ValueError):
-        transform(TensorDict({t2: t1}))
+    t(TensorDict({a1: a2}))
 
     with raises(ValueError):
-        transform(TensorDict({}))
+        t(TensorDict({a2: a1}))
 
     with raises(ValueError):
-        transform(TensorDict({t1: t2, t2: t1}))
+        t(TensorDict({}))
+
+    with raises(ValueError):
+        t(TensorDict({a1: a2, a2: a1}))
 
 
 def test_compose_checks_keys():
@@ -65,15 +65,15 @@ def test_compose_checks_keys():
     match with the outer transform's `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
-    transform1 = FakeTransform(required_keys={t1}, output_keys={t1, t2})
-    transform2 = FakeTransform(required_keys={t2}, output_keys={t1})
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
+    t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
+    t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
-    transform1 << transform2
+    t1 << t2
 
     with raises(ValueError):
-        transform2 << transform1
+        t2 << t1
 
 
 def test_conjunct_checks_required_keys():
@@ -82,20 +82,20 @@ def test_conjunct_checks_required_keys():
     same `required_keys`.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform(required_keys={t1}, output_keys=set())
-    transform2 = FakeTransform(required_keys={t1}, output_keys=set())
-    transform3 = FakeTransform(required_keys={t2}, output_keys=set())
+    t1 = FakeTransform(required_keys={a1}, output_keys=set())
+    t2 = FakeTransform(required_keys={a1}, output_keys=set())
+    t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
-    transform1 | transform2
-
-    with raises(ValueError):
-        transform2 | transform3
+    t1 | t2
 
     with raises(ValueError):
-        transform1 | transform2 | transform3
+        t2 | t3
+
+    with raises(ValueError):
+        t1 | t2 | t3
 
 
 def test_conjunct_checks_output_keys():
@@ -104,20 +104,20 @@ def test_conjunct_checks_output_keys():
     disjoint.
     """
 
-    t1 = torch.randn([2], device=DEVICE)
-    t2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2], device=DEVICE)
+    a2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform(required_keys=set(), output_keys={t1, t2})
-    transform2 = FakeTransform(required_keys=set(), output_keys={t1})
-    transform3 = FakeTransform(required_keys=set(), output_keys={t2})
+    t1 = FakeTransform(required_keys=set(), output_keys={a1, a2})
+    t2 = FakeTransform(required_keys=set(), output_keys={a1})
+    t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
-    transform2 | transform3
-
-    with raises(ValueError):
-        transform1 | transform3
+    t2 | t3
 
     with raises(ValueError):
-        transform1 | transform2 | transform3
+        t1 | t3
+
+    with raises(ValueError):
+        t1 | t2 | t3
 
 
 def test_empty_conjunction():
