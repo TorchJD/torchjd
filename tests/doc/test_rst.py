@@ -120,11 +120,13 @@ def test_mtl():
 
 
 def test_lightning_integration():
+    # Extra ----------------------------------------------------------------------------------------
     import logging
     import warnings
 
     warnings.filterwarnings("ignore")
     logging.disable(logging.INFO)
+    # ----------------------------------------------------------------------------------------------
 
     import torch
     from lightning import LightningModule, Trainer
