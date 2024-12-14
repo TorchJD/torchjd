@@ -51,9 +51,6 @@ class NashMTL(_WeightedAggregator):
 
         Use NashMTL to aggregate a matrix.
 
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore")
-        >>>
         >>> from torch import tensor
         >>> from torchjd.aggregation import NashMTL
         >>>

@@ -21,9 +21,6 @@ class CAGrad(_WeightedAggregator):
 
         Use CAGrad to aggregate a matrix.
 
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore")
-        >>>
         >>> from torch import tensor
         >>> from torchjd.aggregation import CAGrad
         >>>
