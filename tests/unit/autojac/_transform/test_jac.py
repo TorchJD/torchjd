@@ -10,9 +10,8 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 def test_single_input():
     """
     Tests that the Jac transform works correctly for an example of multiple differentiation. Here,
-    the functions considered are: `y1 = a1 * x` and `y2 = a2 * x`. We want to compute the jacobians
-    of `[y1, y2]` with respect to the parameters `a1` and `a2`. These jacobians should be equal to
-    [x, 0] and [0, x], respectively.
+    the function considered is: `y = [a1 * x, a2 * x]`. We want to compute the jacobians of `y` with
+    respect to `a1` and `a2`.
     """
 
     x = torch.tensor(5.0, device=DEVICE)
