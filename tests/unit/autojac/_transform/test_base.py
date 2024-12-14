@@ -45,7 +45,7 @@ def test_call_checks_keys():
 
     t1 = torch.randn([2], device=DEVICE)
     t2 = torch.randn([3], device=DEVICE)
-    transform = FakeTransform({t1}, {t1, t2})
+    transform = FakeTransform(required_keys={t1}, output_keys={t1, t2})
 
     transform(TensorDict({t1: t2}))
 
@@ -67,8 +67,8 @@ def test_compose_checks_keys():
 
     t1 = torch.randn([2], device=DEVICE)
     t2 = torch.randn([3], device=DEVICE)
-    transform1 = FakeTransform({t1}, {t1, t2})
-    transform2 = FakeTransform({t2}, {t1})
+    transform1 = FakeTransform(required_keys={t1}, output_keys={t1, t2})
+    transform2 = FakeTransform(required_keys={t2}, output_keys={t1})
 
     transform1 << transform2
 
@@ -85,9 +85,9 @@ def test_conjunct_checks_required_keys():
     t1 = torch.randn([2], device=DEVICE)
     t2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform({t1}, set())
-    transform2 = FakeTransform({t1}, set())
-    transform3 = FakeTransform({t2}, set())
+    transform1 = FakeTransform(required_keys={t1}, output_keys=set())
+    transform2 = FakeTransform(required_keys={t1}, output_keys=set())
+    transform3 = FakeTransform(required_keys={t2}, output_keys=set())
 
     transform1 | transform2
 
@@ -107,9 +107,9 @@ def test_conjunct_checks_output_keys():
     t1 = torch.randn([2], device=DEVICE)
     t2 = torch.randn([3], device=DEVICE)
 
-    transform1 = FakeTransform(set(), {t1, t2})
-    transform2 = FakeTransform(set(), {t1})
-    transform3 = FakeTransform(set(), {t2})
+    transform1 = FakeTransform(required_keys=set(), output_keys={t1, t2})
+    transform2 = FakeTransform(required_keys=set(), output_keys={t1})
+    transform3 = FakeTransform(required_keys=set(), output_keys={t2})
 
     transform2 | transform3
 
@@ -137,7 +137,7 @@ def test_str():
     conjunctions.
     """
 
-    t = FakeTransform(set(), set())
+    t = FakeTransform(required_keys=set(), output_keys=set())
     transform = (t | t << t << t | t) << t << (t | t)
 
     assert str(transform) == "(T | T ∘ T ∘ T | T) ∘ T ∘ (T | T)"
