@@ -66,7 +66,7 @@ def test_single_differentiation():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_multiple_differentiation_with_grad():
+def test_multiple_differentiations():
     """
     Tests that we can perform multiple scalar differentiations with the conjunction of multiple Grad
     transforms, composed with an Init transform.
@@ -200,7 +200,7 @@ def test_conjunction_accumulate_select():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_equivalence_jac_grad():
+def test_equivalence_jac_grads():
     """
     Tests that differentiation in parallel using `_jac` is equivalent to sequential differentiation
     using several calls to `_grad` and stacking the resulting gradients.

@@ -6,7 +6,7 @@ from torchjd.autojac._transform import Select, TensorDict
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-def test_select_partition():
+def test_partition():
     """
     Tests that the Select transform works correctly by applying 2 different Selects to a TensorDict,
     whose keys form a partition of the keys of the TensorDict.

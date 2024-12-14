@@ -30,7 +30,7 @@ class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
         return self.keys
 
 
-def test_stack_single_key():
+def test_single_key():
     """
     Tests that the Stack transform correctly stacks gradients into a jacobian, in a very simple
     example with 2 transforms sharing the same key.
@@ -48,7 +48,7 @@ def test_stack_single_key():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_stack_disjoint_key_sets():
+def test_disjoint_key_sets():
     """
     Tests that the Stack transform correctly stacks gradients into a jacobian, in an example where
     the output key sets of all of its transforms are disjoint. The missing values should be replaced
@@ -72,7 +72,7 @@ def test_stack_disjoint_key_sets():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_stack_overlapping_key_sets():
+def test_overlapping_key_sets():
     """
     Tests that the Stack transform correctly stacks gradients into a jacobian, in an example where
     the output key sets all of its transforms are overlapping (non-empty intersection, but not
@@ -98,7 +98,7 @@ def test_stack_overlapping_key_sets():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_stack_no_transform():
+def test_empty():
     """Tests that the Stack transform correctly handles an empty list of transforms."""
 
     stack = Stack([])

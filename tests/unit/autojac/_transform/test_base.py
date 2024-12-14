@@ -37,7 +37,7 @@ class FakeTransform(Transform[_B, _C]):
         return self._output_keys
 
 
-def test_apply_keys():
+def test_call_checks_keys():
     """
     Tests that a ``Transform`` checks that the provided dictionary to the `__call__` function
     contains keys that correspond exactly to `required_keys`.
@@ -59,7 +59,7 @@ def test_apply_keys():
         transform(TensorDict({t1: t2, t2: t1}))
 
 
-def test_compose_keys_match():
+def test_compose_checks_keys():
     """
     Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
     match with the outer transform's `required_keys`.
@@ -76,7 +76,7 @@ def test_compose_keys_match():
         transform2 << transform1
 
 
-def test_conjunct_required_keys():
+def test_conjunct_checks_required_keys():
     """
     Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
     same `required_keys`.
@@ -98,7 +98,7 @@ def test_conjunct_required_keys():
         transform1 | transform2 | transform3
 
 
-def test_conjunct_wrong_output_keys():
+def test_conjunct_checks_output_keys():
     """
     Tests that the conjunction of ``Transform``s checks that the transforms `output_keys` are
     disjoint.
@@ -120,7 +120,7 @@ def test_conjunct_wrong_output_keys():
         transform1 | transform2 | transform3
 
 
-def test_conjunction_empty_transforms():
+def test_empty_conjunction():
     """
     Tests that it is possible to take the conjunction of no transform. This should return an empty
     dictionary.

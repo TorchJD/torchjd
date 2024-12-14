@@ -64,7 +64,7 @@ def test_multiple_accumulation(iterations: int):
     assert_tensor_dicts_are_close(grads, expected_grads)
 
 
-def test_accumulate_fails_on_no_requires_grad():
+def test_no_requires_grad_fails():
     """
     Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
     tensor that does not require grad.
@@ -80,7 +80,7 @@ def test_accumulate_fails_on_no_requires_grad():
         accumulate(input)
 
 
-def test_accumulate_fails_on_no_leaf_and_no_retains_grad():
+def test_no_leaf_and_no_retains_grad_fails():
     """
     Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
     tensor that is not a leaf and that does not retain grad.

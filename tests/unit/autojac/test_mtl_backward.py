@@ -11,7 +11,7 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
-def test_mtl_backward_various_aggregators(aggregator: Aggregator):
+def test_various_aggregators(aggregator: Aggregator):
     """Tests that mtl_backward works for various aggregators."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -33,7 +33,7 @@ def test_mtl_backward_various_aggregators(aggregator: Aggregator):
 @mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
 @mark.parametrize("manually_specify_shared_params", [True, False])
 @mark.parametrize("manually_specify_tasks_params", [True, False])
-def test_mtl_backward_value_is_correct(
+def test_value_is_correct(
     aggregator: Aggregator,
     shape: tuple[int, int],
     manually_specify_shared_params: bool,
@@ -86,7 +86,7 @@ def test_mtl_backward_value_is_correct(
     assert_close(p0.grad, expected_aggregation)
 
 
-def test_mtl_backward_empty_tasks():
+def test_empty_tasks_fails():
     """Tests that mtl_backward raises an error when called with an empty list of tasks."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -98,7 +98,7 @@ def test_mtl_backward_empty_tasks():
         mtl_backward(losses=[], features=[r1, r2], aggregator=UPGrad())
 
 
-def test_mtl_backward_single_task():
+def test_single_task():
     """Tests that mtl_backward works correctly with a single task."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -114,7 +114,7 @@ def test_mtl_backward_single_task():
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-def test_mtl_backward_incoherent_task_number():
+def test_incoherent_task_number_fails():
     """
     Tests that mtl_backward raises an error when called with the number of tasks losses different
     from the number of tasks parameters.
@@ -147,7 +147,7 @@ def test_mtl_backward_incoherent_task_number():
         )
 
 
-def test_mtl_backward_empty_params():
+def test_empty_params():
     """Tests that mtl_backward does not fill the .grad values if no parameter is specified."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -171,7 +171,7 @@ def test_mtl_backward_empty_params():
         assert p.grad is None
 
 
-def test_mtl_backward_multiple_params_per_task():
+def test_multiple_params_per_task():
     """Tests that mtl_backward works correctly when the tasks each have several parameters."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -205,7 +205,7 @@ def test_mtl_backward_multiple_params_per_task():
         [(5, 4, 3, 2), (5, 4, 3, 2)],
     ],
 )
-def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int]]):
+def test_various_shared_params(shared_params_shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of shared_params."""
 
     shared_params = [
@@ -230,7 +230,7 @@ def test_mtl_backward_various_shared_params(shared_params_shapes: list[tuple[int
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-def test_mtl_backward_partial_params():
+def test_partial_params():
     """
     Tests that mtl_backward fills the right .grad values when only a subset of the parameters are
     specified as inputs.
@@ -258,7 +258,7 @@ def test_mtl_backward_partial_params():
     assert p2.grad is None
 
 
-def test_mtl_backward_empty_features():
+def test_empty_features_fails():
     """Tests that mtl_backward expectedly raises an error when no there is no feature."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -283,7 +283,7 @@ def test_mtl_backward_empty_features():
         (5, 4, 3, 2),
     ],
 )
-def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
+def test_various_single_features(shape: tuple[int, ...]):
     """Tests that mtl_backward works correctly with various kinds of feature tensors."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -314,7 +314,7 @@ def test_mtl_backward_various_single_features(shape: tuple[int, ...]):
         [(5, 4, 3, 2), (5, 4, 3, 2)],
     ],
 )
-def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
+def test_various_feature_lists(shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -332,7 +332,7 @@ def test_mtl_backward_various_feature_lists(shapes: list[tuple[int]]):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-def test_mtl_backward_non_scalar_loss():
+def test_non_scalar_loss_fails():
     """Tests that mtl_backward raises an error when used with a non-scalar loss."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -349,7 +349,7 @@ def test_mtl_backward_non_scalar_loss():
 
 
 @mark.parametrize("chunk_size", [None, 1, 2, 4])
-def test_mtl_backward_valid_chunk_size(chunk_size):
+def test_various_valid_chunk_sizes(chunk_size):
     """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -374,7 +374,7 @@ def test_mtl_backward_valid_chunk_size(chunk_size):
 
 
 @mark.parametrize("chunk_size", [0, -1])
-def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
+def test_non_positive_chunk_size_fails(chunk_size: int):
     """Tests that mtl_backward raises an error when using invalid chunk sizes."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -399,9 +399,7 @@ def test_mtl_backward_non_positive_chunk_size(chunk_size: int):
     ["chunk_size", "expectation"],
     [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
 )
-def test_mtl_backward_no_retain_graph_small_chunk_size(
-    chunk_size: int, expectation: ExceptionContext
-):
+def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: ExceptionContext):
     """
     Tests that when using retain_graph=False, mtl_backward only works if the chunk size is large
     enough to allow differentiation of all tensors at once.
@@ -426,7 +424,7 @@ def test_mtl_backward_no_retain_graph_small_chunk_size(
         )
 
 
-def test_mtl_backward_fails_with_shared_param_retaining_grad():
+def test_shared_param_retaining_grad_fails():
     """
     Tests that mtl_backward raises an error when some shared param in the computation graph of the
     ``features`` parameter retains grad.
@@ -452,7 +450,7 @@ def test_mtl_backward_fails_with_shared_param_retaining_grad():
         )
 
 
-def test_mtl_backward_fails_with_shared_activation_retaining_grad():
+def test_shared_activation_retaining_grad_fails():
     """
     Tests that mtl_backward fails to fill a valid `.grad` when some tensor in the computation graph
     of the ``features`` parameter retains grad.
@@ -482,7 +480,7 @@ def test_mtl_backward_fails_with_shared_activation_retaining_grad():
         _ = -a.grad
 
 
-def test_mtl_backward_task_params_have_some_overlap():
+def test_tasks_params_overlap():
     """Tests that mtl_backward works correctly when the tasks' parameters have some overlap."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -505,7 +503,7 @@ def test_mtl_backward_task_params_have_some_overlap():
     assert_close(p0.grad, aggregator(J))
 
 
-def test_mtl_backward_task_params_are_the_same():
+def test_tasks_params_are_the_same():
     """Tests that mtl_backward works correctly when the tasks have the same params."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
@@ -524,7 +522,7 @@ def test_mtl_backward_task_params_are_the_same():
     assert_close(p0.grad, aggregator(J))
 
 
-def test_mtl_backward_task_params_are_subset_of_other_task_params():
+def test_task_params_is_subset_of_other_task_params():
     """
     Tests that mtl_backward works correctly when one task's params is a subset of another task's
     params.
@@ -548,7 +546,7 @@ def test_mtl_backward_task_params_are_subset_of_other_task_params():
     assert_close(p0.grad, aggregator(J))
 
 
-def test_mtl_backward_shared_params_overlap_with_tasks_params():
+def test_shared_params_overlapping_with_tasks_params_fails():
     """
     Tests that mtl_backward raises an error when the set of shared params overlaps with the set of
     task-specific params.
@@ -573,7 +571,7 @@ def test_mtl_backward_shared_params_overlap_with_tasks_params():
         )
 
 
-def test_mtl_backward_default_shared_params_overlap_with_default_tasks_params():
+def test_default_shared_params_overlapping_with_default_tasks_params_fails():
     """
     Tests that mtl_backward raises an error when the set of shared params obtained by default
     overlaps with the set of task-specific params obtained by default.
