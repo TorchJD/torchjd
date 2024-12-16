@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Iterable, Sequence
 
 from torch import Tensor
@@ -67,27 +68,27 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
     :param excluded_nodes: Nodes excluded from the graph traversal.
     """
 
-    seen = set()  # Prevent nodes to be traversed more than once
+    excluded_nodes = set(excluded_nodes)  # Re-instantiate set to avoid modifying input
     result = set()
-    nodes_to_traverse = [node for node in roots if node not in excluded_nodes]
+    nodes_to_traverse = deque()
 
-    # This implementation more or less follows what is advised
-    # [here](https://discuss.pytorch.org/t/how-to-access-the-computational-graph/112887), but it is
-    # not necessarily robust to future changes, and it's not guaranteed to work.
-    # See [this](https://discuss.pytorch.org/t/autograd-graph-traversal/213658) for another question
-    # about how to implement this.
+    for node in roots:
+        if node is not None and node not in excluded_nodes:
+            nodes_to_traverse.append(node)
+            excluded_nodes.add(node)
+
+    # This implementation more or less follows what is advised in
+    # https://discuss.pytorch.org/t/autograd-graph-traversal/213658 and what was suggested in
+    # https://github.com/TorchJD/torchjd/issues/216.
     while nodes_to_traverse:
-        current_node = nodes_to_traverse.pop()
+        current_node = nodes_to_traverse.popleft()  # Breadth-first
 
         if current_node.__class__.__name__ == "AccumulateGrad":
             result.add(current_node)
 
-        new_children = [
-            child[0]
-            for child in current_node.next_functions
-            if child[0] is not None and child[0] not in excluded_nodes and child[0] not in seen
-        ]
-        nodes_to_traverse += new_children
-        seen |= set(new_children)
+        for node, _ in current_node.next_functions:
+            if node is not None and node not in excluded_nodes:
+                nodes_to_traverse.append(node)  # Append to the right
+                excluded_nodes.add(node)
 
     return result
