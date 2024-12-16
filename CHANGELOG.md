@@ -8,6 +8,11 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug that could cause `backward` or `mtl_backward` to be stuck in an infinite loop when
+  trying to find the tensors with respect to which differentiation should be done.
+
 ## [0.3.0] - 2024-12-10
 
 ### Added
