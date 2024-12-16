@@ -67,6 +67,7 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
     :param excluded_nodes: Nodes excluded from the graph traversal.
     """
 
+    seen = set()  # Prevent nodes to be traversed more than once
     result = set()
     nodes_to_traverse = [node for node in roots if node not in excluded_nodes]
 
@@ -81,10 +82,12 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
         if current_node.__class__.__name__ == "AccumulateGrad":
             result.add(current_node)
 
-        nodes_to_traverse += [
+        new_children = [
             child[0]
             for child in current_node.next_functions
-            if child[0] is not None and child[0] not in excluded_nodes
+            if child[0] is not None and child[0] not in excluded_nodes and child[0] not in seen
         ]
+        nodes_to_traverse += new_children
+        seen |= set(new_children)
 
     return result
