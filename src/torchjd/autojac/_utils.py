@@ -70,12 +70,7 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
 
     excluded_nodes = set(excluded_nodes)  # Re-instantiate set to avoid modifying input
     result = set()
-    nodes_to_traverse = deque()
-
-    for node in roots:
-        if node is not None and node not in excluded_nodes:
-            nodes_to_traverse.append(node)
-            excluded_nodes.add(node)
+    nodes_to_traverse = deque(roots - excluded_nodes)
 
     # This implementation more or less follows what is advised in
     # https://discuss.pytorch.org/t/autograd-graph-traversal/213658 and what was suggested in
