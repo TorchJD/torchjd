@@ -76,14 +76,14 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
     # https://discuss.pytorch.org/t/autograd-graph-traversal/213658 and what was suggested in
     # https://github.com/TorchJD/torchjd/issues/216.
     while nodes_to_traverse:
-        current_node = nodes_to_traverse.popleft()  # Breadth-first
+        node = nodes_to_traverse.popleft()  # Breadth-first
 
-        if current_node.__class__.__name__ == "AccumulateGrad":
-            result.add(current_node)
+        if node.__class__.__name__ == "AccumulateGrad":
+            result.add(node)
 
-        for node, _ in current_node.next_functions:
-            if node is not None and node not in excluded_nodes:
-                nodes_to_traverse.append(node)  # Append to the right
-                excluded_nodes.add(node)
+        for child, _ in node.next_functions:
+            if child is not None and child not in excluded_nodes:
+                nodes_to_traverse.append(child)  # Append to the right
+                excluded_nodes.add(child)
 
     return result
