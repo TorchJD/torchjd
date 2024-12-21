@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.3.1] - 2024-12-21
+
 ### Changed
 
 - Improved the performance of the graph traversal function called by `backward` and `mtl_backward`
