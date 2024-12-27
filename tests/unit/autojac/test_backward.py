@@ -2,6 +2,7 @@ from contextlib import nullcontext as does_not_raise
 
 import torch
 from pytest import mark, raises
+from torch import nn
 from torch.testing import assert_close
 from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
@@ -213,3 +214,25 @@ def test_non_input_retaining_grad_fails():
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
         _ = -b.grad
+
+
+def test_rnn():
+    """
+    Tests that backward works for a very simple RNN, adapted from
+    [PyTorch's documentation](https://pytorch.org/docs/stable/generated/torch.nn.RNN.html).
+    """
+
+    rnn = nn.RNN(input_size=10, hidden_size=20, num_layers=2).to(device=DEVICE)
+    input = torch.randn(5, 3, 10, device=DEVICE)  # Batch of 3 sequences of length 5 and of dim 10.
+    h0 = torch.randn(2, 3, 20, device=DEVICE)  # Batch of 3 hidden states of 2 layers of dim 20.
+    output, _ = rnn(input, h0)  # Output is of shape [5, 3, 20].
+    target = torch.randn(5, 3, 20, device=DEVICE)  # Batch of 3 sequences of len 5 and of dim 20.
+    losses = ((output - target) ** 2).sum(dim=[1, 2])  # 1 loss per sequence element.
+    aggregator = UPGrad()
+
+    # It's necessary to avoid using vmap by setting the parallel_chunk_size to 1 because the cuda
+    # implementation of RNN is not supported by vmap.
+    backward(tensors=losses, aggregator=aggregator, parallel_chunk_size=1, retain_graph=True)
+
+    for param in rnn.parameters():
+        assert param.grad is not None and param.grad.shape == param.shape
