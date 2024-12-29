@@ -8,6 +8,14 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed how the Jacobians are computed when calling `backward` or `mtl_backward` with
+  `parallel_chunk_size=1` to not rely on `torch.autograd.vmap` in this case. Whenever `vmap` does
+  not support something (compiled functions, RNN on cuda, etc.), users should now be able to avoid
+  using `vmap` by calling `backward` or `mtl_backward` with `parallel_chunk_size=1` and
+  `retain_graph=True`.
+
 ## [0.3.1] - 2024-12-21
 
 ### Changed
