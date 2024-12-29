@@ -1,7 +1,10 @@
 from contextlib import nullcontext as does_not_raise
+from itertools import chain
 
 import torch
 from pytest import mark, raises
+from torch import nn
+from torch.nn import BCELoss, MSELoss
 from torch.testing import assert_close
 from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
@@ -596,3 +599,48 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
             aggregator=UPGrad(),
             retain_graph=True,
         )
+
+
+def test_rnn():
+    """
+    Tests that mtl_backward works for simple multitask model whose feature extractor is an RNN
+    adapted from
+    [PyTorch's documentation](https://pytorch.org/docs/stable/generated/torch.nn.RNN.html).
+
+    Here, we have a binary classification task and a 4-regressions task using the last hidden state
+    of the RNN as shared input features.
+    """
+
+    rnn = nn.RNN(input_size=10, hidden_size=20, num_layers=2).to(device=DEVICE)
+    cls_head = nn.Linear(40, 1).to(device=DEVICE)
+    reg_head = nn.Linear(40, 4).to(device=DEVICE)
+
+    input = torch.randn(5, 3, 10, device=DEVICE)  # Batch of 3 sequences of length 5 and of dim 10.
+    h0 = torch.randn(2, 3, 20, device=DEVICE)  # Batch of 3 hidden states of 2 layers of dim 20.
+    _, hn = rnn(input, h0)  # hn is of shape [2, 3, 20].
+    features = hn.permute(1, 0, 2).reshape(3, -1)
+    cls_output = torch.sigmoid(cls_head(features)).squeeze()
+    reg_output = reg_head(features)
+
+    cls_loss_fn = BCELoss()
+    reg_loss_fn = MSELoss()
+
+    cls_target = torch.tensor([1.0, 0.0, 1.0], device=DEVICE)
+    reg_target = torch.randn(3, 4, device=DEVICE)
+
+    cls_loss = cls_loss_fn(cls_output, cls_target)
+    reg_loss = reg_loss_fn(reg_output, reg_target)
+    losses = [cls_loss, reg_loss]
+
+    # It's necessary to avoid using vmap by setting the parallel_chunk_size to 1 because the cuda
+    # implementation of RNN is not supported by vmap.
+    mtl_backward(
+        losses=losses,
+        features=features,
+        aggregator=UPGrad(),
+        parallel_chunk_size=1,
+        retain_graph=True,
+    )
+
+    for param in chain(rnn.parameters(), cls_head.parameters(), reg_head.parameters()):
+        assert param.grad is not None and param.grad.shape == param.shape
