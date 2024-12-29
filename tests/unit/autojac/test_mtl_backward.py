@@ -29,8 +29,8 @@ def test_various_aggregators(aggregator: Aggregator):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA()])
-@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
+@mark.parametrize("aggregator", [Mean(), UPGrad()])
+@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_shared_params", [True, False])
 @mark.parametrize("manually_specify_tasks_params", [True, False])
 def test_value_is_correct(

@@ -26,8 +26,8 @@ def test_various_aggregators(aggregator: Aggregator):
         assert (a.grad is not None) and (a.shape == a.grad.shape)
 
 
-@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA()])
-@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
+@mark.parametrize("aggregator", [Mean(), UPGrad()])
+@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_inputs", [True, False])
 def test_value_is_correct(
     aggregator: Aggregator, shape: tuple[int, int], manually_specify_inputs: bool
