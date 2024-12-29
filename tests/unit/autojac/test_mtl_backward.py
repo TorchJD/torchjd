@@ -33,11 +33,13 @@ def test_various_aggregators(aggregator: Aggregator):
 @mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_shared_params", [True, False])
 @mark.parametrize("manually_specify_tasks_params", [True, False])
+@mark.parametrize("chunk_size", [1, 3, None])
 def test_value_is_correct(
     aggregator: Aggregator,
     shape: tuple[int, int],
     manually_specify_shared_params: bool,
     manually_specify_tasks_params: bool,
+    chunk_size: int | None,
 ):
     """
     Tests that the .grad value filled by mtl_backward is correct in a simple example of
@@ -74,6 +76,8 @@ def test_value_is_correct(
         aggregator=aggregator,
         tasks_params=tasks_params,
         shared_params=shared_params,
+        retain_graph=True,
+        parallel_chunk_size=chunk_size,
     )
 
     assert_close(p1.grad, f)

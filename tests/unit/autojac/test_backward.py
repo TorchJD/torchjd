@@ -29,8 +29,12 @@ def test_various_aggregators(aggregator: Aggregator):
 @mark.parametrize("aggregator", [Mean(), UPGrad()])
 @mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_inputs", [True, False])
+@mark.parametrize("chunk_size", [1, 3, None])
 def test_value_is_correct(
-    aggregator: Aggregator, shape: tuple[int, int], manually_specify_inputs: bool
+    aggregator: Aggregator,
+    shape: tuple[int, int],
+    manually_specify_inputs: bool,
+    chunk_size: int | None,
 ):
     """
     Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
@@ -46,7 +50,13 @@ def test_value_is_correct(
     else:
         inputs = None
 
-    backward([output], aggregator, inputs=inputs)
+    backward(
+        [output],
+        aggregator,
+        inputs=inputs,
+        retain_graph=True,
+        parallel_chunk_size=chunk_size,
+    )
 
     assert_close(input.grad, aggregator(J))
 
