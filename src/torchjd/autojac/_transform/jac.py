@@ -68,10 +68,23 @@ class Jac(_Differentiate[Jacobians]):
             grads = _materialize(optional_grads, inputs=inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
-        # Because of a limitation of vmap, this breaks when some tensors have `retains_grad=True`.
-        # See https://pytorch.org/functorch/stable/ux_limitations.html for more information.
-        # This also breaks when some tensors have been produced by compiled functions.
-        grouped_jacobian_matrix = torch.vmap(get_vjp, chunk_size=self.chunk_size)(jac_outputs)
+        if self.chunk_size == 1:
+            # In this special case, we don't need vmap, and because of the issues of vmap, we're
+            # better off not using it. In most cases, this should be equivalent to the vmap call,
+            # but in cases where vmap breaks (compiled functions, RNN on cuda, etc.), this should
+            # still work.
+            rows = []
+            for i in range(jac_outputs[0].shape[0]):
+                grad_outputs = [jac_output[i] for jac_output in jac_outputs]
+                gradient_vector = get_vjp(grad_outputs)
+                rows.append(gradient_vector)
+            grouped_jacobian_matrix = torch.vstack(rows)
+        else:
+            # Because of a limitation of vmap, this breaks when some tensors have
+            # `retains_grad=True`. See https://pytorch.org/functorch/stable/ux_limitations.html for
+            # more information. This also breaks when some tensors have been produced by compiled
+            # functions, and in some other cases (RNN on cuda, etc.).
+            grouped_jacobian_matrix = torch.vmap(get_vjp, chunk_size=self.chunk_size)(jac_outputs)
 
         lengths = [input.numel() for input in inputs]
         jacobian_matrices = _extract_sub_matrices(grouped_jacobian_matrix, lengths)
