@@ -213,3 +213,30 @@ def test_non_input_retaining_grad_fails():
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
         _ = -b.grad
+
+
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_tensor_used_multiple_times(chunk_size: int | None):
+    """
+    Tests that backward works correctly when one of the inputs is used multiple times. In this
+    setup, the autograd graph is still acyclic, but the graph of tensors used becomes cyclic.
+    """
+
+    a = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    b = 2.0 * a
+    c = a * b
+    d = a * c
+    e = a * d
+    aggregator = UPGrad()
+
+    backward([d, e], aggregator=aggregator, parallel_chunk_size=chunk_size, retain_graph=True)
+
+    expected_jacobian = torch.tensor(
+        [
+            [2.0 * 3.0 * a**2],
+            [2.0 * 4.0 * a**3],
+        ],
+        device=DEVICE,
+    )
+
+    assert_close(a.grad, aggregator(expected_jacobian).squeeze())
