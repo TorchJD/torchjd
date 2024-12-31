@@ -17,6 +17,7 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
 
 .. |yes| replace:: :raw-html:`<center><font color="#28b528">✔</font></center>`
 .. |no| replace:: :raw-html:`<center><font color="#e63232">✘</font></center>`
+.. |TODO| replace:: :raw-html:`<center><font color="#ffff00">?</font></center>`
 
 .. list-table::
    :widths: 25 15 15 15
@@ -37,6 +38,10 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
    * - :doc:`CAGrad <cagrad>`
      - |no|
      - |no|
+     - |yes|
+   * - :doc:`ConFIG <config>`
+     - |TODO|
+     - |TODO|
      - |yes|
    * - :doc:`Constant <constant>`
      - |no|
@@ -140,6 +145,7 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
     upgrad.rst
     aligned_mtl.rst
     cagrad.rst
+    config.rst
     constant.rst
     dualproj.rst
     graddrop.rst
