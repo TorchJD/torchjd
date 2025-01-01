@@ -1,12 +1,10 @@
-from conflictfree.grad_operator import ConFIGOperator
-from conflictfree.length_model import LengthModel, ProjectionLength
-from conflictfree.weight_model import EqualWeight, WeightModel
+import torch
 from torch import Tensor
 
-from torchjd.aggregation.bases import Aggregator
+from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
 
-class ConFIG(Aggregator):
+class ConFIG(_WeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` as defined in Equation 2 of `ConFIG: Towards
     Conflict-free Training of Physics Informed Neural Networks <https://arxiv.org/pdf/2408.11104>`_.
@@ -27,20 +25,15 @@ class ConFIG(Aggregator):
         # TODO: add doc test
     """
 
-    def __init__(
-        self,
-        weight_model: WeightModel = EqualWeight(),
-        length_model: LengthModel = ProjectionLength(),
-        allow_simplified_model: bool = True,
-        use_least_square: bool = True,
-    ):
-        super().__init__()
-        self._config_operator = ConFIGOperator(
-            weight_model=weight_model,
-            length_model=length_model,
-            allow_simplified_model=allow_simplified_model,
-            use_least_square=use_least_square,
-        )
+    def __init__(self):
+        super().__init__(weighting=_ConFIGWeighting())
+
+
+class _ConFIGWeighting(_Weighting):
+    """
+    TODO
+    """
 
     def forward(self, matrix: Tensor) -> Tensor:
-        return self._config_operator.calculate_gradient(matrix)
+        # TODO
+        return torch.ones(matrix.shape[0], dtype=matrix.dtype, device=matrix.device)
