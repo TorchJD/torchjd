@@ -431,7 +431,7 @@ def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: Excep
 def test_shared_param_retaining_grad_fails():
     """
     Tests that mtl_backward raises an error when some shared param in the computation graph of the
-    ``features`` parameter retains grad.
+    ``features`` parameter retains grad and vmap has to be used.
     """
 
     p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
@@ -457,7 +457,7 @@ def test_shared_param_retaining_grad_fails():
 def test_shared_activation_retaining_grad_fails():
     """
     Tests that mtl_backward fails to fill a valid `.grad` when some tensor in the computation graph
-    of the ``features`` parameter retains grad.
+    of the ``features`` parameter retains grad and vmap has to be used.
     """
 
     p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)

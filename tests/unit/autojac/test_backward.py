@@ -184,10 +184,10 @@ def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: Excep
 def test_input_retaining_grad_fails():
     """
     Tests that backward raises an error when some input in the computation graph of the ``tensors``
-    parameter retains grad.
+    parameter retains grad and vmap has to be used.
     """
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     b = 2 * a
     b.retain_grad()
     y = 3 * b
@@ -199,10 +199,10 @@ def test_input_retaining_grad_fails():
 def test_non_input_retaining_grad_fails():
     """
     Tests that backward fails to fill a valid `.grad` when some tensor in the computation graph of
-    the ``tensors`` parameter retains grad.
+    the ``tensors`` parameter retains grad and vmap has to be used.
     """
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
     b = 2 * a
     b.retain_grad()
     y = 3 * b
