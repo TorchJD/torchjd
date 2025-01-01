@@ -1,9 +1,6 @@
-from contextlib import nullcontext as does_not_raise
-
 import torch
 from pytest import mark, raises
 from torch.testing import assert_close
-from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd import backward
@@ -54,7 +51,6 @@ def test_value_is_correct(
         [output],
         aggregator,
         inputs=inputs,
-        retain_graph=True,
         parallel_chunk_size=chunk_size,
     )
 
@@ -141,7 +137,7 @@ def test_various_valid_chunk_sizes(chunk_size):
     y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size, retain_graph=True)
+    backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
 
     for a in [a1, a2]:
         assert (a.grad is not None) and (a.shape == a.grad.shape)
@@ -159,26 +155,6 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
 
     with raises(ValueError):
         backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
-
-
-@mark.parametrize(
-    ["chunk_size", "expectation"],
-    [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
-)
-def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: ExceptionContext):
-    """
-    Tests that when using retain_graph=False, backward only works if the chunk size is large enough
-    to allow differentiation of all tensors at once.
-    """
-
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
-    y2 = (a1**2).sum() + a2.norm()
-
-    with expectation:
-        backward([y1, y2], UPGrad(), retain_graph=False, parallel_chunk_size=chunk_size)
 
 
 def test_input_retaining_grad_fails():
@@ -229,7 +205,7 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
     e = a * d
     aggregator = UPGrad()
 
-    backward([d, e], aggregator=aggregator, parallel_chunk_size=chunk_size, retain_graph=True)
+    backward([d, e], aggregator=aggregator, parallel_chunk_size=chunk_size)
 
     expected_jacobian = torch.tensor(
         [

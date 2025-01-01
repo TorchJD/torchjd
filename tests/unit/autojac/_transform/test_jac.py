@@ -7,8 +7,8 @@ from torchjd.autojac._transform import Jac, Jacobians
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-@mark.parametrize(["chunk_size", "retain_graph"], [(1, True), (3, True), (None, False)])
-def test_single_input(chunk_size: int | None, retain_graph: bool):
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_single_input(chunk_size: int | None):
     """
     Tests that the Jac transform works correctly for an example of multiple differentiation. Here,
     the function considered is: `y = [a1 * x, a2 * x]`. We want to compute the jacobians of `y` with
@@ -21,7 +21,7 @@ def test_single_input(chunk_size: int | None, retain_graph: bool):
     y = torch.stack([a1 * x, a2 * x])
     input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
-    jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=chunk_size, retain_graph=True)
+    jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=chunk_size)
 
     jacobians = jac(input)
     expected_jacobians = {
@@ -32,8 +32,8 @@ def test_single_input(chunk_size: int | None, retain_graph: bool):
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
 
 
-@mark.parametrize(["chunk_size", "retain_graph"], [(1, True), (3, True), (None, False)])
-def test_empty_inputs_1(chunk_size: int | None, retain_graph: bool):
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_empty_inputs_1(chunk_size: int | None):
     """
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
@@ -43,7 +43,7 @@ def test_empty_inputs_1(chunk_size: int | None, retain_graph: bool):
     y = torch.stack([y1, y2])
     input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
-    jac = Jac(outputs=[y], inputs=[], chunk_size=chunk_size, retain_graph=True)
+    jac = Jac(outputs=[y], inputs=[], chunk_size=chunk_size)
 
     jacobians = jac(input)
     expected_jacobians = {}
@@ -51,8 +51,8 @@ def test_empty_inputs_1(chunk_size: int | None, retain_graph: bool):
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
 
 
-@mark.parametrize(["chunk_size", "retain_graph"], [(1, True), (3, True), (None, False)])
-def test_empty_inputs_2(chunk_size: int | None, retain_graph: bool):
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_empty_inputs_2(chunk_size: int | None):
     """
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
@@ -65,7 +65,7 @@ def test_empty_inputs_2(chunk_size: int | None, retain_graph: bool):
     y = torch.stack([y1, y2])
     input = Jacobians({y: torch.eye(2, device=DEVICE)})
 
-    jac = Jac(outputs=[y], inputs=[], chunk_size=chunk_size, retain_graph=True)
+    jac = Jac(outputs=[y], inputs=[], chunk_size=chunk_size)
 
     jacobians = jac(input)
     expected_jacobians = {}
@@ -125,8 +125,8 @@ def test_two_levels():
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
 
 
-@mark.parametrize(["chunk_size", "retain_graph"], [(1, True), (3, True), (None, False)])
-def test_multiple_outputs_1(chunk_size: int | None, retain_graph: bool):
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_multiple_outputs_1(chunk_size: int | None):
     """
     Tests that the Jac transform works correctly when the `outputs` contains 3 vectors.
     The input (jac_outputs) is not the same for all outputs, so that this test also checks that the
@@ -147,7 +147,7 @@ def test_multiple_outputs_1(chunk_size: int | None, retain_graph: bool):
     jac_output3 = torch.cat([zeros_2x2, zeros_2x2, identity_2x2])
     input = Jacobians({y1: jac_output1, y2: jac_output2, y3: jac_output3})
 
-    jac = Jac(outputs=[y1, y2, y3], inputs=[a1, a2], chunk_size=chunk_size, retain_graph=True)
+    jac = Jac(outputs=[y1, y2, y3], inputs=[a1, a2], chunk_size=chunk_size)
 
     jacobians = jac(input)
     zero_scalar = torch.tensor(0.0, device=DEVICE)
@@ -159,8 +159,8 @@ def test_multiple_outputs_1(chunk_size: int | None, retain_graph: bool):
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
 
 
-@mark.parametrize(["chunk_size", "retain_graph"], [(1, True), (3, True), (None, False)])
-def test_multiple_outputs_2(chunk_size: int | None, retain_graph: bool):
+@mark.parametrize("chunk_size", [1, 3, None])
+def test_multiple_outputs_2(chunk_size: int | None):
     """
     Same as test_multiple_outputs_1 but with different jac_outputs, so the returned jacobians are of
     different shapes.
@@ -180,7 +180,7 @@ def test_multiple_outputs_2(chunk_size: int | None, retain_graph: bool):
     jac_output3 = torch.stack([zeros_2, zeros_2, ones_2])
     input = Jacobians({y1: jac_output1, y2: jac_output2, y3: jac_output3})
 
-    jac = Jac(outputs=[y1, y2, y3], inputs=[a1, a2], chunk_size=chunk_size, retain_graph=True)
+    jac = Jac(outputs=[y1, y2, y3], inputs=[a1, a2], chunk_size=chunk_size)
 
     jacobians = jac(input)
     expected_jacobians = {

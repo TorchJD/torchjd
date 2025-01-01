@@ -1,9 +1,6 @@
-from contextlib import nullcontext as does_not_raise
-
 import torch
 from pytest import mark, raises
 from torch.testing import assert_close
-from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd import mtl_backward
@@ -76,7 +73,6 @@ def test_value_is_correct(
         aggregator=aggregator,
         tasks_params=tasks_params,
         shared_params=shared_params,
-        retain_graph=True,
         parallel_chunk_size=chunk_size,
     )
 
@@ -369,7 +365,6 @@ def test_various_valid_chunk_sizes(chunk_size):
         losses=[y1, y2],
         features=[f1, f2],
         aggregator=UPGrad(),
-        retain_graph=True,
         parallel_chunk_size=chunk_size,
     )
 
@@ -395,35 +390,6 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
             losses=[y1, y2],
             features=[f1, f2],
             aggregator=UPGrad(),
-            parallel_chunk_size=chunk_size,
-        )
-
-
-@mark.parametrize(
-    ["chunk_size", "expectation"],
-    [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
-)
-def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: ExceptionContext):
-    """
-    Tests that when using retain_graph=False, mtl_backward only works if the chunk size is large
-    enough to allow differentiation of all tensors at once.
-    """
-
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    f1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    f2 = (p0**2).sum() + p0.norm()
-    y1 = f1 * p1[0] + f2 * p1[1]
-    y2 = f1 * p2[0] + f2 * p2[1]
-
-    with expectation:
-        mtl_backward(
-            losses=[y1, y2],
-            features=[f1, f2],
-            aggregator=UPGrad(),
-            retain_graph=False,
             parallel_chunk_size=chunk_size,
         )
 
@@ -497,7 +463,7 @@ def test_tasks_params_overlap():
     y2 = f * p2 * p12
 
     aggregator = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator, retain_graph=True)
+    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator)
 
     assert_close(p2.grad, f * p12)
     assert_close(p1.grad, f * p12)
@@ -518,7 +484,7 @@ def test_tasks_params_are_the_same():
     y2 = f + p1
 
     aggregator = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator, retain_graph=True)
+    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator)
 
     assert_close(p1.grad, f + 1)
 
@@ -571,7 +537,6 @@ def test_shared_params_overlapping_with_tasks_params_fails():
             aggregator=UPGrad(),
             tasks_params=[[p1], [p0, p2]],  # Problem: p0 is also shared
             shared_params=[p0],
-            retain_graph=True,
         )
 
 
@@ -594,5 +559,4 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
             losses=[y1, y2],
             features=[f],
             aggregator=UPGrad(),
-            retain_graph=True,
         )

@@ -13,8 +13,12 @@ changes that do not affect the user.
 - Changed how the Jacobians are computed when calling `backward` or `mtl_backward` with
   `parallel_chunk_size=1` to not rely on `torch.autograd.vmap` in this case. Whenever `vmap` does
   not support something (compiled functions, RNN on cuda, etc.), users should now be able to avoid
-  using `vmap` by calling `backward` or `mtl_backward` with `parallel_chunk_size=1` and
-  `retain_graph=True`.
+  using `vmap` by calling `backward` or `mtl_backward` with `parallel_chunk_size=1`.
+
+- Changed the effect of the parameter `retain_graph` of `backward` and `mtl_backward`. When set to
+  `False`, it now frees the graph only after all gradients have been computed. In most cases, users
+  should now leave the default value `retain_graph=False`, no matter what the value of
+  `parallel_chunk_size` is. This will reduce the memory overhead.
 
 ## [0.3.1] - 2024-12-21
 

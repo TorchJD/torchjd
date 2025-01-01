@@ -1,7 +1,7 @@
 import math
 from functools import partial
 from itertools import accumulate
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Sequence
 
 import torch
 from torch import Size, Tensor
@@ -58,7 +58,7 @@ class Jac(_Differentiate[Jacobians]):
                 ]
             )
 
-        def get_vjp(grad_outputs: Sequence[Tensor], retain_graph: bool) -> Tensor:
+        def _get_vjp(grad_outputs: Sequence[Tensor], retain_graph: bool) -> Tensor:
             optional_grads = torch.autograd.grad(
                 outputs,
                 inputs,
@@ -70,34 +70,29 @@ class Jac(_Differentiate[Jacobians]):
             grads = _materialize(optional_grads, inputs=inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
+        get_vjp_retain = partial(_get_vjp, retain_graph=True)
+        get_vjp_last = partial(_get_vjp, retain_graph=self.retain_graph)
+
         # By the Jacobians constraint, this value should be the same for all jac_outputs.
         m = jac_outputs[0].shape[0]
-        chunk_size = self.chunk_size if self.chunk_size is not None else m
-        n_calls = math.ceil(m / chunk_size)
+        max_chunk_size = self.chunk_size if self.chunk_size is not None else m
+        n_chunks = math.ceil(m / max_chunk_size)
 
-        rows = []  # List of tensors of shape [k_i, n] where the k_i's sum to m
-        diff_fn = partial(get_vjp, retain_graph=self.retain_graph)
-        for i in range(n_calls):
-            start = i * chunk_size
-            end = min((i + 1) * chunk_size, m)
-            sub_jac_outputs = [jac_output[start:end] for jac_output in jac_outputs]
-            if (end - start) == 1:
-                # In this special case, we don't need vmap, and because of the issues of vmap, we're
-                # better off not using it. In most cases, this should be equivalent to the vmap
-                # call, but in cases where vmap breaks (compiled functions, RNN on cuda, etc.), this
-                # should still work.
-                grad_outputs = [tensor.squeeze() for tensor in sub_jac_outputs]
-                gradient_vector = diff_fn(grad_outputs)
-                sub_jacobian_matrix = gradient_vector.unsqueeze(0)
-            else:
-                # Because of a limitation of vmap, this breaks when some tensors have
-                # `retains_grad=True`. See https://pytorch.org/functorch/stable/ux_limitations.html
-                # for more information. This also breaks when some tensors have been produced by
-                # compiled functions, and in some other cases (RNN on cuda, etc.).
-                sub_jacobian_matrix = torch.vmap(diff_fn, chunk_size=chunk_size)(sub_jac_outputs)
-            rows.append(sub_jacobian_matrix)
+        # List of tensors of shape [k_i, n] where the k_i's sum to m
+        jacobian_matrix_chunks = []
+        for i in range(n_chunks):
+            # Chunk the jac_outputs ourselves
+            start = i * max_chunk_size
+            end = min((i + 1) * max_chunk_size, m)
+            jac_outputs_chunk = [jac_output[start:end] for jac_output in jac_outputs]
 
-        grouped_jacobian_matrix = torch.vstack(rows)
+            # Decide which get_vjp function to use
+            get_vjp = get_vjp_retain if i < n_chunks - 1 else get_vjp_last
+
+            # Compute the current jacobian matrix chunk and store it
+            jacobian_matrix_chunks.append(_get_jacobian_matrix_chunk(jac_outputs_chunk, get_vjp))
+
+        grouped_jacobian_matrix = torch.vstack(jacobian_matrix_chunks)
         lengths = [input.numel() for input in inputs]
         jacobian_matrices = _extract_sub_matrices(grouped_jacobian_matrix, lengths)
 
@@ -105,6 +100,25 @@ class Jac(_Differentiate[Jacobians]):
         jacobians = _reshape_matrices(jacobian_matrices, shapes)
 
         return tuple(jacobians)
+
+
+def _get_jacobian_matrix_chunk(
+    jac_outputs_chunk: list[Tensor], get_vjp: Callable[[Sequence[Tensor]], Tensor]
+) -> Tensor:
+    """
+    Computes the jacobian matrix chunk corresponding to the provided get_vjp function, either by
+    calling get_vjp directly or by wrapping it into a call to ``torch.vmap``, depending on the shape
+    of the provided ``jac_outputs_chunk``. Because of the numerous issues of vmap, we use it only if
+    necessary (i.e. when the ``jac_outputs_chunk`` have more than 1 row).
+    """
+
+    chunk_size = jac_outputs_chunk[0].shape[0]
+    if chunk_size == 1:
+        grad_outputs = [tensor.squeeze() for tensor in jac_outputs_chunk]
+        gradient_vector = get_vjp(grad_outputs)
+        return gradient_vector.unsqueeze(0)
+    else:
+        return torch.vmap(get_vjp, chunk_size=chunk_size)(jac_outputs_chunk)
 
 
 def _extract_sub_matrices(matrix: Tensor, lengths: Sequence[int]) -> list[Tensor]:
