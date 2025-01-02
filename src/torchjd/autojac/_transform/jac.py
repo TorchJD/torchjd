@@ -114,7 +114,7 @@ def _get_jac_matrix_chunk(
 
     chunk_size = jac_outputs_chunk[0].shape[0]
     if chunk_size == 1:
-        grad_outputs = [tensor.squeeze() for tensor in jac_outputs_chunk]
+        grad_outputs = [tensor.squeeze(0) for tensor in jac_outputs_chunk]
         gradient_vector = get_vjp(grad_outputs)
         return gradient_vector.unsqueeze(0)
     else:
