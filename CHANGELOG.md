@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-01-02
+
 ### Changed
 
 - Changed how the Jacobians are computed when calling `backward` or `mtl_backward` with
