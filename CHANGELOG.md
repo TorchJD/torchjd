@@ -20,6 +20,10 @@ changes that do not affect the user.
   should now leave the default value `retain_graph=False`, no matter what the value of
   `parallel_chunk_size` is. This will reduce the memory overhead.
 
+### Added
+
+- RNN training usage example in the documentation.
+
 ## [0.3.1] - 2024-12-21
 
 ### Changed
