@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-01-02
+
 ### Fixed
 
 - Fixed a bug introduced in v0.4.0 that could cause `backward` and `mtl_backward` to fail with some
