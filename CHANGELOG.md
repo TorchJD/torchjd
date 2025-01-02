@@ -8,6 +8,11 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug introduced in v0.4.0 that could cause `backward` and `mtl_backward` to fail with some
+  tensor shapes.
+
 ## [0.4.0] - 2025-01-02 [YANKED]
 
 ### Changed
