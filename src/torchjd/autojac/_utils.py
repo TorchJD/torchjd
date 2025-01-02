@@ -21,19 +21,6 @@ def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     return output
 
 
-def _check_retain_graph_compatible_with_chunk_size(
-    tensors: list[Tensor],
-    retain_graph: bool,
-    parallel_chunk_size: int | None,
-) -> None:
-    tensors_numel = sum([tensor.numel() for tensor in tensors])
-    if parallel_chunk_size is not None and parallel_chunk_size < tensors_numel and not retain_graph:
-        raise ValueError(
-            "When using `retain_graph=False`, parameter `parallel_chunk_size` must be `None` or "
-            "large enough to compute all gradients in parallel."
-        )
-
-
 def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> set[Tensor]:
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.

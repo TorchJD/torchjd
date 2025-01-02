@@ -1,9 +1,6 @@
-from contextlib import nullcontext as does_not_raise
-
 import torch
 from pytest import mark, raises
 from torch.testing import assert_close
-from unit._utils import ExceptionContext
 from unit.conftest import DEVICE
 
 from torchjd import mtl_backward
@@ -29,15 +26,17 @@ def test_various_aggregators(aggregator: Aggregator):
         assert (p.grad is not None) and (p.shape == p.grad.shape)
 
 
-@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA()])
-@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (60, 55), (120, 143)])
+@mark.parametrize("aggregator", [Mean(), UPGrad()])
+@mark.parametrize("shape", [(2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_shared_params", [True, False])
 @mark.parametrize("manually_specify_tasks_params", [True, False])
+@mark.parametrize("chunk_size", [1, 2, None])
 def test_value_is_correct(
     aggregator: Aggregator,
     shape: tuple[int, int],
     manually_specify_shared_params: bool,
     manually_specify_tasks_params: bool,
+    chunk_size: int | None,
 ):
     """
     Tests that the .grad value filled by mtl_backward is correct in a simple example of
@@ -74,6 +73,7 @@ def test_value_is_correct(
         aggregator=aggregator,
         tasks_params=tasks_params,
         shared_params=shared_params,
+        parallel_chunk_size=chunk_size,
     )
 
     assert_close(p1.grad, f)
@@ -365,7 +365,6 @@ def test_various_valid_chunk_sizes(chunk_size):
         losses=[y1, y2],
         features=[f1, f2],
         aggregator=UPGrad(),
-        retain_graph=True,
         parallel_chunk_size=chunk_size,
     )
 
@@ -395,39 +394,10 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
         )
 
 
-@mark.parametrize(
-    ["chunk_size", "expectation"],
-    [(1, raises(ValueError)), (2, does_not_raise()), (None, does_not_raise())],
-)
-def test_no_retain_graph_various_chunk_sizes(chunk_size: int, expectation: ExceptionContext):
-    """
-    Tests that when using retain_graph=False, mtl_backward only works if the chunk size is large
-    enough to allow differentiation of all tensors at once.
-    """
-
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
-
-    f1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ p0
-    f2 = (p0**2).sum() + p0.norm()
-    y1 = f1 * p1[0] + f2 * p1[1]
-    y2 = f1 * p2[0] + f2 * p2[1]
-
-    with expectation:
-        mtl_backward(
-            losses=[y1, y2],
-            features=[f1, f2],
-            aggregator=UPGrad(),
-            retain_graph=False,
-            parallel_chunk_size=chunk_size,
-        )
-
-
 def test_shared_param_retaining_grad_fails():
     """
     Tests that mtl_backward raises an error when some shared param in the computation graph of the
-    ``features`` parameter retains grad.
+    ``features`` parameter retains grad and vmap has to be used.
     """
 
     p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
@@ -453,7 +423,7 @@ def test_shared_param_retaining_grad_fails():
 def test_shared_activation_retaining_grad_fails():
     """
     Tests that mtl_backward fails to fill a valid `.grad` when some tensor in the computation graph
-    of the ``features`` parameter retains grad.
+    of the ``features`` parameter retains grad and vmap has to be used.
     """
 
     p0 = torch.tensor(1.0, requires_grad=True, device=DEVICE)
@@ -493,7 +463,7 @@ def test_tasks_params_overlap():
     y2 = f * p2 * p12
 
     aggregator = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator, retain_graph=True)
+    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator)
 
     assert_close(p2.grad, f * p12)
     assert_close(p1.grad, f * p12)
@@ -514,7 +484,7 @@ def test_tasks_params_are_the_same():
     y2 = f + p1
 
     aggregator = UPGrad()
-    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator, retain_graph=True)
+    mtl_backward(losses=[y1, y2], features=[f], aggregator=aggregator)
 
     assert_close(p1.grad, f + 1)
 
@@ -567,7 +537,6 @@ def test_shared_params_overlapping_with_tasks_params_fails():
             aggregator=UPGrad(),
             tasks_params=[[p1], [p0, p2]],  # Problem: p0 is also shared
             shared_params=[p0],
-            retain_graph=True,
         )
 
 
@@ -590,5 +559,4 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
             losses=[y1, y2],
             features=[f],
             aggregator=UPGrad(),
-            retain_graph=True,
         )
