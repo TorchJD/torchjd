@@ -8,7 +8,7 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
-## [0.4.0] - 2025-01-02
+## [0.4.0] - 2025-01-02 [YANKED]
 
 ### Changed
 
