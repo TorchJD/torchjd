@@ -1,6 +1,7 @@
 from .aligned_mtl import AlignedMTL
 from .bases import Aggregator
 from .cagrad import CAGrad
+from .config import ConFIG
 from .constant import Constant
 from .dualproj import DualProj
 from .graddrop import GradDrop
