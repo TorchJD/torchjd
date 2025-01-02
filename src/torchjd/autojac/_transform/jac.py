@@ -70,39 +70,39 @@ class Jac(_Differentiate[Jacobians]):
             grads = _materialize(optional_grads, inputs=inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
-        get_vjp_retain = partial(_get_vjp, retain_graph=True)
-        get_vjp_last = partial(_get_vjp, retain_graph=self.retain_graph)
-
         # By the Jacobians constraint, this value should be the same for all jac_outputs.
         m = jac_outputs[0].shape[0]
         max_chunk_size = self.chunk_size if self.chunk_size is not None else m
         n_chunks = math.ceil(m / max_chunk_size)
 
         # List of tensors of shape [k_i, n] where the k_i's sum to m
-        jacobian_matrix_chunks = []
-        for i in range(n_chunks):
-            # Chunk the jac_outputs ourselves
+        jac_matrix_chunks = []
+
+        # First differentiations: always retain graph
+        get_vjp_retain = partial(_get_vjp, retain_graph=True)
+        for i in range(n_chunks - 1):
             start = i * max_chunk_size
-            end = min((i + 1) * max_chunk_size, m)
+            end = (i + 1) * max_chunk_size
             jac_outputs_chunk = [jac_output[start:end] for jac_output in jac_outputs]
+            jac_matrix_chunks.append(_get_jac_matrix_chunk(jac_outputs_chunk, get_vjp_retain))
 
-            # Decide which get_vjp function to use
-            get_vjp = get_vjp_retain if i < n_chunks - 1 else get_vjp_last
+        # Last differentiation: retain the graph only if self.retain_graph==True
+        get_vjp_last = partial(_get_vjp, retain_graph=self.retain_graph)
+        start = (n_chunks - 1) * max_chunk_size
+        jac_outputs_chunk = [jac_output[start:] for jac_output in jac_outputs]
+        jac_matrix_chunks.append(_get_jac_matrix_chunk(jac_outputs_chunk, get_vjp_last))
 
-            # Compute the current jacobian matrix chunk and store it
-            jacobian_matrix_chunks.append(_get_jacobian_matrix_chunk(jac_outputs_chunk, get_vjp))
-
-        grouped_jacobian_matrix = torch.vstack(jacobian_matrix_chunks)
+        grouped_jac_matrix = torch.vstack(jac_matrix_chunks)
         lengths = [input.numel() for input in inputs]
-        jacobian_matrices = _extract_sub_matrices(grouped_jacobian_matrix, lengths)
+        jac_matrices = _extract_sub_matrices(grouped_jac_matrix, lengths)
 
         shapes = [input.shape for input in inputs]
-        jacobians = _reshape_matrices(jacobian_matrices, shapes)
+        jacs = _reshape_matrices(jac_matrices, shapes)
 
-        return tuple(jacobians)
+        return tuple(jacs)
 
 
-def _get_jacobian_matrix_chunk(
+def _get_jac_matrix_chunk(
     jac_outputs_chunk: list[Tensor], get_vjp: Callable[[Sequence[Tensor]], Tensor]
 ) -> Tensor:
     """
