@@ -98,7 +98,7 @@ To release a new `torchjd` version, you have to:
 - Make sure that all important changes since the last release have been reported in the
   `[Unreleased]`
   section at the top of the changelog.
-- Change the `[Unreleased]` section to a `[vX.Y.Z]` section in the changelog with the current date.
+- Add a `[X.Y.Z] - yyyy-mm-dd` header in the changelog just below the `[Unreleased]` header.
 - Change the version in `pyproject.toml`.
 - Make a pull request with those changes and merge it.
 - Make a draft of the release on GitHub (click on `Releases`, then `Draft a new release`, then fill
