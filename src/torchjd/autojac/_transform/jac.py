@@ -92,9 +92,9 @@ class Jac(_Differentiate[Jacobians]):
         jac_outputs_chunk = [jac_output[start:] for jac_output in jac_outputs]
         jac_matrix_chunks.append(_get_jac_matrix_chunk(jac_outputs_chunk, get_vjp_last))
 
-        grouped_jac_matrix = torch.vstack(jac_matrix_chunks)
+        jac_matrix = torch.vstack(jac_matrix_chunks)
         lengths = [input.numel() for input in inputs]
-        jac_matrices = _extract_sub_matrices(grouped_jac_matrix, lengths)
+        jac_matrices = _extract_sub_matrices(jac_matrix, lengths)
 
         shapes = [input.shape for input in inputs]
         jacs = _reshape_matrices(jac_matrices, shapes)
