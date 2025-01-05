@@ -8,6 +8,11 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- New aggregator `ConFIG` from [ConFIG: Towards Conflict-free Training of Physics
+Informed Neural Networks](https://arxiv.org/pdf/2408.11104).
+
 ## [0.4.1] - 2025-01-02
 
 ### Fixed
