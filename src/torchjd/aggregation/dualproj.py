@@ -6,8 +6,11 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 from ._gramian_utils import _compute_normalized_gramian
-from ._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
-from ._str_utils import _vector_to_str
+from ._pref_vector_utils import (
+    _check_pref_vector,
+    _pref_vector_to_str_suffix,
+    _pref_vector_to_weighting,
+)
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -68,11 +71,7 @@ class DualProj(_WeightedAggregator):
         )
 
     def __str__(self) -> str:
-        if self._pref_vector is None:
-            suffix = ""
-        else:
-            suffix = f"([{_vector_to_str(self._pref_vector)}])"
-        return f"DualProj{suffix}"
+        return f"DualProj{_pref_vector_to_str_suffix(self._pref_vector)}"
 
 
 class _DualProjWrapper(_Weighting):

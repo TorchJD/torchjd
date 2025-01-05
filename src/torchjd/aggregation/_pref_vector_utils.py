@@ -1,5 +1,6 @@
 from torch import Tensor
 
+from ._str_utils import _vector_to_str
 from .bases import _Weighting
 from .constant import _ConstantWeighting
 
@@ -25,3 +26,12 @@ def _pref_vector_to_weighting(pref_vector: Tensor | None, default: _Weighting) -
         return default
     else:
         return _ConstantWeighting(pref_vector)
+
+
+def _pref_vector_to_str_suffix(pref_vector: Tensor | None) -> str:
+    """Returns a suffix string containing the representation of the optional preference vector."""
+
+    if pref_vector is None:
+        return ""
+    else:
+        return f"([{_vector_to_str(pref_vector)}])"
