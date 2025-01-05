@@ -49,7 +49,6 @@ class ConFIG(Aggregator):
         >>>
         >>> A(J)
         tensor([0.1588, 2.0706, 2.0706])
-        # TODO: add doc test
 
     .. note::
         This implementation was adapted from the `official implementation

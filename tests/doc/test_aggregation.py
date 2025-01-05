@@ -37,6 +37,17 @@ def test_cagrad():
     assert_close(A(J), tensor([0.1835, 1.2041, 1.2041]), rtol=0, atol=1e-4)
 
 
+def test_config():
+    from torch import tensor
+
+    from torchjd.aggregation import ConFIG
+
+    A = ConFIG()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+
+    assert_close(A(J), tensor([0.1588, 2.0706, 2.0706]), rtol=0, atol=1e-4)
+
+
 def test_constant():
     from torch import tensor
 
