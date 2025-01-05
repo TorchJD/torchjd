@@ -28,7 +28,13 @@
 import torch
 from torch import Tensor
 
+from torchjd.aggregation._pref_vector_utils import (
+    _check_pref_vector,
+    _pref_vector_to_str_suffix,
+    _pref_vector_to_weighting,
+)
 from torchjd.aggregation.bases import Aggregator
+from torchjd.aggregation.sum import _SumWeighting
 
 
 class ConFIG(Aggregator):
@@ -36,6 +42,8 @@ class ConFIG(Aggregator):
     :class:`~torchjd.aggregation.bases.Aggregator` as defined in Equation 2 of `ConFIG: Towards
     Conflict-free Training of Physics Informed Neural Networks <https://arxiv.org/pdf/2408.11104>`_.
 
+    :param pref_vector: The preference vector used to weight the rows. If not provided, defaults to
+        equal weights of 1.
     :param use_least_square: Whether to use the least square method to solve the optimization
         problem, as opposed to the pseudo-inverse method.
 
@@ -58,12 +66,15 @@ class ConFIG(Aggregator):
         <https://github.com/tum-pbs/ConFIG/tree/main/conflictfree>`_.
     """
 
-    def __init__(self, use_least_square: bool = True):
+    def __init__(self, pref_vector: Tensor | None = None, use_least_square: bool = True):
         super().__init__()
+        _check_pref_vector(pref_vector)
+        self.weighting = _pref_vector_to_weighting(pref_vector, default=_SumWeighting())
+        self._pref_vector = pref_vector
         self.use_least_square = use_least_square
 
     def forward(self, matrix: Tensor) -> Tensor:
-        weights = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
+        weights = self.weighting(matrix)
         units = torch.nan_to_num((matrix / (matrix.norm(dim=1)).unsqueeze(1)), 0.0)
         if self.use_least_square:
             best_direction = torch.linalg.lstsq(units, weights).solution
@@ -80,4 +91,10 @@ class ConFIG(Aggregator):
         return length * unit_target_vector
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(use_least_square={self.use_least_square})"
+        return (
+            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, use_least_square="
+            f"{self.use_least_square})"
+        )
+
+    def __str__(self) -> str:
+        return f"ConFIG{_pref_vector_to_str_suffix(self._pref_vector)}"
