@@ -9,6 +9,7 @@ from ._gramian_utils import _compute_normalized_gramian
 from ._pref_vector_utils import _check_pref_vector, _pref_vector_to_weighting
 from ._str_utils import _vector_to_str
 from .bases import _WeightedAggregator, _Weighting
+from .mean import _MeanWeighting
 
 
 class UPGrad(_WeightedAggregator):
@@ -49,7 +50,7 @@ class UPGrad(_WeightedAggregator):
         solver: Literal["quadprog"] = "quadprog",
     ):
         _check_pref_vector(pref_vector)
-        weighting = _pref_vector_to_weighting(pref_vector)
+        weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(
