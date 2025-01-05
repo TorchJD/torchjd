@@ -36,6 +36,9 @@ class ConFIG(Aggregator):
     :class:`~torchjd.aggregation.bases.Aggregator` as defined in Equation 2 of `ConFIG: Towards
     Conflict-free Training of Physics Informed Neural Networks <https://arxiv.org/pdf/2408.11104>`_.
 
+    :param use_least_square: Whether to use the least square method to solve the optimization
+        problem, as opposed to the pseudo-inverse method.
+
     .. admonition::
         Example
 
