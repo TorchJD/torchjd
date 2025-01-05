@@ -76,3 +76,6 @@ class ConFIG(Aggregator):
         length = torch.sum(torch.stack([torch.dot(grad, unit_target_vector) for grad in matrix]))
 
         return length * unit_target_vector
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(use_least_square={self.use_least_square})"

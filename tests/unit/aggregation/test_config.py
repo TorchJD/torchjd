@@ -11,6 +11,6 @@ class TestConFIG(ExpectedStructureProperty, PermutationInvarianceProperty):
 
 
 def test_representations():
-    A = ConFIG()
-    assert repr(A) == "ConFIG()"
+    A = ConFIG(use_least_square=True)
+    assert repr(A) == "ConFIG(use_least_square=True)"
     assert str(A) == "ConFIG"
