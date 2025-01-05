@@ -41,7 +41,7 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
      - |yes|
    * - :doc:`ConFIG <config>`
      - |no|
-     - |TODO|
+     - |yes|
      - |yes|
    * - :doc:`Constant <constant>`
      - |no|
