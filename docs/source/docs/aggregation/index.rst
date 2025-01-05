@@ -17,7 +17,6 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
 
 .. |yes| replace:: :raw-html:`<center><font color="#28b528">✔</font></center>`
 .. |no| replace:: :raw-html:`<center><font color="#e63232">✘</font></center>`
-.. |TODO| replace:: :raw-html:`<center><font color="#ffff00">?</font></center>`
 
 .. list-table::
    :widths: 25 15 15 15
