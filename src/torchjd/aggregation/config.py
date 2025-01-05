@@ -60,7 +60,6 @@ class ConFIG(Aggregator):
         self.use_least_square = use_least_square
 
     def forward(self, matrix: Tensor) -> Tensor:
-        # TODO: have a _Weighting class that does the actual computation
         weights = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
         units = torch.nan_to_num((matrix / (matrix.norm(dim=1)).unsqueeze(1)), 0.0)
         if self.use_least_square:
