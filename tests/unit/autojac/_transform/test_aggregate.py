@@ -15,7 +15,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> JacobianMatrices:
     jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
-    jacobian_list = [torch.rand(shape, generator=rng, device=DEVICE) for shape in jacobian_shapes]
+    jacobian_list = [torch.rand(shape, generator=rng) for shape in jacobian_shapes]
     jacobian_matrices = JacobianMatrices({key: jac for key, jac in zip(_keys, jacobian_list)})
     return jacobian_matrices
 
@@ -35,7 +35,7 @@ _param_shapes = [
     [2, 3, 4, 5],
     [5, 5, 5, 5],
 ]
-_keys = [torch.zeros(shape, device=DEVICE) for shape in _param_shapes]
+_keys = [torch.zeros(shape) for shape in _param_shapes]
 
 _rng = torch.Generator(device=DEVICE)
 _rng.manual_seed(0)
@@ -70,18 +70,18 @@ def test_aggregate_matrices_empty_dict():
     ["united_gradient_vector", "jacobian_matrices"],
     [
         (
-            torch.ones(10, device=DEVICE),
+            torch.ones(10),
             {  # Total number of parameters according to the united gradient vector: 10
-                torch.ones(5, device=DEVICE): torch.ones(2, 5, device=DEVICE),
-                torch.ones(4, device=DEVICE): torch.ones(2, 4, device=DEVICE),
+                torch.ones(5): torch.ones(2, 5),
+                torch.ones(4): torch.ones(2, 4),
             },
         ),  # Total number of parameters according to the jacobian matrices: 9
         (
-            torch.ones(10, device=DEVICE),
+            torch.ones(10),
             {  # Total number of parameters according to the united gradient vector: 10
-                torch.ones(5, device=DEVICE): torch.ones(2, 5, device=DEVICE),
-                torch.ones(3, device=DEVICE): torch.ones(2, 3, device=DEVICE),
-                torch.ones(3, device=DEVICE): torch.ones(2, 3, device=DEVICE),
+                torch.ones(5): torch.ones(2, 5),
+                torch.ones(3): torch.ones(2, 3),
+                torch.ones(3): torch.ones(2, 3),
             },
         ),  # Total number of parameters according to the jacobian matrices: 11
     ],
@@ -101,21 +101,21 @@ def test_matrixify():
     """Tests that the Matrixify transform correctly creates matrices from the jacobians."""
 
     n_outputs = 5
-    key1 = torch.zeros([], device=DEVICE)
-    key2 = torch.zeros([1], device=DEVICE)
-    key3 = torch.zeros([2, 3], device=DEVICE)
-    value1 = torch.tensor([1.0] * n_outputs, device=DEVICE)
-    value2 = torch.tensor([[2.0]] * n_outputs, device=DEVICE)
-    value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs, device=DEVICE)
+    key1 = torch.zeros([])
+    key2 = torch.zeros([1])
+    key3 = torch.zeros([2, 3])
+    value1 = torch.tensor([1.0] * n_outputs)
+    value2 = torch.tensor([[2.0]] * n_outputs)
+    value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
     input = Jacobians({key1: value1, key2: value2, key3: value3})
 
     matrixify = _Matrixify([key1, key2, key3])
 
     output = matrixify(input)
     expected_output = {
-        key1: torch.tensor([[1.0]] * n_outputs, device=DEVICE),
-        key2: torch.tensor([[2.0]] * n_outputs, device=DEVICE),
-        key3: torch.tensor([[3.0, 4.0, 5.0, 6.0, 7.0, 8.0]] * n_outputs, device=DEVICE),
+        key1: torch.tensor([[1.0]] * n_outputs),
+        key2: torch.tensor([[2.0]] * n_outputs),
+        key3: torch.tensor([[3.0, 4.0, 5.0, 6.0, 7.0, 8.0]] * n_outputs),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -124,21 +124,21 @@ def test_matrixify():
 def test_reshape():
     """Tests that the Reshape transform correctly creates gradients from gradient vectors."""
 
-    key1 = torch.zeros([], device=DEVICE)
-    key2 = torch.zeros([1], device=DEVICE)
-    key3 = torch.zeros([2, 3], device=DEVICE)
-    value1 = torch.tensor([1.0], device=DEVICE)
-    value2 = torch.tensor([2.0], device=DEVICE)
-    value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0], device=DEVICE)
+    key1 = torch.zeros([])
+    key2 = torch.zeros([1])
+    key3 = torch.zeros([2, 3])
+    value1 = torch.tensor([1.0])
+    value2 = torch.tensor([2.0])
+    value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
     input = GradientVectors({key1: value1, key2: value2, key3: value3})
 
     reshape = _Reshape([key1, key2, key3])
 
     output = reshape(input)
     expected_output = {
-        key1: torch.tensor(1.0, device=DEVICE),
-        key2: torch.tensor([2.0], device=DEVICE),
-        key3: torch.tensor([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]], device=DEVICE),
+        key1: torch.tensor(1.0),
+        key2: torch.tensor([2.0]),
+        key3: torch.tensor([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)

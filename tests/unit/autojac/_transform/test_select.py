@@ -1,5 +1,4 @@
 import torch
-from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Select, TensorDict
 
@@ -12,9 +11,9 @@ def test_partition():
     whose keys form a partition of the keys of the TensorDict.
     """
 
-    key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], device=DEVICE)
-    key2 = torch.tensor([1.0, 3.0, 5.0], device=DEVICE)
-    key3 = torch.tensor(2.0, device=DEVICE)
+    key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    key2 = torch.tensor([1.0, 3.0, 5.0])
+    key3 = torch.tensor(2.0)
     value1 = torch.ones_like(key1)
     value2 = torch.ones_like(key2)
     value3 = torch.ones_like(key3)
@@ -40,9 +39,9 @@ def test_conjunction_of_selects_is_select():
     the union of the keys of the 2 Selects.
     """
 
-    x1 = torch.tensor(5.0, device=DEVICE)
-    x2 = torch.tensor(6.0, device=DEVICE)
-    x3 = torch.tensor(7.0, device=DEVICE)
+    x1 = torch.tensor(5.0)
+    x2 = torch.tensor(6.0)
+    x3 = torch.tensor(7.0)
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
 
     select1 = Select([x1], [x1, x2, x3])

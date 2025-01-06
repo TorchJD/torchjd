@@ -16,6 +16,7 @@ if _device_str == "cuda:0" and not torch.cuda.is_available():
     raise ValueError('Requested device "cuda:0" but cuda is not available.')
 
 DEVICE = torch.device(_device_str)
+torch.set_default_device(DEVICE)
 
 
 @fixture(autouse=True)

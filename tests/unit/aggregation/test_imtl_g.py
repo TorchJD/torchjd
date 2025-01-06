@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
 from torch.testing import assert_close
-from unit.conftest import DEVICE
 
 from torchjd.aggregation import IMTLG
 
@@ -20,8 +19,8 @@ def test_imtlg_zero():
     """
 
     A = IMTLG()
-    J = torch.zeros(2, 3, device=DEVICE)
-    assert_close(A(J), torch.zeros(3, device=DEVICE))
+    J = torch.zeros(2, 3)
+    assert_close(A(J), torch.zeros(3))
 
 
 def test_representations():

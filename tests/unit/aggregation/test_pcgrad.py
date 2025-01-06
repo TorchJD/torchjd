@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
 from torch.testing import assert_close
-from unit.conftest import DEVICE
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation.pcgrad import _PCGradWeighting
@@ -37,7 +36,7 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     rows.
     """
 
-    matrix = torch.randn(shape, device=DEVICE)
+    matrix = torch.randn(shape)
 
     pc_grad_weighting = _PCGradWeighting()
     upgrad_sum_weighting = _UPGradWrapper(

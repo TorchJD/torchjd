@@ -4,7 +4,6 @@ from typing import Sequence
 import torch
 from pytest import mark, raises
 from unit._utils import ExceptionContext
-from unit.conftest import DEVICE
 
 from torchjd.aggregation import Aggregator
 
@@ -21,4 +20,4 @@ from torchjd.aggregation import Aggregator
 )
 def test_check_is_matrix(shape: Sequence[int], expectation: ExceptionContext):
     with expectation:
-        Aggregator._check_is_matrix(torch.randn(shape, device=DEVICE))
+        Aggregator._check_is_matrix(torch.randn(shape))
