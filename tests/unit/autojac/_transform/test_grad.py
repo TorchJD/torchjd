@@ -1,6 +1,5 @@
 import torch
 from pytest import raises
-from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Grad, Gradients
 
@@ -14,8 +13,8 @@ def test_single_input():
     respect to the parameter `a`. This derivative should be equal to `x`.
     """
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
@@ -33,7 +32,7 @@ def test_empty_inputs_1():
     `Iterable`.
     """
 
-    y = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    y = torch.tensor(1.0, requires_grad=True)
     input = Gradients({y: torch.ones_like(y)})
 
     grad = Grad(outputs=[y], inputs=[])
@@ -50,8 +49,8 @@ def test_empty_inputs_2():
     `Iterable`.
     """
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(1.0, requires_grad=True)
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
@@ -66,8 +65,8 @@ def test_empty_inputs_2():
 def test_retain_graph():
     """Tests that the `Grad` transform behaves as expected with the `retain_graph` flag."""
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
@@ -91,9 +90,9 @@ def test_single_input_two_levels():
     using chain rule. This derivative should be equal to `x1 * x2`.
     """
 
-    x1 = torch.tensor(5.0, device=DEVICE)
-    x2 = torch.tensor(6.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x1 = torch.tensor(5.0)
+    x2 = torch.tensor(6.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y = a * x1
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
@@ -114,9 +113,9 @@ def test_empty_inputs_two_levels():
     `Iterable`, with 2 composed Grad transforms.
     """
 
-    x1 = torch.tensor(5.0, device=DEVICE)
-    x2 = torch.tensor(6.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x1 = torch.tensor(5.0)
+    x2 = torch.tensor(6.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y = a * x1
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
@@ -138,10 +137,10 @@ def test_vector_output():
     checks that the scaling is performed correctly.
     """
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y = torch.stack([a * x, a**2])
-    input = Gradients({y: torch.tensor([3.0, 1.0], device=DEVICE)})
+    input = Gradients({y: torch.tensor([3.0, 1.0])})
 
     grad = Grad(outputs=[y], inputs=[a])
 
@@ -158,8 +157,8 @@ def test_multiple_outputs():
     the scaling is performed correctly.
     """
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y1 = a * x
     y2 = a**2
     input = Gradients({y1: torch.ones_like(y1) * 3, y2: torch.ones_like(y2)})
@@ -179,16 +178,16 @@ def test_multiple_tensor_outputs():
     that this test also checks that the scaling is performed correctly.
     """
 
-    x = torch.tensor(5.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    x = torch.tensor(5.0)
+    a = torch.tensor(2.0, requires_grad=True)
     y1 = a * x
     y2 = torch.stack([a**2, 2 * a**2])
     y3 = torch.stack([a**3, 2 * a**3]).unsqueeze(0)
     input = Gradients(
         {
-            y1: torch.tensor(3.0, device=DEVICE),
-            y2: torch.tensor([6.0, 7.0], device=DEVICE),
-            y3: torch.tensor([[9.0, 10.0]], device=DEVICE),
+            y1: torch.tensor(3.0),
+            y2: torch.tensor([6.0, 7.0]),
+            y3: torch.tensor([[9.0, 10.0]]),
         }
     )
 
@@ -207,10 +206,10 @@ def test_composition_of_grads_is_grad():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0, device=DEVICE)
-    x2 = torch.tensor(6.0, device=DEVICE)
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    b = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    x1 = torch.tensor(5.0)
+    x2 = torch.tensor(6.0)
+    a = torch.tensor(2.0, requires_grad=True)
+    b = torch.tensor(1.0, requires_grad=True)
     y1 = a * x1
     y2 = a * x2
     z1 = y1 + x2
@@ -234,10 +233,10 @@ def test_conjunction_of_grads_is_grad():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0, device=DEVICE)
-    x2 = torch.tensor(6.0, device=DEVICE)
-    a1 = torch.tensor(2.0, requires_grad=True, device=DEVICE)
-    a2 = torch.tensor(3.0, requires_grad=True, device=DEVICE)
+    x1 = torch.tensor(5.0)
+    x2 = torch.tensor(6.0)
+    a1 = torch.tensor(2.0, requires_grad=True)
+    a2 = torch.tensor(3.0, requires_grad=True)
     y = torch.stack([a1 * x1, a2 * x2])
     input = Gradients({y: torch.ones_like(y)})
 
@@ -255,7 +254,7 @@ def test_conjunction_of_grads_is_grad():
 def test_create_graph():
     """Tests that the Grad transform behaves correctly when `create_graph` is set to `True`."""
 
-    a = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a = torch.tensor(2.0, requires_grad=True)
     y = a * a
     input = Gradients({y: torch.ones_like(y)})
 

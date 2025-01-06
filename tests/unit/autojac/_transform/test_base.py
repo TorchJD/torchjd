@@ -3,7 +3,6 @@ import typing
 import torch
 from pytest import raises
 from torch import Tensor
-from unit.conftest import DEVICE
 
 from torchjd.autojac._transform._utils import _B, _C
 from torchjd.autojac._transform.base import Conjunction, Transform
@@ -25,7 +24,7 @@ class FakeTransform(Transform[_B, _C]):
     def _compute(self, input: _B) -> _C:
         # Ignore the input, create a dictionary with the right keys as an output.
         # Cast the type for the purpose of type-checking.
-        output_dict = {key: torch.empty(0, device=DEVICE) for key in self._output_keys}
+        output_dict = {key: torch.empty(0) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
     @property
@@ -43,8 +42,8 @@ def test_call_checks_keys():
     contains keys that correspond exactly to `required_keys`.
     """
 
-    a1 = torch.randn([2], device=DEVICE)
-    a2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2])
+    a2 = torch.randn([3])
     t = FakeTransform(required_keys={a1}, output_keys={a1, a2})
 
     t(TensorDict({a1: a2}))
@@ -65,8 +64,8 @@ def test_compose_checks_keys():
     match with the outer transform's `required_keys`.
     """
 
-    a1 = torch.randn([2], device=DEVICE)
-    a2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2])
+    a2 = torch.randn([3])
     t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
@@ -82,8 +81,8 @@ def test_conjunct_checks_required_keys():
     same `required_keys`.
     """
 
-    a1 = torch.randn([2], device=DEVICE)
-    a2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2])
+    a2 = torch.randn([3])
 
     t1 = FakeTransform(required_keys={a1}, output_keys=set())
     t2 = FakeTransform(required_keys={a1}, output_keys=set())
@@ -104,8 +103,8 @@ def test_conjunct_checks_output_keys():
     disjoint.
     """
 
-    a1 = torch.randn([2], device=DEVICE)
-    a2 = torch.randn([3], device=DEVICE)
+    a1 = torch.randn([2])
+    a2 = torch.randn([3])
 
     t1 = FakeTransform(required_keys=set(), output_keys={a1, a2})
     t2 = FakeTransform(required_keys=set(), output_keys={a1})

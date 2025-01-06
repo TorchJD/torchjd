@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
 from torch import Tensor
-from unit.conftest import DEVICE
 
 from torchjd.aggregation import Constant
 
@@ -16,7 +15,7 @@ from ._property_testers import ExpectedStructureProperty
 
 def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    weights = torch.tensor([1.0 / n_rows] * n_rows, device=DEVICE)
+    weights = torch.tensor([1.0 / n_rows] * n_rows)
     return Constant(weights)
 
 

@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
 from torch.testing import assert_close
-from unit.conftest import DEVICE
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation.mean import _MeanWeighting
@@ -21,8 +20,8 @@ class TestUPGrad(ExpectedStructureProperty, NonConflictingProperty, PermutationI
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
 def test_upgrad_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
-    matrix = torch.randn(shape, device=DEVICE)
-    weights = torch.rand(shape[0], device=DEVICE)
+    matrix = torch.randn(shape)
+    weights = torch.rand(shape[0])
 
     gramian = matrix @ matrix.T
 
@@ -41,7 +40,7 @@ def test_upgrad_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
     assert_close(positive_constraint.norm(), constraint.norm(), atol=1e-04, rtol=0)
 
     slackness = torch.trace(lagrange_multiplier @ constraint)
-    assert_close(slackness, torch.zeros_like(slackness, device=DEVICE), atol=3e-03, rtol=0)
+    assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
 
 
 def test_representations():
