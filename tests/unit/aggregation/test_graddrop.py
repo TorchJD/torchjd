@@ -12,7 +12,7 @@ class TestGradDrop(ExpectedStructureProperty):
 
 
 def test_representations():
-    A = GradDrop(leak=torch.tensor([0.0, 1.0]))
+    A = GradDrop(leak=torch.tensor([0.0, 1.0], device="cpu"))
     assert repr(A) == "GradDrop(leak=tensor([0., 1.]))"
     assert str(A) == "GradDrop([0., 1.])"
 

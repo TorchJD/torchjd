@@ -38,6 +38,6 @@ class TestConstant(ExpectedStructureProperty):
 
 
 def test_representations():
-    A = Constant(weights=torch.tensor([1.0, 2.0]))
+    A = Constant(weights=torch.tensor([1.0, 2.0], device="cpu"))
     assert repr(A) == "Constant(weights=tensor([1., 2.]))"
     assert str(A) == "Constant([1., 2.])"
