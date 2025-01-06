@@ -183,3 +183,27 @@ def test_lightning_integration():
     )
 
     trainer.fit(model=model, train_dataloaders=train_loader)
+
+
+def test_rnn():
+    import torch
+    from torch.nn import RNN
+    from torch.optim import SGD
+
+    from torchjd import backward
+    from torchjd.aggregation import UPGrad
+
+    rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
+    optimizer = SGD(rnn.parameters(), lr=0.1)
+    aggregator = UPGrad()
+
+    inputs = torch.randn(8, 5, 3, 10)  # 8 batches of 3 sequences of length 5 and of dim 10.
+    targets = torch.randn(8, 5, 3, 20)  # 8 batches of 3 sequences of length 5 and of dim 20.
+
+    for input, target in zip(inputs, targets):
+        output, _ = rnn(input)  # output is of shape [5, 3, 20].
+        losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
+
+        optimizer.zero_grad()
+        backward(losses, aggregator, parallel_chunk_size=1)
+        optimizer.step()

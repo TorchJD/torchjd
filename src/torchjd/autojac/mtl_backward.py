@@ -16,12 +16,7 @@ from ._transform import (
     Stack,
     Transform,
 )
-from ._utils import (
-    _as_tensor_list,
-    _check_optional_positive_chunk_size,
-    _check_retain_graph_compatible_with_chunk_size,
-    _get_leaf_tensors,
-)
+from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
 
 
 def mtl_backward(
@@ -60,8 +55,7 @@ def mtl_backward(
         backward pass. If set to ``None``, all coordinates of ``tensors`` will be differentiated in
         parallel at once. If set to ``1``, all coordinates will be differentiated sequentially. A
         larger value results in faster differentiation, but also higher memory usage. Defaults to
-        ``None``. If ``parallel_chunk_size`` is not large enough to differentiate all tensors
-        simultaneously, ``retain_graph`` has to be set to ``True``.
+        ``None``.
 
     .. admonition::
         Example
@@ -75,13 +69,13 @@ def mtl_backward(
         respect to those parameters will be accumulated into their ``.grad`` fields.
 
     .. warning::
-        ``mtl_backward`` relies on a usage of ``torch.vmap`` that is not compatible with compiled
-        functions. The arguments of ``mtl_backward`` should thus not come from a compiled model.
-        Check https://github.com/pytorch/pytorch/issues/138422 for the status of this issue.
-
-    .. warning::
-        Because of a limitation of ``torch.vmap``, tensors in the computation graph of the
-        ``features`` parameter should not have their ``retains_grad`` parameter set to ``True``.
+        To differentiate in parallel, ``mtl_backward`` relies on ``torch.vmap``, which has some
+        limitations: `it does not work on the output of compiled functions
+        <https://github.com/pytorch/pytorch/issues/138422>`_, `when some tensors have
+        <https://github.com/TorchJD/torchjd/issues/184>`_ ``retains_grad=True`` or `when using an
+        RNN on CUDA <https://github.com/TorchJD/torchjd/issues/220>`_, for instance. If you
+        experience issues with ``backward`` try to use ``parallel_chunk_size=1`` to avoid relying on
+        ``torch.vmap``.
     """
 
     _check_optional_positive_chunk_size(parallel_chunk_size)
@@ -96,7 +90,6 @@ def mtl_backward(
     if len(features) == 0:
         raise ValueError("`features` cannot be empty.")
 
-    _check_retain_graph_compatible_with_chunk_size(features, retain_graph, parallel_chunk_size)
     _check_no_overlap(shared_params, tasks_params)
     _check_losses_are_scalar(losses)
 

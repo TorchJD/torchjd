@@ -1,7 +1,8 @@
 from torch import Tensor
 
+from ._str_utils import _vector_to_str
+from .bases import _Weighting
 from .constant import _ConstantWeighting
-from .mean import _MeanWeighting
 
 
 def _check_pref_vector(pref_vector: Tensor | None) -> None:
@@ -15,12 +16,22 @@ def _check_pref_vector(pref_vector: Tensor | None) -> None:
             )
 
 
-def _pref_vector_to_weighting(pref_vector: Tensor | None) -> _ConstantWeighting | _MeanWeighting:
-    """Returns the weighting associated to a given preference vector."""
+def _pref_vector_to_weighting(pref_vector: Tensor | None, default: _Weighting) -> _Weighting:
+    """
+    Returns the weighting associated to a given preference vector, with a fallback to a default
+    weighting if the preference vector is None.
+    """
 
     if pref_vector is None:
-        weighting = _MeanWeighting()
+        return default
     else:
-        weighting = _ConstantWeighting(pref_vector)
+        return _ConstantWeighting(pref_vector)
 
-    return weighting
+
+def _pref_vector_to_str_suffix(pref_vector: Tensor | None) -> str:
+    """Returns a suffix string containing the representation of the optional preference vector."""
+
+    if pref_vector is None:
+        return ""
+    else:
+        return f"([{_vector_to_str(pref_vector)}])"

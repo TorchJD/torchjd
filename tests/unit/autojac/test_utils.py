@@ -1,7 +1,6 @@
 import torch
 from pytest import mark, raises
 from torch.nn import Linear, MSELoss, ReLU, Sequential
-from unit.conftest import DEVICE
 
 from torchjd.autojac._utils import _get_leaf_tensors
 
@@ -9,10 +8,10 @@ from torchjd.autojac._utils import _get_leaf_tensors
 def test_simple_get_leaf_tensors():
     """Tests that _get_leaf_tensors works correctly in a very simple setting."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
@@ -27,13 +26,13 @@ def test_get_leaf_tensors_excluded_1():
     is excluded from the graph traversal.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
 
     b1 = (a1**2).sum()
     b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + b2
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + b2
     y2 = b1
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
@@ -48,13 +47,13 @@ def test_get_leaf_tensors_excluded_2():
     `a1` and `a2` from another path, so these two tensors should be in the result.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
 
     b1 = (a1**2).sum()
     b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = b1
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
@@ -66,10 +65,10 @@ def test_get_leaf_tensors_leaf_not_requiring_grad():
     Tests that _get_leaf_tensors does not include tensors that do not require grad in its results.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=False, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=False)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
@@ -119,7 +118,7 @@ def test_get_leaf_tensors_model_excluded_2():
 def test_get_leaf_tensors_single_root():
     """Tests that _get_leaf_tensors returns no leaves when roots is the empty set."""
 
-    p = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
+    p = torch.tensor([1.0, 2.0], requires_grad=True)
     y = p * 2
 
     leaves = _get_leaf_tensors(tensors=[y], excluded=set())
@@ -136,10 +135,10 @@ def test_get_leaf_tensors_empty_roots():
 def test_get_leaf_tensors_excluded_root():
     """Tests that _get_leaf_tensors correctly excludes the root."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True, device=DEVICE)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True, device=DEVICE)
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0], device=DEVICE) @ a1 + a2.sum()
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={y1})
@@ -150,8 +149,8 @@ def test_get_leaf_tensors_excluded_root():
 def test_get_leaf_tensors_deep(depth: int):
     """Tests that _get_leaf_tensors works when the graph is very deep."""
 
-    one = torch.tensor(1.0, requires_grad=True, device=DEVICE)
-    sum_ = torch.tensor(0.0, requires_grad=False, device=DEVICE)
+    one = torch.tensor(1.0, requires_grad=True)
+    sum_ = torch.tensor(0.0, requires_grad=False)
     for i in range(depth):
         sum_ = sum_ + one
 
@@ -162,7 +161,7 @@ def test_get_leaf_tensors_deep(depth: int):
 def test_get_leaf_tensors_leaf():
     """Tests that _get_leaf_tensors raises an error some of the provided tensors are leaves."""
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE)
+    a = torch.tensor(1.0, requires_grad=True)
     with raises(ValueError):
         _ = _get_leaf_tensors(tensors=[a], excluded=set())
 
@@ -172,7 +171,7 @@ def test_get_leaf_tensors_tensor_not_requiring_grad():
     Tests that _get_leaf_tensors raises an error some of the provided tensors do not require grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=False, device=DEVICE) * 2
+    a = torch.tensor(1.0, requires_grad=False) * 2
     with raises(ValueError):
         _ = _get_leaf_tensors(tensors=[a], excluded=set())
 
@@ -180,8 +179,8 @@ def test_get_leaf_tensors_tensor_not_requiring_grad():
 def test_get_leaf_tensors_excluded_leaf():
     """Tests that _get_leaf_tensors raises an error some of the excluded tensors are leaves."""
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE) * 2
-    b = torch.tensor(2.0, requires_grad=True, device=DEVICE)
+    a = torch.tensor(1.0, requires_grad=True) * 2
+    b = torch.tensor(2.0, requires_grad=True)
     with raises(ValueError):
         _ = _get_leaf_tensors(tensors=[a], excluded={b})
 
@@ -191,7 +190,7 @@ def test_get_leaf_tensors_excluded_not_requiring_grad():
     Tests that _get_leaf_tensors raises an error some of the excluded tensors do not require grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=True, device=DEVICE) * 2
-    b = torch.tensor(2.0, requires_grad=False, device=DEVICE) * 2
+    a = torch.tensor(1.0, requires_grad=True) * 2
+    b = torch.tensor(2.0, requires_grad=False) * 2
     with raises(ValueError):
         _ = _get_leaf_tensors(tensors=[a], excluded={b})

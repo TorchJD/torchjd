@@ -32,7 +32,7 @@ with maintainers before implementing major changes.
 
    - If you have access to a cuda-enabled GPU, you should also check that the unit tests pass on it:
      ```bash
-     CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTEST_TORCH_DEVICE=cuda pdm run pytest tests/unit
+     CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTEST_TORCH_DEVICE=cuda:0 pdm run pytest tests/unit
      ```
 
    - To check that the usage examples from docstrings and `.rst` files are correct, we test their
@@ -98,7 +98,7 @@ To release a new `torchjd` version, you have to:
 - Make sure that all important changes since the last release have been reported in the
   `[Unreleased]`
   section at the top of the changelog.
-- Change the `[Unreleased]` section to a `[vX.Y.Z]` section in the changelog with the current date.
+- Add a `[X.Y.Z] - yyyy-mm-dd` header in the changelog just below the `[Unreleased]` header.
 - Change the version in `pyproject.toml`.
 - Make a pull request with those changes and merge it.
 - Make a draft of the release on GitHub (click on `Releases`, then `Draft a new release`, then fill
