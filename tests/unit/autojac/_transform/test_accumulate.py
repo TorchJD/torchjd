@@ -1,6 +1,5 @@
 import torch
 from pytest import mark, raises
-from unit.conftest import DEVICE
 
 from torchjd.autojac._transform import Accumulate, Gradients
 
@@ -13,12 +12,12 @@ def test_single_accumulation():
     once.
     """
 
-    key1 = torch.zeros([], requires_grad=True, device=DEVICE)
-    key2 = torch.zeros([1], requires_grad=True, device=DEVICE)
-    key3 = torch.zeros([2, 3], requires_grad=True, device=DEVICE)
-    value1 = torch.ones([], device=DEVICE)
-    value2 = torch.ones([1], device=DEVICE)
-    value3 = torch.ones([2, 3], device=DEVICE)
+    key1 = torch.zeros([], requires_grad=True)
+    key2 = torch.zeros([1], requires_grad=True)
+    key3 = torch.zeros([2, 3], requires_grad=True)
+    value1 = torch.ones([])
+    value2 = torch.ones([1])
+    value3 = torch.ones([2, 3])
     input = Gradients({key1: value1, key2: value2, key3: value3})
 
     accumulate = Accumulate([key1, key2, key3])
@@ -41,12 +40,12 @@ def test_multiple_accumulation(iterations: int):
     `iterations` times.
     """
 
-    key1 = torch.zeros([], requires_grad=True, device=DEVICE)
-    key2 = torch.zeros([1], requires_grad=True, device=DEVICE)
-    key3 = torch.zeros([2, 3], requires_grad=True, device=DEVICE)
-    value1 = torch.ones([], device=DEVICE)
-    value2 = torch.ones([1], device=DEVICE)
-    value3 = torch.ones([2, 3], device=DEVICE)
+    key1 = torch.zeros([], requires_grad=True)
+    key2 = torch.zeros([1], requires_grad=True)
+    key3 = torch.zeros([2, 3], requires_grad=True)
+    value1 = torch.ones([])
+    value2 = torch.ones([1])
+    value3 = torch.ones([2, 3])
     input = Gradients({key1: value1, key2: value2, key3: value3})
 
     accumulate = Accumulate([key1, key2, key3])
@@ -70,8 +69,8 @@ def test_no_requires_grad_fails():
     tensor that does not require grad.
     """
 
-    key = torch.zeros([1], requires_grad=False, device=DEVICE)
-    value = torch.ones([1], device=DEVICE)
+    key = torch.zeros([1], requires_grad=False)
+    value = torch.ones([1])
     input = Gradients({key: value})
 
     accumulate = Accumulate([key])
@@ -86,8 +85,8 @@ def test_no_leaf_and_no_retains_grad_fails():
     tensor that is not a leaf and that does not retain grad.
     """
 
-    key = torch.tensor([1.0], requires_grad=True, device=DEVICE) * 2
-    value = torch.ones([1], device=DEVICE)
+    key = torch.tensor([1.0], requires_grad=True) * 2
+    value = torch.ones([1])
     input = Gradients({key: value})
 
     accumulate = Accumulate([key])

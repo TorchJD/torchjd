@@ -1,6 +1,5 @@
 import torch
 from torch import Tensor
-from unit.conftest import DEVICE
 
 
 def _check_valid_dimensions(n_rows: int, n_cols: int) -> None:
@@ -37,9 +36,9 @@ def _augment_orthogonal_matrix(orthogonal_matrix: Tensor) -> Tensor:
 
     n_rows = orthogonal_matrix.shape[0]
     projection = orthogonal_matrix @ orthogonal_matrix.T
-    zero = torch.zeros([n_rows], device=DEVICE)
+    zero = torch.zeros([n_rows])
     while True:
-        random_vector = torch.randn([n_rows], device=DEVICE)
+        random_vector = torch.randn([n_rows])
         projected_vector = random_vector - projection @ random_vector
         if not torch.allclose(projected_vector, zero):
             break
@@ -70,7 +69,7 @@ def _generate_unitary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """Generates a unitary matrix of shape [n_rows, n_cols]."""
 
     _check_valid_dimensions(n_rows, n_cols)
-    partial_matrix = torch.randn([n_rows, 1], device=DEVICE)
+    partial_matrix = torch.randn([n_rows, 1])
     partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
 
     unitary_matrix = _complete_orthogonal_matrix(partial_matrix, n_cols)
@@ -83,7 +82,7 @@ def _generate_unitary_matrix_with_positive_column(n_rows: int, n_cols: int) -> T
     positive vector.
     """
     _check_valid_dimensions(n_rows, n_cols)
-    partial_matrix = torch.abs(torch.randn([n_rows, 1], device=DEVICE))
+    partial_matrix = torch.abs(torch.randn([n_rows, 1]))
     partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
 
     unitary_matrix_with_positive_column = _complete_orthogonal_matrix(partial_matrix, n_cols)
@@ -94,7 +93,7 @@ def _generate_diagonal_singular_values(rank: int) -> Tensor:
     """
     generates a diagonal matrix of positive values sorted in descending order.
     """
-    singular_values = torch.abs(torch.randn([rank], device=DEVICE))
+    singular_values = torch.abs(torch.randn([rank]))
     singular_values = torch.sort(singular_values, descending=True)[0]
     S = torch.diag(singular_values)
     return S
@@ -108,7 +107,7 @@ def generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     _check_valid_rank(n_rows, n_cols, rank)
 
     if rank == 0:
-        matrix = torch.zeros([n_rows, n_cols], device=DEVICE)
+        matrix = torch.zeros([n_rows, n_cols])
     else:
         U = _generate_unitary_matrix(n_rows, rank)
         V = _generate_unitary_matrix(n_cols, rank)
@@ -126,7 +125,7 @@ def generate_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
 
     _check_valid_rank(n_rows, n_cols, rank)
     if rank == 0:
-        matrix = torch.zeros([n_rows, n_cols], device=DEVICE)
+        matrix = torch.zeros([n_rows, n_cols])
     else:
         U = _generate_unitary_matrix_with_positive_column(n_rows, rank)
         V = _generate_unitary_matrix(n_cols, rank)
@@ -161,9 +160,7 @@ matrices = [
     generate_matrix(n_rows, n_cols, rank) for n_rows, n_cols, rank in _matrix_dimension_triples
 ]
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
-zero_rank_matrices = [
-    torch.zeros([n_rows, n_cols], device=DEVICE) for n_rows, n_cols in _zero_rank_matrix_shapes
-]
+zero_rank_matrices = [torch.zeros([n_rows, n_cols]) for n_rows, n_cols in _zero_rank_matrix_shapes]
 matrices_2_plus_rows = [matrix for matrix in matrices + zero_rank_matrices if matrix.shape[0] >= 2]
 scaled_matrices_2_plus_rows = [
     matrix for matrix in scaled_matrices + zero_rank_matrices if matrix.shape[0] >= 2
