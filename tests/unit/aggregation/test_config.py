@@ -1,3 +1,4 @@
+import torch
 from pytest import mark
 
 from torchjd.aggregation import ConFIG
@@ -16,3 +17,7 @@ def test_representations():
     A = ConFIG(use_least_square=True)
     assert repr(A) == "ConFIG(pref_vector=None, use_least_square=True)"
     assert str(A) == "ConFIG"
+
+    A = ConFIG(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"), use_least_square=True)
+    assert repr(A) == "ConFIG(pref_vector=tensor([1., 2., 3.]), use_least_square=True)"
+    assert str(A) == "ConFIG([1., 2., 3.])"
