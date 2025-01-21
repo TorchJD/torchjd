@@ -12,7 +12,7 @@ def test_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
 
     gramian = matrix @ matrix.T
 
-    projection_weights = _weights_of_projection_onto_dual_cone(gramian, weights, 0.0, "quadprog")
+    projection_weights = _weights_of_projection_onto_dual_cone(gramian, weights, "quadprog")
     lagrange_multiplier = projection_weights - weights
 
     positive_lagrange_multiplier = lagrange_multiplier[lagrange_multiplier >= 0.0]

@@ -7,7 +7,7 @@ from torch import Tensor
 
 
 def _weights_of_projection_onto_dual_cone(
-    gramian: Tensor, weights: Tensor, reg_eps: float, solver: Literal["quadprog"]
+    gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
     """
     Computes the weights of the projection of some weights onto the dual cone of a matrix whose
@@ -19,27 +19,17 @@ def _weights_of_projection_onto_dual_cone(
     """
     shape = weights.shape
     if len(shape) == 1:
-        weights_list = [weights]
+        weights_list = [weights.cpu().detach().numpy().astype(np.float64)]
     elif len(shape) == 2:
-        weights_list = [weight for weight in weights.T]
+        weights_list = [weight.cpu().detach().numpy().astype(np.float64) for weight in weights.T]
     else:
         raise ValueError(f"Expect vector or matrix of weights, found shape {shape}")
 
     gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
-    dimension = gramian.shape[0]
-
-    # Because of numerical errors, `gramian_array` might have slightly negative eigenvalue(s),
-    # which makes quadprog misbehave. Adding a regularization term which is a small proportion
-    # of the identity matrix ensures that the gramian is positive definite.
-    regularization_array = reg_eps * np.eye(dimension)
-    regularized_gramian_array = gramian_array + regularization_array
 
     lagrangian_rows = []
-    for weight in weights_list:
-        weight_array = weight.cpu().detach().numpy().astype(np.float64)
-        lagrangian_rows.append(
-            _lagrange_multipliers(regularized_gramian_array, weight_array, solver)
-        )
+    for weight_array in weights_list:
+        lagrangian_rows.append(_lagrange_multipliers(gramian_array, weight_array, solver))
 
     lagrangian_array = np.stack(lagrangian_rows).T.reshape(shape)
     lagrangian = torch.from_numpy(lagrangian_array).to(device=gramian.device, dtype=gramian.dtype)

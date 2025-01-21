@@ -43,3 +43,13 @@ def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
         left_unitary_matrix @ torch.diag(scaled_singular_values**2) @ left_unitary_matrix.T
     )
     return normalized_gramian
+
+
+def _regularize_gramian(gramian: Tensor, reg_eps: float) -> Tensor:
+    regularization_matrix = reg_eps * torch.eye(gramian.shape[0])
+    return gramian + regularization_matrix
+
+
+def _compute_normalized_regularized_gramian(matrix: Tensor, norm_eps: float, reg_eps: float):
+    normalized_gramian = _compute_normalized_gramian(matrix, norm_eps)
+    return _regularize_gramian(normalized_gramian, reg_eps)
