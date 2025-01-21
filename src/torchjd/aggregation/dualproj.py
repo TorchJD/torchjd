@@ -107,10 +107,10 @@ class _DualProjWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self.weighting(matrix)
-        weights_array = weights.cpu().detach().numpy()
+        weights_array = weights.cpu().detach().numpy().astype(np.float64)
 
         gramian = _compute_normalized_gramian(matrix, self.norm_eps)
-        gramian_array = gramian.cpu().detach().numpy()
+        gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
         dimension = gramian.shape[0]
 
         # Because of numerical errors, `gramian_array` might have slightly negative eigenvalue(s),
