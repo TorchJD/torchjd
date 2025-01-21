@@ -1,10 +1,8 @@
 from typing import Literal
 
-import numpy as np
-import torch
-from qpsolvers import solve_qp
 from torch import Tensor
 
+from ._dual_cone_utils import _weights_of_projection_onto_dual_cone
 from ._gramian_utils import _compute_normalized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
@@ -107,25 +105,5 @@ class _DualProjWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self.weighting(matrix)
-        weights_array = weights.cpu().detach().numpy().astype(np.float64)
-
         gramian = _compute_normalized_gramian(matrix, self.norm_eps)
-        gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
-        dimension = gramian.shape[0]
-
-        # Because of numerical errors, `gramian_array` might have slightly negative eigenvalue(s),
-        # which makes quadprog misbehave. Adding a regularization term which is a small proportion
-        # of the identity matrix ensures that the gramian is positive definite.
-        regularization_array = self.reg_eps * np.eye(dimension)
-        regularized_gramian_array = gramian_array + regularization_array
-
-        P = regularized_gramian_array
-        q = regularized_gramian_array @ weights_array
-        G = -np.eye(dimension)
-        h = np.zeros(dimension)
-
-        projection_weights_array = solve_qp(P, q, G, h, solver=self.solver)
-        projection_weights = torch.from_numpy(projection_weights_array).to(
-            device=matrix.device, dtype=matrix.dtype
-        )
-        return projection_weights + weights
+        return _weights_of_projection_onto_dual_cone(gramian, weights, self.reg_eps, self.solver)
