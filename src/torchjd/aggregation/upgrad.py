@@ -109,7 +109,7 @@ class _UPGradWrapper(_Weighting):
 
     def _compute_lagrangian(self, matrix: Tensor, weights: Tensor) -> Tensor:
         gramian = _compute_normalized_gramian(matrix, self.norm_eps)
-        gramian_array = gramian.cpu().detach().numpy()
+        gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
         dimension = gramian.shape[0]
 
         regularization_array = self.reg_eps * np.eye(dimension)

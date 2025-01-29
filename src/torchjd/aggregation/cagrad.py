@@ -76,7 +76,7 @@ class _CAGradWeighting(_Weighting):
         U, S, _ = torch.svd(gramian)
 
         reduced_matrix = U @ S.sqrt().diag()
-        reduced_array = reduced_matrix.cpu().detach().numpy()
+        reduced_array = reduced_matrix.cpu().detach().numpy().astype(np.float64)
 
         dimension = matrix.shape[0]
         reduced_g_0 = reduced_array.T @ np.ones(dimension) / dimension
