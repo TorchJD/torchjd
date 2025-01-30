@@ -6,18 +6,18 @@ from torchjd.aggregation import ConFIG
 from ._property_testers import ExpectedStructureProperty
 
 
-# For some reason, some permutation-invariance property tests fail when use_least_square=False or
-# on Windows.
-@mark.parametrize("aggregator", [ConFIG(), ConFIG(use_least_square=False)])
-class TestConFIGLeastSquares(ExpectedStructureProperty):
+# For some reason, some permutation-invariance property tests fail with the pinv-based
+# implementation.
+@mark.parametrize("aggregator", [ConFIG()])
+class TestConfig(ExpectedStructureProperty):
     pass
 
 
 def test_representations():
-    A = ConFIG(use_least_square=True)
-    assert repr(A) == "ConFIG(pref_vector=None, use_least_square=True)"
+    A = ConFIG()
+    assert repr(A) == "ConFIG(pref_vector=None)"
     assert str(A) == "ConFIG"
 
-    A = ConFIG(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"), use_least_square=True)
-    assert repr(A) == "ConFIG(pref_vector=tensor([1., 2., 3.]), use_least_square=True)"
+    A = ConFIG(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"))
+    assert repr(A) == "ConFIG(pref_vector=tensor([1., 2., 3.]))"
     assert str(A) == "ConFIG([1., 2., 3.])"

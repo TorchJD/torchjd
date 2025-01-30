@@ -44,8 +44,6 @@ class ConFIG(Aggregator):
 
     :param pref_vector: The preference vector used to weight the rows. If not provided, defaults to
         equal weights of 1.
-    :param use_least_square: Whether to use the least square method to solve the optimization
-        problem, as opposed to the pseudo-inverse method.
 
     .. admonition::
         Example
@@ -66,20 +64,16 @@ class ConFIG(Aggregator):
         <https://github.com/tum-pbs/ConFIG/tree/main/conflictfree>`_.
     """
 
-    def __init__(self, pref_vector: Tensor | None = None, use_least_square: bool = True):
+    def __init__(self, pref_vector: Tensor | None = None):
         super().__init__()
         _check_pref_vector(pref_vector)
         self.weighting = _pref_vector_to_weighting(pref_vector, default=_SumWeighting())
         self._pref_vector = pref_vector
-        self.use_least_square = use_least_square
 
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self.weighting(matrix)
         units = torch.nan_to_num((matrix / (matrix.norm(dim=1)).unsqueeze(1)), 0.0)
-        if self.use_least_square:
-            best_direction = torch.linalg.lstsq(units, weights).solution
-        else:
-            best_direction = torch.linalg.pinv(units) @ weights
+        best_direction = torch.linalg.pinv(units) @ weights
 
         if best_direction.norm() == 0:
             unit_target_vector = torch.zeros_like(best_direction)
@@ -91,10 +85,7 @@ class ConFIG(Aggregator):
         return length * unit_target_vector
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, use_least_square="
-            f"{self.use_least_square})"
-        )
+        return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
 
     def __str__(self) -> str:
         return f"ConFIG{_pref_vector_to_str_suffix(self._pref_vector)}"
