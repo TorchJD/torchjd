@@ -5,4 +5,4 @@
 :end-before: <!-- end installation -->
 ```
 
-Note that `torchjd` requires python 3.10, 3.11 or 3.12 and `torch>=2.0`.
+Note that `torchjd` requires python 3.10, 3.11, 3.12 or 3.13 and `torch>=2.0`.
