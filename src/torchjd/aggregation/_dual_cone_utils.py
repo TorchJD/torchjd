@@ -29,11 +29,10 @@ def _get_lagrange_multipliers(
 
     gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
 
-    lagrange_multipliers_rows = []
-    for weight_array in weights_matrix:
-        lagrange_multipliers_rows.append(
-            _get_lagrange_multipliers_array(gramian_array, weight_array, solver)
-        )
+    lagrange_multipliers_rows = [
+        _get_lagrange_multipliers_array(gramian_array, weight_array, solver)
+        for weight_array in weights_matrix
+    ]
 
     lagrange_array = np.stack(lagrange_multipliers_rows).T
     lagrange_multipliers = torch.from_numpy(lagrange_array).to(
