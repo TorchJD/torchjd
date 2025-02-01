@@ -27,13 +27,17 @@ def _get_projection_weights(
 
     gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
 
-    lagrangian_rows = []
+    lagrange_multipliers_rows = []
     for weight_array in weights_list:
-        lagrangian_rows.append(_get_lagrange_multipliers(gramian_array, weight_array, solver))
+        lagrange_multipliers_rows.append(
+            _get_lagrange_multipliers(gramian_array, weight_array, solver)
+        )
 
-    lagrangian_array = np.stack(lagrangian_rows).T.reshape(shape)
-    lagrangian = torch.from_numpy(lagrangian_array).to(device=gramian.device, dtype=gramian.dtype)
-    return lagrangian + weights
+    lagrange_array = np.stack(lagrange_multipliers_rows).T.reshape(shape)
+    lagrange_multipliers = torch.from_numpy(lagrange_array).to(
+        device=gramian.device, dtype=gramian.dtype
+    )
+    return lagrange_multipliers + weights
 
 
 def _get_lagrange_multipliers(
