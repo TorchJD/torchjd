@@ -10,7 +10,7 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     return matrix @ matrix.T
 
 
-def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
+def _normalize(matrix: Tensor, norm_eps: float) -> Tensor:
     r"""
     Computes :math:`\frac{1}{\sigma_\max^2} J J^T` for an input matrix :math:`J`, where
     :math:`{\sigma_\max^2}` is :math:`J`'s largest singular value.
@@ -45,12 +45,12 @@ def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
     return normalized_gramian
 
 
-def _compute_normalized_regularized_gramian(matrix: Tensor, norm_eps: float, reg_eps: float):
-    normalized_gramian = _compute_normalized_gramian(matrix, norm_eps)
-    return _regularize_gramian(normalized_gramian, reg_eps)
+def _normalize_and_regularize(matrix: Tensor, norm_eps: float, reg_eps: float):
+    normalized_gramian = _normalize(matrix, norm_eps)
+    return _regularize(normalized_gramian, reg_eps)
 
 
-def _regularize_gramian(gramian: Tensor, reg_eps: float) -> Tensor:
+def _regularize(gramian: Tensor, reg_eps: float) -> Tensor:
     # Because of numerical errors, `gramian` might have slightly negative eigenvalue(s).
     # Adding a regularization term which is a small proportion of the identity matrix ensures that the gramian is positive definite.
     regularization_matrix = reg_eps * torch.eye(gramian.shape[0])
