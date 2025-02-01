@@ -17,6 +17,13 @@ def _get_projection_weights(
 
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
     """
+    lagrange_multipliers = _get_lagrange_multipliers(gramian, weights, solver)
+    return lagrange_multipliers + weights
+
+
+def _get_lagrange_multipliers(
+    gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
+) -> Tensor:
     shape = weights.shape
     if len(shape) == 1:
         weights_list = [weights.cpu().detach().numpy().astype(np.float64)]
@@ -30,17 +37,17 @@ def _get_projection_weights(
     lagrange_multipliers_rows = []
     for weight_array in weights_list:
         lagrange_multipliers_rows.append(
-            _get_lagrange_multipliers(gramian_array, weight_array, solver)
+            _get_lagrange_multipliers_array(gramian_array, weight_array, solver)
         )
 
     lagrange_array = np.stack(lagrange_multipliers_rows).T.reshape(shape)
     lagrange_multipliers = torch.from_numpy(lagrange_array).to(
         device=gramian.device, dtype=gramian.dtype
     )
-    return lagrange_multipliers + weights
+    return lagrange_multipliers
 
 
-def _get_lagrange_multipliers(
+def _get_lagrange_multipliers_array(
     gramian_array: np.array, weight_array: np.array, solver: Literal["quadprog"]
 ) -> np.array:
     """
