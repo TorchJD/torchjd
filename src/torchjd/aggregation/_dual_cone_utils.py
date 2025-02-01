@@ -25,27 +25,21 @@ def _get_lagrange_multipliers(
     gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
     weights_array = weights.cpu().detach().numpy().astype(np.float64)
-    shape = weights.shape
-    if len(shape) == 1:
-        weights_list = [weights_array]
-    elif len(shape) == 2:
-        weights_list = [weight for weight in weights_array.T]
-    else:
-        raise ValueError(f"Expect vector or matrix of weights, found shape {shape}")
+    weights_matrix = weights_array.reshape([-1, weights_array.shape[-1]])
 
     gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
 
     lagrange_multipliers_rows = []
-    for weight_array in weights_list:
+    for weight_array in weights_matrix:
         lagrange_multipliers_rows.append(
             _get_lagrange_multipliers_array(gramian_array, weight_array, solver)
         )
 
-    lagrange_array = np.stack(lagrange_multipliers_rows).T.reshape(shape)
+    lagrange_array = np.stack(lagrange_multipliers_rows).T
     lagrange_multipliers = torch.from_numpy(lagrange_array).to(
         device=gramian.device, dtype=gramian.dtype
     )
-    return lagrange_multipliers
+    return lagrange_multipliers.reshape(weights.shape)
 
 
 def _get_lagrange_multipliers_array(
