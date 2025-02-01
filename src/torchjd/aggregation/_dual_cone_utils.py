@@ -24,11 +24,12 @@ def _get_projection_weights(
 def _get_lagrange_multipliers(
     gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
+    weights_array = weights.cpu().detach().numpy().astype(np.float64)
     shape = weights.shape
     if len(shape) == 1:
-        weights_list = [weights.cpu().detach().numpy().astype(np.float64)]
+        weights_list = [weights_array]
     elif len(shape) == 2:
-        weights_list = [weight.cpu().detach().numpy().astype(np.float64) for weight in weights.T]
+        weights_list = [weight for weight in weights_array.T]
     else:
         raise ValueError(f"Expect vector or matrix of weights, found shape {shape}")
 
