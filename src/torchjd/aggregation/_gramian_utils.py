@@ -51,5 +51,7 @@ def _compute_normalized_regularized_gramian(matrix: Tensor, norm_eps: float, reg
 
 
 def _regularize_gramian(gramian: Tensor, reg_eps: float) -> Tensor:
+    # Because of numerical errors, `gramian` might have slightly negative eigenvalue(s).
+    # Adding a regularization term which is a small proportion of the identity matrix ensures that the gramian is positive definite.
     regularization_matrix = reg_eps * torch.eye(gramian.shape[0])
     return gramian + regularization_matrix
