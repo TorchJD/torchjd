@@ -6,16 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
 changes that do not affect the user.
 
+## [0.5.0] - 2025-02-01
+
+### Added
+
+- Added new aggregator `ConFIG` from [ConFIG: Towards Conflict-free Training of Physics
+Informed Neural Networks](https://arxiv.org/pdf/2408.11104).
+
 ## [0.4.2] - 2025-01-30
 
 ### Added
 
 - Added Python 3.13 classifier in pyproject.toml (we now also run tests on Python 3.13 in the CI).
-
-### Added
-
-- New aggregator `ConFIG` from [ConFIG: Towards Conflict-free Training of Physics
-Informed Neural Networks](https://arxiv.org/pdf/2408.11104).
 
 ## [0.4.1] - 2025-01-02
 
