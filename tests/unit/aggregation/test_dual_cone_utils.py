@@ -2,7 +2,7 @@ import torch
 from pytest import mark, raises
 from torch.testing import assert_close
 
-from torchjd.aggregation._dual_cone_utils import _weights_of_projection_onto_dual_cone
+from torchjd.aggregation._dual_cone_utils import _get_projection_weights
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
@@ -12,7 +12,7 @@ def test_lagrangian_satisfies_kkt_conditions(shape: tuple[int, int]):
 
     gramian = matrix @ matrix.T
 
-    projection_weights = _weights_of_projection_onto_dual_cone(gramian, weights, "quadprog")
+    projection_weights = _get_projection_weights(gramian, weights, "quadprog")
     lagrange_multiplier = projection_weights - weights
 
     positive_lagrange_multiplier = lagrange_multiplier[lagrange_multiplier >= 0.0]
@@ -36,7 +36,7 @@ def test_lagrangian_satisfies_kkt_conditions_matrix_weights(shape: tuple[int, in
 
     gramian = matrix @ matrix.T
 
-    projection_weights = _weights_of_projection_onto_dual_cone(gramian, weights_matrix, "quadprog")
+    projection_weights = _get_projection_weights(gramian, weights_matrix, "quadprog")
     lagrange_multiplier = projection_weights - weights_matrix
 
     positive_lagrange_multiplier = lagrange_multiplier[lagrange_multiplier >= 0.0]
@@ -55,6 +55,4 @@ def test_lagrangian_satisfies_kkt_conditions_matrix_weights(shape: tuple[int, in
 
 def test_weights_of_projection_onto_dual_cone_invalid_shape():
     with raises(ValueError):
-        _weights_of_projection_onto_dual_cone(
-            torch.zeros([5, 5]), torch.zeros([5, 2, 3]), "quadprog"
-        )
+        _get_projection_weights(torch.zeros([5, 5]), torch.zeros([5, 2, 3]), "quadprog")

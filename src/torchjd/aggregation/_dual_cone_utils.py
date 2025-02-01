@@ -6,7 +6,7 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 
-def _weights_of_projection_onto_dual_cone(
+def _get_projection_weights(
     gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
     """
@@ -29,14 +29,14 @@ def _weights_of_projection_onto_dual_cone(
 
     lagrangian_rows = []
     for weight_array in weights_list:
-        lagrangian_rows.append(_lagrange_multipliers(gramian_array, weight_array, solver))
+        lagrangian_rows.append(_get_lagrange_multipliers(gramian_array, weight_array, solver))
 
     lagrangian_array = np.stack(lagrangian_rows).T.reshape(shape)
     lagrangian = torch.from_numpy(lagrangian_array).to(device=gramian.device, dtype=gramian.dtype)
     return lagrangian + weights
 
 
-def _lagrange_multipliers(
+def _get_lagrange_multipliers(
     gramian_array: np.array, weight_array: np.array, solver: Literal["quadprog"]
 ) -> np.array:
     """
