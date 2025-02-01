@@ -15,7 +15,7 @@ def _weights_of_projection_onto_dual_cone(
     Proposition 1 of [1] when the gramian is $JJ^\top$ and $v$ is given by weights.
     This is a vectorized version, therefore weights can be a matrix made of columns of weights.
 
-    [1] Jacobian Descent For Multi-Objective Optimization, Quinton and Rey.
+    [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
     """
     shape = weights.shape
     if len(shape) == 1:
