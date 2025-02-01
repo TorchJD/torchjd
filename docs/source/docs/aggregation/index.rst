@@ -38,6 +38,10 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
      - |no|
      - |no|
      - |yes|
+   * - :doc:`ConFIG <config>`
+     - |no|
+     - |yes|
+     - |yes|
    * - :doc:`Constant <constant>`
      - |no|
      - |yes|
@@ -140,6 +144,7 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
     upgrad.rst
     aligned_mtl.rst
     cagrad.rst
+    config.rst
     constant.rst
     dualproj.rst
     graddrop.rst

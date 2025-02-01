@@ -14,6 +14,7 @@ from torchjd.aggregation import (
     MGDA,
     AlignedMTL,
     CAGrad,
+    ConFIG,
     DualProj,
     GradDrop,
     Mean,
@@ -44,6 +45,7 @@ def main() -> None:
     aggregators = [
         AlignedMTL(),
         CAGrad(c=0.5),
+        ConFIG(),
         DualProj(),
         GradDrop(),
         IMTLG(),
