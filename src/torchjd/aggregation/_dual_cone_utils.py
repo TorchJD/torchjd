@@ -9,14 +9,36 @@ from torch import Tensor
 def _get_projection_weights(
     gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
-    """
-    Computes the weights of the projection of some weights onto the dual cone of a matrix whose
-    gramian is provided. Specifically, this solves for $w$ in the problem defined by (5) in
-    Proposition 1 of [1] when the gramian is $JJ^\top$ and $v$ is given by weights.
-    This is a vectorized version, therefore weights can be a matrix made of columns of weights.
+    r"""
+    Computes the projection weights of a tensor of weights onto the dual cone of a matrix, given
+    its Gramian matrix.
 
+    Specifically, as stated in Proposition 1 of [1], let:
+    - `J` be a matrix,
+    - `G = J J^\top` its Gramian,
+    - `u` a vector.
+
+    The projection of `J^\top u` onto the dual cone of `J` is `J^\top w`, where `w` is the solution
+    to the optimization problem:
+
+        minimize        v^\top G v
+        subject to      u \preceq v
+
+    This function calculates `w` when provided with `G` and `u`.
+
+    Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
+
+    **Note:** This function is tensorized, meaning `weights` can be a tensor with additional batch
+    dimensions rather than a single vector.
+
+
+    :param gramian: The Gramian matrix with shape `[n, n]`.
+    :param weights: A tensor of weights to be projected with shape `[*, n]`.
+    :param solver: The quadratic programming solver to use.
+    :return: A tensor of projection weights with shape `[*, n]`, corresponding to `weights`.
     """
+
     lagrange_multipliers = _get_lagrange_multipliers(gramian, weights, solver)
     return lagrange_multipliers + weights
 
