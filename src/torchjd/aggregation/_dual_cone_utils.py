@@ -24,33 +24,37 @@ def _get_projection_weights(
 def _get_lagrange_multipliers(
     gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
 ) -> Tensor:
-    weights_array = weights.cpu().detach().numpy().astype(np.float64)
-    weights_matrix = weights_array.reshape([-1, weights_array.shape[-1]])
+    weight_matrix = _to_array(weights.reshape([-1, weights.shape[-1]]))
+    gramian_array = _to_array(gramian)
 
-    gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
-
-    lagrange_multipliers_rows = [
-        _get_lagrange_multipliers_array(gramian_array, weight_array, solver)
-        for weight_array in weights_matrix
+    lagrange_multiplier_vectors = [
+        _get_lagrange_multiplier_vector(gramian_array, weight_vector, solver)
+        for weight_vector in weight_matrix
     ]
 
-    lagrange_array = np.stack(lagrange_multipliers_rows).T
-    lagrange_multipliers = torch.from_numpy(lagrange_array).to(
-        device=gramian.device, dtype=gramian.dtype
+    lagrange_multiplier_matrix = np.stack(lagrange_multiplier_vectors).T
+    lagrange_multipliers = (
+        torch.from_numpy(lagrange_multiplier_matrix)
+        .to(device=gramian.device, dtype=gramian.dtype)
+        .reshape(weights.shape)
     )
-    return lagrange_multipliers.reshape(weights.shape)
+    return lagrange_multipliers
 
 
-def _get_lagrange_multipliers_array(
-    gramian_array: np.array, weight_array: np.array, solver: Literal["quadprog"]
+def _get_lagrange_multiplier_vector(
+    gramian: np.array, weight_vector: np.array, solver: Literal["quadprog"]
 ) -> np.array:
     """
     Solves the dual of the projection of a vector of weights onto the dual cone of the matrix J
     whose gramian is given.
     """
-    dimension = gramian_array.shape[0]
-    P = gramian_array
-    q = gramian_array @ weight_array
+    dimension = gramian.shape[0]
+    P = gramian
+    q = gramian @ weight_vector
     G = -np.eye(dimension)
     h = np.zeros(dimension)
     return solve_qp(P, q, G, h, solver=solver)
+
+
+def _to_array(tensor: Tensor) -> np.ndarray:
+    return tensor.cpu().detach().numpy().astype(np.float64)
