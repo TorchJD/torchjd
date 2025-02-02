@@ -3,7 +3,7 @@ from typing import Literal
 from torch import Tensor
 
 from ._dual_cone_utils import _get_projection_weights
-from ._gramian_utils import _normalize_and_regularize
+from ._gramian_utils import _compute_regularized_normalized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
     _pref_vector_to_str_suffix,
@@ -105,5 +105,5 @@ class _DualProjWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self.weighting(matrix)
-        gramian = _normalize_and_regularize(matrix, self.norm_eps, self.reg_eps)
+        gramian = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
         return _get_projection_weights(gramian, weights, self.solver)
