@@ -105,4 +105,4 @@ class _UPGradWrapper(_Weighting):
         projection_weights_matrix = _get_projection_weights(
             gramian, torch.diag(weights), self.solver
         )
-        return torch.sum(projection_weights_matrix, dim=1)
+        return torch.sum(projection_weights_matrix, dim=0)

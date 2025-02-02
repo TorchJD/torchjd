@@ -32,7 +32,7 @@ def _get_lagrange_multipliers(
         for weight_vector in weight_matrix
     ]
 
-    lagrange_multiplier_matrix = np.stack(lagrange_multiplier_vectors).T
+    lagrange_multiplier_matrix = np.stack(lagrange_multiplier_vectors)
     lagrange_multipliers = (
         torch.from_numpy(lagrange_multiplier_matrix)
         .to(device=gramian.device, dtype=gramian.dtype)

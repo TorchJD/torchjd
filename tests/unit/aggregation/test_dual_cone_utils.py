@@ -44,12 +44,12 @@ def test_lagrangian_satisfies_kkt_conditions_matrix_weights(shape: tuple[int, in
         positive_lagrange_multiplier.norm(), lagrange_multiplier.norm(), atol=1e-05, rtol=0
     )
 
-    constraint = gramian @ projection_weights
+    constraint = gramian @ projection_weights.T
 
     positive_constraint = constraint[constraint >= 0]
     assert_close(positive_constraint.norm(), constraint.norm(), atol=1e-04, rtol=0)
 
-    slackness = torch.trace(constraint @ lagrange_multiplier.T)
+    slackness = torch.trace(lagrange_multiplier @ constraint)
     assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
 
 
