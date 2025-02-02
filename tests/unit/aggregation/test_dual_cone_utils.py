@@ -51,3 +51,17 @@ def test_solution_weights(shape: tuple[int, int]):
     # Complementary slackness
     slackness = dual_gap @ primal_gap
     assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
+
+
+@mark.parametrize("shape", [(5, 2, 3), (1, 3, 6, 9), (2, 1, 1, 5, 8), (3, 1)])
+def test_tensorization_shape(shape: tuple[int, ...]):
+    matrix = torch.randn([shape[-1], shape[-1]])
+    weight_tensor = torch.randn(shape)
+    weight_matrix = weight_tensor.reshape([-1, shape[-1]])
+
+    gramian = matrix @ matrix.T
+
+    projection_weight_tensor = _get_projection_weights(gramian, weight_tensor, "quadprog")
+    projection_weight_matrix = _get_projection_weights(gramian, weight_matrix, "quadprog")
+
+    assert_close(projection_weight_matrix.reshape(shape), projection_weight_tensor)
