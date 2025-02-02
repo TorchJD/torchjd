@@ -24,7 +24,7 @@ author_names = [author["name"] for author in authors]
 author_name_emails = [f"{author['name']} <{author['email']}>" for author in authors]
 
 project = pyproject_config["project"]["name"]
-copyright = "2024, " + ", ".join(author_names)
+copyright = ", ".join(author_names)
 author = ", ".join(author_name_emails)
 release = pyproject_config["project"]["version"]
 
