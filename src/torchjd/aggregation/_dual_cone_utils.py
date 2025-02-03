@@ -39,18 +39,11 @@ def _get_projection_weights(
     :return: A tensor of projection weights with shape `[*, n]`, corresponding to `weights`.
     """
 
-    lagrange_multipliers = _get_lagrange_multipliers(gramian, weights, solver)
-    return lagrange_multipliers + weights
-
-
-def _get_lagrange_multipliers(
-    gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
-) -> Tensor:
     weight_matrix = _to_array(weights.reshape([-1, weights.shape[-1]]))
     gramian_array = _to_array(gramian)
 
     lagrange_multiplier_vectors = [
-        _get_lagrange_multiplier_vector(gramian_array, weight_vector, solver)
+        _get_projection_weight_vector(gramian_array, weight_vector, solver)
         for weight_vector in weight_matrix
     ]
 
@@ -63,18 +56,23 @@ def _get_lagrange_multipliers(
     return lagrange_multipliers
 
 
-def _get_lagrange_multiplier_vector(
+def _get_projection_weight_vector(
     gramian: np.array, weight_vector: np.array, solver: Literal["quadprog"]
 ) -> np.array:
+    r"""
+    Solves the problem
+
+        minimize        v^\top G v
+        subject to      u \preceq v
+
+    with `G=gramian` and `u=weight_vector`.
     """
-    Solves the dual of the projection of a vector of weights onto the dual cone of the matrix J
-    whose gramian is given.
-    """
+
     dimension = gramian.shape[0]
     P = gramian
-    q = gramian @ weight_vector
+    q = np.zeros(dimension)
     G = -np.eye(dimension)
-    h = np.zeros(dimension)
+    h = -weight_vector
     return solve_qp(P, q, G, h, solver=solver)
 
 
