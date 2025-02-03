@@ -60,7 +60,7 @@ def _get_projection_weight_vector(
     gramian: np.array, weight_vector: np.array, solver: Literal["quadprog"]
 ) -> np.array:
     r"""
-    Solves the problem
+    Solves for `v` the quadratic problem
 
         minimize        v^\top G v
         subject to      u \preceq v
