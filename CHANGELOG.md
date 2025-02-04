@@ -8,6 +8,11 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Changed
+
+- Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
+  project onto the dual cone. This may minimally affect the output of these aggregators.
+
 ## [0.5.0] - 2025-02-01
 
 ### Added
