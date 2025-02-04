@@ -100,8 +100,7 @@ class _UPGradWrapper(_Weighting):
         self.solver = solver
 
     def forward(self, matrix: Tensor) -> Tensor:
-        u = self.weighting(matrix)
-        U = torch.diag(u)
+        U = torch.diag(self.weighting(matrix))
         G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
         W = _project_weights(U, G, self.solver)
         return torch.sum(W, dim=0)
