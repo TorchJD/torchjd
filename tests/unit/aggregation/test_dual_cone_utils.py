@@ -52,6 +52,11 @@ def test_solution_weights(shape: tuple[int, int]):
 
 @mark.parametrize("shape", [(5, 2, 3), (1, 3, 6, 9), (2, 1, 1, 5, 8), (3, 1)])
 def test_tensorization_shape(shape: tuple[int, ...]):
+    """
+    Tests that applying `_project_weights` on a tensor is equivalent to applying it on the tensor
+    reshaped as matrix and to reshape the result back to the original tensor's shape.
+    """
+
     matrix = torch.randn([shape[-1], shape[-1]])
     U_tensor = torch.randn(shape)
     U_matrix = U_tensor.reshape([-1, shape[-1]])
