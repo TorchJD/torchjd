@@ -3,7 +3,7 @@ from typing import Literal
 import torch
 from torch import Tensor
 
-from ._dual_cone_utils import _get_projection_weights
+from ._dual_cone_utils import _project_weights
 from ._gramian_utils import _compute_regularized_normalized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
@@ -103,7 +103,5 @@ class _UPGradWrapper(_Weighting):
         with torch.no_grad():
             weights = self.weighting(matrix)
             gramian = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
-            projection_weights_matrix = _get_projection_weights(
-                gramian, torch.diag(weights), self.solver
-            )
+            projection_weights_matrix = _project_weights(torch.diag(weights), gramian, self.solver)
             return torch.sum(projection_weights_matrix, dim=0)

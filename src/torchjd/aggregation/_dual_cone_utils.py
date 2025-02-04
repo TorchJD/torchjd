@@ -6,75 +6,52 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 
-def _get_projection_weights(
-    gramian: Tensor, weights: Tensor, solver: Literal["quadprog"]
-) -> Tensor:
+def _project_weights(weights: Tensor, gramian: Tensor, solver: Literal["quadprog"]) -> Tensor:
+    """
+    Computes the tensor of weights corresponding to the projection of the vectors in `weights` onto
+    the rows of a matrix `J`, whose Gramian is provided.
+
+    :param weights: The tensor of weights corresponding to the vectors to project, of shape
+        `[..., m]`.
+    :param gramian: The Gramian matrix of shape `[m, m]`.
+    :param solver: The quadratic programming solver to use.
+    :return: A tensor of projection weights with the same shape as `weights`.
+    """
+
+    G = _to_array(gramian)
+    U = _to_array(weights)
+
+    W = np.apply_along_axis(lambda u: _project_weight_vector(u, G, solver), axis=-1, arr=U)
+
+    return torch.as_tensor(W, device=gramian.device, dtype=gramian.dtype)
+
+
+def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadprog"]) -> np.ndarray:
     r"""
-    Computes the projection weights of a tensor of weights onto the dual cone of a matrix, given
-    its Gramian matrix.
+    Computes the weights `w` of the projection of `J^T u` onto the dual cone of the rows of `J`,
+    given `G = J J^T` and `u`. In other words, this computes the `w` that satisfies
+    `\pi_J(J^T u) = J^T w`.
 
-    Specifically, as stated in Proposition 1 of [1], let:
-    - `J` be a matrix,
-    - `G = J J^\top` its Gramian,
-    - `u` a vector.
+    By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
 
-    The projection of `J^\top u` onto the dual cone of `J` is `J^\top w`, where `w` is the solution
-    to the optimization problem:
-
-        minimize        v^\top G v
-        subject to      u \preceq v
-
-    This function calculates `w` when provided with `G` and `u`.
+    minimize        v^T G v
+    subject to      u \preceq v
 
     Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
-    **Note:** This function is tensorized, meaning `weights` can be a tensor with additional batch
-    dimensions rather than a single vector.
-
-
-    :param gramian: The Gramian matrix with shape `[n, n]`.
-    :param weights: A tensor of weights to be projected with shape `[*, n]`.
+    :param u: The vector of weights `u` of shape `[m]` corresponding to the vector `J^T u` to
+        project.
+    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`.
     :param solver: The quadratic programming solver to use.
-    :return: A tensor of projection weights with shape `[*, n]`, corresponding to `weights`.
     """
 
-    weight_matrix = _to_array(weights.reshape([-1, weights.shape[-1]]))
-    gramian_array = _to_array(gramian)
-
-    lagrange_multiplier_vectors = [
-        _get_projection_weight_vector(gramian_array, weight_vector, solver)
-        for weight_vector in weight_matrix
-    ]
-
-    lagrange_multiplier_matrix = np.stack(lagrange_multiplier_vectors)
-    lagrange_multipliers = (
-        torch.from_numpy(lagrange_multiplier_matrix)
-        .to(device=gramian.device, dtype=gramian.dtype)
-        .reshape(weights.shape)
-    )
-    return lagrange_multipliers
-
-
-def _get_projection_weight_vector(
-    gramian: np.array, weight_vector: np.array, solver: Literal["quadprog"]
-) -> np.array:
-    r"""
-    Solves for `v` the quadratic problem
-
-        minimize        v^\top G v
-        subject to      u \preceq v
-
-    with `G=gramian` and `u=weight_vector`.
-    """
-
-    dimension = gramian.shape[0]
-    P = gramian
-    q = np.zeros(dimension)
-    G = -np.eye(dimension)
-    h = -weight_vector
-    return solve_qp(P, q, G, h, solver=solver)
+    m = G.shape[0]
+    w = solve_qp(G, np.zeros(m), -np.eye(m), -u, solver=solver)
+    return w
 
 
 def _to_array(tensor: Tensor) -> np.ndarray:
+    """Transforms a tensor into a numpy array with float64 dtype."""
+
     return tensor.cpu().detach().numpy().astype(np.float64)
