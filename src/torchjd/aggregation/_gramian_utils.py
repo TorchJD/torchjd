@@ -7,10 +7,16 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
     """
+
     return matrix @ matrix.T
 
 
-def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
+def _compute_regularized_normalized_gramian(matrix: Tensor, norm_eps: float, reg_eps: float):
+    normalized_gramian = _compute_normalized_gramian(matrix, norm_eps)
+    return _regularize(normalized_gramian, reg_eps)
+
+
+def _compute_normalized_gramian(matrix: Tensor, eps: float) -> Tensor:
     r"""
     Computes :math:`\frac{1}{\sigma_\max^2} J J^T` for an input matrix :math:`J`, where
     :math:`{\sigma_\max^2}` is :math:`J`'s largest singular value.
@@ -35,7 +41,7 @@ def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
             "issue on https://github.com/TorchJD/torchjd/issues and paste this error message in it."
         ) from error
     max_singular_value = torch.max(singular_values)
-    if max_singular_value < norm_eps:
+    if max_singular_value < eps:
         scaled_singular_values = torch.zeros_like(singular_values)
     else:
         scaled_singular_values = singular_values / max_singular_value
@@ -43,3 +49,18 @@ def _compute_normalized_gramian(matrix: Tensor, norm_eps: float) -> Tensor:
         left_unitary_matrix @ torch.diag(scaled_singular_values**2) @ left_unitary_matrix.T
     )
     return normalized_gramian
+
+
+def _regularize(gramian: Tensor, eps: float) -> Tensor:
+    """
+    Adds a regularization term to the gramian to enforce positive definiteness.
+
+    Because of numerical errors, `gramian` might have slightly negative eigenvalue(s). Adding a
+    regularization term which is a small proportion of the identity matrix ensures that the gramian
+    is positive definite.
+    """
+
+    regularization_matrix = eps * torch.eye(
+        gramian.shape[0], dtype=gramian.dtype, device=gramian.device
+    )
+    return gramian + regularization_matrix

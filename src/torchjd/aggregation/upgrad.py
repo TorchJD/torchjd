@@ -1,11 +1,10 @@
 from typing import Literal
 
-import numpy as np
 import torch
-from qpsolvers import solve_qp
 from torch import Tensor
 
-from ._gramian_utils import _compute_normalized_gramian
+from ._dual_cone_utils import _project_weights
+from ._gramian_utils import _compute_regularized_normalized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
     _pref_vector_to_str_suffix,
@@ -101,37 +100,7 @@ class _UPGradWrapper(_Weighting):
         self.solver = solver
 
     def forward(self, matrix: Tensor) -> Tensor:
-        weights = self.weighting(matrix)
-        lagrangian = self._compute_lagrangian(matrix, weights)
-        lagrangian_weights = torch.sum(lagrangian, dim=0)
-        result_weights = lagrangian_weights + weights
-        return result_weights
-
-    def _compute_lagrangian(self, matrix: Tensor, weights: Tensor) -> Tensor:
-        gramian = _compute_normalized_gramian(matrix, self.norm_eps)
-        gramian_array = gramian.cpu().detach().numpy().astype(np.float64)
-        dimension = gramian.shape[0]
-
-        regularization_array = self.reg_eps * np.eye(dimension)
-        regularized_gramian_array = gramian_array + regularization_array
-
-        P = regularized_gramian_array
-        G = -np.eye(dimension)
-        h = np.zeros(dimension)
-
-        lagrangian_rows = []
-        for i in range(dimension):
-            weight = weights[i].item()
-            if weight <= 0.0:
-                # In this case, the solution to the quadratic program is always 0,
-                # so we don't need to run solve_qp.
-                lagrangian_rows.append(np.zeros([dimension]))
-            else:
-                q = weight * regularized_gramian_array[i, :]
-                lagrangian_rows.append(solve_qp(P, q, G, h, solver=self.solver))
-
-        lagrangian_array = np.stack(lagrangian_rows)
-        lagrangian = torch.from_numpy(lagrangian_array).to(
-            device=gramian.device, dtype=gramian.dtype
-        )
-        return lagrangian
+        U = torch.diag(self.weighting(matrix))
+        G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
+        W = _project_weights(U, G, self.solver)
+        return torch.sum(W, dim=0)
