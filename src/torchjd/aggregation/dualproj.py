@@ -106,6 +106,7 @@ class _DualProjWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         with torch.no_grad():
-            weights = self.weighting(matrix)
-            gramian = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
-            return _project_weights(weights, gramian, self.solver)
+            u = self.weighting(matrix)
+            G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
+            w = _project_weights(u, G, self.solver)
+            return w

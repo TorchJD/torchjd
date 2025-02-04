@@ -6,24 +6,23 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 
-def _project_weights(weights: Tensor, gramian: Tensor, solver: Literal["quadprog"]) -> Tensor:
+def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tensor:
     """
-    Computes the tensor of weights corresponding to the projection of the vectors in `weights` onto
-    the rows of a matrix `J`, whose Gramian is provided.
+    Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
+    rows of a matrix whose Gramian is provided.
 
-    :param weights: The tensor of weights corresponding to the vectors to project, of shape
-        `[..., m]`.
-    :param gramian: The Gramian matrix of shape `[m, m]`.
+    :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
+    :param G: The Gramian matrix of shape `[m, m]`.
     :param solver: The quadratic programming solver to use.
-    :return: A tensor of projection weights with the same shape as `weights`.
+    :return: A tensor of projection weights with the same shape as `U`.
     """
 
-    G = _to_array(gramian)
-    U = _to_array(weights)
+    G_ = _to_array(G)
+    U_ = _to_array(U)
 
-    W = np.apply_along_axis(lambda u: _project_weight_vector(u, G, solver), axis=-1, arr=U)
+    W = np.apply_along_axis(lambda u: _project_weight_vector(u, G_, solver), axis=-1, arr=U_)
 
-    return torch.as_tensor(W, device=gramian.device, dtype=gramian.dtype)
+    return torch.as_tensor(W, device=G.device, dtype=G.dtype)
 
 
 def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadprog"]) -> np.ndarray:

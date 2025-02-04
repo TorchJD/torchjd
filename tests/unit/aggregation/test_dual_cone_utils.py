@@ -30,19 +30,19 @@ def test_solution_weights(shape: tuple[int, int]):
     Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
     """
-    matrix = torch.randn(shape)
-    weights = torch.rand(shape[0])
 
-    gramian = matrix @ matrix.T
+    J = torch.randn(shape)
+    G = J @ J.T
+    u = torch.rand(shape[0])
 
-    projection_weights = _project_weights(weights, gramian, "quadprog")
-    dual_gap = projection_weights - weights
+    w = _project_weights(u, G, "quadprog")
+    dual_gap = w - u
 
     # Dual feasibility
     dual_gap_positive_part = dual_gap[dual_gap >= 0.0]
     assert_close(dual_gap_positive_part.norm(), dual_gap.norm(), atol=1e-05, rtol=0)
 
-    primal_gap = gramian @ projection_weights
+    primal_gap = G @ w
 
     # Primal feasibility
     primal_gap_positive_part = primal_gap[primal_gap >= 0]
@@ -56,12 +56,12 @@ def test_solution_weights(shape: tuple[int, int]):
 @mark.parametrize("shape", [(5, 2, 3), (1, 3, 6, 9), (2, 1, 1, 5, 8), (3, 1)])
 def test_tensorization_shape(shape: tuple[int, ...]):
     matrix = torch.randn([shape[-1], shape[-1]])
-    weight_tensor = torch.randn(shape)
-    weight_matrix = weight_tensor.reshape([-1, shape[-1]])
+    U_tensor = torch.randn(shape)
+    U_matrix = U_tensor.reshape([-1, shape[-1]])
 
-    gramian = matrix @ matrix.T
+    G = matrix @ matrix.T
 
-    projection_weight_tensor = _project_weights(weight_tensor, gramian, "quadprog")
-    projection_weight_matrix = _project_weights(weight_matrix, gramian, "quadprog")
+    W_tensor = _project_weights(U_tensor, G, "quadprog")
+    W_matrix = _project_weights(U_matrix, G, "quadprog")
 
-    assert_close(projection_weight_matrix.reshape(shape), projection_weight_tensor)
+    assert_close(W_matrix.reshape(shape), W_tensor)
