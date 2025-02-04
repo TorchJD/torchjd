@@ -8,24 +8,21 @@ from torchjd.aggregation._dual_cone_utils import _project_weights
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
 def test_solution_weights(shape: tuple[int, int]):
     r"""
-    Tests that `_get_projection_weights` returns valid weights corresponding to the projection onto
-    the dual cone of a matrix with the specified shape.
+    Tests that `_project_weights` returns valid weights corresponding to the projection onto the
+    dual cone of a matrix with the specified shape.
 
     Validation is performed by verifying that the solution satisfies the `KKT conditions
     <https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions>`_ for the
-    quadratic program that projects vectors onto the dual cone of a matrix.
-    Specifically, the solution should satisfy the equivalent set of conditions described in Lemma 4
-    of [1].
+    quadratic program that projects vectors onto the dual cone of a matrix. Specifically, the
+    solution should satisfy the equivalent set of conditions described in Lemma 4 of [1].
 
-    Let:
-    - `u` be a vector of weights,
-    - `G` a positive semi-definite matrix,
-    - Consider the quadratic problem of minimizing `v^\top G v` subject to `u \preceq v`.
+    Let `u` be a vector of weights and `G` a positive semi-definite matrix. Consider the quadratic
+    problem of minimizing `v^T G v` subject to `u \preceq v`.
 
     Then `w` is a solution if and only if it satisfies the following three conditions:
     1. **Dual feasibility:** `u \preceq w`
     2. **Primal feasibility:** `0 \preceq G w`
-    3. **Complementary slackness:** `u^\top G w = w^\top G w`
+    3. **Complementary slackness:** `u^T G w = w^T G w`
 
     Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
