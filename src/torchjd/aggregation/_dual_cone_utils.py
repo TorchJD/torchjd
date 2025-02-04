@@ -32,7 +32,6 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
     `\pi_J(J^T u) = J^T w`.
 
     By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
-
     minimize        v^T G v
     subject to      u \preceq v
 
