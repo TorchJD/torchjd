@@ -1,6 +1,5 @@
 from typing import Literal
 
-import torch
 from torch import Tensor
 
 from ._dual_cone_utils import _project_weights
@@ -105,8 +104,7 @@ class _DualProjWrapper(_Weighting):
         self.solver = solver
 
     def forward(self, matrix: Tensor) -> Tensor:
-        with torch.no_grad():
-            u = self.weighting(matrix)
-            G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
-            w = _project_weights(u, G, self.solver)
-            return w
+        u = self.weighting(matrix)
+        G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
+        w = _project_weights(u, G, self.solver)
+        return w
