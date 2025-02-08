@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._dual_cone_utils import _project_weights
-from ._gramian_utils import _compute_regularized_normalized_gramian
+from ._gramian_utils import _compute_regularized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
     _pref_vector_to_str_suffix,
@@ -22,7 +22,6 @@ class UPGrad(_WeightedAggregator):
 
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
-    :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
@@ -47,7 +46,6 @@ class UPGrad(_WeightedAggregator):
     def __init__(
         self,
         pref_vector: Tensor | None = None,
-        norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
@@ -56,16 +54,13 @@ class UPGrad(_WeightedAggregator):
         self._pref_vector = pref_vector
 
         super().__init__(
-            weighting=_UPGradWrapper(
-                weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
-            )
+            weighting=_UPGradWrapper(weighting=weighting, reg_eps=reg_eps, solver=solver)
         )
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
-            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps}, "
-            f"solver={repr(self.weighting.solver)})"
+            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, "
+            f"reg_eps={self.weighting.reg_eps}, solver={repr(self.weighting.solver)})"
         )
 
     def __str__(self) -> str:
@@ -78,7 +73,6 @@ class _UPGradWrapper(_Weighting):
     that each weighted row is projected onto the dual cone of all rows.
 
     :param weighting: The wrapped weighting.
-    :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
@@ -89,18 +83,16 @@ class _UPGradWrapper(_Weighting):
     def __init__(
         self,
         weighting: _Weighting,
-        norm_eps: float,
         reg_eps: float,
         solver: Literal["quadprog"],
     ):
         super().__init__()
         self.weighting = weighting
-        self.norm_eps = norm_eps
         self.reg_eps = reg_eps
         self.solver = solver
 
     def forward(self, matrix: Tensor) -> Tensor:
         U = torch.diag(self.weighting(matrix))
-        G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
+        G = _compute_regularized_gramian(matrix, self.reg_eps)
         W = _project_weights(U, G, self.solver)
         return torch.sum(W, dim=0)

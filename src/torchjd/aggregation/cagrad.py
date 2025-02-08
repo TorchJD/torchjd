@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ._gramian_utils import _compute_normalized_gramian
+from ._gramian_utils import _compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -72,7 +72,7 @@ class _CAGradWeighting(_Weighting):
         self.norm_eps = norm_eps
 
     def forward(self, matrix: Tensor) -> Tensor:
-        gramian = _compute_normalized_gramian(matrix, self.norm_eps)
+        gramian = _compute_gramian(matrix)
         U, S, _ = torch.svd(gramian)
 
         reduced_matrix = U @ S.sqrt().diag()
