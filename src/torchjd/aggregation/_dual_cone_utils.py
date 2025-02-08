@@ -5,8 +5,12 @@ import torch
 from qpsolvers import solve_qp
 from torch import Tensor
 
+from torchjd.aggregation._gramian_utils import _compute_regularized_normalized_gramian
 
-def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tensor:
+
+def _project_weights(
+    U: Tensor, matrix: Tensor, solver: Literal["quadprog"], norm_eps: float, reg_eps: float
+) -> Tensor:
     """
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.
@@ -16,6 +20,8 @@ def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tenso
     :param solver: The quadratic programming solver to use.
     :return: A tensor of projection weights with the same shape as `U`.
     """
+
+    G = _compute_regularized_normalized_gramian(matrix, norm_eps, reg_eps)
 
     G_ = _to_array(G)
     U_ = _to_array(U)

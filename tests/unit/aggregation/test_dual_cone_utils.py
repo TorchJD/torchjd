@@ -32,7 +32,7 @@ def test_solution_weights(shape: tuple[int, int]):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = _project_weights(u, G, "quadprog")
+    w = _project_weights(u, J, "quadprog", 0.0, 0.0)
     dual_gap = w - u
 
     # Dual feasibility
@@ -61,9 +61,7 @@ def test_tensorization_shape(shape: tuple[int, ...]):
     U_tensor = torch.randn(shape)
     U_matrix = U_tensor.reshape([-1, shape[-1]])
 
-    G = matrix @ matrix.T
-
-    W_tensor = _project_weights(U_tensor, G, "quadprog")
-    W_matrix = _project_weights(U_matrix, G, "quadprog")
+    W_tensor = _project_weights(U_tensor, matrix, "quadprog", 0.0, 0.0)
+    W_matrix = _project_weights(U_matrix, matrix, "quadprog", 0.0, 0.0)
 
     assert_close(W_matrix.reshape(shape), W_tensor)

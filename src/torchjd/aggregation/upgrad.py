@@ -4,7 +4,6 @@ import torch
 from torch import Tensor
 
 from ._dual_cone_utils import _project_weights
-from ._gramian_utils import _compute_regularized_normalized_gramian
 from ._pref_vector_utils import (
     _check_pref_vector,
     _pref_vector_to_str_suffix,
@@ -101,6 +100,5 @@ class _UPGradWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         U = torch.diag(self.weighting(matrix))
-        G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
-        W = _project_weights(U, G, self.solver)
+        W = _project_weights(U, matrix, self.solver, self.norm_eps, self.reg_eps)
         return torch.sum(W, dim=0)
