@@ -8,6 +8,10 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added usage example showing how to combine TorchJD with automatic mixed precision (AMP).
+
 ### Changed
 
 - Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
