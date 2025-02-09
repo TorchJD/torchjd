@@ -46,6 +46,10 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
 
     m = G.shape[0]
     w = solve_qp(G, np.zeros(m), -np.eye(m), -u, solver=solver)
+
+    if w is None:  # This may happen when G has large values.
+        raise ValueError("Failed to solve the quadratic programming problem.")
+
     return w
 
 
