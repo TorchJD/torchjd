@@ -1,8 +1,9 @@
+import numpy as np
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch.testing import assert_close
 
-from torchjd.aggregation._dual_cone_utils import _project_weights
+from torchjd.aggregation._dual_cone_utils import _project_weight_vector, _project_weights
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
@@ -67,3 +68,12 @@ def test_tensorization_shape(shape: tuple[int, ...]):
     W_matrix = _project_weights(U_matrix, G, "quadprog")
 
     assert_close(W_matrix.reshape(shape), W_tensor)
+
+
+def test_project_weight_vector_failure():
+    """Tests that `_project_weight_vector` raises an error when the input G has too large values."""
+
+    large_J = np.random.randn(10, 100) * 1e5
+    large_G = large_J @ large_J.T
+    with raises(ValueError):
+        _project_weight_vector(np.ones(10), large_G, "quadprog")
