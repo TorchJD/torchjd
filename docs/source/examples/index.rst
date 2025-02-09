@@ -18,6 +18,7 @@ This section contains some usage examples for TorchJD.
 - :doc:`PyTorch Lightning Integration <lightning_integration>` showcases how to combine
   TorchJD with PyTorch Lightning, by providing an example implementation of a multi-task
   ``LightningModule`` optimized by Jacobian descent.
+- :doc:`Automatic Mixed Precision <amp>` shows how to combine mixed precision training with TorchJD.
 
 .. toctree::
     :hidden:
@@ -27,3 +28,4 @@ This section contains some usage examples for TorchJD.
     mtl.rst
     rnn.rst
     lightning_integration.rst
+    amp.rst
