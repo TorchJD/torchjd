@@ -24,7 +24,16 @@ def _regularize(gramian: Tensor, eps: float) -> Tensor:
     is positive definite.
     """
 
-    regularization_matrix = eps * torch.eye(
-        gramian.shape[0], dtype=gramian.dtype, device=gramian.device
+    max_singular_value = torch.max(torch.linalg.svdvals(gramian))
+
+    if max_singular_value < 0.0001:
+        return torch.zeros_like(gramian) + eps * torch.eye(
+            gramian.shape[0], dtype=gramian.dtype, device=gramian.device
+        )
+
+    regularization_matrix = (
+        eps
+        * (max_singular_value)
+        * torch.eye(gramian.shape[0], dtype=gramian.dtype, device=gramian.device)
     )
     return gramian + regularization_matrix
