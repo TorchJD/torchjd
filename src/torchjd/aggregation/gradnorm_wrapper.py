@@ -2,25 +2,26 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class GradNormWrapper(nn.Module):
     r"""
     :class:`~torchjd.aggregation.bases.Aggregator` Loss-Balancing Wrapper using GradNorm proposed in
         "GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks"
         (Chen et al., ICML 2018).  See the paper: https://arxiv.org/pdf/1711.02257
-    
+
         It is designed to work on a list of task losses (scalar tensors) and re-weight
         them before aggregation. The aggregated loss is computed as:
 
         .. math::
            L_{\text{total}} = \sum_{i=1}^{T} \alpha_i \, L_i,
-        
+
         where the task weights are computed as:
-    
+
         .. math::
            \alpha = T \cdot \mathrm{softmax}(\text{loss\_scale})
-        
+
         and T is the number of tasks.
-    
+
         The internal parameters (``loss_scale``) are updated by the
         :meth:`balance` method, which computes per-task gradient norms and compares them
         to target values derived from the ratio of current losses to the initially recorded losses.
@@ -31,23 +32,23 @@ class GradNormWrapper(nn.Module):
         Example 1
 
         .. code-block:: python
-    
+
            import torch
            from torchjd.aggregation.gradnorm_wrapper import GradNormWrapper
-    
+
            # Use CUDA if available
             >>> device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
            # Initialize GradNormWrapper for 2 tasks with alpha=1.5 and learning rate 1e-2.
             >>> gradnorm = GradNormWrapper(num_tasks=2, alpha=1.5, lr=1e-2, device=device)
-    
+
            # Compute individual task losses.
             >>> loss1 = (torch.randn(10, device=device, requires_grad=True).sum()) ** 2
             >>> loss2 = (torch.randn(10, device=device, requires_grad=True).mean()) ** 2
-    
+
            # Forward pass: compute aggregated (weighted) loss.
             >>> total_loss = gradnorm([loss1, loss2])
             >>> total_loss.backward(retain_graph=True)
-    
+
            # Suppose shared parameters are provided (e.g., from a shared model)
             >>> shared_params = [torch.randn(10, device=device, requires_grad=True)]
            # Update the loss_scale parameters based on the balancing loss.
@@ -59,7 +60,7 @@ class GradNormWrapper(nn.Module):
             alpha (float, optional): Hyperparameter controlling the strength of the balancing force
             lr (float, optional): Learning rate for updating the loss_scale parameters.
             device (torch.device, optional): Device on which to run the module.
-    
+
         Returns:
             When calling :meth:`forward`, returns a scalar aggregated loss.
             When calling :meth:`balance`, returns a scalar balancing loss.
@@ -126,7 +127,7 @@ class GradNormWrapper(nn.Module):
         Updates the internal "loss_scale" parameters by balancing the gradient norms.
 
         For each task *i*:
-        
+
         - Computes the gradient norm *G_i* of the weighted loss (``alpha_i * L_i``)
           with respect to the shared parameters.
         - Computes *G*, the average gradient norm.
@@ -149,13 +150,18 @@ class GradNormWrapper(nn.Module):
         for i in range(self.num_tasks):
             weighted_loss = weights[i] * losses[i]
             grads = torch.autograd.grad(
-                weighted_loss, shared_params,
-                retain_graph=True, create_graph=True, allow_unused=True,
+                weighted_loss,
+                shared_params,
+                retain_graph=True,
+                create_graph=True,
+                allow_unused=True,
             )
-            squared_norm = sum([
-                g.pow(2).sum() if g is not None else torch.tensor(0.0, device=self.device)
-                for g in grads
-            ])
+            squared_norm = sum(
+                [
+                    g.pow(2).sum() if g is not None else torch.tensor(0.0, device=self.device)
+                    for g in grads
+                ]
+            )
             grad_norm = torch.sqrt(squared_norm)
             grad_norms.append(grad_norm)
         grad_norms_tensor = torch.stack(grad_norms)
@@ -163,7 +169,7 @@ class GradNormWrapper(nn.Module):
         current_losses = torch.stack([l.detach() for l in losses])
         L_i = current_losses / self.initial_losses
         r_i = L_i / L_i.mean()
-        target = G * (r_i ** self.alpha)
+        target = G * (r_i**self.alpha)
         balance_loss = torch.sum(torch.abs(grad_norms_tensor - target))
         if not balance_loss.requires_grad:
             balance_loss = balance_loss + 1e-6 * torch.sum(self.loss_scale)

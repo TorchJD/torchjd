@@ -6,7 +6,6 @@ from torch.testing import assert_close
 from torchjd.aggregation import MGDA, Sum
 from torchjd.aggregation.gradnorm_wrapper import GradNormWrapper
 
-
 devices = [torch.device("cpu")]
 if torch.cuda.is_available():
     devices.append(torch.device("cuda"))
@@ -124,7 +123,6 @@ def test_zero_gradient_behavior(wrapper_fn, device):
     shared_param = torch.randn(10, device=device, requires_grad=True)
     balance_loss = wrapper.balance([loss1, loss2], [shared_param])
     assert torch.isfinite(balance_loss), "Balance loss must be finite even with zero gradients."
-
 
 
 @mark.parametrize("device", devices)
