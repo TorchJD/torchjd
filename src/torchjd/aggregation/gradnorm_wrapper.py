@@ -2,30 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-:class:`~torchjd.aggregation.bases.Aggregator` as defined in Equation 2 of `ConFIG: Towards
-    Conflict-free Training of Physics Informed Neural Networks <https://arxiv.org/pdf/2408.11104>`_.
-
-    :param pref_vector: The preference vector used to weight the rows. If not provided, defaults to
-        equal weights of 1.
-
-    .. admonition::
-        Example
-
-        Use ConFIG to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import ConFIG
-        >>>
-        >>> A = ConFIG()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.1588, 2.0706, 2.0706])
-
-    .. note::
-        This implementation was adapted from the `official implementation
-        <https://github.com/tum-pbs/ConFIG/tree/main/conflictfree>`_.
-
 class GradNormWrapper(nn.Module):
     r"""
     :class:`~torchjd.aggregation.bases.Aggregator` Loss-Balancing Wrapper using GradNorm proposed in
