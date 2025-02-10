@@ -65,6 +65,28 @@ class GradNormWrapper(nn.Module):
     Returns:
         When calling :meth:`forward`, returns a scalar aggregated loss.
         When calling :meth:`balance`, returns a scalar balancing loss.
+
+
+   # ----- Composing with an Underlying Aggregator -----
+   # If you wish to further aggregate re-weighted losses using a gradient aggregator like MGDA,
+   # you can re-weight the losses and then form a matrix to pass to the aggregator.
+   weights = gradnorm.loss_weights
+   reweighted_losses = [weights[i] * loss for i, loss in enumerate([loss1, loss2])]
+   # Stack the re-weighted losses as a column vector.
+   matrix = torch.stack(reweighted_losses).unsqueeze(1)
+   # Initialize the MGDA aggregator.
+   mgda = MGDA(epsilon=0.001, max_iters=100)
+   # Use MGDA to aggregate the matrix.
+   aggregated_update = mgda(matrix)
+   print("Aggregated update:", aggregated_update)
+
+
+    Note
+    ----
+    While GradNormWrapper itself is not designed as a gradient aggregator (i.e. it does not accept a matrix
+    input), it can be composed with other torchjd aggregators. In the example above, we first use GradNormWrapper
+    to compute adaptive weights from a list of losses, and then we use these weights to re-weight the losses.
+    The reweighted losses are then stacked into a matrix, which can be fed into an aggregator like MGDA.
     """
 
     def __init__(self, num_tasks: int, alpha: float = 1.5, lr: float = 1e-3, device=None):
