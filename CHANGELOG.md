@@ -9,13 +9,15 @@ changes that do not affect the user.
 ## [Unreleased]
 
 ### Added
-
 - Added usage example showing how to combine TorchJD with automatic mixed precision (AMP).
 
 ### Changed
+- Refactored the underlying optimization problem that UPGrad and DualProj have to solve to project onto the dual cone. This may minimally affect the output of these aggregators.
+- Implemented a new GradNorm loss-balancing wrapper (with full CUDA support) and enriched its test suite.
 
-- Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
-  project onto the dual cone. This may minimally affect the output of these aggregators.
+[0.5.1] - 2025-02-10
+- Released GradNorm (Chen. et al, ICML 2018) loss-balancing wrapper along with enhanced tests (including CUDA tests) ensuring 96% test coverage.
+- Updated documentation and examples to reflect the new GradNorm functionality.
 
 ## [0.5.0] - 2025-02-01
 
