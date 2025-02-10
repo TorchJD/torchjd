@@ -2,91 +2,113 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+:class:`~torchjd.aggregation.bases.Aggregator` as defined in Equation 2 of `ConFIG: Towards
+    Conflict-free Training of Physics Informed Neural Networks <https://arxiv.org/pdf/2408.11104>`_.
+
+    :param pref_vector: The preference vector used to weight the rows. If not provided, defaults to
+        equal weights of 1.
+
+    .. admonition::
+        Example
+
+        Use ConFIG to aggregate a matrix.
+
+        >>> from torch import tensor
+        >>> from torchjd.aggregation import ConFIG
+        >>>
+        >>> A = ConFIG()
+        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
+        >>>
+        >>> A(J)
+        tensor([0.1588, 2.0706, 2.0706])
+
+    .. note::
+        This implementation was adapted from the `official implementation
+        <https://github.com/tum-pbs/ConFIG/tree/main/conflictfree>`_.
+
 class GradNormWrapper(nn.Module):
     r"""
-    Loss-Balancing Wrapper using GradNorm.
-
-    This module implements the adaptive loss-balancing mechanism proposed in
-    "GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks"
-    (Chen et al., ICML 2018).  See the paper: https://arxiv.org/pdf/1711.02257
-
-    It is designed to work on a list of task losses (scalar tensors) and re-weight
-    them before aggregation. The aggregated loss is computed as:
-
-    .. math::
-       L_{\text{total}} = \sum_{i=1}^{T} \alpha_i \, L_i,
+    :class:`~torchjd.aggregation.bases.Aggregator` Loss-Balancing Wrapper using GradNorm proposed in
+        "GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks"
+        (Chen et al., ICML 2018).  See the paper: https://arxiv.org/pdf/1711.02257
     
-    where the task weights are computed as:
+        It is designed to work on a list of task losses (scalar tensors) and re-weight
+        them before aggregation. The aggregated loss is computed as:
 
-    .. math::
-       \alpha = T \cdot \mathrm{softmax}(\text{loss\_scale})
+        .. math::
+           L_{\text{total}} = \sum_{i=1}^{T} \alpha_i \, L_i,
+        
+        where the task weights are computed as:
     
-    and T is the number of tasks.
+        .. math::
+           \alpha = T \cdot \mathrm{softmax}(\text{loss\_scale})
+        
+        and T is the number of tasks.
+    
+        The internal parameters (``loss_scale``) are updated by the
+        :meth:`balance` method, which computes per-task gradient norms and compares them
+        to target values derived from the ratio of current losses to the initially recorded losses.
+        Note that GradNormWrapper is a loss-balancing heuristic rather than a gradient aggregator
+        (like MGDA or GradDrop).
 
-    The internal parameters (``loss_scale``) are updated by the
-    :meth:`balance` method, which computes per-task gradient norms and compares them
-    to target values derived from the ratio of current losses to the initially recorded losses.
-    Note that GradNormWrapper is a loss-balancing heuristic rather than a gradient aggregator
-    (like MGDA or GradDrop).
+     .. admonition::
+        Example 1
 
-    **Example**
+        .. code-block:: python
+    
+           import torch
+           from torchjd.aggregation.gradnorm_wrapper import GradNormWrapper
+    
+           # Use CUDA if available
+            >>> device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+           # Initialize GradNormWrapper for 2 tasks with alpha=1.5 and learning rate 1e-2.
+            >>> gradnorm = GradNormWrapper(num_tasks=2, alpha=1.5, lr=1e-2, device=device)
+    
+           # Compute individual task losses.
+            >>> loss1 = (torch.randn(10, device=device, requires_grad=True).sum()) ** 2
+            >>> loss2 = (torch.randn(10, device=device, requires_grad=True).mean()) ** 2
+    
+           # Forward pass: compute aggregated (weighted) loss.
+            >>> total_loss = gradnorm([loss1, loss2])
+            >>> total_loss.backward(retain_graph=True)
+    
+           # Suppose shared parameters are provided (e.g., from a shared model)
+            >>> shared_params = [torch.randn(10, device=device, requires_grad=True)]
+           # Update the loss_scale parameters based on the balancing loss.
+            >>> balance_loss = gradnorm.balance([loss1, loss2], shared_params)
+            >>> print("Balancing loss:", balance_loss.item())
 
-    .. code-block:: python
+        Args:
+            num_tasks (int): Number of tasks (loss scalars).
+            alpha (float, optional): Hyperparameter controlling the strength of the balancing force
+            lr (float, optional): Learning rate for updating the loss_scale parameters.
+            device (torch.device, optional): Device on which to run the module.
+    
+        Returns:
+            When calling :meth:`forward`, returns a scalar aggregated loss.
+            When calling :meth:`balance`, returns a scalar balancing loss.
 
-       import torch
-       from torchjd.aggregation.gradnorm_wrapper import GradNormWrapper
-
-       # Use CUDA if available
-       device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-       # Initialize GradNormWrapper for 2 tasks with alpha=1.5 and learning rate 1e-2.
-       gradnorm = GradNormWrapper(num_tasks=2, alpha=1.5, lr=1e-2, device=device)
-
-       # Compute individual task losses.
-       loss1 = (torch.randn(10, device=device, requires_grad=True).sum()) ** 2
-       loss2 = (torch.randn(10, device=device, requires_grad=True).mean()) ** 2
-
-       # Forward pass: compute aggregated (weighted) loss.
-       total_loss = gradnorm([loss1, loss2])
-       total_loss.backward(retain_graph=True)
-
-       # Suppose shared parameters are provided (e.g., from a shared model)
-       shared_params = [torch.randn(10, device=device, requires_grad=True)]
-       # Update the loss_scale parameters based on the balancing loss.
-       balance_loss = gradnorm.balance([loss1, loss2], shared_params)
-       print("Balancing loss:", balance_loss.item())
-
-    Args:
-        num_tasks (int): Number of tasks (loss scalars).
-        alpha (float, optional): Hyperparameter controlling the strength of the balancing force
-                                 (equivalent to “alpha” in LibMTL’s implementation).
-        lr (float, optional): Learning rate for updating the loss_scale parameters.
-        device (torch.device, optional): Device on which to run the module.
-
-    Returns:
-        When calling :meth:`forward`, returns a scalar aggregated loss.
-        When calling :meth:`balance`, returns a scalar balancing loss.
-
-
-   # ----- Composing with an Underlying Aggregator -----
-   # If you wish to further aggregate re-weighted losses using a gradient aggregator like MGDA,
-   # you can re-weight the losses and then form a matrix to pass to the aggregator.
-   weights = gradnorm.loss_weights
-   reweighted_losses = [weights[i] * loss for i, loss in enumerate([loss1, loss2])]
-   # Stack the re-weighted losses as a column vector.
-   matrix = torch.stack(reweighted_losses).unsqueeze(1)
-   # Initialize the MGDA aggregator.
-   mgda = MGDA(epsilon=0.001, max_iters=100)
-   # Use MGDA to aggregate the matrix.
-   aggregated_update = mgda(matrix)
-   print("Aggregated update:", aggregated_update)
+        Example 2
+       # ----- Composing with an Underlying Aggregator -----
+       If you wish to further aggregate re-weighted losses using a gradient aggregator like MGDA,
+       you can re-weight the losses and then form a matrix to pass to the aggregator.
+       >>> weights = gradnorm.loss_weights
+       >>> reweighted_losses = [weights[i] * loss for i, loss in enumerate([loss1, loss2])]
+       # Stack the re-weighted losses as a column vector.
+       >>> matrix = torch.stack(reweighted_losses).unsqueeze(1)
+       # Initialize the MGDA aggregator.
+       >>> mgda = MGDA(epsilon=0.001, max_iters=100)
+       # Use MGDA to aggregate the matrix.
+       >>> aggregated_update = mgda(matrix)
+       >>> print("Aggregated update:", aggregated_update)
 
 
-    Note
-    ----
-    While GradNormWrapper itself is not designed as a gradient aggregator (i.e. it does not accept a matrix
-    input), it can be composed with other torchjd aggregators. In the example above, we first use GradNormWrapper
-    to compute adaptive weights from a list of losses, and then we use these weights to re-weight the losses.
-    The reweighted losses are then stacked into a matrix, which can be fed into an aggregator like MGDA.
+    .. note::
+        ----
+        While GradNormWrapper itself is not designed as a gradient aggregator (i.e. it does not accept a matrix
+        input), it can be composed with other torchjd aggregators. In the example above, we first use GradNormWrapper
+        to compute adaptive weights from a list of losses, and then we use these weights to re-weight the losses.
+        The reweighted losses are then stacked into a matrix, which can be fed into an aggregator like MGDA.
     """
 
     def __init__(self, num_tasks: int, alpha: float = 1.5, lr: float = 1e-3, device=None):
