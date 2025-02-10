@@ -17,7 +17,7 @@ changes that do not affect the user.
 
 [0.5.1] - 2025-02-10
 - Released GradNorm (Chen. et al, ICML 2018) loss-balancing wrapper along with enhanced tests (including CUDA tests) ensuring 96% test coverage.
-- Updated documentation and examples to reflect the new GradNorm functionality.
+- Updated documentation and examples to reflect the new GradNorm functionality (though I'm not sure if I made the changes correctly).
 
 ## [0.5.0] - 2025-02-01
 
