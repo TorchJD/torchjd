@@ -5,8 +5,6 @@ import torch
 from qpsolvers import solve_qp
 from torch import Tensor
 
-from torchjd.aggregation._gramian_utils import _compute_regularized_normalized_gramian
-
 
 def _project_weights(
     U: Tensor, matrix: Tensor, solver: Literal["quadprog"], norm_eps: float, reg_eps: float
@@ -21,17 +19,23 @@ def _project_weights(
     :return: A tensor of projection weights with the same shape as `U`.
     """
 
-    G = _compute_regularized_normalized_gramian(matrix, norm_eps, reg_eps)
+    _, R = torch.linalg.qr(matrix.T, mode="r")
 
-    G_ = _to_array(G)
+    # Computes the inverse of R
+    dimension = matrix.shape[0]
+    R_inv = torch.linalg.solve_triangular(R, torch.eye(dimension), upper=True)
+
+    R_inv = _to_array(R_inv)
     U_ = _to_array(U)
 
-    W = np.apply_along_axis(lambda u: _project_weight_vector(u, G_, solver), axis=-1, arr=U_)
+    W = np.apply_along_axis(lambda u: _project_weight_vector(u, R_inv, solver), axis=-1, arr=U_)
 
-    return torch.as_tensor(W, device=G.device, dtype=G.dtype)
+    return torch.as_tensor(W, device=matrix.device, dtype=matrix.dtype)
 
 
-def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadprog"]) -> np.ndarray:
+def _project_weight_vector(
+    u: np.ndarray, R_inv: np.ndarray, solver: Literal["quadprog"]
+) -> np.ndarray:
     r"""
     Computes the weights `w` of the projection of `J^T u` onto the dual cone of the rows of `J`,
     given `G = J J^T` and `u`. In other words, this computes the `w` that satisfies
@@ -50,8 +54,8 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
     :param solver: The quadratic programming solver to use.
     """
 
-    m = G.shape[0]
-    w = solve_qp(G, np.zeros(m), -np.eye(m), -u, solver=solver)
+    m = R_inv.shape[0]
+    w = solve_qp(R_inv, np.zeros(m), -np.eye(m), -u, solver=solver, factorized=True)
     return w
 
 
