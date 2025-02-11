@@ -12,7 +12,7 @@ def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tenso
     rows of a matrix whose Gramian is provided.
 
     :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
-    :param G: The Gramian matrix of shape `[m, m]`.
+    :param G: The Gramian matrix of shape `[m, m]`, must be symmetric and positive definite.
     :param solver: The quadratic programming solver to use.
     :return: A tensor of projection weights with the same shape as `U`.
     """
