@@ -83,7 +83,7 @@ def test_cuda():
     aggregator = GradVac(target=0.4).to("cuda")
     weights = aggregator(matrix)
     assert weights.device.type == "cuda"
-    assert weights.shape == (8,),
+    assert weights.shape == (8,)
 
 
 def test_repr_str():
