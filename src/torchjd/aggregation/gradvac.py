@@ -1,6 +1,7 @@
+import math
+
 import torch
 from torch import Tensor
-import math
 
 from torchjd.aggregation.bases import _WeightedAggregator, _Weighting
 
@@ -57,6 +58,7 @@ class GradVac(_WeightedAggregator):
 
 
     """
+
     def _init_(self, target: float = None, beta: float = 1e-2):
         r"""
         :param target: The desired cosine similarity (`\phi^T`) between task gradients.
@@ -88,12 +90,13 @@ class _GradVacWeighting(_Weighting):
        g'i = g_i + \frac{\|g_i\|\Bigl(\phi^T\sqrt{1-\phi{ij}^2} - \phi_{ij}\sqrt{1-(\phi^T)^2}\Bigr)}
        {\|g_j\|\sqrt{1-(\phi^T)^2}}\,g_j.
 
-    .. note:: 
+    .. note::
     When no constant target is provided, the target is set adaptively for each pair using an EMA update,
     as described in Equation (3) of the paper.
     When the provided target constant is set to 0, the aggregator will behave exactly as PCGrad (which is GradVac's base case).
     Hence, GradVac can be conceived as a generalization of PCGrad.
     """
+
     def _init_(self, target: float = None, beta: float = 1e-2):
         super()._init_()
         self.constant_target = target  # if provided, a fixed value in [-1, 1]
@@ -134,12 +137,17 @@ class _GradVacWeighting(_Weighting):
                 self.ema[i, j] = (1 - self.beta) * self.ema[i, j] + self.beta * phi
 
                 # checj if a constant was provided and use it; else, use the EMA value.
-                phi_target = self.constant_target if self.constant_target is not None else self.ema[i, j]
+                phi_target = (
+                    self.constant_target if self.constant_target is not None else self.ema[i, j]
+                )
 
                 # if the observed similarity is lower than the target, compute an adjustment.
                 if phi < phi_target:
                     # computing the adjustment factor (according to Equation (2) from the paper)
-                    numerator = norm_i * (phi_target * math.sqrt(max(0.0, 1 - phi*2)) - phi * math.sqrt(max(0.0, 1 - phi_target*2)))
+                    numerator = norm_i * (
+                        phi_target * math.sqrt(max(0.0, 1 - phi * 2))
+                        - phi * math.sqrt(max(0.0, 1 - phi_target * 2))
+                    )
                     denominator = norm_j * math.sqrt(max(1e-8, 1 - phi_target**2))
                     factor = numerator / (denominator + 1e-8)
 
