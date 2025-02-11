@@ -8,16 +8,18 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### [0.5.1] - 2025-02-12
+- Implemented GradVac aggregator, implementing the "Gradient Vaccine" strategy as described in Wang et al. ([arXiv:2010.05874](https://arxiv.org/abs/2010.05874)).
+- Code Coverage : 100 %
+- GradVac adjusts each task’s gradient to achieve a target cosine similarity—either using a fixed target or an adaptive target computed via an exponential moving average (EMA).
+- Updated documentation and examples to precisely describe GradVac’s functionality, its equivalence to PCGrad when the target is zero, and its overall benefits for multi-task optimization.
+
+
 ### Added
 - Added usage example showing how to combine TorchJD with automatic mixed precision (AMP).
 
 ### Changed
 - Refactored the underlying optimization problem that UPGrad and DualProj have to solve to project onto the dual cone. This may minimally affect the output of these aggregators.
-- Implemented a new GradNorm loss-balancing wrapper (with full CUDA support) and enriched its test suite.
-
-[0.5.1] - 2025-02-10
-- Released GradNorm (Chen. et al, ICML 2018) loss-balancing wrapper along with enhanced tests (including CUDA tests) ensuring 96% test coverage.
-- Updated documentation and examples to reflect the new GradNorm functionality.
 
 ## [0.5.0] - 2025-02-01
 
