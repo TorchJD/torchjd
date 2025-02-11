@@ -1,12 +1,15 @@
 import math
-import torch
+
 import pytest
+import torch
 from torch.testing import assert_close
 
 from torchjd.aggregation import GradVac
 from torchjd.aggregation.gradvac import _GradVacWeighting
 from torchjd.aggregation.pcgrad import _PCGradWeighting
+
 from ._property_testers import ExpectedStructureProperty
+
 
 @pytest.mark.parametrize("aggregator", [GradVac()])
 class TestGradVac(ExpectedStructureProperty):
