@@ -47,7 +47,7 @@ def test_solution_weights(shape: tuple[int, int]):
 
     # Complementary slackness
     slackness = dual_gap @ primal_gap
-    assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
+    assert_close(slackness, torch.zeros_like(slackness), atol=1e-04, rtol=0)
 
 
 @mark.parametrize("shape", [(5, 2, 3), (1, 3, 6, 9), (2, 1, 1, 5, 8), (3, 1)])
