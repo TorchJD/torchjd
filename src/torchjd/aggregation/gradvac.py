@@ -65,7 +65,7 @@ class GradVac(_WeightedAggregator):
                        If `None`, an EMA is used to adaptively set the target per task pair.
         :param beta: The EMA decay rate (`\beta`); see Equation (3) in the paper.
         """
-        super()._init_(weighting=_GradVacWeighting(target, beta))
+        super().__init__(weighting=_GradVacWeighting(target, beta))
 
 
 class _GradVacWeighting(_Weighting):
@@ -98,7 +98,7 @@ class _GradVacWeighting(_Weighting):
     """
 
     def _init_(self, target: float = None, beta: float = 1e-2):
-        super()._init_()
+        super().__init__()
         self.constant_target = target  # if provided, a fixed value in [-1, 1]
         self.beta = beta
         self.ema = None  # will be initialized as a (dimension x dimension) tensor if target is not provided
