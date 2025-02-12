@@ -59,7 +59,7 @@ class GradVac(_WeightedAggregator):
 
     """
 
-    def _init_(self, target: float = None, beta: float = 1e-2):
+    def __init__(self, target: float = None, beta: float = 1e-2):
         r"""
         :param target: The desired cosine similarity (`\phi^T`) between task gradients.
                        If `None`, an EMA is used to adaptively set the target per task pair.
@@ -97,7 +97,7 @@ class _GradVacWeighting(_Weighting):
     Hence, GradVac can be conceived as a generalization of PCGrad.
     """
 
-    def _init_(self, target: float = None, beta: float = 1e-2):
+    def __init__(self, target: float = None, beta: float = 1e-2):
         super().__init__()
         self.constant_target = target  # if provided, a fixed value in [-1, 1]
         self.beta = beta
