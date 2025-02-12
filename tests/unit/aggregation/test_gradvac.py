@@ -1,9 +1,11 @@
 import math
-import torch
+
 import pytest
+import torch
 from torch.testing import assert_close
 
 from torchjd.aggregation import GradVac
+
 # For equivalence testing when target=0 (i.e. PCGrad behavior)
 from torchjd.aggregation.gradvac import _GradVacWeighting
 from torchjd.aggregation.pcgrad import _PCGradWeighting
@@ -16,8 +18,8 @@ class TestGradVac(ExpectedStructureProperty):
     """
     Test that GradVac satisfies the expected structure property.
     """
-    pass
 
+    pass
 
 
 @pytest.mark.parametrize(
@@ -47,6 +49,8 @@ def test_equivalence_gradvac_pcgrad(shape: tuple[int, int]):
     result = gradvac_weighting(matrix)
     expected = pcgrad_weighting(matrix)
     assert_close(result, expected, atol=4e-04, rtol=0.0)
+
+
 def test_ema_adaptive_target():
     """
     Test the EMA adaptive target update for GradVac when no constant target is provided.
@@ -56,15 +60,13 @@ def test_ema_adaptive_target():
     matrix = torch.randn(4, 6)  # 4-dimensional gradients, 6 tasks
     aggregator = GradVac(target=None, beta=0.2)
     weighting = aggregator.weighting
- 
+
     _ = aggregator(matrix)
     assert weighting.ema is not None, "EMA should be initialized after first call"
     ema_first = weighting.ema.clone()
     _ = aggregator(matrix)
 
     assert not torch.allclose(ema_first, weighting.ema, atol=1e-6)
-
-
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
@@ -108,6 +110,7 @@ def test_consistency_with_fixed_seed():
     weights2 = aggregator(matrix)
     assert_close(weights1, weights2, atol=1e-6, rtol=0.0)
 
+
 def test_beta_zero():
     """
     Test that when beta=0, the EMA remains unchanged (i.e. stays at its initial state).
@@ -117,7 +120,9 @@ def test_beta_zero():
     aggregator = GradVac(target=None, beta=0.0)
     _ = aggregator(matrix)
     # With beta=0, EMA should remain as all zeros.
-    assert torch.allclose(aggregator.weighting.ema, torch.zeros_like(aggregator.weighting.ema), atol=1e-6)
+    assert torch.allclose(
+        aggregator.weighting.ema, torch.zeros_like(aggregator.weighting.ema), atol=1e-6
+    )
 
 
 def test_dtype_preservation():
