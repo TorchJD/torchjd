@@ -11,7 +11,7 @@ from torchjd.aggregation.pcgrad import _PCGradWeighting
 from ._property_testers import ExpectedStructureProperty
 
 
-@pytest.mark.parametrize("aggregator", [GradVac()])
+@pytest.mark.parametrize("aggregator", [GradVac(target=0.5, beta=0.02)])
 class TestGradVac(ExpectedStructureProperty):
     """
     Test that GradVac satisfies the expected structure property.
