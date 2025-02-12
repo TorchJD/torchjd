@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.testing import assert_close
 
-from torchjd.aggregation import GradVac
+from torchjd.aggregation.gradvac import GradVac
 
 # For equivalence testing when target=0 (i.e. PCGrad behavior)
 from torchjd.aggregation.gradvac import _GradVacWeighting
