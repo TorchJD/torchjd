@@ -12,7 +12,7 @@ def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tenso
     rows of a matrix whose Gramian is provided.
 
     :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
-    :param G: The Gramian matrix of shape `[m, m]`.
+    :param G: The Gramian matrix of shape `[m, m]`. It must be symmetric and positive definite.
     :param solver: The quadratic programming solver to use.
     :return: A tensor of projection weights with the same shape as `U`.
     """
@@ -29,7 +29,7 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
     r"""
     Computes the weights `w` of the projection of `J^T u` onto the dual cone of the rows of `J`,
     given `G = J J^T` and `u`. In other words, this computes the `w` that satisfies
-    `\pi_J(J^T u) = J^T w`.
+    `\pi_J(J^T u) = J^T w`, with `\pi_J` defined in Equation 3 of [1].
 
     By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
     minimize        v^T G v
@@ -40,7 +40,8 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
 
     :param u: The vector of weights `u` of shape `[m]` corresponding to the vector `J^T u` to
         project.
-    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`.
+    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`. It must be
+        symmetric and positive definite.
     :param solver: The quadratic programming solver to use.
     """
 
