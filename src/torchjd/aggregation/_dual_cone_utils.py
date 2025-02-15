@@ -40,7 +40,8 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
 
     :param u: The vector of weights `u` of shape `[m]` corresponding to the vector `J^T u` to
         project.
-    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`.
+    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`. It must be
+        symmetric and positive definite.
     :param solver: The quadratic programming solver to use.
     """
 
