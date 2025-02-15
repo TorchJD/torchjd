@@ -90,6 +90,30 @@ of the library when adding new sources. Also, please make sure that new modules 
 `__init__.py` file of the package they are located into. This makes them easier to import for the
 user.
 
+## Adding a new aggregator
+
+Mathematically, an aggregator is a mapping $\mathcal A: \mathbb R^{m \times n} \to \mathbb R^n$. In
+the context of Jacobian descent, it is used to reduce a Jacobian matrix into a vector that can be
+used to update the parameters. In TorchJD, an `Aggregator` subclass should be a faithful
+implementation of a mathematical aggregator.
+
+> [!WARNING]
+> Currently, we only accept aggregators that have the same interface as the `Aggregator` base class.
+> We do not support stateful aggregators yet, so the proposed aggregators **must be immutable**.
+
+> [!NOTE]
+> If your aggregator is weighted (Definition 3 of
+> [Jacobian Descent for Multi-objective Optimization](https://arxiv.org/pdf/2406.16232)), please try
+> to implement it as a subclass of `_WeightedAggregator`, and to implement the corresponding
+> `_Weighting`.
+
+> [!NOTE] The property testers, defined in `tests/unit/aggregation/_property_testers.py` can be
+> used to easily verify that some properties hold empirically for your aggregator.
+
+> [!NOTE]
+> Before working on the implementation of a new aggregator, please contact us via an issue or a
+> discussion: in many cases, we have already thought about it, or even started an implementation.
+
 ## Release
 
 To release a new `torchjd` version, you have to:
