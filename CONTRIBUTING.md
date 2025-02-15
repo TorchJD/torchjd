@@ -116,6 +116,8 @@ implementation of a mathematical aggregator.
 
 ## Release
 
+*This section is addressed to maintainers.*
+
 To release a new `torchjd` version, you have to:
 - Make sure that all tests, including those on cuda, pass (for this, you need access to a machine
   that has a cuda-enabled GPU).
