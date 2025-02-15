@@ -102,15 +102,6 @@ implementation of a mathematical aggregator.
 > We do not support stateful aggregators yet, so the proposed aggregators **must be immutable**.
 
 > [!NOTE]
-> If your aggregator is weighted (Definition 3 of
-> [Jacobian Descent for Multi-objective Optimization](https://arxiv.org/pdf/2406.16232)), please try
-> to implement it as a subclass of `_WeightedAggregator`, and to implement the corresponding
-> `_Weighting`.
-
-> [!NOTE] The property testers, defined in `tests/unit/aggregation/_property_testers.py` can be
-> used to easily verify that some properties hold empirically for your aggregator.
-
-> [!NOTE]
 > Before working on the implementation of a new aggregator, please contact us via an issue or a
 > discussion: in many cases, we have already thought about it, or even started an implementation.
 
