@@ -6,7 +6,7 @@ with maintainers before implementing major changes.
 ## Installation
 
 1) Pre-requisites: To work with TorchJD, you need Python to be installed. In the following, we
-   suggest to use Python 3.12.3, but you can work with any python version supported by `torchjd`. We
+   suggest to use Python 3.13.1, but you can work with any python version supported by `torchjd`. We
    use [pyenv](https://github.com/pyenv/pyenv) to install Python and
    [pdm](https://pdm-project.org/en/latest/) to manage dependencies. While the desired Python
    version can also be installed without pyenv, the installation of `torchjd` for development
@@ -15,7 +15,7 @@ with maintainers before implementing major changes.
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
-   pdm venv create 3.12.3  # Requires Python 3.12.3 to be installed
+   pdm venv create 3.13.1  # Requires Python 3.13.1 to be installed
    pdm use -i .venv/bin/python
    pdm install --frozen-lockfile
    pdm run pre-commit install
