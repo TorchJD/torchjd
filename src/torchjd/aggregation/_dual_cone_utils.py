@@ -29,7 +29,7 @@ def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadpr
     r"""
     Computes the weights `w` of the projection of `J^T u` onto the dual cone of the rows of `J`,
     given `G = J J^T` and `u`. In other words, this computes the `w` that satisfies
-    `\pi_J(J^T u) = J^T w`.
+    `\pi_J(J^T u) = J^T w`, with `\pi_J` defined in Equation 3 of [1].
 
     By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
     minimize        v^T G v
