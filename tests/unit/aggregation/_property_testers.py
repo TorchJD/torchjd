@@ -95,4 +95,20 @@ class LinearUnderScalingProperty:
         aggregator: Aggregator,
         matrix: Tensor,
     ) -> None:
-        pass
+        c1 = torch.rand(matrix.shape[0])
+        c2 = torch.rand(matrix.shape[0])
+        alpha = torch.rand([])
+        beta = torch.rand([])
+
+        seed = torch.seed()
+
+        x1 = aggregator(torch.diag(c1) @ matrix)
+
+        torch.manual_seed(seed)
+        x2 = aggregator(torch.diag(c2) @ matrix)
+
+        torch.manual_seed(seed)
+        x = aggregator(torch.diag(alpha * c1 + beta * c2) @ matrix)
+        expected = alpha * x1 + beta * x2
+
+        assert_close(x, expected, atol=8e-03, rtol=0)
