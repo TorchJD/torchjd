@@ -35,11 +35,7 @@ class NonConflictingProperty:
 
     @classmethod
     @mark.parametrize("matrix", stationary_matrices + matrices)
-    def test_non_conflicting_property(
-        cls,
-        aggregator: Aggregator,
-        matrix: Tensor,
-    ):
+    def test_non_conflicting_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_non_conflicting_property(aggregator, matrix)
 
     @staticmethod
@@ -80,3 +76,22 @@ class PermutationInvarianceProperty:
     def _permute_randomly(matrix: Tensor) -> Tensor:
         row_permutation = torch.randperm(matrix.size(dim=0))
         return matrix[row_permutation]
+
+
+class LinearUnderScalingProperty:
+    """
+    This class tests empirically that a given `Aggregator` satisfies the linear under scaling
+    property.
+    """
+
+    @classmethod
+    @mark.parametrize("matrix", stationary_matrices + matrices)
+    def test_linear_under_scaling_property(cls, aggregator: Aggregator, matrix: Tensor):
+        cls._assert_linear_under_scaling_property(aggregator, matrix)
+
+    @staticmethod
+    def _assert_linear_under_scaling_property(
+        aggregator: Aggregator,
+        matrix: Tensor,
+    ) -> None:
+        pass
