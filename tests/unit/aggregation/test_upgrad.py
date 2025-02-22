@@ -5,13 +5,19 @@ from torchjd.aggregation import UPGrad
 
 from ._property_testers import (
     ExpectedStructureProperty,
+    LinearUnderScalingProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
 )
 
 
 @mark.parametrize("aggregator", [UPGrad()])
-class TestUPGrad(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
+class TestUPGrad(
+    ExpectedStructureProperty,
+    NonConflictingProperty,
+    PermutationInvarianceProperty,
+    LinearUnderScalingProperty,
+):
     pass
 
 
