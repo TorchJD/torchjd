@@ -2,32 +2,6 @@ import torch
 from torch import Tensor
 
 
-def _check_valid_dimensions(n_rows: int, n_cols: int) -> None:
-    if n_rows < 1:
-        raise ValueError(
-            f"Parameter `n_rows` should be a positive integer. Found n_rows = {n_rows}."
-        )
-    if n_cols < 1:
-        raise ValueError(
-            f"Parameter `n_cols` should be a positive integer. Found n_cols = {n_cols}."
-        )
-
-
-def _check_valid_rank(n_rows: int, n_cols: int, rank: int) -> None:
-    if rank < 0:
-        raise ValueError(f"Parameter `rank` should be a non-negative integer. Found rank = {rank}.")
-    if rank > n_rows:
-        raise ValueError(
-            "Parameter `rank` should not be larger than the number of rows. "
-            f"Found rank = {rank} and n_rows = {n_rows}."
-        )
-    if rank > n_cols:
-        raise ValueError(
-            "Parameter `rank` should not be larger than the number of columns. "
-            f"Found rank = {rank} and n_cols = {n_cols}."
-        )
-
-
 def _augment_orthogonal_matrix(orthogonal_matrix: Tensor) -> Tensor:
     """
     Augments the provided matrix with one more column that is filled with a random unit vector that
@@ -68,7 +42,6 @@ def _complete_orthogonal_matrix(orthogonal_matrix: Tensor, n_cols: int) -> Tenso
 def _generate_unitary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """Generates a unitary matrix of shape [n_rows, n_cols]."""
 
-    _check_valid_dimensions(n_rows, n_cols)
     partial_matrix = torch.randn([n_rows, 1])
     partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
 
@@ -81,7 +54,6 @@ def _generate_unitary_matrix_with_positive_column(n_rows: int, n_cols: int) -> T
     Generates a unitary matrix of shape [n_rows, n_cols] with the first column consisting of an all
     positive vector.
     """
-    _check_valid_dimensions(n_rows, n_cols)
     partial_matrix = torch.abs(torch.randn([n_rows, 1]))
     partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
 
@@ -104,8 +76,6 @@ def generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
     """
 
-    _check_valid_rank(n_rows, n_cols, rank)
-
     if rank == 0:
         matrix = torch.zeros([n_rows, n_cols])
     else:
@@ -123,7 +93,6 @@ def generate_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     has a singular triple (u, s, v) such that u is all (strictly) positive and s is 0.
     """
 
-    _check_valid_rank(n_rows, n_cols, rank)
     if rank == 0:
         matrix = torch.zeros([n_rows, n_cols])
     else:
