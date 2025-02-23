@@ -85,7 +85,7 @@ _matrix_dimension_triples = [
     (9, 11, 9),
 ]
 
-_zero_rank_matrix_shapes = [
+_zero_matrices_shapes = [
     (1, 1),
     (4, 3),
     (9, 11),
@@ -100,12 +100,12 @@ matrices = [
     generate_matrix(n_rows, n_cols, rank) for n_rows, n_cols, rank in _matrix_dimension_triples
 ]
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
-zero_rank_matrices = [torch.zeros([n_rows, n_cols]) for n_rows, n_cols in _zero_rank_matrix_shapes]
-matrices_2_plus_rows = [matrix for matrix in matrices + zero_rank_matrices if matrix.shape[0] >= 2]
+zero_matrices = [torch.zeros([n_rows, n_cols]) for n_rows, n_cols in _zero_matrices_shapes]
+matrices_2_plus_rows = [matrix for matrix in matrices + zero_matrices if matrix.shape[0] >= 2]
 scaled_matrices_2_plus_rows = [
-    matrix for matrix in scaled_matrices + zero_rank_matrices if matrix.shape[0] >= 2
+    matrix for matrix in scaled_matrices + zero_matrices if matrix.shape[0] >= 2
 ]
-stationary_matrices = [
+strong_stationary_matrices = [
     generate_strong_stationary_matrix(n_rows, n_cols, rank)
     for n_rows, n_cols, rank in _matrix_dimension_triples
 ]
