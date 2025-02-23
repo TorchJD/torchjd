@@ -5,7 +5,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from ._inputs import matrices, scaled_matrices, strong_stationary_matrices, zero_matrices
+from ._inputs import matrices, scaled_matrices, weak_stationary_matrices, zero_matrices
 
 
 class ExpectedStructureProperty:
@@ -34,7 +34,7 @@ class NonConflictingProperty:
     """
 
     @classmethod
-    @mark.parametrize("matrix", strong_stationary_matrices + matrices)
+    @mark.parametrize("matrix", weak_stationary_matrices + matrices)
     def test_non_conflicting_property(
         cls,
         aggregator: Aggregator,

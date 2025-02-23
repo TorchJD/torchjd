@@ -109,3 +109,7 @@ strong_stationary_matrices = [
     generate_strong_stationary_matrix(n_rows, n_cols, rank)
     for n_rows, n_cols, rank in _matrix_dimension_triples
 ]
+weak_stationary_matrices = strong_stationary_matrices + [
+    generate_weak_stationary_matrix(n_rows, n_cols, rank)
+    for n_rows, n_cols, rank in _matrix_dimension_triples
+]
