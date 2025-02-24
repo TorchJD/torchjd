@@ -41,31 +41,31 @@ def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     return matrix
 
 
-def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int, rank: int) -> Tensor:
+def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
     ``min(rank, len(vector)-1)``. Such that `vector @ matrix` is zero.
     """
 
     n_rows = len(vector)
-    effective_rank = min(rank, n_rows - 1)
+    rank = min(n_cols, n_rows - 1)
     U = _complete_orthogonal_matrix(vector)
     Vt = _generate_orthogonal_matrix(n_cols)
-    S = torch.diag(torch.abs(torch.randn([effective_rank])))
-    matrix = U[:, 1 : 1 + effective_rank] @ S @ Vt[:effective_rank, :]
+    S = torch.diag(torch.abs(torch.randn([rank])))
+    matrix = U[:, 1 : 1 + rank] @ S @ Vt[:rank, :]
     return matrix
 
 
-def _generate_strong_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
+def _generate_strong_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with rank
     ``min(rank, len(vector)-1)``, such that there exists a vector `0<v` with `v @ matrix=0`.
     """
     v = torch.abs(torch.randn([n_rows]))
-    return _generate_matrix_with_orthogonal_vector(v, n_cols, rank)
+    return _generate_matrix_with_orthogonal_vector(v, n_cols)
 
 
-def _generate_weak_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
+def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with rank
     ``min(rank, len(vector)-1)``, such that there exists a vector `0<=v` with at least one
@@ -73,7 +73,7 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Ten
     """
     v = torch.abs(torch.randn([n_rows]))
     v[torch.randint(0, n_rows, [])] = 0.0
-    return _generate_matrix_with_orthogonal_vector(v, n_cols, rank)
+    return _generate_matrix_with_orthogonal_vector(v, n_cols)
 
 
 _matrix_dimension_triples = [
@@ -88,6 +88,12 @@ _matrix_dimension_triples = [
 _zero_matrices_shapes = [
     (1, 1),
     (4, 3),
+    (9, 11),
+]
+
+_stationary_matrices_shapes = [
+    (1, 1),
+    (5, 3),
     (9, 11),
 ]
 
@@ -106,10 +112,10 @@ scaled_matrices_2_plus_rows = [
     matrix for matrix in scaled_matrices + zero_matrices if matrix.shape[0] >= 2
 ]
 strong_stationary_matrices = [
-    _generate_strong_stationary_matrix(n_rows, n_cols, rank)
-    for n_rows, n_cols, rank in _matrix_dimension_triples
+    _generate_strong_stationary_matrix(n_rows, n_cols)
+    for n_rows, n_cols in _stationary_matrices_shapes
 ]
 weak_stationary_matrices = strong_stationary_matrices + [
-    _generate_weak_stationary_matrix(n_rows, n_cols, rank)
-    for n_rows, n_cols, rank in _matrix_dimension_triples
+    _generate_weak_stationary_matrix(n_rows, n_cols)
+    for n_rows, n_cols in _stationary_matrices_shapes
 ]
