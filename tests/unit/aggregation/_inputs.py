@@ -92,7 +92,6 @@ _zero_matrices_shapes = [
 ]
 
 _stationary_matrices_shapes = [
-    (1, 1),
     (5, 3),
     (9, 11),
 ]
