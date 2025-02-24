@@ -7,11 +7,17 @@ from ._property_testers import (
     ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
+    StrongStationarityProperty,
 )
 
 
 @mark.parametrize("aggregator", [UPGrad()])
-class TestUPGrad(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
+class TestUPGrad(
+    ExpectedStructureProperty,
+    NonConflictingProperty,
+    PermutationInvarianceProperty,
+    StrongStationarityProperty,
+):
     pass
 
 
