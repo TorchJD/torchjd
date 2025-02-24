@@ -4,7 +4,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import CAGrad, Mean
 
-from ._inputs import matrices, stationary_matrices
+from ._inputs import matrices, strong_stationary_matrices
 from ._property_testers import ExpectedStructureProperty, NonConflictingProperty
 
 
@@ -20,7 +20,7 @@ class TestCAGradNonConflicting(NonConflictingProperty):
     pass
 
 
-@mark.parametrize("matrix", stationary_matrices + matrices)
+@mark.parametrize("matrix", strong_stationary_matrices + matrices)
 def test_equivalence_mean(matrix: Tensor):
     """Tests that CAGrad is equivalent to Mean when c=0."""
 

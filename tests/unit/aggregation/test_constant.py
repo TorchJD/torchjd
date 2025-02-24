@@ -4,7 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Constant
 
-from ._inputs import matrices, scaled_matrices, stationary_matrices, zero_rank_matrices
+from ._inputs import matrices, scaled_matrices, strong_stationary_matrices, zero_matrices
 from ._property_testers import ExpectedStructureProperty
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
@@ -19,10 +19,10 @@ def _make_aggregator(matrix: Tensor) -> Constant:
     return Constant(weights)
 
 
-_matrices_1 = scaled_matrices + zero_rank_matrices
+_matrices_1 = scaled_matrices + zero_matrices
 _aggregators_1 = [_make_aggregator(matrix) for matrix in _matrices_1]
 
-_matrices_2 = matrices + stationary_matrices
+_matrices_2 = matrices + strong_stationary_matrices
 _aggregators_2 = [_make_aggregator(matrix) for matrix in _matrices_2]
 
 
