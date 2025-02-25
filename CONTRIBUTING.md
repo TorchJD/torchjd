@@ -5,24 +5,24 @@ with maintainers before implementing major changes.
 
 ## Installation
 
-1) Pre-requisites: To work with TorchJD, you need python to be installed. In the following, we
-   suggest to use python 3.12.3, but you can work with any python version supported by `torchjd`. We
-   use [pyenv](https://github.com/pyenv/pyenv) to install python and
-   [pdm](https://pdm-project.org/en/latest/) to manage dependencies. While the desired python
+1) Pre-requisites: To work with TorchJD, you need Python to be installed. In the following, we
+   suggest to use Python 3.13.1, but you can work with any python version supported by `torchjd`. We
+   use [pyenv](https://github.com/pyenv/pyenv) to install Python and
+   [pdm](https://pdm-project.org/en/latest/) to manage dependencies. While the desired Python
    version can also be installed without pyenv, the installation of `torchjd` for development
    purposes requires `pdm`. To install it, follow their
    [installation steps](https://pdm-project.org/en/latest/#installation).
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
-   pdm venv create 3.12.3  # Requires python 3.12.3 to be installed
+   pdm venv create 3.13.1  # Requires Python 3.13.1 to be installed
    pdm use -i .venv/bin/python
    pdm install --frozen-lockfile
    pdm run pre-commit install
    ```
 
 > [!TIP]
-> The python version that you should specify in your IDE is `<path-to-torchjd>/.venv/bin/python`.
+> The Python version that you should specify in your IDE is `<path-to-torchjd>/.venv/bin/python`.
 
 ## Running tests
    - To verify that your installation was successful, and that all unit tests pass, run:
@@ -67,7 +67,7 @@ maintainers to be merged.
 
 ### Documentation
 
-Most source python files in TorchJD have a corresponding `.rst` in `docs/source`. Please make sure
+Most source Python files in TorchJD have a corresponding `.rst` in `docs/source`. Please make sure
 to add such a documentation entry whenever you add a new public module. In most cases, public
 classes should contain a usage example in their docstring. We also ask contributors to add an entry
 in the `[Unreleased]` section of the changelog whenever they make a change that may affect users (we
@@ -90,7 +90,24 @@ of the library when adding new sources. Also, please make sure that new modules 
 `__init__.py` file of the package they are located into. This makes them easier to import for the
 user.
 
+## Adding a new aggregator
+
+Mathematically, an aggregator is a mapping $\mathcal A: \mathbb R^{m \times n} \to \mathbb R^n$. In
+the context of Jacobian descent, it is used to reduce a Jacobian matrix into a vector that can be
+used to update the parameters. In TorchJD, an `Aggregator` subclass should be a faithful
+implementation of a mathematical aggregator.
+
+> [!WARNING]
+> Currently, we only accept aggregators that have the same interface as the `Aggregator` base class.
+> We do not support stateful aggregators yet, so the proposed aggregators **must be immutable**.
+
+> [!NOTE]
+> Before working on the implementation of a new aggregator, please contact us via an issue or a
+> discussion: in many cases, we have already thought about it, or even started an implementation.
+
 ## Release
+
+*This section is addressed to maintainers.*
 
 To release a new `torchjd` version, you have to:
 - Make sure that all tests, including those on cuda, pass (for this, you need access to a machine
