@@ -2,33 +2,6 @@ import torch
 from torch import Tensor
 
 
-def _generate_orthogonal_matrix(dim: int) -> Tensor:
-    """
-    Uniformly generates a random orthogonal matrix of shape [n, n].
-    """
-
-    A = torch.randn([dim, dim])
-    Q, _ = torch.linalg.qr(A)
-    return Q
-
-
-def _complete_orthogonal_matrix(vector: Tensor) -> Tensor:
-    """
-    Uniformly generates a random orthogonal matrix of shape [len(vector), len(vector)] such that the
-    first column is the normalization of the provided vector.
-    """
-
-    n = vector.shape[0]
-    u = torch.nn.functional.normalize(vector, dim=0)
-    A = torch.randn([n, n - 1])
-
-    # project A onto the orthogonal complement of u
-    A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
-
-    Q, _ = torch.linalg.qr(A_proj)
-    return torch.cat([u.unsqueeze(1), Q], dim=1)
-
-
 def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
@@ -38,21 +11,6 @@ def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     Vt = _generate_orthogonal_matrix(n_cols)
     S = torch.diag(torch.abs(torch.randn([rank])))
     matrix = U[:, :rank] @ S @ Vt[:rank, :]
-    return matrix
-
-
-def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
-    """
-    Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
-    ``min(rank, len(vector)-1)``. Such that `vector @ matrix` is zero.
-    """
-
-    n_rows = len(vector)
-    rank = min(n_cols, n_rows - 1)
-    U = _complete_orthogonal_matrix(vector)
-    Vt = _generate_orthogonal_matrix(n_cols)
-    S = torch.diag(torch.abs(torch.randn([rank])))
-    matrix = U[:, 1 : 1 + rank] @ S @ Vt[:rank, :]
     return matrix
 
 
@@ -74,6 +32,48 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     v = torch.abs(torch.randn([n_rows]))
     v[torch.randint(0, n_rows, [])] = 0.0
     return _generate_matrix_with_orthogonal_vector(v, n_cols)
+
+
+def _generate_orthogonal_matrix(dim: int) -> Tensor:
+    """
+    Uniformly generates a random orthogonal matrix of shape [n, n].
+    """
+
+    A = torch.randn([dim, dim])
+    Q, _ = torch.linalg.qr(A)
+    return Q
+
+
+def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
+    """
+    Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
+    ``min(rank, len(vector)-1)``. Such that `vector @ matrix` is zero.
+    """
+
+    n_rows = len(vector)
+    rank = min(n_cols, n_rows - 1)
+    U = _complete_orthogonal_matrix(vector)
+    Vt = _generate_orthogonal_matrix(n_cols)
+    S = torch.diag(torch.abs(torch.randn([rank])))
+    matrix = U[:, 1 : 1 + rank] @ S @ Vt[:rank, :]
+    return matrix
+
+
+def _complete_orthogonal_matrix(vector: Tensor) -> Tensor:
+    """
+    Uniformly generates a random orthogonal matrix of shape [len(vector), len(vector)] such that the
+    first column is the normalization of the provided vector.
+    """
+
+    n = vector.shape[0]
+    u = torch.nn.functional.normalize(vector, dim=0)
+    A = torch.randn([n, n - 1])
+
+    # project A onto the orthogonal complement of u
+    A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
+
+    Q, _ = torch.linalg.qr(A_proj)
+    return torch.cat([u.unsqueeze(1), Q], dim=1)
 
 
 _matrix_dimension_triples = [
