@@ -45,7 +45,7 @@ def _generate_orthogonal_matrix(dim: int) -> Tensor:
 def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
-    ``min(rank, len(vector)-1)`` such that ``vector @ matrix = 0``.
+    ``min(n_cols, len(vector) - 1)`` such that ``vector @ matrix = 0``.
     """
 
     n_rows = len(vector)
