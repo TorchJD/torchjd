@@ -15,7 +15,7 @@ def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
 def _generate_strong_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with rank
-    ``min(n_cols, n_rows - 1)``, such that there exists a vector `0<v` with `v @ matrix=0`.
+    ``min(n_cols, n_rows - 1)``, such that there exists a vector ``0<v`` with ``v @ matrix = 0``.
     """
     v = torch.abs(torch.randn([n_rows]))
     return _generate_matrix_with_orthogonal_vector(v, n_cols)
@@ -24,8 +24,8 @@ def _generate_strong_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
 def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with rank
-    ``min(n_cols, n_rows - 1)``, such that there exists a vector `0<=v` with at least one
-    coordinate equal to `0` and such that `v @ matrix=0`.
+    ``min(n_cols, n_rows - 1)``, such that there exists a vector ``0<=v`` with at least one
+    coordinate equal to ``0`` and such that ``v @ matrix = 0``.
     """
     v = torch.abs(torch.randn([n_rows]))
     v[torch.randint(0, n_rows, [])] = 0.0
@@ -43,7 +43,7 @@ def _generate_orthogonal_matrix(dim: int) -> Tensor:
 def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
-    ``min(rank, len(vector)-1)``. Such that `vector @ matrix` is zero.
+    ``min(rank, len(vector)-1)`` such that ``vector @ matrix = 0``.
     """
 
     n_rows = len(vector)
@@ -57,8 +57,8 @@ def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tens
 
 def _complete_orthogonal_matrix(vector: Tensor) -> Tensor:
     """
-    Uniformly generates a random orthogonal matrix of shape [len(vector), len(vector)] such that the
-    first column is the normalization of the provided vector.
+    Uniformly generates a random orthogonal matrix of shape [``len(vector)``, ``len(vector)``] such
+    that the first column is the normalization of the provided vector.
     """
 
     n = vector.shape[0]
