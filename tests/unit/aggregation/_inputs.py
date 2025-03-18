@@ -3,9 +3,7 @@ from torch import Tensor
 
 
 def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
-    """
-    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
-    """
+    """Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``."""
 
     U = _generate_orthogonal_matrix(n_rows)
     Vt = _generate_orthogonal_matrix(n_cols)
@@ -35,9 +33,7 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
 
 
 def _generate_orthogonal_matrix(dim: int) -> Tensor:
-    """
-    Uniformly generates a random orthogonal matrix of shape [``dim``, ``dim``].
-    """
+    """Uniformly generates a random orthogonal matrix of shape [``dim``, ``dim``]."""
 
     A = torch.randn([dim, dim])
     Q, _ = torch.linalg.qr(A)
