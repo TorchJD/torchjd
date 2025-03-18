@@ -8,7 +8,7 @@ def _generate_orthogonal_matrix(dim: int) -> Tensor:
     """
 
     A = torch.randn([dim, dim])
-    Q, _ = torch.qr(A)
+    Q, _ = torch.linalg.qr(A)
     return Q
 
 
@@ -25,7 +25,7 @@ def _complete_orthogonal_matrix(vector: Tensor) -> Tensor:
     # project A onto the orthogonal complement of u
     A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
 
-    Q, _ = torch.qr(A_proj)
+    Q, _ = torch.linalg.qr(A_proj)
     return torch.cat([u.unsqueeze(1), Q], dim=1)
 
 
