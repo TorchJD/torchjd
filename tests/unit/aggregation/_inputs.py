@@ -17,6 +17,7 @@ def _generate_strong_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     Generates a random matrix of shape [``n_rows``, ``n_cols``] with rank
     ``min(n_cols, n_rows - 1)``, such that there exists a vector ``0<v`` with ``v @ matrix = 0``.
     """
+
     v = torch.abs(torch.randn([n_rows]))
     return _generate_matrix_with_orthogonal_vector(v, n_cols)
 
@@ -27,6 +28,7 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     ``min(n_cols, n_rows - 1)``, such that there exists a vector ``0<=v`` with at least one
     coordinate equal to ``0`` and such that ``v @ matrix = 0``.
     """
+
     v = torch.abs(torch.randn([n_rows]))
     v[torch.randint(0, n_rows, [])] = 0.0
     return _generate_matrix_with_orthogonal_vector(v, n_cols)
