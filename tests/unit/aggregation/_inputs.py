@@ -36,7 +36,7 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
 
 def _generate_orthogonal_matrix(dim: int) -> Tensor:
     """
-    Uniformly generates a random orthogonal matrix of shape [n, n].
+    Uniformly generates a random orthogonal matrix of shape [``dim``, ``dim``].
     """
 
     A = torch.randn([dim, dim])
