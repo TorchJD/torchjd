@@ -50,28 +50,28 @@ def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tens
 
     n_rows = len(vector)
     rank = min(n_cols, n_rows - 1)
-    U = _complete_orthogonal_matrix(vector)
+    U = _generate_orthogonal_complement(vector, n_cols=rank)
     Vt = _generate_orthogonal_matrix(n_cols)
     S = torch.diag(torch.abs(torch.randn([rank])))
-    matrix = U[:, 1 : 1 + rank] @ S @ Vt[:rank, :]
+    matrix = U @ S @ Vt[:rank, :]
     return matrix
 
 
-def _complete_orthogonal_matrix(vector: Tensor) -> Tensor:
+def _generate_orthogonal_complement(vector: Tensor, n_cols: int) -> Tensor:
     """
-    Uniformly generates a random orthogonal matrix of shape [``len(vector)``, ``len(vector)``] such
-    that the first column is the normalization of the provided vector.
+    Uniformly generates a random orthogonal matrix of shape [``len(vector)``, ``n_cols``] such that
+    ``vector @ matrix = 0``.
     """
 
-    n = vector.shape[0]
+    m = vector.shape[0]
     u = torch.nn.functional.normalize(vector, dim=0)
-    A = torch.randn([n, n - 1])
+    A = torch.randn([m, n_cols])
 
     # project A onto the orthogonal complement of u
     A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
 
     Q, _ = torch.linalg.qr(A_proj)
-    return torch.cat([u.unsqueeze(1), Q], dim=1)
+    return Q
 
 
 _matrix_dimension_triples = [
