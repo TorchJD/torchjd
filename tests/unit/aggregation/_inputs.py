@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+from torch.nn.functional import normalize
 
 
 def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
@@ -34,44 +35,45 @@ def _generate_weak_stationary_matrix(m: int, n: int) -> Tensor:
     return _generate_matrix_orthogonal_to_vector(v, n)
 
 
-def _generate_orthonormal_matrix(dim: int) -> Tensor:
-    """Uniformly generates a random orthonormal matrix Q of shape [``dim``, ``dim``]."""
-
-    A = torch.randn([dim, dim])
-    Q, _ = torch.linalg.qr(A)
-    return Q
-
-
 def _generate_matrix_orthogonal_to_vector(v: Tensor, n: int) -> Tensor:
     """
     Generates a random matrix A of shape [``len(v)``, ``n``] with rank ``min(n, len(v) - 1)`` such
     that ``v @ A = 0``.
     """
 
-    m = len(v)
-    rank = min(n, m - 1)
-    U = _generate_semi_orthonormal_matrix_orthogonal_to_vector(v, n=rank)
+    rank = min(n, len(v) - 1)
+    Q = normalize(v, dim=0).unsqueeze(1)
+    U = _generate_semi_orthonormal_complement(Q)
     Vt = _generate_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
-    A = U @ S @ Vt[:rank, :]
+    A = U[:, :rank] @ S @ Vt[:rank, :]
     return A
 
 
-def _generate_semi_orthonormal_matrix_orthogonal_to_vector(v: Tensor, n: int) -> Tensor:
+def _generate_orthonormal_matrix(dim: int) -> Tensor:
+    """Uniformly generates a random orthonormal matrix of shape [``dim``, ``dim``]."""
+
+    return _generate_semi_orthonormal_complement(torch.zeros([dim, 0]))
+
+
+def _generate_semi_orthonormal_complement(Q: Tensor) -> Tensor:
     """
-    Uniformly generates a random semi-orthonormal matrix Q of shape [``len(v)``, ``n``] such that
-    ``v @ Q = 0``.
+    Uniformly generates a random semi-orthonormal matrix ``Q'`` (i.e. ``Q'^T @ Q' = I``) of shape
+    ``[m, m-k]`` orthogonal to ``Q``, i.e. such that the concatenation ``[Q Q']`` is an orthonormal
+    matrix.
+
+    :param Q: A semi-orthonormal matrix (i.e. ``Q^T @ Q = I``) of shape [``m``, ``k``], with
+        ``k <= m``.
     """
 
-    m = v.shape[0]
-    u = torch.nn.functional.normalize(v, dim=0)
-    A = torch.randn([m, n])
+    m, k = Q.shape
+    A = torch.randn([m, m - k])
 
-    # project A onto the orthogonal complement of u
-    A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
+    # project A onto the orthogonal complement of Q
+    A_proj = A - Q @ (Q.T @ A)
 
-    Q, _ = torch.linalg.qr(A_proj)
-    return Q
+    Q_prime, _ = torch.linalg.qr(A_proj)
+    return Q_prime
 
 
 _matrix_dimension_triples = [
