@@ -5,8 +5,13 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from ._inputs import matrices, scaled_matrices, weak_stationary_matrices, zero_matrices, \
-    strong_stationary_matrices
+from ._inputs import (
+    matrices,
+    scaled_matrices,
+    strong_stationary_matrices,
+    weak_stationary_matrices,
+    zero_matrices,
+)
 
 
 class ExpectedStructureProperty:
