@@ -45,10 +45,7 @@ class NonConflictingProperty:
         cls._assert_non_conflicting_property(aggregator, matrix)
 
     @staticmethod
-    def _assert_non_conflicting_property(
-        aggregator: Aggregator,
-        matrix: Tensor,
-    ) -> None:
+    def _assert_non_conflicting_property(aggregator: Aggregator, matrix: Tensor) -> None:
         vector = aggregator(matrix)
         output_direction = matrix @ vector
         positive_directions = output_direction[output_direction >= 0]
