@@ -63,9 +63,9 @@ def _generate_semi_orthonormal_matrix_orthogonal_to_vector(vector: Tensor, n_col
     that ``vector @ matrix = 0``.
     """
 
-    m = vector.shape[0]
+    n_rows = vector.shape[0]
     u = torch.nn.functional.normalize(vector, dim=0)
-    A = torch.randn([m, n_cols])
+    A = torch.randn([n_rows, n_cols])
 
     # project A onto the orthogonal complement of u
     A_proj = A - u.unsqueeze(1) * (u.unsqueeze(0) @ A)
