@@ -1,139 +1,80 @@
 import torch
 from torch import Tensor
+from torch.nn.functional import normalize
 
 
-def _check_valid_dimensions(n_rows: int, n_cols: int) -> None:
-    if n_rows < 1:
-        raise ValueError(
-            f"Parameter `n_rows` should be a positive integer. Found n_rows = {n_rows}."
-        )
-    if n_cols < 1:
-        raise ValueError(
-            f"Parameter `n_cols` should be a positive integer. Found n_cols = {n_cols}."
-        )
+def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
+    """Generates a random matrix A of shape [m, n] with provided rank."""
+
+    U = _generate_orthonormal_matrix(m)
+    Vt = _generate_orthonormal_matrix(n)
+    S = torch.diag(torch.abs(torch.randn([rank])))
+    A = U[:, :rank] @ S @ Vt[:rank, :]
+    return A
 
 
-def _check_valid_rank(n_rows: int, n_cols: int, rank: int) -> None:
-    if rank < 0:
-        raise ValueError(f"Parameter `rank` should be a non-negative integer. Found rank = {rank}.")
-    if rank > n_rows:
-        raise ValueError(
-            "Parameter `rank` should not be larger than the number of rows. "
-            f"Found rank = {rank} and n_rows = {n_rows}."
-        )
-    if rank > n_cols:
-        raise ValueError(
-            "Parameter `rank` should not be larger than the number of columns. "
-            f"Found rank = {rank} and n_cols = {n_cols}."
-        )
-
-
-def _augment_orthogonal_matrix(orthogonal_matrix: Tensor) -> Tensor:
+def _generate_strong_stationary_matrix(m: int, n: int) -> Tensor:
     """
-    Augments the provided matrix with one more column that is filled with a random unit vector that
-    is orthogonal to the provided orthogonal_matrix.
+    Generates a random matrix A of shape [m, n] with rank min(n, m - 1), such that there exists a
+    vector 0<v with v^T A = 0.
     """
 
-    n_rows = orthogonal_matrix.shape[0]
-    projection = orthogonal_matrix @ orthogonal_matrix.T
-    zero = torch.zeros([n_rows])
-    while True:
-        random_vector = torch.randn([n_rows])
-        projected_vector = random_vector - projection @ random_vector
-        if not torch.allclose(projected_vector, zero):
-            break
-    projected_vector = torch.nn.functional.normalize(projected_vector, dim=0).reshape([-1, 1])
-    augmented_matrix = torch.cat((orthogonal_matrix, projected_vector), dim=1)
-    return augmented_matrix
+    v = torch.abs(torch.randn([m]))
+    return _generate_matrix_orthogonal_to_vector(v, n)
 
 
-def _complete_orthogonal_matrix(orthogonal_matrix: Tensor, n_cols: int) -> Tensor:
+def _generate_weak_stationary_matrix(m: int, n: int) -> Tensor:
     """
-    Iteratively augments the input ``orthogonal_matrix`` with columns that are orthogonal to its
-    existing columns, until it has the required number of columns. Returns the obtained
-    orthogonal matrix.
+    Generates a random matrix A of shape [m, n] with rank min(n, m - 1), such that there exists a
+    vector 0<=v with one coordinate equal to 0 and such that v^T A = 0.
+
+    Note that if multiple coordinates of v were equal to 0, the generated matrix would still be weak
+    stationary, but here we only set one of them to 0 for simplicity.
     """
 
-    if orthogonal_matrix.shape[1] > n_cols:
-        raise ValueError(
-            f"Parameter `n_cols` should exceed the second dimension of the provided matrix. Found "
-            f"`n_cols = {n_cols}` and `partial_matrix.shape[1] = {orthogonal_matrix.shape[1]}`."
-        )
-
-    for i in range(n_cols - 1):
-        orthogonal_matrix = _augment_orthogonal_matrix(orthogonal_matrix)
-    return orthogonal_matrix
+    v = torch.abs(torch.randn([m]))
+    i = torch.randint(0, m, [])
+    v[i] = 0.0
+    return _generate_matrix_orthogonal_to_vector(v, n)
 
 
-def _generate_unitary_matrix(n_rows: int, n_cols: int) -> Tensor:
-    """Generates a unitary matrix of shape [n_rows, n_cols]."""
-
-    _check_valid_dimensions(n_rows, n_cols)
-    partial_matrix = torch.randn([n_rows, 1])
-    partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
-
-    unitary_matrix = _complete_orthogonal_matrix(partial_matrix, n_cols)
-    return unitary_matrix
-
-
-def _generate_unitary_matrix_with_positive_column(n_rows: int, n_cols: int) -> Tensor:
+def _generate_matrix_orthogonal_to_vector(v: Tensor, n: int) -> Tensor:
     """
-    Generates a unitary matrix of shape [n_rows, n_cols] with the first column consisting of an all
-    positive vector.
-    """
-    _check_valid_dimensions(n_rows, n_cols)
-    partial_matrix = torch.abs(torch.randn([n_rows, 1]))
-    partial_matrix = torch.nn.functional.normalize(partial_matrix, dim=0)
-
-    unitary_matrix_with_positive_column = _complete_orthogonal_matrix(partial_matrix, n_cols)
-    return unitary_matrix_with_positive_column
-
-
-def _generate_diagonal_singular_values(rank: int) -> Tensor:
-    """
-    generates a diagonal matrix of positive values sorted in descending order.
-    """
-    singular_values = torch.abs(torch.randn([rank]))
-    singular_values = torch.sort(singular_values, descending=True)[0]
-    S = torch.diag(singular_values)
-    return S
-
-
-def generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
-    """
-    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``.
+    Generates a random matrix A of shape [len(v), n] with rank min(n, len(v) - 1) such that
+    v^T A = 0.
     """
 
-    _check_valid_rank(n_rows, n_cols, rank)
-
-    if rank == 0:
-        matrix = torch.zeros([n_rows, n_cols])
-    else:
-        U = _generate_unitary_matrix(n_rows, rank)
-        V = _generate_unitary_matrix(n_cols, rank)
-        S = _generate_diagonal_singular_values(rank)
-        matrix = U @ S @ V.T
-
-    return matrix
+    rank = min(n, len(v) - 1)
+    Q = normalize(v, dim=0).unsqueeze(1)
+    U = _generate_semi_orthonormal_complement(Q)
+    Vt = _generate_orthonormal_matrix(n)
+    S = torch.diag(torch.abs(torch.randn([rank])))
+    A = U[:, :rank] @ S @ Vt[:rank, :]
+    return A
 
 
-def generate_stationary_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
+def _generate_orthonormal_matrix(dim: int) -> Tensor:
+    """Uniformly generates a random orthonormal matrix of shape [dim, dim]."""
+
+    return _generate_semi_orthonormal_complement(torch.zeros([dim, 0]))
+
+
+def _generate_semi_orthonormal_complement(Q: Tensor) -> Tensor:
     """
-    Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``. The matrix
-    has a singular triple (u, s, v) such that u is all (strictly) positive and s is 0.
+    Uniformly generates a random semi-orthonormal matrix Q' (i.e. Q'^T Q' = I) of shape [m, m-k]
+    orthogonal to Q, i.e. such that the concatenation [Q, Q'] is an orthonormal matrix.
+
+    :param Q: A semi-orthonormal matrix (i.e. Q^T Q = I) of shape [m, k], with k <= m.
     """
 
-    _check_valid_rank(n_rows, n_cols, rank)
-    if rank == 0:
-        matrix = torch.zeros([n_rows, n_cols])
-    else:
-        U = _generate_unitary_matrix_with_positive_column(n_rows, rank)
-        V = _generate_unitary_matrix(n_cols, rank)
-        S = _generate_diagonal_singular_values(rank)
-        S[0, 0] = 0.0
-        matrix = U @ S @ V.T
+    m, k = Q.shape
+    A = torch.randn([m, m - k])
 
-    return matrix
+    # project A onto the orthogonal complement of Q
+    A_proj = A - Q @ (Q.T @ A)
+
+    Q_prime, _ = torch.linalg.qr(A_proj)
+    return Q_prime
 
 
 _matrix_dimension_triples = [
@@ -145,9 +86,14 @@ _matrix_dimension_triples = [
     (9, 11, 9),
 ]
 
-_zero_rank_matrix_shapes = [
+_zero_matrices_shapes = [
     (1, 1),
     (4, 3),
+    (9, 11),
+]
+
+_stationary_matrices_shapes = [
+    (5, 3),
     (9, 11),
 ]
 
@@ -156,16 +102,16 @@ _scales = [0.0, 1e-10, 1.0, 1e3, 1e5, 1e10, 1e15]
 # Fix seed to fix randomness of matrix generation
 torch.manual_seed(0)
 
-matrices = [
-    generate_matrix(n_rows, n_cols, rank) for n_rows, n_cols, rank in _matrix_dimension_triples
-]
+matrices = [_generate_matrix(m, n, rank) for m, n, rank in _matrix_dimension_triples]
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
-zero_rank_matrices = [torch.zeros([n_rows, n_cols]) for n_rows, n_cols in _zero_rank_matrix_shapes]
-matrices_2_plus_rows = [matrix for matrix in matrices + zero_rank_matrices if matrix.shape[0] >= 2]
+zero_matrices = [torch.zeros([m, n]) for m, n in _zero_matrices_shapes]
+matrices_2_plus_rows = [matrix for matrix in matrices + zero_matrices if matrix.shape[0] >= 2]
 scaled_matrices_2_plus_rows = [
-    matrix for matrix in scaled_matrices + zero_rank_matrices if matrix.shape[0] >= 2
+    matrix for matrix in scaled_matrices + zero_matrices if matrix.shape[0] >= 2
 ]
-stationary_matrices = [
-    generate_stationary_matrix(n_rows, n_cols, rank)
-    for n_rows, n_cols, rank in _matrix_dimension_triples
+strong_stationary_matrices = [
+    _generate_strong_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
+]
+weak_stationary_matrices = strong_stationary_matrices + [
+    _generate_weak_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
 ]
