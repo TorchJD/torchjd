@@ -4,7 +4,7 @@ from torch.nn.functional import normalize
 
 
 def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
-    """Generates a random matrix A of shape [``m``, ``n``] with provided ``rank``."""
+    """Generates a random matrix A of shape [m, n] with provided rank."""
 
     U = _generate_orthonormal_matrix(m)
     Vt = _generate_orthonormal_matrix(n)
@@ -15,8 +15,8 @@ def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
 
 def _generate_strong_stationary_matrix(m: int, n: int) -> Tensor:
     """
-    Generates a random matrix A of shape [``m``, ``n``] with rank ``min(n, m - 1)``, such that there
-    exists a vector ``0<v`` with ``v @ A = 0``.
+    Generates a random matrix A of shape [m, n] with rank min(n, m - 1), such that there exists a
+    vector 0<v with v^T A = 0.
     """
 
     v = torch.abs(torch.randn([m]))
@@ -25,9 +25,8 @@ def _generate_strong_stationary_matrix(m: int, n: int) -> Tensor:
 
 def _generate_weak_stationary_matrix(m: int, n: int) -> Tensor:
     """
-    Generates a random matrix A of shape [``m``, ``n``] with rank ``min(n, m - 1)``, such that there
-    exists a vector ``0<=v`` with at least one coordinate equal to ``0`` and such that
-    ``v @ A = 0``.
+    Generates a random matrix A of shape [m, n] with rank min(n, m - 1), such that there exists a
+    vector 0<=v with at least one coordinate equal to 0 and such that v^T A = 0.
     """
 
     v = torch.abs(torch.randn([m]))
@@ -37,8 +36,8 @@ def _generate_weak_stationary_matrix(m: int, n: int) -> Tensor:
 
 def _generate_matrix_orthogonal_to_vector(v: Tensor, n: int) -> Tensor:
     """
-    Generates a random matrix A of shape [``len(v)``, ``n``] with rank ``min(n, len(v) - 1)`` such
-    that ``v @ A = 0``.
+    Generates a random matrix A of shape [len(v), n] with rank min(n, len(v) - 1) such that
+    v^T A = 0.
     """
 
     rank = min(n, len(v) - 1)
@@ -51,19 +50,17 @@ def _generate_matrix_orthogonal_to_vector(v: Tensor, n: int) -> Tensor:
 
 
 def _generate_orthonormal_matrix(dim: int) -> Tensor:
-    """Uniformly generates a random orthonormal matrix of shape [``dim``, ``dim``]."""
+    """Uniformly generates a random orthonormal matrix of shape [dim, dim]."""
 
     return _generate_semi_orthonormal_complement(torch.zeros([dim, 0]))
 
 
 def _generate_semi_orthonormal_complement(Q: Tensor) -> Tensor:
     """
-    Uniformly generates a random semi-orthonormal matrix ``Q'`` (i.e. ``Q'^T @ Q' = I``) of shape
-    ``[m, m-k]`` orthogonal to ``Q``, i.e. such that the concatenation ``[Q Q']`` is an orthonormal
-    matrix.
+    Uniformly generates a random semi-orthonormal matrix Q' (i.e. Q'^T Q' = I) of shape [m, m-k]
+    orthogonal to Q, i.e. such that the concatenation [Q, Q'] is an orthonormal matrix.
 
-    :param Q: A semi-orthonormal matrix (i.e. ``Q^T @ Q = I``) of shape [``m``, ``k``], with
-        ``k <= m``.
+    :param Q: A semi-orthonormal matrix (i.e. Q^T Q = I) of shape [m, k], with k <= m.
     """
 
     m, k = Q.shape
