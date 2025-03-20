@@ -26,11 +26,15 @@ def _generate_strong_stationary_matrix(m: int, n: int) -> Tensor:
 def _generate_weak_stationary_matrix(m: int, n: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with rank min(n, m - 1), such that there exists a
-    vector 0<=v with at least one coordinate equal to 0 and such that v^T A = 0.
+    vector 0<=v with one coordinate equal to 0 and such that v^T A = 0.
+
+    Note that if multiple coordinates of v were equal to 0, the generated matrix would still be weak
+    stationary, but here we only set one of them to 0 for simplicity.
     """
 
     v = torch.abs(torch.randn([m]))
-    v[torch.randint(0, m, [])] = 0.0
+    i = torch.randint(0, m, [])
+    v[i] = 0.0
     return _generate_matrix_orthogonal_to_vector(v, n)
 
 
