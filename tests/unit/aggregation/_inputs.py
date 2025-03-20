@@ -5,8 +5,8 @@ from torch import Tensor
 def _generate_matrix(n_rows: int, n_cols: int, rank: int) -> Tensor:
     """Generates a random matrix of shape [``n_rows``, ``n_cols``] with provided ``rank``."""
 
-    U = _generate_orthogonal_matrix(n_rows)
-    Vt = _generate_orthogonal_matrix(n_cols)
+    U = _generate_orthonormal_matrix(n_rows)
+    Vt = _generate_orthonormal_matrix(n_cols)
     S = torch.diag(torch.abs(torch.randn([rank])))
     matrix = U[:, :rank] @ S @ Vt[:rank, :]
     return matrix
@@ -19,7 +19,7 @@ def _generate_strong_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
     """
 
     v = torch.abs(torch.randn([n_rows]))
-    return _generate_matrix_with_orthogonal_vector(v, n_cols)
+    return _generate_matrix_orthogonal_to_vector(v, n_cols)
 
 
 def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
@@ -31,18 +31,18 @@ def _generate_weak_stationary_matrix(n_rows: int, n_cols: int) -> Tensor:
 
     v = torch.abs(torch.randn([n_rows]))
     v[torch.randint(0, n_rows, [])] = 0.0
-    return _generate_matrix_with_orthogonal_vector(v, n_cols)
+    return _generate_matrix_orthogonal_to_vector(v, n_cols)
 
 
-def _generate_orthogonal_matrix(dim: int) -> Tensor:
-    """Uniformly generates a random orthogonal matrix of shape [``dim``, ``dim``]."""
+def _generate_orthonormal_matrix(dim: int) -> Tensor:
+    """Uniformly generates a random orthonormal matrix of shape [``dim``, ``dim``]."""
 
     A = torch.randn([dim, dim])
     Q, _ = torch.linalg.qr(A)
     return Q
 
 
-def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tensor:
+def _generate_matrix_orthogonal_to_vector(vector: Tensor, n_cols: int) -> Tensor:
     """
     Generates a random matrix of shape [``len(vector)``, ``n_cols``] with rank
     ``min(n_cols, len(vector) - 1)`` such that ``vector @ matrix = 0``.
@@ -50,17 +50,17 @@ def _generate_matrix_with_orthogonal_vector(vector: Tensor, n_cols: int) -> Tens
 
     n_rows = len(vector)
     rank = min(n_cols, n_rows - 1)
-    U = _generate_orthogonal_complement(vector, n_cols=rank)
-    Vt = _generate_orthogonal_matrix(n_cols)
+    U = _generate_semi_orthonormal_matrix_orthogonal_to_vector(vector, n_cols=rank)
+    Vt = _generate_orthonormal_matrix(n_cols)
     S = torch.diag(torch.abs(torch.randn([rank])))
     matrix = U @ S @ Vt[:rank, :]
     return matrix
 
 
-def _generate_orthogonal_complement(vector: Tensor, n_cols: int) -> Tensor:
+def _generate_semi_orthonormal_matrix_orthogonal_to_vector(vector: Tensor, n_cols: int) -> Tensor:
     """
-    Uniformly generates a random orthogonal matrix of shape [``len(vector)``, ``n_cols``] such that
-    ``vector @ matrix = 0``.
+    Uniformly generates a random semi-orthonormal matrix of shape [``len(vector)``, ``n_cols``] such
+    that ``vector @ matrix = 0``.
     """
 
     m = vector.shape[0]
