@@ -102,14 +102,8 @@ class LinearUnderScalingProperty:
         alpha = torch.rand([])
         beta = torch.rand([])
 
-        seed = torch.seed()
-
         x1 = aggregator(torch.diag(c1) @ matrix)
-
-        torch.manual_seed(seed)
         x2 = aggregator(torch.diag(c2) @ matrix)
-
-        torch.manual_seed(seed)
         x = aggregator(torch.diag(alpha * c1 + beta * c2) @ matrix)
         expected = alpha * x1 + beta * x2
 

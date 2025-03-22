@@ -2,11 +2,11 @@ from pytest import mark
 
 from torchjd.aggregation import Random
 
-from ._property_testers import ExpectedStructureProperty, LinearUnderScalingProperty
+from ._property_testers import ExpectedStructureProperty
 
 
 @mark.parametrize("aggregator", [Random()])
-class TestRGW(ExpectedStructureProperty, LinearUnderScalingProperty):
+class TestRGW(ExpectedStructureProperty):
     pass
 
 

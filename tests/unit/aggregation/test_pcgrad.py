@@ -7,11 +7,11 @@ from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
-from ._property_testers import ExpectedStructureProperty, LinearUnderScalingProperty
+from ._property_testers import ExpectedStructureProperty
 
 
 @mark.parametrize("aggregator", [PCGrad()])
-class TestPCGrad(ExpectedStructureProperty, LinearUnderScalingProperty):
+class TestPCGrad(ExpectedStructureProperty):
     pass
 
 
