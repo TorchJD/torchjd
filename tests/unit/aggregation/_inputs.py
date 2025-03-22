@@ -105,8 +105,6 @@ torch.manual_seed(0)
 matrices = [_generate_matrix(m, n, rank) for m, n, rank in _matrix_dimension_triples]
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
 zero_matrices = [torch.zeros([m, n]) for m, n in _zero_matrices_shapes]
-matrices_2_plus_rows = [matrix for matrix in matrices + zero_matrices if matrix.shape[0] >= 2]
-scaled_matrices_2_plus_rows = [matrix for matrix in scaled_matrices if matrix.shape[0] >= 2]
 strong_stationary_matrices = [
     _generate_strong_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
 ]
@@ -114,3 +112,6 @@ weak_stationary_matrices = strong_stationary_matrices + [
     _generate_weak_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
 ]
 typical_matrices = zero_matrices + matrices + weak_stationary_matrices + strong_stationary_matrices
+
+matrices_2_plus_rows = [matrix for matrix in matrices + zero_matrices if matrix.shape[0] >= 2]
+scaled_matrices_2_plus_rows = [matrix for matrix in scaled_matrices if matrix.shape[0] >= 2]
