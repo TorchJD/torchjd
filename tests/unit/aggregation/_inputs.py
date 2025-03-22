@@ -97,7 +97,7 @@ _stationary_matrices_shapes = [
     (9, 11),
 ]
 
-_scales = [0.0, 1e-10, 1.0, 1e3, 1e5, 1e10, 1e15]
+_scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
 
 # Fix seed to fix randomness of matrix generation
 torch.manual_seed(0)
@@ -115,3 +115,4 @@ strong_stationary_matrices = [
 weak_stationary_matrices = strong_stationary_matrices + [
     _generate_weak_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
 ]
+typical_matrices = zero_matrices + matrices + weak_stationary_matrices + strong_stationary_matrices

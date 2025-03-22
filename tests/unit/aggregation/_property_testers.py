@@ -5,13 +5,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from ._inputs import (
-    matrices,
-    scaled_matrices,
-    strong_stationary_matrices,
-    weak_stationary_matrices,
-    zero_matrices,
-)
+from ._inputs import scaled_matrices, typical_matrices
 
 
 class ExpectedStructureProperty:
@@ -23,7 +17,7 @@ class ExpectedStructureProperty:
     """
 
     @classmethod
-    @mark.parametrize("matrix", scaled_matrices + zero_matrices)
+    @mark.parametrize("matrix", scaled_matrices + typical_matrices)
     def test_expected_structure_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_expected_structure_property(aggregator, matrix)
 
@@ -40,7 +34,7 @@ class NonConflictingProperty:
     """
 
     @classmethod
-    @mark.parametrize("matrix", weak_stationary_matrices + matrices)
+    @mark.parametrize("matrix", typical_matrices)
     def test_non_conflicting_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_non_conflicting_property(aggregator, matrix)
 
@@ -61,7 +55,7 @@ class PermutationInvarianceProperty:
     N_PERMUTATIONS = 5
 
     @classmethod
-    @mark.parametrize("matrix", matrices)
+    @mark.parametrize("matrix", typical_matrices)
     def test_permutation_invariance_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_permutation_invariance_property(aggregator, matrix)
 
@@ -88,7 +82,7 @@ class LinearUnderScalingProperty:
     """
 
     @classmethod
-    @mark.parametrize("matrix", strong_stationary_matrices + matrices)
+    @mark.parametrize("matrix", typical_matrices)
     def test_linear_under_scaling_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_linear_under_scaling_property(aggregator, matrix)
 
