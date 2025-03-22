@@ -1,6 +1,9 @@
+from contextlib import nullcontext as does_not_raise
+
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
+from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
 
@@ -39,6 +42,48 @@ class TestConstant(ExpectedStructureProperty, LinearUnderScalingProperty):
     @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_2, _matrices_2))
     def test_linear_under_scaling_property(cls, aggregator: Constant, matrix: Tensor):
         cls._assert_linear_under_scaling_property(aggregator, matrix)
+
+
+@mark.parametrize(
+    ["weights_shape", "expectation"],
+    [
+        ([], raises(ValueError)),
+        ([0], does_not_raise()),
+        ([1], does_not_raise()),
+        ([10], does_not_raise()),
+        ([0, 0], raises(ValueError)),
+        ([0, 1], raises(ValueError)),
+        ([1, 1], raises(ValueError)),
+        ([1, 1, 1], raises(ValueError)),
+        ([1, 1, 1, 1], raises(ValueError)),
+        ([1, 1, 1, 1, 1], raises(ValueError)),
+    ],
+)
+def test_weights_shape_check(weights_shape: list[int], expectation: ExceptionContext):
+    weights = torch.ones(weights_shape)
+    with expectation:
+        _ = Constant(weights=weights)
+
+
+@mark.parametrize(
+    ["weights_shape", "n_rows", "expectation"],
+    [
+        ([0], 0, does_not_raise()),
+        ([1], 1, does_not_raise()),
+        ([5], 5, does_not_raise()),
+        ([0], 1, raises(ValueError)),
+        ([1], 0, raises(ValueError)),
+        ([4], 5, raises(ValueError)),
+        ([5], 4, raises(ValueError)),
+    ],
+)
+def test_matrix_shape_check(weights_shape: list[int], n_rows: int, expectation: ExceptionContext):
+    matrix = torch.ones([n_rows, 5])
+    weights = torch.ones(weights_shape)
+    aggregator = Constant(weights)
+
+    with expectation:
+        _ = aggregator(matrix)
 
 
 def test_representations():
