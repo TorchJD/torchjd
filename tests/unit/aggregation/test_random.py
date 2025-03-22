@@ -6,7 +6,7 @@ from ._property_testers import ExpectedStructureProperty
 
 
 @mark.parametrize("aggregator", [Random()])
-class TestRGW(ExpectedStructureProperty):
+class TestRandom(ExpectedStructureProperty):
     pass
 
 
