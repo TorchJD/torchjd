@@ -115,3 +115,4 @@ strong_stationary_matrices = [
 weak_stationary_matrices = strong_stationary_matrices + [
     _generate_weak_stationary_matrix(m, n) for m, n in _stationary_matrices_shapes
 ]
+typical_matrices = zero_matrices + matrices + weak_stationary_matrices + strong_stationary_matrices
