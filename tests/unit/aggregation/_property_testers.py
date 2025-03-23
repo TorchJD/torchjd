@@ -134,29 +134,21 @@ class StrongStationarityProperty(StationarityProperty):
     @classmethod
     @mark.parametrize("stationary_matrix", strong_stationary_matrices)
     def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
-        super(StrongStationarityProperty, cls)._assert_stationarity_property(
-            aggregator, stationary_matrix
-        )
+        cls._assert_stationarity_property(aggregator, stationary_matrix)
 
     @classmethod
     @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
     def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
-        super(StrongStationarityProperty, cls)._assert_non_stationarity_property(
-            aggregator, non_stationary_matrix
-        )
+        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
 
 
 class WeakStationarityProperty(StationarityProperty):
     @classmethod
     @mark.parametrize("stationary_matrix", strong_stationary_matrices + weak_stationary_matrices)
     def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
-        super(WeakStationarityProperty, cls)._assert_stationarity_property(
-            aggregator, stationary_matrix
-        )
+        cls._assert_stationarity_property(aggregator, stationary_matrix)
 
     @classmethod
     @mark.parametrize("non_stationary_matrix", matrices)
     def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
-        super(WeakStationarityProperty, cls)._assert_non_stationarity_property(
-            aggregator, non_stationary_matrix
-        )
+        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
