@@ -21,3 +21,19 @@ from torchjd.aggregation import Aggregator
 def test_check_is_matrix(shape: Sequence[int], expectation: ExceptionContext):
     with expectation:
         Aggregator._check_is_matrix(torch.randn(shape))
+
+
+@mark.parametrize(
+    ["value", "expectation"],
+    [
+        (0.0, does_not_raise()),
+        (torch.nan, raises(ValueError)),
+        (torch.inf, raises(ValueError)),
+        (-torch.inf, raises(ValueError)),
+    ],
+)
+def test_check_is_finite(value: float, expectation: ExceptionContext):
+    matrix = torch.ones([5, 5])
+    matrix[1, 2] = value
+    with expectation:
+        Aggregator._check_is_finite(matrix)

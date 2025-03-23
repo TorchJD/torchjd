@@ -1,6 +1,9 @@
-from pytest import mark
+from contextlib import nullcontext as does_not_raise
+
+from pytest import mark, raises
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import ExceptionContext
 
 from torchjd.aggregation import CAGrad, Mean
 
@@ -31,6 +34,21 @@ def test_equivalence_mean(matrix: Tensor):
     expected = mean(matrix)
 
     assert_close(result, expected)
+
+
+@mark.parametrize(
+    ["c", "expectation"],
+    [
+        (-5.0, raises(ValueError)),
+        (-1.0, raises(ValueError)),
+        (0.0, does_not_raise()),
+        (1.0, does_not_raise()),
+        (50.0, does_not_raise()),
+    ],
+)
+def test_c_check(c: float, expectation: ExceptionContext):
+    with expectation:
+        _ = CAGrad(c=c)
 
 
 def test_representations():
