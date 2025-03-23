@@ -39,7 +39,7 @@ class GradDrop(Aggregator):
     def __init__(self, f: Callable = _identity, leak: Tensor | None = None):
         if leak is not None and leak.dim() != 1:
             raise ValueError(
-                "Parameter `leak` should be a 1-dimensional tensor. Found `weights.shape = "
+                "Parameter `leak` should be a 1-dimensional tensor. Found `leak.shape = "
                 f"{leak.shape}`."
             )
 
