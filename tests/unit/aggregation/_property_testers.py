@@ -5,7 +5,13 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from ._inputs import scaled_matrices, typical_matrices
+from ._inputs import (
+    matrices,
+    scaled_matrices,
+    strong_stationary_matrices,
+    typical_matrices,
+    weak_stationary_matrices,
+)
 
 
 class ExpectedStructureProperty:
@@ -102,3 +108,77 @@ class LinearUnderScalingProperty:
         expected = alpha * x1 + beta * x2
 
         assert_close(x, expected, atol=8e-03, rtol=0)
+
+
+class StationarityProperty:
+    """
+    This class tests empirically that a given `Aggregator` satisfies the stationarity property.
+    """
+
+    @staticmethod
+    def _assert_stationarity_property(
+        aggregator: Aggregator,
+        stationary_matrix: Tensor,
+    ) -> None:
+        vector = aggregator(stationary_matrix)
+        norm = vector.norm().item()
+        assert norm < 8e-02
+
+    @staticmethod
+    def _assert_non_stationarity_property(
+        aggregator: Aggregator,
+        non_stationary_matrix: Tensor,
+    ) -> None:
+        vector = aggregator(non_stationary_matrix)
+        norm = vector.norm().item()
+        assert norm > 1e-03
+
+
+class StrongStationarityProperty(StationarityProperty):
+
+    @classmethod
+    @mark.parametrize("stationary_matrix", strong_stationary_matrices)
+    def test_stationarity_property(
+        cls,
+        aggregator: Aggregator,
+        stationary_matrix: Tensor,
+    ):
+        super(StrongStationarityProperty, cls)._assert_stationarity_property(
+            aggregator, stationary_matrix
+        )
+
+    @classmethod
+    @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
+    def test_non_stationarity_property(
+        cls,
+        aggregator: Aggregator,
+        non_stationary_matrix: Tensor,
+    ):
+        super(StrongStationarityProperty, cls)._assert_non_stationarity_property(
+            aggregator, non_stationary_matrix
+        )
+
+
+class WeakStationarityProperty(StationarityProperty):
+
+    @classmethod
+    @mark.parametrize("stationary_matrix", strong_stationary_matrices + weak_stationary_matrices)
+    def test_stationarity_property(
+        cls,
+        aggregator: Aggregator,
+        stationary_matrix: Tensor,
+    ):
+        super(WeakStationarityProperty, cls)._assert_stationarity_property(
+            aggregator, stationary_matrix
+        )
+
+    @classmethod
+    @mark.parametrize("non_stationary_matrix", matrices)
+    def test_non_stationarity_property(
+        cls,
+        aggregator: Aggregator,
+        non_stationary_matrix: Tensor,
+    ):
+        super(WeakStationarityProperty, cls)._assert_non_stationarity_property(
+            aggregator, non_stationary_matrix
+        )
