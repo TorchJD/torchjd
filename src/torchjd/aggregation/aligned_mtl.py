@@ -29,11 +29,7 @@ import torch
 from torch import Tensor
 from torch.linalg import LinAlgError
 
-from ._pref_vector_utils import (
-    _check_pref_vector,
-    _pref_vector_to_str_suffix,
-    _pref_vector_to_weighting,
-)
+from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -66,7 +62,6 @@ class AlignedMTL(_WeightedAggregator):
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
-        _check_pref_vector(pref_vector)
         weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
