@@ -39,13 +39,9 @@ class _IMTLGWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         d = torch.linalg.norm(matrix, dim=1)
-
-        try:
-            v = torch.linalg.pinv(matrix @ matrix.T) @ d
-        except RuntimeError:  # This can happen when the matrix has extremely large values
-            v = torch.ones(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
-
+        v = torch.linalg.pinv(matrix @ matrix.T) @ d
         v_sum = v.sum()
+
         if v_sum.abs() < 1e-12:
             weights = torch.zeros_like(v)
         else:
