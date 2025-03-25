@@ -110,3 +110,13 @@ def _assert_class_checks_properly(
 
 def _make_tensor_dict(value_shapes: list[list[int]]) -> dict[Tensor, Tensor]:
     return {torch.zeros(key): torch.zeros(value) for key, value in zip(_key_shapes, value_shapes)}
+
+
+def test_immutability():
+    """Tests that it's impossible to modify an existing TensorDict."""
+
+    t = Gradients({})
+    with raises(TypeError):
+        t[torch.ones(1)] = torch.ones(1)
+
+    assert t == Gradients({})
