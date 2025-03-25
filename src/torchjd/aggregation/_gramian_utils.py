@@ -1,6 +1,5 @@
 import torch
 from torch import Tensor
-from torch.linalg import LinAlgError
 
 
 def _compute_gramian(matrix: Tensor) -> Tensor:
@@ -33,13 +32,7 @@ def _compute_normalized_gramian(matrix: Tensor, eps: float) -> Tensor:
         :math:`n` through the SVD algorithm which is efficient, therefore this is rather fast.
     """
 
-    try:
-        left_unitary_matrix, singular_values, _ = torch.linalg.svd(matrix, full_matrices=False)
-    except LinAlgError as error:  # Not sure if this can happen
-        raise ValueError(
-            f"Unexpected failure of the svd computation on matrix {matrix}. Please open an "
-            "issue on https://github.com/TorchJD/torchjd/issues and paste this error message in it."
-        ) from error
+    left_unitary_matrix, singular_values, _ = torch.linalg.svd(matrix, full_matrices=False)
     max_singular_value = torch.max(singular_values)
     if max_singular_value < eps:
         scaled_singular_values = torch.zeros_like(singular_values)
