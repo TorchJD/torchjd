@@ -37,12 +37,7 @@ class Grad(_Differentiate[Gradients]):
             return tuple()
 
         if len(outputs) == 0:
-            return tuple(
-                [
-                    torch.empty(input.shape, device=input.device, dtype=input.dtype)
-                    for input in inputs
-                ]
-            )
+            return tuple([torch.zeros_like(input) for input in inputs])
 
         optional_grads = torch.autograd.grad(
             outputs,
