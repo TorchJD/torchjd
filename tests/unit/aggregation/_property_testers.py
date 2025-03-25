@@ -112,7 +112,10 @@ class LinearUnderScalingProperty:
 
 class StrongStationarityProperty:
     """
-    This class tests empirically that a given `Aggregator` satisfies the strong stationarity property.
+    This class tests empirically that a given `Aggregator` is strongly stationary property.
+
+    An aggregator `A` is strongly stationary if for any matrix `J` with `A(J)=0`, `J` is stationary,
+    i.e., there exists `0<w` such that `J^T w=0`.
     """
 
     @classmethod
