@@ -120,3 +120,10 @@ def test_immutability():
         t[torch.ones(1)] = torch.ones(1)
 
     assert t == Gradients({})
+
+
+def test_empty_tensor_dict():
+    """Tests that it's impossible to instantiate a non-empty EmptyTensorDict."""
+
+    with raises(ValueError):
+        _ = EmptyTensorDict({torch.ones(1): torch.ones(1)})
