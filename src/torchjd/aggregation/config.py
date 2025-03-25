@@ -28,13 +28,9 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._pref_vector_utils import (
-    _check_pref_vector,
-    _pref_vector_to_str_suffix,
-    _pref_vector_to_weighting,
-)
-from torchjd.aggregation.bases import Aggregator
-from torchjd.aggregation.sum import _SumWeighting
+from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
+from .bases import Aggregator
+from .sum import _SumWeighting
 
 
 class ConFIG(Aggregator):
@@ -66,7 +62,6 @@ class ConFIG(Aggregator):
 
     def __init__(self, pref_vector: Tensor | None = None):
         super().__init__()
-        _check_pref_vector(pref_vector)
         self.weighting = _pref_vector_to_weighting(pref_vector, default=_SumWeighting())
         self._pref_vector = pref_vector
 
