@@ -62,6 +62,24 @@ def test_empty_inputs_2():
     assert_tensor_dicts_are_close(gradients, expected_gradients)
 
 
+def test_empty_outputs():
+    """
+    Tests that the Grad transform works correctly when the `outputs` parameter is an empty
+    `Iterable`.
+    """
+
+    a1 = torch.tensor(1.0, requires_grad=True)
+    a2 = torch.tensor([1.0, 2.0], requires_grad=True)
+    input = Gradients({})
+
+    grad = Grad(outputs=[], inputs=[a1, a2])
+
+    gradients = grad(input)
+    expected_gradients = {a1: torch.zeros_like(a1), a2: torch.zeros_like(a2)}
+
+    assert_tensor_dicts_are_close(gradients, expected_gradients)
+
+
 def test_retain_graph():
     """Tests that the `Grad` transform behaves as expected with the `retain_graph` flag."""
 
