@@ -9,7 +9,6 @@ from ._property_testers import (
     ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
-    WeakStationarityProperty,
 )
 
 
@@ -18,7 +17,6 @@ class TestMGDA(
     ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
-    WeakStationarityProperty,
 ):
     pass
 

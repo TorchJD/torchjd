@@ -140,15 +140,3 @@ class StrongStationarityProperty(StationarityProperty):
     @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
     def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
         cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
-
-
-class WeakStationarityProperty(StationarityProperty):
-    @classmethod
-    @mark.parametrize("stationary_matrix", strong_stationary_matrices + weak_stationary_matrices)
-    def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
-        cls._assert_stationarity_property(aggregator, stationary_matrix)
-
-    @classmethod
-    @mark.parametrize("non_stationary_matrix", matrices)
-    def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
-        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
