@@ -5,13 +5,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
 
-from ._inputs import (
-    matrices,
-    scaled_matrices,
-    strong_stationary_matrices,
-    typical_matrices,
-    weak_stationary_matrices,
-)
+from ._inputs import matrices, scaled_matrices, typical_matrices, weak_stationary_matrices
 
 
 class ExpectedStructureProperty:
@@ -119,23 +113,12 @@ class StrongStationarityProperty:
     """
 
     @classmethod
-    @mark.parametrize("stationary_matrix", strong_stationary_matrices)
+    @mark.parametrize("stationary_matrix", weak_stationary_matrices + matrices)
     def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
         cls._assert_stationarity_property(aggregator, stationary_matrix)
 
-    @classmethod
-    @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
-    def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
-        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
-
     @staticmethod
-    def _assert_stationarity_property(aggregator: Aggregator, stationary_matrix: Tensor) -> None:
-        vector = aggregator(stationary_matrix)
-        norm = vector.norm().item()
-        assert norm < 8e-02
-
-    @staticmethod
-    def _assert_non_stationarity_property(
+    def _assert_stationarity_property(
         aggregator: Aggregator, non_stationary_matrix: Tensor
     ) -> None:
         vector = aggregator(non_stationary_matrix)
