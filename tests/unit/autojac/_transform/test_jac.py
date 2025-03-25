@@ -80,7 +80,7 @@ def test_empty_outputs(chunk_size: int | None):
     """
 
     a1 = torch.tensor(1.0, requires_grad=True)
-    a2 = torch.tensor(1.0, requires_grad=True)
+    a2 = torch.tensor([1.0, 2.0], requires_grad=True)
     input = Jacobians({})
 
     jac = Jac(outputs=[], inputs=[a1, a2], chunk_size=chunk_size)
