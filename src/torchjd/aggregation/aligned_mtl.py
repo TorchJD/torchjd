@@ -27,13 +27,8 @@
 
 import torch
 from torch import Tensor
-from torch.linalg import LinAlgError
 
-from ._pref_vector_utils import (
-    _check_pref_vector,
-    _pref_vector_to_str_suffix,
-    _pref_vector_to_weighting,
-)
+from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -66,7 +61,6 @@ class AlignedMTL(_WeightedAggregator):
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
-        _check_pref_vector(pref_vector)
         weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
@@ -107,12 +101,7 @@ class _AlignedMTLWrapper(_Weighting):
     def _compute_balance_transformation(G: Tensor) -> Tensor:
         M = G.T @ G
 
-        try:
-            lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
-        except LinAlgError:  # This can happen when the matrix has extremely large values
-            identity = torch.eye(len(M), dtype=M.dtype, device=M.device)
-            return identity
-
+        lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
         rank = sum(lambda_ > tol)
 

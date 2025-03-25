@@ -17,6 +17,11 @@ changes that do not affect the user.
 - Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
   project onto the dual cone. This may minimally affect the output of these aggregators.
 
+### Fixed
+- Removed arbitrary exception handling in `IMTLG` and `AlignedMTL` when the computation fails. In
+  practice, this fix should only affect some matrices with extremely large values, which should
+  not usually happen.
+
 ## [0.5.0] - 2025-02-01
 
 ### Added
