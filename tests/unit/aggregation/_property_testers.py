@@ -110,10 +110,20 @@ class LinearUnderScalingProperty:
         assert_close(x, expected, atol=8e-03, rtol=0)
 
 
-class StationarityProperty:
+class StrongStationarityProperty:
     """
-    This class tests empirically that a given `Aggregator` satisfies the stationarity property.
+    This class tests empirically that a given `Aggregator` satisfies the strong stationarity property.
     """
+
+    @classmethod
+    @mark.parametrize("stationary_matrix", strong_stationary_matrices)
+    def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
+        cls._assert_stationarity_property(aggregator, stationary_matrix)
+
+    @classmethod
+    @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
+    def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
+        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
 
     @staticmethod
     def _assert_stationarity_property(aggregator: Aggregator, stationary_matrix: Tensor) -> None:
@@ -128,15 +138,3 @@ class StationarityProperty:
         vector = aggregator(non_stationary_matrix)
         norm = vector.norm().item()
         assert norm > 1e-03
-
-
-class StrongStationarityProperty(StationarityProperty):
-    @classmethod
-    @mark.parametrize("stationary_matrix", strong_stationary_matrices)
-    def test_stationarity_property(cls, aggregator: Aggregator, stationary_matrix: Tensor):
-        cls._assert_stationarity_property(aggregator, stationary_matrix)
-
-    @classmethod
-    @mark.parametrize("non_stationary_matrix", weak_stationary_matrices + matrices)
-    def test_non_stationarity_property(cls, aggregator: Aggregator, non_stationary_matrix: Tensor):
-        cls._assert_non_stationarity_property(aggregator, non_stationary_matrix)
