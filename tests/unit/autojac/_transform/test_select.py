@@ -76,7 +76,7 @@ def test_keys_check(
     keys.
     """
 
-    all_keys = [torch.tensor(i) for i in range(10)]
+    all_keys = [torch.tensor(i) for i in range(2)]
     keys = [all_keys[i] for i in key_indices]
     required_keys = [all_keys[i] for i in required_key_indices]
 
