@@ -16,14 +16,7 @@ _C = TypeVar("_C", bound=TensorDict)
 
 
 def ordered_set(elements: Iterable[_KeyType]) -> _OrderedSet[_KeyType]:
-    elements = list(elements)
-    result = OrderedDict.fromkeys(elements, None)
-    if len(elements) != len(result):
-        raise ValueError(
-            f"Parameter `elements` should contain unique elements. Found `elements = {elements}`."
-        )
-
-    return result
+    return OrderedDict.fromkeys(elements, None)
 
 
 def dicts_union(dicts: Iterable[dict[_KeyType, _ValueType]]) -> dict[_KeyType, _ValueType]:

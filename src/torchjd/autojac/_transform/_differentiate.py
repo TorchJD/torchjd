@@ -15,7 +15,7 @@ class _Differentiate(Transform[_A, _A], ABC):
         retain_graph: bool,
         create_graph: bool,
     ):
-        self.outputs = ordered_set(outputs)
+        self.outputs = list(outputs)
         self.inputs = ordered_set(inputs)
         self.retain_graph = retain_graph
         self.create_graph = create_graph
