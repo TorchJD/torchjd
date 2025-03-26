@@ -54,8 +54,8 @@ class TestConstant(
 
     @classmethod
     @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_3, _matrices_3))
-    def test_stationarity_property(cls, aggregator: Constant, non_stationary_matrix: Tensor):
-        cls._assert_stationarity_property(aggregator, non_stationary_matrix)
+    def test_stationarity_property(cls, aggregator: Constant, matrix: Tensor):
+        cls._assert_stationarity_property(aggregator, matrix)
 
 
 @mark.parametrize(

@@ -25,7 +25,7 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     U = torch.hstack([U1, U2])
     Vt = _generate_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
-    A = U[:, 1 : rank + 1] @ S @ Vt[1 : rank + 1, :]
+    A = U[:, 1 : rank + 1] @ S @ Vt[:rank, :]
     return A
 
 
@@ -46,7 +46,7 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     U = torch.hstack([U1, U2])
     Vt = _generate_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
-    A = U[:, 1 : rank + 1] @ S @ Vt[1 : rank + 1, :]
+    A = U[:, 1 : rank + 1] @ S @ Vt[:rank, :]
     return A
 
 
@@ -109,7 +109,6 @@ _stationary_matrices_triples = [
     (5, 3, 3),
     (9, 11, 6),
     (7, 13, 2),
-    (3, 5, 3),
 ]
 
 _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]

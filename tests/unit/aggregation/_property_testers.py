@@ -113,7 +113,7 @@ class StrongStationarityProperty:
     """
 
     @classmethod
-    @mark.parametrize("stationary_matrix", non_strong_stationary_matrices)
+    @mark.parametrize("matrix", non_strong_stationary_matrices)
     def test_stationarity_property(cls, aggregator: Aggregator, matrix: Tensor):
         cls._assert_stationarity_property(aggregator, matrix)
 
