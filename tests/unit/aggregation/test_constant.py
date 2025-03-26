@@ -7,8 +7,12 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
 
-from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import ExpectedStructureProperty, LinearUnderScalingProperty
+from ._inputs import non_strong_stationary_matrices, scaled_matrices, typical_matrices
+from ._property_testers import (
+    ExpectedStructureProperty,
+    LinearUnderScalingProperty,
+    StrongStationarityProperty,
+)
 
 # The weights must be a vector of length equal to the number of rows in the matrix that it will be
 # applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To
@@ -28,8 +32,13 @@ _aggregators_1 = [_make_aggregator(matrix) for matrix in _matrices_1]
 _matrices_2 = typical_matrices
 _aggregators_2 = [_make_aggregator(matrix) for matrix in _matrices_2]
 
+_matrices_3 = non_strong_stationary_matrices
+_aggregators_3 = [_make_aggregator(matrix) for matrix in _matrices_3]
 
-class TestConstant(ExpectedStructureProperty, LinearUnderScalingProperty):
+
+class TestConstant(
+    ExpectedStructureProperty, LinearUnderScalingProperty, StrongStationarityProperty
+):
     # Override the parametrization of `test_expected_structure_property` to make the test use the
     # right aggregator with each matrix.
 
@@ -42,6 +51,11 @@ class TestConstant(ExpectedStructureProperty, LinearUnderScalingProperty):
     @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_2, _matrices_2))
     def test_linear_under_scaling_property(cls, aggregator: Constant, matrix: Tensor):
         cls._assert_linear_under_scaling_property(aggregator, matrix)
+
+    @classmethod
+    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_3, _matrices_3))
+    def test_stationarity_property(cls, aggregator: Constant, non_stationary_matrix: Tensor):
+        cls._assert_stationarity_property(aggregator, non_stationary_matrix)
 
 
 @mark.parametrize(

@@ -2,11 +2,11 @@ from pytest import mark
 
 from torchjd.aggregation import Random
 
-from ._property_testers import ExpectedStructureProperty
+from ._property_testers import ExpectedStructureProperty, StrongStationarityProperty
 
 
 @mark.parametrize("aggregator", [Random()])
-class TestRandom(ExpectedStructureProperty):
+class TestRandom(ExpectedStructureProperty, StrongStationarityProperty):
     pass
 
 
