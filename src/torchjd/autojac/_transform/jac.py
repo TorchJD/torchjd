@@ -122,9 +122,4 @@ def _extract_sub_matrices(matrix: Tensor, lengths: Sequence[int]) -> list[Tensor
 
 
 def _reshape_matrices(matrices: Sequence[Tensor], shapes: Sequence[Size]) -> Sequence[Tensor]:
-    if len(matrices) != len(shapes):
-        raise ValueError(
-            "Parameters `matrices` and `shapes` should contain the same number of elements."
-        )
-
     return [matrix.view((matrix.shape[0],) + shape) for matrix, shape in zip(matrices, shapes)]
