@@ -1,9 +1,10 @@
 import torch
 from pytest import mark, raises
+from torch.autograd import grad
 from torch.testing import assert_close
 
 from torchjd import mtl_backward
-from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
+from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
@@ -557,3 +558,118 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
             features=[f],
             aggregator=UPGrad(),
         )
+
+
+def test_repeated_losses():
+    """
+    Tests that mtl_backward correctly works when some losses are repeated. In this case, since
+    torch.autograd.backward would sum the gradients of the repeated losses, it is natural for
+    autojac to sum the task-specific gradients, and to compute and aggregate a Jacobian with one row
+    per repeated tensor, for shared gradients.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
+
+    expected_grad_wrt_p0 = grad([y1, y1, y2], [p0], retain_graph=True)[0]
+    expected_grad_wrt_p1 = grad([y1, y1], [p1], retain_graph=True)[0]
+    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
+
+    losses = [y1, y1, y2]
+    mtl_backward(losses=losses, features=[f1, f2], aggregator=Sum(), retain_graph=True)
+
+    assert_close(p0.grad, expected_grad_wrt_p0)
+    assert_close(p1.grad, expected_grad_wrt_p1)
+    assert_close(p2.grad, expected_grad_wrt_p2)
+
+
+def test_repeated_features():
+    """
+    Tests that mtl_backward correctly works when some features are repeated. Repeated features are
+    a bit more tricky, because we differentiate with respect to them (in which case it shouldn't
+    matter that they are repeated) and we also differentiate them (in which case it should lead to
+    extra rows in the Jacobian).
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
+
+    grad_outputs = grad([y1, y2], [f1, f1, f2], retain_graph=True)
+    expected_grad_wrt_p0 = grad([f1, f1, f2], [p0], grad_outputs, retain_graph=True)[0]
+    expected_grad_wrt_p1 = grad([y1], [p1], retain_graph=True)[0]
+    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
+
+    features = [f1, f1, f2]
+    mtl_backward(losses=[y1, y2], features=features, aggregator=Sum())
+
+    assert_close(p0.grad, expected_grad_wrt_p0)
+    assert_close(p1.grad, expected_grad_wrt_p1)
+    assert_close(p2.grad, expected_grad_wrt_p2)
+
+
+def test_repeated_shared_params():
+    """
+    Tests that mtl_backward correctly works when some shared are repeated. Since these are tensors
+    with respect to which we differentiate, to match the behavior of torch.autograd.backward, this
+    repetition should not affect the result.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
+
+    expected_grad_wrt_p0 = grad([y1, y2], [p0], retain_graph=True)[0]
+    expected_grad_wrt_p1 = grad([y1], [p1], retain_graph=True)[0]
+    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
+
+    shared_params = [p0, p0]
+    mtl_backward(losses=[y1, y2], features=[f1, f2], aggregator=Sum(), shared_params=shared_params)
+
+    assert_close(p0.grad, expected_grad_wrt_p0)
+    assert_close(p1.grad, expected_grad_wrt_p1)
+    assert_close(p2.grad, expected_grad_wrt_p2)
+
+
+def test_repeated_task_params():
+    """
+    Tests that mtl_backward correctly works when some task-specific params are repeated for some
+    task. Since these are tensors with respect to which we differentiate, to match the behavior of
+    torch.autograd.backward, this repetition should not affect the result.
+    """
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
+
+    expected_grad_wrt_p0 = grad([y1, y2], [p0], retain_graph=True)[0]
+    expected_grad_wrt_p1 = grad([y1], [p1], retain_graph=True)[0]
+    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
+
+    tasks_params = [[p1, p1], [p2]]
+    mtl_backward(losses=[y1, y2], features=[f1, f2], aggregator=Sum(), tasks_params=tasks_params)
+
+    assert_close(p0.grad, expected_grad_wrt_p0)
+    assert_close(p1.grad, expected_grad_wrt_p1)
+    assert_close(p2.grad, expected_grad_wrt_p2)
