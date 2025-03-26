@@ -43,14 +43,7 @@ class Jac(_Differentiate[Jacobians]):
         if len(inputs) == 0:
             return tuple()
 
-        n_outputs = len(outputs)
-        if len(jac_outputs) != n_outputs:
-            raise ValueError(
-                "Parameters `outputs` and `jac_outputs` should be sequences of the same length."
-                f"Found `len(outputs) = {n_outputs}` and `len(jac_outputs) = {len(jac_outputs)}`."
-            )
-
-        if n_outputs == 0:
+        if len(outputs) == 0:
             return tuple(
                 [
                     torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
