@@ -1,9 +1,10 @@
 import torch
 from pytest import mark, raises
+from torch.autograd import grad
 from torch.testing import assert_close
 
 from torchjd import backward
-from torchjd.aggregation import MGDA, Aggregator, Mean, Random, UPGrad
+from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
@@ -214,3 +215,47 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
     )
 
     assert_close(a.grad, aggregator(expected_jacobian).squeeze())
+
+
+def test_repeated_tensors():
+    """
+    Tests that backward correctly works when some tensors are repeated. In this case, since
+    torch.autograd.backward would sum the gradients of the repeated tensors, it is natural for
+    autojac to compute a Jacobian with one row per repeated tensor, and to aggregate it.
+    """
+
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + (a2**2).sum()
+
+    expected_grad_wrt_a1 = grad([y1, y1, y2], a1, retain_graph=True)[0]
+    expected_grad_wrt_a2 = grad([y1, y1, y2], a2, retain_graph=True)[0]
+
+    backward([y1, y1, y2], Sum())
+
+    assert_close(a1.grad, expected_grad_wrt_a1)
+    assert_close(a2.grad, expected_grad_wrt_a2)
+
+
+def test_repeated_inputs():
+    """
+    Tests that backward correctly works when some inputs are repeated. In this case, since
+    torch.autograd.backward ignores the repetition of the inputs, it is natural for autojac to
+    ignore that as well.
+    """
+
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + (a2**2).sum()
+
+    expected_grad_wrt_a1 = grad([y1, y2], a1, retain_graph=True)[0]
+    expected_grad_wrt_a2 = grad([y1, y2], a2, retain_graph=True)[0]
+
+    backward([y1, y2], Sum(), inputs=[a1, a1, a2])
+
+    assert_close(a1.grad, expected_grad_wrt_a1)
+    assert_close(a2.grad, expected_grad_wrt_a2)
