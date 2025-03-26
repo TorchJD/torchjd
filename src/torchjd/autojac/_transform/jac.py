@@ -43,14 +43,7 @@ class Jac(_Differentiate[Jacobians]):
         if len(inputs) == 0:
             return tuple()
 
-        n_outputs = len(outputs)
-        if len(jac_outputs) != n_outputs:
-            raise ValueError(
-                "Parameters `outputs` and `jac_outputs` should be sequences of the same length."
-                f"Found `len(outputs) = {n_outputs}` and `len(jac_outputs) = {len(jac_outputs)}`."
-            )
-
-        if n_outputs == 0:
+        if len(outputs) == 0:
             return tuple(
                 [
                     torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
@@ -123,22 +116,10 @@ def _get_jac_matrix_chunk(
 
 def _extract_sub_matrices(matrix: Tensor, lengths: Sequence[int]) -> list[Tensor]:
     cumulative_lengths = [*accumulate(lengths)]
-
-    if cumulative_lengths[-1] != matrix.shape[1]:
-        raise ValueError(
-            "The sum of the provided lengths should be equal to the number of columns in the "
-            "provided matrix."
-        )
-
     start_indices = [0] + cumulative_lengths[:-1]
     end_indices = cumulative_lengths
     return [matrix[:, start:end] for start, end in zip(start_indices, end_indices)]
 
 
 def _reshape_matrices(matrices: Sequence[Tensor], shapes: Sequence[Size]) -> Sequence[Tensor]:
-    if len(matrices) != len(shapes):
-        raise ValueError(
-            "Parameters `matrices` and `shapes` should contain the same number of elements."
-        )
-
     return [matrix.view((matrix.shape[0],) + shape) for matrix, shape in zip(matrices, shapes)]
