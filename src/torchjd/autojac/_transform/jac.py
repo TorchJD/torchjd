@@ -116,13 +116,6 @@ def _get_jac_matrix_chunk(
 
 def _extract_sub_matrices(matrix: Tensor, lengths: Sequence[int]) -> list[Tensor]:
     cumulative_lengths = [*accumulate(lengths)]
-
-    if cumulative_lengths[-1] != matrix.shape[1]:
-        raise ValueError(
-            "The sum of the provided lengths should be equal to the number of columns in the "
-            "provided matrix."
-        )
-
     start_indices = [0] + cumulative_lengths[:-1]
     end_indices = cumulative_lengths
     return [matrix[:, start:end] for start, end in zip(start_indices, end_indices)]
