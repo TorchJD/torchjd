@@ -1,4 +1,5 @@
 import torch
+from pytest import raises
 from torch.testing import assert_close
 
 from torchjd.autojac._transform import (
@@ -248,3 +249,17 @@ def test_equivalence_jac_grads():
     assert_close(jac_A, torch.stack([grad_1_A, grad_2_A]))
     assert_close(jac_b, torch.stack([grad_1_b, grad_2_b]))
     assert_close(jac_c, torch.stack([grad_1_c, grad_2_c]))
+
+
+def test_stack_different_required_keys():
+    """Tests that the Stack transform fails on transforms with different required keys."""
+
+    a = torch.tensor(1.0, requires_grad=True)
+    y1 = a * 2.0
+    y2 = a * 3.0
+
+    grad1 = Grad([y1], [a])
+    grad2 = Grad([y2], [a])
+
+    with raises(ValueError):
+        _ = Stack([grad1, grad2])
