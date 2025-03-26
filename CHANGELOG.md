@@ -19,7 +19,7 @@ changes that do not affect the user.
 
 ### Fixed
 - Fixed the behavior of `backward` and `mtl_backward` when some tensors are repeated (i.e. when they
-  appear several times in the list of tensors provided as argument). Instead of raising an exception
+  appear several times in the list of tensors provided as arguments). Instead of raising an exception
   in these cases, we are now aligned with the behavior of `torch.autograd.backward`. Repeated
   tensors that we differentiate lead to repeated rows in the Jacobian, prior to aggregation, and
   repeated tensors with respect to which we differentiate count only once.
