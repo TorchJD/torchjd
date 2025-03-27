@@ -19,6 +19,9 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     0<v with v^T A = 0.
     """
 
+    assert 1 < m
+    assert 0 < rank < min(m - 1, n)
+
     v = torch.abs(torch.randn([m]))
     U1 = normalize(v, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
