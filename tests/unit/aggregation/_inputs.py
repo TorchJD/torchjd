@@ -65,10 +65,6 @@ def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     0<=w, w!=0, with w^T A = 0.
     """
 
-    # Having the first column u be such that 0<u (with probability 1) ensures that there exists no
-    # vector w with 0<=w, w!=0, that is orthogonal to A. Such a vector would necessarily have a
-    # positive inner product with v, that has a non-zero associated singular value (with probability
-    # 1), so such a w woulds be such that w^T A != 0.
     u = torch.abs(torch.randn([m]))
     U1 = normalize(u, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
