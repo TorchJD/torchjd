@@ -45,6 +45,13 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     U1 = torch.zeros([m, 2])
     U1[shuffled_range[:split_index], 0] = normalize(z[shuffled_range[:split_index]], dim=0)
     U1[shuffled_range[split_index:], 1] = normalize(z[shuffled_range[split_index:]], dim=0)
+    # At this point, there are two orthonormal columns in U1. The first one will be dropped, but the
+    # second one will be kept. The first one can be called v, and we have 0 <= v, v != 0, and
+    # v^T A = 0 (because the second column of U1 and all columns in U2 are orthogonal to v).
+    # Since the second column of U1 is >= 0 and != 0, if a vector 0<w existed, it would have a
+    # positive inner product with it, which would make w^T != 0 (also because the singular value
+    # associated to the second column of U1 is positive with probability 1). Thus, we satisfy the
+    # two requirements.
 
     U2 = _generate_semi_orthonormal_complement(U1)
     U = torch.hstack([U1, U2])
