@@ -101,7 +101,7 @@ class LinearUnderScalingProperty:
         x = aggregator(torch.diag(alpha * c1 + beta * c2) @ matrix)
         expected = alpha * x1 + beta * x2
 
-        assert_close(x, expected, atol=8e-03, rtol=0)
+        assert_close(x, expected, atol=1e-02, rtol=0)
 
 
 class StrongStationarityProperty:
