@@ -17,13 +17,13 @@ def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
     0<v with v^T A = 0.
+
+    This is done by generating a positive v, and by then generating a matrix orthogonal to v.
     """
 
     assert 1 < m
     assert 0 < rank <= min(m - 1, n)
 
-    # The idea is to create a vector v with 0 < v, and then to create A such that it is orthogonal
-    # to v.
     v = torch.abs(torch.randn([m]))
     U1 = normalize(v, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
