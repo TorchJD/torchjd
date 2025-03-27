@@ -3,19 +3,19 @@ from torch import Tensor
 from torch.nn.functional import normalize
 
 
-def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
-    """Generates a random matrix A of shape [m, n] with provided rank."""
+def _sample_matrix(m: int, n: int, rank: int) -> Tensor:
+    """Samples a random matrix A of shape [m, n] with provided rank."""
 
-    U = _generate_orthonormal_matrix(m)
-    Vt = _generate_orthonormal_matrix(n)
+    U = _sample_orthonormal_matrix(m)
+    Vt = _sample_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
     A = U[:, :rank] @ S @ Vt[:rank, :]
     return A
 
 
-def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
+def _sample_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random strongly stationary matrix A of shape [m, n] with provided rank.
+    Samples a random strongly stationary matrix A of shape [m, n] with provided rank.
 
     Definition: A matrix A is said to be strongly stationary if there exists a vector 0 < v such
     that v^T A = 0.
@@ -28,16 +28,16 @@ def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
 
     v = torch.abs(torch.randn([m]))
     U1 = normalize(v, dim=0).unsqueeze(1)
-    U2 = _generate_semi_orthonormal_complement(U1)
-    Vt = _generate_orthonormal_matrix(n)
+    U2 = _sample_semi_orthonormal_complement(U1)
+    Vt = _sample_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
     A = U2[:, :rank] @ S @ Vt[:rank, :]
     return A
 
 
-def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
+def _sample_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random strictly weakly stationary matrix A of shape [m, n] with provided rank.
+    Samples a random strictly weakly stationary matrix A of shape [m, n] with provided rank.
 
     Definition: A matrix A is said to be weakly stationary if there exists a vector 0 <= v, v != 0,
     such that v^T A = 0.
@@ -65,17 +65,17 @@ def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     v_prime = torch.zeros(m)
     v_prime[shuffled_range[split_index:]] = normalize(u[shuffled_range[split_index:]], dim=0)
     U1 = torch.stack([v, v_prime]).T
-    U2 = _generate_semi_orthonormal_complement(U1)
+    U2 = _sample_semi_orthonormal_complement(U1)
     U = torch.hstack([U1, U2])
-    Vt = _generate_orthonormal_matrix(n)
+    Vt = _sample_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
     A = U[:, 1 : rank + 1] @ S @ Vt[:rank, :]
     return A
 
 
-def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
+def _sample_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random non weakly-stationary matrix A of shape [m, n] with provided rank.
+    Samples a random non weakly-stationary matrix A of shape [m, n] with provided rank.
 
     This is done by generating a positive u, and by then generating a matrix A that has u as one of
     its left-singular vectors, with positive singular value s. Any 0 <= v, v != 0, satisfies
@@ -87,23 +87,23 @@ def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
 
     u = torch.abs(torch.randn([m]))
     U1 = normalize(u, dim=0).unsqueeze(1)
-    U2 = _generate_semi_orthonormal_complement(U1)
+    U2 = _sample_semi_orthonormal_complement(U1)
     U = torch.hstack([U1, U2])
-    Vt = _generate_orthonormal_matrix(n)
+    Vt = _sample_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
     A = U[:, :rank] @ S @ Vt[:rank, :]
     return A
 
 
-def _generate_orthonormal_matrix(dim: int) -> Tensor:
-    """Uniformly generates a random orthonormal matrix of shape [dim, dim]."""
+def _sample_orthonormal_matrix(dim: int) -> Tensor:
+    """Uniformly samples a random orthonormal matrix of shape [dim, dim]."""
 
-    return _generate_semi_orthonormal_complement(torch.zeros([dim, 0]))
+    return _sample_semi_orthonormal_complement(torch.zeros([dim, 0]))
 
 
-def _generate_semi_orthonormal_complement(Q: Tensor) -> Tensor:
+def _sample_semi_orthonormal_complement(Q: Tensor) -> Tensor:
     """
-    Uniformly generates a random semi-orthonormal matrix Q' (i.e. Q'^T Q' = I) of shape [m, m-k]
+    Uniformly samples a random semi-orthonormal matrix Q' (i.e. Q'^T Q' = I) of shape [m, m-k]
     orthogonal to Q, i.e. such that the concatenation [Q, Q'] is an orthonormal matrix.
 
     :param Q: A semi-orthonormal matrix (i.e. Q^T Q = I) of shape [m, k], with k <= m.
@@ -147,11 +147,11 @@ _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
 # Fix seed to fix randomness of matrix generation
 torch.manual_seed(0)
 
-matrices = [_generate_matrix(m, n, r) for m, n, r in _normal_dims]
+matrices = [_sample_matrix(m, n, r) for m, n, r in _normal_dims]
 zero_matrices = [torch.zeros([m, n]) for m, n, _ in _zero_dims]
-strong_matrices = [_generate_strong_matrix(m, n, r) for m, n, r in _stationarity_dims]
-strictly_weak_matrices = [_generate_strictly_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
-non_weak_matrices = [_generate_non_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
+strong_matrices = [_sample_strong_matrix(m, n, r) for m, n, r in _stationarity_dims]
+strictly_weak_matrices = [_sample_strictly_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
+non_weak_matrices = [_sample_non_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
 
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
 
