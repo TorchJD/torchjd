@@ -108,8 +108,9 @@ class StrongStationarityProperty:
     """
     This class tests empirically that a given `Aggregator` is strongly stationary.
 
-    An aggregator `A` is strongly stationary if for any matrix `J` with `A(J)=0`, `J` is stationary,
-    i.e., there exists `0<w` such that `J^T w=0`.
+    An aggregator `A` is strongly stationary if for any matrix `J` with `A(J)=0`, `J` is strongly
+    stationary, i.e., there exists `0<w` such that `J^T w=0`. In this class, we test the
+    contraposition: whenever `J` is not strongly stationary, we must have `A(J) != 0`.
     """
 
     @classmethod
