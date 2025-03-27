@@ -44,7 +44,7 @@ def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     assert 0 < rank <= min(m - 1, n)
 
     u = torch.abs(torch.randn([m]))
-    split_index = torch.randint(1, m + 1, []).item()
+    split_index = torch.randint(1, m, []).item()
     shuffled_range = torch.randperm(m)
     v = torch.zeros(m)
     v[shuffled_range[:split_index]] = normalize(u[shuffled_range[:split_index]], dim=0)
