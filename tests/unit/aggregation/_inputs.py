@@ -36,12 +36,13 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     vector 0<w with w^T A = 0.
     """
 
-    v = torch.abs(torch.randn([m]))
+    z = torch.abs(torch.randn([m]))
     split_index = torch.randint(1, m + 1, []).item()
     shuffled_range = torch.randperm(m)
     U1 = torch.zeros([m, 2])
-    U1[shuffled_range[:split_index], 0] = normalize(v[shuffled_range[:split_index]], dim=0)
-    U1[shuffled_range[split_index:], 1] = normalize(v[shuffled_range[split_index:]], dim=0)
+    U1[shuffled_range[:split_index], 0] = normalize(z[shuffled_range[:split_index]], dim=0)
+    U1[shuffled_range[split_index:], 1] = normalize(z[shuffled_range[split_index:]], dim=0)
+
     U2 = _generate_semi_orthonormal_complement(U1)
     U = torch.hstack([U1, U2])
     Vt = _generate_orthonormal_matrix(n)
