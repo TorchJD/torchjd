@@ -20,7 +20,7 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     """
 
     assert 1 < m
-    assert 0 < rank < min(m - 1, n)
+    assert 0 < rank <= min(m - 1, n)
 
     # The idea is to create a vector v with 0 < v, and then to create A such that it is orthogonal
     # to v.
@@ -42,7 +42,7 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     """
 
     assert 1 < m
-    assert 0 < rank < min(m - 1, n)
+    assert 0 < rank <= min(m - 1, n)
 
     z = torch.abs(torch.randn([m]))
     split_index = torch.randint(1, m + 1, []).item()
