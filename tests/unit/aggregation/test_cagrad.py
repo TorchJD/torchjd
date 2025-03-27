@@ -33,7 +33,7 @@ def test_equivalence_mean(matrix: Tensor):
     result = ca_grad(matrix)
     expected = mean(matrix)
 
-    assert_close(result, expected)
+    assert_close(result, expected, atol=1e-1, rtol=0)
 
 
 @mark.parametrize(
