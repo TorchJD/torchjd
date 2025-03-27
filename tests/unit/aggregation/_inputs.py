@@ -22,6 +22,8 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     assert 1 < m
     assert 0 < rank < min(m - 1, n)
 
+    # The idea is to create a vector v with 0 < v, and then to create A such that it is orthogonal
+    # to v.
     v = torch.abs(torch.randn([m]))
     U1 = normalize(v, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
