@@ -83,6 +83,8 @@ def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     is thus not weakly stationary.
     """
 
+    assert 0 < rank <= min(m, n)
+
     u = torch.abs(torch.randn([m]))
     U1 = normalize(u, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
