@@ -46,9 +46,11 @@ def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     u = torch.abs(torch.randn([m]))
     split_index = torch.randint(1, m + 1, []).item()
     shuffled_range = torch.randperm(m)
-    U1 = torch.zeros([m, 2])
-    U1[shuffled_range[:split_index], 0] = normalize(u[shuffled_range[:split_index]], dim=0)
-    U1[shuffled_range[split_index:], 1] = normalize(u[shuffled_range[split_index:]], dim=0)
+    v = torch.zeros(m)
+    v[shuffled_range[:split_index]] = normalize(u[shuffled_range[:split_index]], dim=0)
+    v_prime = torch.zeros(m)
+    v_prime[shuffled_range[split_index:]] = normalize(u[shuffled_range[split_index:]], dim=0)
+    U1 = torch.stack([v, v_prime]).T
     # At this point, there are two orthonormal columns in U1. The first one will be dropped, but the
     # second one will be kept. The first one can be called v, and we have 0 <= v, v != 0, and
     # v^T A = 0 (because the second column of U1 and all columns in U2 are orthogonal to v).
