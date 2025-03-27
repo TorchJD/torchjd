@@ -32,8 +32,8 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
 def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
-    0<=v with one coordinate equal to 0 and such that v^T A = 0, and there is no vector 0<w with
-    w^T A = 0.
+    0<=v, v!=0, with at least one coordinate equal to 0 and such that v^T A = 0, and there is no
+    vector 0<w with w^T A = 0.
     """
 
     v = torch.abs(torch.randn([m]))
@@ -53,7 +53,7 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
 def _generate_non_weak_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there is no vector
-    0<=w with w^T A = 0.
+    0<=w, w!=0, with w^T A = 0.
     """
 
     v = torch.abs(torch.randn([m]))
