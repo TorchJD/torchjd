@@ -36,6 +36,9 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     vector 0<w with w^T A = 0.
     """
 
+    assert 1 < m
+    assert 0 < rank < min(m - 1, n)
+
     z = torch.abs(torch.randn([m]))
     split_index = torch.randint(1, m + 1, []).item()
     shuffled_range = torch.randperm(m)
