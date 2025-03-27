@@ -15,8 +15,10 @@ def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
 
 def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
-    0<v with v^T A = 0.
+    Generates a random strongly stationary matrix A of shape [m, n] with provided rank.
+
+    Definition: A matrix A is said to be strongly stationary if there exists a vector 0 < v such
+    that v^T A = 0.
 
     This is done by generating a positive v, and by then generating a matrix orthogonal to v.
     """
@@ -35,9 +37,21 @@ def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
 
 def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
-    0<=v, v!=0, with at least one coordinate equal to 0 and such that v^T A = 0, and there is no
-    vector 0<w with w^T A = 0.
+    Generates a random strictly weakly stationary matrix A of shape [m, n] with provided rank.
+
+    Definition: A matrix A is said to be weakly stationary if there exists a vector 0 <= v, v != 0,
+    such that v^T A = 0.
+
+    Definition: A matrix A is said to be strictly weakly stationary if it is weakly stationary and
+    not strongly stationary, i.e. if there exists a vector 0 <= v, v != 0, such that v^T A = 0 and
+    there exists no vector 0 < w with w^T A = 0.
+
+    This is done by generating two unit-norm vectors v, v', whose sum u is a positive vector. These
+    two vectors are also non-negative and non-zero, and are furthermore orthogonal. Then, a matrix
+    A, orthogonal to v, is generated. By its orthogonality to v, A is weakly stationary. Moreover,
+    since v' is a non-negative left-singular vector of A with positive singular value s, any 0 < w
+    satisfies w^T A != 0. Otherwise, we would have 0 = w^T A A^T v' = s w^T v' > 0, which is a
+    contradiction. A is thus also not strongly stationary.
     """
 
     assert 1 < m
@@ -61,8 +75,12 @@ def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
 
 def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
-    Generates a random matrix A of shape [m, n] with provided rank, such that there is no vector
-    0<=w, w!=0, with w^T A = 0.
+    Generates a random non weakly-stationary matrix A of shape [m, n] with provided rank.
+
+    This is done by generating a positive u, and by then generating a matrix A that has u as one of
+    its left-singular vectors, with positive singular value s. Any 0 <= v, v != 0, satisfies
+    v^T A != 0. Otherwise, we would have 0 = v^T A A^T u = s v^T u > 0, which is a contradiction. A
+    is thus not weakly stationary.
     """
 
     u = torch.abs(torch.randn([m]))
