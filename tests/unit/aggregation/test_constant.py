@@ -7,7 +7,7 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
 
-from ._inputs import non_strong_stationary_matrices, scaled_matrices, typical_matrices
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 from ._property_testers import (
     ExpectedStructureProperty,
     LinearUnderScalingProperty,
@@ -32,7 +32,7 @@ _aggregators_1 = [_make_aggregator(matrix) for matrix in _matrices_1]
 _matrices_2 = typical_matrices
 _aggregators_2 = [_make_aggregator(matrix) for matrix in _matrices_2]
 
-_matrices_3 = non_strong_stationary_matrices
+_matrices_3 = non_strong_matrices
 _aggregators_3 = [_make_aggregator(matrix) for matrix in _matrices_3]
 
 

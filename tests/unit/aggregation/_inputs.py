@@ -13,7 +13,7 @@ def _generate_matrix(m: int, n: int, rank: int) -> Tensor:
     return A
 
 
-def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
+def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
     0<v with v^T A = 0.
@@ -34,7 +34,7 @@ def _generate_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
     return A
 
 
-def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
+def _generate_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there exists a vector
     0<=v, v!=0, with at least one coordinate equal to 0 and such that v^T A = 0, and there is no
@@ -66,7 +66,7 @@ def _generate_weak_non_strong_stationary_matrix(m: int, n: int, rank: int) -> Te
     return A
 
 
-def _generate_non_weak_stationary_matrix(m: int, n: int, rank: int) -> Tensor:
+def _generate_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Generates a random matrix A of shape [m, n] with provided rank, such that there is no vector
     0<=w, w!=0, with w^T A = 0.
@@ -110,7 +110,7 @@ def _generate_semi_orthonormal_complement(Q: Tensor) -> Tensor:
     return Q_prime
 
 
-_matrix_dimension_triples = [
+_normal_dims = [
     (1, 1, 1),
     (4, 3, 1),
     (4, 3, 2),
@@ -119,16 +119,34 @@ _matrix_dimension_triples = [
     (9, 11, 9),
 ]
 
-_zero_matrices_shapes = [
-    (1, 1),
-    (4, 3),
-    (9, 11),
+_zero_dims = [
+    (1, 1, 0),
+    (4, 3, 0),
+    (9, 11, 0),
 ]
 
-_stationary_matrices_triples = [
-    (5, 3, 3),
-    (9, 11, 6),
-    (7, 13, 2),
+_strong_dims = [
+    (50, 10, 10),
+    (50, 10, 5),
+    (50, 10, 1),
+    (50, 500, 1),
+    (50, 500, 49),
+]
+
+_strictly_weak_dims = [
+    (50, 10, 10),
+    (50, 10, 5),
+    (50, 10, 1),
+    (50, 500, 1),
+    (50, 500, 49),
+]
+
+_non_weak_dims = [
+    (50, 10, 10),
+    (50, 10, 5),
+    (50, 10, 1),
+    (50, 500, 1),
+    (50, 500, 49),
 ]
 
 _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
@@ -136,24 +154,18 @@ _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
 # Fix seed to fix randomness of matrix generation
 torch.manual_seed(0)
 
-matrices = [_generate_matrix(m, n, rank) for m, n, rank in _matrix_dimension_triples]
-scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
-zero_matrices = [torch.zeros([m, n]) for m, n in _zero_matrices_shapes]
-strong_stationary_matrices = [
-    _generate_strong_stationary_matrix(m, n, rank) for m, n, rank in _stationary_matrices_triples
+matrices = [_generate_matrix(m, n, r) for m, n, r in _normal_dims]
+zero_matrices = [torch.zeros([m, n]) for m, n, _ in _zero_dims]
+strong_matrices = [_generate_strong_matrix(m, n, r) for m, n, r in _strong_dims]
+strictly_weak_matrices = [
+    _generate_strictly_weak_matrix(m, n, r) for m, n, r in _strictly_weak_dims
 ]
-weak_non_strong_stationary_matrices = [
-    _generate_weak_non_strong_stationary_matrix(m, n, rank)
-    for m, n, rank in _stationary_matrices_triples
-]
-non_weak_stationary_matrices = [
-    _generate_non_weak_stationary_matrix(m, n, rank) for m, n, rank in _stationary_matrices_triples
-]
-non_strong_stationary_matrices = weak_non_strong_stationary_matrices + non_weak_stationary_matrices
-typical_matrices = (
-    zero_matrices + matrices + strong_stationary_matrices + non_strong_stationary_matrices
-)
+non_weak_matrices = [_generate_non_weak_matrix(m, n, r) for m, n, r in _non_weak_dims]
 
+scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
+
+non_strong_matrices = strictly_weak_matrices + non_weak_matrices
+typical_matrices = zero_matrices + matrices + strong_matrices + non_strong_matrices
 
 scaled_matrices_2_plus_rows = [matrix for matrix in scaled_matrices if matrix.shape[0] >= 2]
 typical_matrices_2_plus_rows = [matrix for matrix in typical_matrices if matrix.shape[0] >= 2]
