@@ -6,12 +6,16 @@ from ._property_testers import (
     ExpectedStructureProperty,
     LinearUnderScalingProperty,
     PermutationInvarianceProperty,
+    StrongStationarityProperty,
 )
 
 
 @mark.parametrize("aggregator", [Mean()])
 class TestMean(
-    ExpectedStructureProperty, PermutationInvarianceProperty, LinearUnderScalingProperty
+    ExpectedStructureProperty,
+    PermutationInvarianceProperty,
+    LinearUnderScalingProperty,
+    StrongStationarityProperty,
 ):
     pass
 

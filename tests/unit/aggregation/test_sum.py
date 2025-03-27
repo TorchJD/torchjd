@@ -6,11 +6,17 @@ from ._property_testers import (
     ExpectedStructureProperty,
     LinearUnderScalingProperty,
     PermutationInvarianceProperty,
+    StrongStationarityProperty,
 )
 
 
 @mark.parametrize("aggregator", [Sum()])
-class TestSum(ExpectedStructureProperty, PermutationInvarianceProperty, LinearUnderScalingProperty):
+class TestSum(
+    ExpectedStructureProperty,
+    PermutationInvarianceProperty,
+    LinearUnderScalingProperty,
+    StrongStationarityProperty,
+):
     pass
 
 

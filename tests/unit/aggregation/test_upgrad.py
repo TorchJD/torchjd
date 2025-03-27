@@ -8,6 +8,7 @@ from ._property_testers import (
     LinearUnderScalingProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
+    StrongStationarityProperty,
 )
 
 
@@ -17,6 +18,7 @@ class TestUPGrad(
     NonConflictingProperty,
     PermutationInvarianceProperty,
     LinearUnderScalingProperty,
+    StrongStationarityProperty,
 ):
     pass
 

@@ -7,12 +7,16 @@ from ._property_testers import (
     ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
+    StrongStationarityProperty,
 )
 
 
 @mark.parametrize("aggregator", [DualProj()])
 class TestDualProj(
-    ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty
+    ExpectedStructureProperty,
+    NonConflictingProperty,
+    PermutationInvarianceProperty,
+    StrongStationarityProperty,
 ):
     pass
 
