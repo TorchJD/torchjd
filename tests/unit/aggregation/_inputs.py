@@ -20,7 +20,7 @@ def _sample_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     Definition: A matrix A is said to be strongly stationary if there exists a vector 0 < v such
     that v^T A = 0.
 
-    This is done by generating a positive v, and by then generating a matrix orthogonal to v.
+    This is done by sampling a positive v, and by then sampling a matrix orthogonal to v.
     """
 
     assert 1 < m
@@ -46,9 +46,9 @@ def _sample_strictly_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     not strongly stationary, i.e. if there exists a vector 0 <= v, v != 0, such that v^T A = 0 and
     there exists no vector 0 < w with w^T A = 0.
 
-    This is done by generating two unit-norm vectors v, v', whose sum u is a positive vector. These
+    This is done by sampling two unit-norm vectors v, v', whose sum u is a positive vector. These
     two vectors are also non-negative and non-zero, and are furthermore orthogonal. Then, a matrix
-    A, orthogonal to v, is generated. By its orthogonality to v, A is weakly stationary. Moreover,
+    A, orthogonal to v, is sampled. By its orthogonality to v, A is weakly stationary. Moreover,
     since v' is a non-negative left-singular vector of A with positive singular value s, any 0 < w
     satisfies w^T A != 0. Otherwise, we would have 0 = w^T A A^T v' = s w^T v' > 0, which is a
     contradiction. A is thus also not strongly stationary.
@@ -77,10 +77,10 @@ def _sample_non_weak_matrix(m: int, n: int, rank: int) -> Tensor:
     """
     Samples a random non weakly-stationary matrix A of shape [m, n] with provided rank.
 
-    This is done by generating a positive u, and by then generating a matrix A that has u as one of
-    its left-singular vectors, with positive singular value s. Any 0 <= v, v != 0, satisfies
-    v^T A != 0. Otherwise, we would have 0 = v^T A A^T u = s v^T u > 0, which is a contradiction. A
-    is thus not weakly stationary.
+    This is done by sampling a positive u, and by then sampling a matrix A that has u as one of its
+    left-singular vectors, with positive singular value s. Any 0 <= v, v != 0, satisfies v^T A != 0.
+    Otherwise, we would have 0 = v^T A A^T u = s v^T u > 0, which is a contradiction. A is thus not
+    weakly stationary.
     """
 
     assert 0 < rank <= min(m, n)
@@ -144,7 +144,7 @@ _stationarity_dims = [
 
 _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
 
-# Fix seed to fix randomness of matrix generation
+# Fix seed to fix randomness of matrix sampling
 torch.manual_seed(0)
 
 matrices = [_sample_matrix(m, n, r) for m, n, r in _normal_dims]
