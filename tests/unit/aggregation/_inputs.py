@@ -134,23 +134,7 @@ _zero_dims = [
     (9, 11, 0),
 ]
 
-_strong_dims = [
-    (50, 10, 10),
-    (50, 10, 5),
-    (50, 10, 1),
-    (50, 500, 1),
-    (50, 500, 49),
-]
-
-_strictly_weak_dims = [
-    (50, 10, 10),
-    (50, 10, 5),
-    (50, 10, 1),
-    (50, 500, 1),
-    (50, 500, 49),
-]
-
-_non_weak_dims = [
+_stationarity_dims = [
     (50, 10, 10),
     (50, 10, 5),
     (50, 10, 1),
@@ -165,11 +149,9 @@ torch.manual_seed(0)
 
 matrices = [_generate_matrix(m, n, r) for m, n, r in _normal_dims]
 zero_matrices = [torch.zeros([m, n]) for m, n, _ in _zero_dims]
-strong_matrices = [_generate_strong_matrix(m, n, r) for m, n, r in _strong_dims]
-strictly_weak_matrices = [
-    _generate_strictly_weak_matrix(m, n, r) for m, n, r in _strictly_weak_dims
-]
-non_weak_matrices = [_generate_non_weak_matrix(m, n, r) for m, n, r in _non_weak_dims]
+strong_matrices = [_generate_strong_matrix(m, n, r) for m, n, r in _stationarity_dims]
+strictly_weak_matrices = [_generate_strictly_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
+non_weak_matrices = [_generate_non_weak_matrix(m, n, r) for m, n, r in _stationarity_dims]
 
 scaled_matrices = [scale * matrix for scale in _scales for matrix in matrices]
 
