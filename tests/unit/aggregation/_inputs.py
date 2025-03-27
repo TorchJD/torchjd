@@ -27,10 +27,9 @@ def _generate_strong_matrix(m: int, n: int, rank: int) -> Tensor:
     v = torch.abs(torch.randn([m]))
     U1 = normalize(v, dim=0).unsqueeze(1)
     U2 = _generate_semi_orthonormal_complement(U1)
-    U = torch.hstack([U1, U2])
     Vt = _generate_orthonormal_matrix(n)
     S = torch.diag(torch.abs(torch.randn([rank])))
-    A = U[:, 1 : rank + 1] @ S @ Vt[:rank, :]
+    A = U2[:, :rank] @ S @ Vt[:rank, :]
     return A
 
 
