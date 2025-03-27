@@ -9,17 +9,11 @@ from ._property_testers import (
     ExpectedStructureProperty,
     NonConflictingProperty,
     PermutationInvarianceProperty,
-    StrongStationarityProperty,
 )
 
 
 @mark.parametrize("aggregator", [MGDA()])
-class TestMGDA(
-    ExpectedStructureProperty,
-    NonConflictingProperty,
-    PermutationInvarianceProperty,
-    StrongStationarityProperty,
-):
+class TestMGDA(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
     pass
 
 

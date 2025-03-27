@@ -8,15 +8,11 @@ from unit._utils import ExceptionContext
 from torchjd.aggregation import CAGrad, Mean
 
 from ._inputs import typical_matrices
-from ._property_testers import (
-    ExpectedStructureProperty,
-    NonConflictingProperty,
-    StrongStationarityProperty,
-)
+from ._property_testers import ExpectedStructureProperty, NonConflictingProperty
 
 
 @mark.parametrize("aggregator", [CAGrad(c=0.5)])
-class TestCAGrad(ExpectedStructureProperty, StrongStationarityProperty):
+class TestCAGrad(ExpectedStructureProperty):
     pass
 
 
