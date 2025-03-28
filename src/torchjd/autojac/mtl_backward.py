@@ -120,6 +120,11 @@ def _create_transform(
     retain_graph: bool,
     parallel_chunk_size: int | None,
 ) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+    """
+    Creates the backward transform for a multi-task learning problem. It is a hybrid between
+    Jacobian descent (for shared parameters) and multiple gradient descent branches (for
+    task-specific parameters).
+    """
 
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
