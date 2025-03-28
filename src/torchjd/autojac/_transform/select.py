@@ -16,7 +16,7 @@ class Select(Transform[_A, _A]):
         return type(tensor_dict)(output)
 
     def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        required_keys = set(self._required_keys)
+        required_keys = self._required_keys
         if not self.keys.issubset(required_keys):
             raise ValueError("Parameter `keys` should be a subset of parameter `required_keys`")
 
