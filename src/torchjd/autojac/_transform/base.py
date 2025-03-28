@@ -46,8 +46,15 @@ class Transform(Generic[_B, _C], ABC):
     @abstractmethod
     def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         """
-        Returns a pair containing (in order) the required keys and the output keys of the Transform.
-        Checks that the transform is valid.
+        Returns a pair containing (in order) the required keys and the output keys of the Transform
+        and recursively checks that the transform is valid.
+
+        The required keys are the set of keys that the transform requires to be present in its input
+        TensorDicts. The output keys are the set of keys that will be present in the output
+        TensorDicts of the transform.
+
+        Since the computation of the required and output keys and the verification that the
+        transform is valid are sometimes intertwined operations, we do them in a single method.
         """
 
     __lshift__ = compose
