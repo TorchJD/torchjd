@@ -14,19 +14,6 @@ class TensorDict(dict[Tensor, Tensor]):
         self._check_all_pairs(tensor_dict)
         super().__init__(tensor_dict)
 
-    def check_keys_are(self, keys: set[Tensor]) -> None:
-        """
-        Checks that the keys in the mapping are the same as the provided ``keys``.
-
-        :param keys: Keys that the mapping should (exclusively) contain.
-        """
-
-        if set(keys) != set(self.keys()):
-            raise ValueError(
-                f"The keys of the {self.__class__.__name__} should be {keys}. Found self.keys = "
-                f"{self.keys()}."
-            )
-
     @staticmethod
     def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
         pass
