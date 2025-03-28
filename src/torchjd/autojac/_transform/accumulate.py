@@ -28,13 +28,8 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
 
         return EmptyTensorDict()
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return set()
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, set()
 
 
 def _check_expects_grad(tensor: Tensor) -> None:

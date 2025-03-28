@@ -44,20 +44,14 @@ class Transform(Generic[_B, _C], ABC):
         """Applies the transform to the input."""
 
     def __call__(self, input: _B) -> _C:
-        input.check_keys_are(self.required_keys)
         return self._compute(input)
 
-    @property
     @abstractmethod
-    def required_keys(self) -> set[Tensor]:
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         """
-        Returns the set of keys that the transform requires to be present in its input TensorDicts.
+        Returns a pair containing (in order) the required keys and the output keys of the Transform.
+        Checks that the transform is valid.
         """
-
-    @property
-    @abstractmethod
-    def output_keys(self) -> set[Tensor]:
-        """Returns the set of keys that will be present in the output of the transform."""
 
     __lshift__ = compose
     __or__ = conjunct
@@ -65,11 +59,6 @@ class Transform(Generic[_B, _C], ABC):
 
 class Composition(Transform[_A, _C]):
     def __init__(self, outer: Transform[_B, _C], inner: Transform[_A, _B]):
-        if outer.required_keys != inner.output_keys:
-            raise ValueError(
-                "The `output_keys` of `inner` must match with the `required_keys` of "
-                f"outer. Found {outer.required_keys} and {inner.output_keys}"
-            )
         self.outer = outer
         self.inner = inner
 
@@ -80,31 +69,20 @@ class Composition(Transform[_A, _C]):
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self.inner.required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.outer.output_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        outer_required_keys, outer_output_keys = self.outer.check_keys()
+        inner_required_keys, inner_output_keys = self.inner.check_keys()
+        if outer_required_keys != inner_output_keys:
+            raise ValueError(
+                "The `output_keys` of `inner` must match with the `required_keys` of "
+                f"outer. Found {outer_required_keys} and {inner_output_keys}"
+            )
+        return inner_required_keys, outer_output_keys
 
 
 class Conjunction(Transform[_A, _B]):
     def __init__(self, transforms: Sequence[Transform[_A, _B]]):
         self.transforms = transforms
-
-        self._required_keys = set(
-            key for transform in transforms for key in transform.required_keys
-        )
-        for transform in transforms:
-            if transform.required_keys != self.required_keys:
-                raise ValueError("All transforms should require the same set of keys.")
-
-        output_keys_with_duplicates = [key for t in transforms for key in t.output_keys]
-        self._output_keys = set(output_keys_with_duplicates)
-
-        if len(self._output_keys) != len(output_keys_with_duplicates):
-            raise ValueError("The sets of output keys of transforms should be disjoint.")
 
     def __str__(self) -> str:
         strings = []
@@ -120,10 +98,18 @@ class Conjunction(Transform[_A, _B]):
         output = _union([transform(tensor_dict) for transform in self.transforms])
         return output
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys_pairs = [transform.check_keys() for transform in self.transforms]
 
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._output_keys
+        required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
+        for transform_required_keys, _ in keys_pairs:
+            if transform_required_keys != required_keys:
+                raise ValueError("All transforms should require the same set of keys.")
+
+        output_keys_with_duplicates = [key for _, output_keys in keys_pairs for key in output_keys]
+        output_keys = set(output_keys_with_duplicates)
+
+        if len(output_keys) != len(output_keys_with_duplicates):
+            raise ValueError("The sets of output keys of transforms should be disjoint.")
+
+        return required_keys, output_keys

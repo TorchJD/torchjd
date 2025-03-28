@@ -26,13 +26,8 @@ class Aggregate(Transform[Jacobians, Gradients]):
     def _compute(self, input: Jacobians) -> Gradients:
         return self.transform(input)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self.transform.required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.transform.output_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self.transform.check_keys()
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
@@ -53,13 +48,9 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         ordered_matrices = self._select_ordered_subdict(jacobian_matrices, self.key_order)
         return self._aggregate_group(ordered_matrices, self.aggregator)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return set(self.key_order)
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return set(self.key_order)
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys = set(self.key_order)
+        return keys, keys
 
     @staticmethod
     def _select_ordered_subdict(
@@ -126,13 +117,8 @@ class _Matrixify(Transform[Jacobians, JacobianMatrices]):
         }
         return JacobianMatrices(jacobian_matrices)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self._required_keys
 
 
 class _Reshape(Transform[GradientVectors, Gradients]):
@@ -146,10 +132,5 @@ class _Reshape(Transform[GradientVectors, Gradients]):
         }
         return Gradients(gradients)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self._required_keys

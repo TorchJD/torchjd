@@ -21,10 +21,5 @@ class Init(Transform[EmptyTensorDict, Gradients]):
 
         return Gradients({value: torch.ones_like(value) for value in self.values})
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return set()
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.values
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return set(), self.values

@@ -38,12 +38,6 @@ class _Differentiate(Transform[_A, _A], ABC):
         tensor_outputs should be.
         """
 
-    @property
-    def required_keys(self) -> set[Tensor]:
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         # outputs in the forward direction become inputs in the backward direction, and vice-versa
-        return set(self.outputs)
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        # outputs in the forward direction become inputs in the backward direction, and vice-versa
-        return set(self.inputs)
+        return set(self.outputs), set(self.inputs)

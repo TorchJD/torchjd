@@ -18,10 +18,5 @@ class Select(Transform[_A, _A]):
         output = {key: tensor_dict[key] for key in self.keys}
         return type(tensor_dict)(output)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self.keys

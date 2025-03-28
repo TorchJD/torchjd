@@ -27,10 +27,6 @@ class Diagonalize(Transform[Gradients, Jacobians]):
         }
         return Jacobians(diagonalized_tensors)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return set(self.considered)
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return set(self.considered)
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys = set(self.considered)
+        return keys, keys

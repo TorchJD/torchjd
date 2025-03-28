@@ -27,13 +27,8 @@ class FakeTransform(Transform[_B, _C]):
         output_dict = {key: torch.empty(0) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._output_keys
+    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self._output_keys
 
 
 def test_call_checks_keys():
