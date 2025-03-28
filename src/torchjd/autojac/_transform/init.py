@@ -11,7 +11,7 @@ class Init(Transform[EmptyTensorDict, Gradients]):
     def __init__(self, values: Iterable[Tensor]):
         self.values = set(values)
 
-    def _compute(self, input: EmptyTensorDict) -> Gradients:
+    def __call__(self, input: EmptyTensorDict) -> Gradients:
         r"""
         Computes the gradients of the ``value`` with respect to itself. Returns the result as a
         dictionary. The only key of the dictionary is ``value``. The corresponding gradient is a
@@ -21,10 +21,5 @@ class Init(Transform[EmptyTensorDict, Gradients]):
 
         return Gradients({value: torch.ones_like(value) for value in self.values})
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return set()
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.values
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return set(), self.values

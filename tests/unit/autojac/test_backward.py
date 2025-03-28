@@ -5,6 +5,29 @@ from torch.testing import assert_close
 
 from torchjd import backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac.backward import _create_transform
+
+
+def test_check_create_transform():
+    """Tests that _create_transform creates a valid Transform"""
+
+    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y2 = (a1**2).sum() + a2.norm()
+
+    transform = _create_transform(
+        tensors=[y1, y2],
+        aggregator=Mean(),
+        inputs={a1, a2},
+        retain_graph=False,
+        parallel_chunk_size=None,
+    )
+    required_keys, output_keys = transform.check_and_get_keys()
+
+    assert required_keys == set()
+    assert output_keys == set()
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])

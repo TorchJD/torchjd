@@ -142,3 +142,42 @@ def test_reshape():
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
+
+
+def test_aggregate_matrices_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([2.0])
+    aggregate = _AggregateMatrices(Random(), [key2, key1])
+
+    required_keys, output_keys = aggregate.check_and_get_keys()
+
+    assert required_keys == {key1, key2}
+    assert output_keys == {key1, key2}
+
+
+def test_matrixify_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([2.0])
+    matrixify = _Matrixify([key1, key2])
+
+    required_keys, output_keys = matrixify.check_and_get_keys()
+
+    assert required_keys == {key1, key2}
+    assert output_keys == {key1, key2}
+
+
+def test_reshape_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([2.0])
+    reshape = _Reshape([key1, key2])
+
+    required_keys, output_keys = reshape.check_and_get_keys()
+
+    assert required_keys == {key1, key2}
+    assert output_keys == {key1, key2}

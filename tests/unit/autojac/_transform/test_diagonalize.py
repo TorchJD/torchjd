@@ -95,3 +95,15 @@ def test_permute_order():
     expected_output = diag(input)
 
     assert_tensor_dicts_are_close(output, expected_output)
+
+
+def test_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key = torch.tensor([1.0])
+    diag = Diagonalize([key])
+
+    required_keys, output_keys = diag.check_and_get_keys()
+
+    assert required_keys == {key}
+    assert output_keys == {key}

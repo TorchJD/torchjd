@@ -11,17 +11,13 @@ class Select(Transform[_A, _A]):
         self.keys = set(keys)
         self._required_keys = set(required_keys)
 
-        if not self.keys.issubset(self._required_keys):
-            raise ValueError("Parameter `keys` should be a subset of parameter `required_keys`")
-
-    def _compute(self, tensor_dict: _A) -> _A:
+    def __call__(self, tensor_dict: _A) -> _A:
         output = {key: tensor_dict[key] for key in self.keys}
         return type(tensor_dict)(output)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        required_keys = self._required_keys
+        if not self.keys.issubset(required_keys):
+            raise ValueError("Parameter `keys` should be a subset of parameter `required_keys`")
 
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.keys
+        return required_keys, self.keys

@@ -20,7 +20,7 @@ class _Differentiate(Transform[_A, _A], ABC):
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
-    def _compute(self, tensors: _A) -> _A:
+    def __call__(self, tensors: _A) -> _A:
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)
@@ -38,12 +38,6 @@ class _Differentiate(Transform[_A, _A], ABC):
         tensor_outputs should be.
         """
 
-    @property
-    def required_keys(self) -> set[Tensor]:
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         # outputs in the forward direction become inputs in the backward direction, and vice-versa
-        return set(self.outputs)
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        # outputs in the forward direction become inputs in the backward direction, and vice-versa
-        return set(self.inputs)
+        return set(self.outputs), set(self.inputs)

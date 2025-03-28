@@ -61,3 +61,15 @@ def test_conjunction_of_inits_is_init():
     expected_output = init(input)
 
     assert_tensor_dicts_are_close(output, expected_output)
+
+
+def test_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key = torch.tensor([1.0])
+    init = Init([key])
+
+    required_keys, output_keys = init.check_and_get_keys()
+
+    assert required_keys == set()
+    assert output_keys == {key}

@@ -93,3 +93,15 @@ def test_no_leaf_and_no_retains_grad_fails():
 
     with raises(ValueError):
         accumulate(input)
+
+
+def test_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    key = torch.tensor([1.0], requires_grad=True)
+    accumulate = Accumulate([key])
+
+    required_keys, output_keys = accumulate.check_and_get_keys()
+
+    assert required_keys == {key}
+    assert output_keys == set()

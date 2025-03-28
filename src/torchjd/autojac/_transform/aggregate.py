@@ -23,16 +23,11 @@ class Aggregate(Transform[Jacobians, Gradients]):
         self._aggregator_str = str(aggregator)
         self.transform = reshape << aggregate_matrices << matrixify
 
-    def _compute(self, input: Jacobians) -> Gradients:
+    def __call__(self, input: Jacobians) -> Gradients:
         return self.transform(input)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self.transform.required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self.transform.output_keys
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self.transform.check_and_get_keys()
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
@@ -40,7 +35,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         self.key_order = ordered_set(key_order)
         self.aggregator = aggregator
 
-    def _compute(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:
+    def __call__(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:
         """
         Concatenates the provided ``jacobian_matrices`` into a single matrix and aggregates it using
         the ``aggregator``. Returns the dictionary mapping each key from ``jacobian_matrices`` to
@@ -53,13 +48,9 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         ordered_matrices = self._select_ordered_subdict(jacobian_matrices, self.key_order)
         return self._aggregate_group(ordered_matrices, self.aggregator)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return set(self.key_order)
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return set(self.key_order)
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys = set(self.key_order)
+        return keys, keys
 
     @staticmethod
     def _select_ordered_subdict(
@@ -120,36 +111,26 @@ class _Matrixify(Transform[Jacobians, JacobianMatrices]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
-    def _compute(self, jacobians: Jacobians) -> JacobianMatrices:
+    def __call__(self, jacobians: Jacobians) -> JacobianMatrices:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
         }
         return JacobianMatrices(jacobian_matrices)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self._required_keys
 
 
 class _Reshape(Transform[GradientVectors, Gradients]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
-    def _compute(self, gradient_vectors: GradientVectors) -> Gradients:
+    def __call__(self, gradient_vectors: GradientVectors) -> Gradients:
         gradients = {
             key: gradient_vector.view(key.shape)
             for key, gradient_vector in gradient_vectors.items()
         }
         return Gradients(gradients)
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
-
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        return self._required_keys, self._required_keys

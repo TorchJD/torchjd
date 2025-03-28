@@ -98,6 +98,34 @@ def mtl_backward(
     if len(losses) != len(tasks_params):
         raise ValueError("`losses` and `tasks_params` should have the same size.")
 
+    backward_transform = _create_transform(
+        losses=losses,
+        features=features,
+        aggregator=aggregator,
+        tasks_params=tasks_params,
+        shared_params=shared_params,
+        retain_graph=retain_graph,
+        parallel_chunk_size=parallel_chunk_size,
+    )
+
+    backward_transform(EmptyTensorDict())
+
+
+def _create_transform(
+    losses: Sequence[Tensor],
+    features: list[Tensor],
+    aggregator: Aggregator,
+    tasks_params: list[Iterable[Tensor]],
+    shared_params: set[Tensor],
+    retain_graph: bool,
+    parallel_chunk_size: int | None,
+) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+    """
+    Creates the backward transform for a multi-task learning problem. It is a hybrid between
+    Jacobian descent (for shared parameters) and multiple gradient descent branches (for
+    task-specific parameters).
+    """
+
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
 
@@ -105,7 +133,7 @@ def mtl_backward(
     # loss w.r.t. the task's specific parameters, and computes and backpropagates the gradient of
     # the losses w.r.t. the shared representations.
     task_transforms = [
-        _make_task_transform(
+        _create_task_transform(
             features,
             task_params,
             loss,
@@ -127,12 +155,10 @@ def mtl_backward(
     # Transform that accumulates the result in the .grad field of the shared parameters.
     accumulate = Accumulate(shared_params)
 
-    backward_transform = accumulate << aggregate << jac << stack
-
-    backward_transform(EmptyTensorDict())
+    return accumulate << aggregate << jac << stack
 
 
-def _make_task_transform(
+def _create_task_transform(
     features: list[Tensor],
     tasks_params: list[Tensor],
     loss: Tensor,

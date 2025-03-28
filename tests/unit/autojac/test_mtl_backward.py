@@ -5,6 +5,34 @@ from torch.testing import assert_close
 
 from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac.mtl_backward import _create_transform
+
+
+def test_check_create_transform():
+    """Tests that _create_transform creates a valid Transform"""
+
+    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+
+    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f2 = (p0**2).sum() + p0.norm()
+    y1 = f1 * p1[0] + f2 * p1[1]
+    y2 = f1 * p2[0] + f2 * p2[1]
+
+    transform = _create_transform(
+        losses=[y1, y2],
+        features=[f1, f2],
+        aggregator=Mean(),
+        tasks_params=[[p1], [p2]],
+        shared_params={p0},
+        retain_graph=False,
+        parallel_chunk_size=None,
+    )
+    required_keys, output_keys = transform.check_and_get_keys()
+
+    assert required_keys == set()
+    assert output_keys == set()
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])

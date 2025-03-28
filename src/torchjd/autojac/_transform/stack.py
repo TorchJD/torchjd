@@ -12,25 +12,22 @@ class Stack(Transform[_A, Jacobians]):
     def __init__(self, transforms: Sequence[Transform[_A, Gradients]]):
         self.transforms = transforms
 
-        self._required_keys = {key for transform in transforms for key in transform.required_keys}
-        self._output_keys = {key for transform in transforms for key in transform.output_keys}
-
-        for transform in transforms:
-            if transform.required_keys != self.required_keys:
-                raise ValueError("All transforms should require the same set of keys.")
-
-    def _compute(self, input: _A) -> Jacobians:
+    def __call__(self, input: _A) -> Jacobians:
         results = [transform(input) for transform in self.transforms]
         result = _stack(results)
         return result
 
-    @property
-    def required_keys(self) -> set[Tensor]:
-        return self._required_keys
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys_pairs = [transform.check_and_get_keys() for transform in self.transforms]
 
-    @property
-    def output_keys(self) -> set[Tensor]:
-        return self._output_keys
+        required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
+        output_keys = set(key for _, output_keys in keys_pairs for key in output_keys)
+
+        for transform_required_keys, _ in keys_pairs:
+            if transform_required_keys != required_keys:
+                raise ValueError("All transforms should require the same set of keys.")
+
+        return required_keys, output_keys
 
 
 def _stack(gradient_dicts: list[Gradients]) -> Jacobians:

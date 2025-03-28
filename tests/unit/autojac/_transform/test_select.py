@@ -1,8 +1,5 @@
-from contextlib import nullcontext as does_not_raise
-
 import torch
-from pytest import mark, raises
-from unit._utils import ExceptionContext
+from pytest import raises
 
 from torchjd.autojac._transform import Select, TensorDict
 
@@ -59,26 +56,20 @@ def test_conjunction_of_selects_is_select():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-@mark.parametrize(
-    ["key_indices", "required_key_indices", "expectation"],
-    [
-        ([0], [0, 1], does_not_raise()),
-        ([0], [1], raises(ValueError)),
-        ([0, 1], [0], raises(ValueError)),
-        ([], [0], does_not_raise()),
-    ],
-)
-def test_keys_check(
-    key_indices: list[int], required_key_indices: list[int], expectation: ExceptionContext
-):
+def test_check_and_get_keys():
     """
-    Tests that the Select transform correctly checks that the keys are a subset of the required
-    keys.
+    Tests that the `check_and_get_keys` method works correctly: the set of keys to select should
+    be a subset of the set of required_keys.
     """
 
-    all_keys = [torch.tensor(i) for i in range(2)]
-    keys = [all_keys[i] for i in key_indices]
-    required_keys = [all_keys[i] for i in required_key_indices]
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([2.0])
+    key3 = torch.tensor([3.0])
 
-    with expectation:
-        _ = Select(keys, required_keys)
+    required_keys, output_keys = Select([key1, key2], [key1, key2, key3]).check_and_get_keys()
+
+    assert required_keys == {key1, key2, key3}
+    assert output_keys == {key1, key2}
+
+    with raises(ValueError):
+        Select([key1, key2], [key1]).check_and_get_keys()
