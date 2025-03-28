@@ -17,7 +17,7 @@ class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
     def __init__(self, keys: Iterable[Tensor]):
         self.keys = set(keys)
 
-    def _compute(self, input: EmptyTensorDict) -> Gradients:
+    def __call__(self, input: EmptyTensorDict) -> Gradients:
         return Gradients({key: torch.ones_like(key) for key in self.keys})
 
     def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
