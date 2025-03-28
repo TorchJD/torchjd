@@ -31,10 +31,10 @@ class FakeTransform(Transform[_B, _C]):
         return self._required_keys, self._output_keys
 
 
-def test_compose_checks_keys():
+def test_composition_check_and_get_keys():
     """
-    Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
-    match with the outer transform's `required_keys`.
+    Tests that `check_and_get_keys` works correctly for a composition of transforms: the inner
+    transform's `output_keys` has to match with the outer transform's `required_keys`.
     """
 
     a1 = torch.randn([2])
@@ -42,16 +42,19 @@ def test_compose_checks_keys():
     t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
-    (t1 << t2).check_and_get_keys()
+    required_keys, output_keys = (t1 << t2).check_and_get_keys()
+
+    assert required_keys == {a2}
+    assert output_keys == {a1, a2}
 
     with raises(ValueError):
         (t2 << t1).check_and_get_keys()
 
 
-def test_conjunct_checks_required_keys():
+def test_conjunct_check_and_get_keys_1():
     """
-    Tests that the conjunction of ``Transform``s checks that the provided transforms all have the
-    same `required_keys`.
+    Tests that `check_and_get_keys` works correctly for a conjunction of transforms: all of them
+    should have the same `required_keys`.
     """
 
     a1 = torch.randn([2])
@@ -61,7 +64,10 @@ def test_conjunct_checks_required_keys():
     t2 = FakeTransform(required_keys={a1}, output_keys=set())
     t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
-    (t1 | t2).check_and_get_keys()
+    required_keys, output_keys = (t1 | t2).check_and_get_keys()
+
+    assert required_keys == {a1}
+    assert output_keys == set()
 
     with raises(ValueError):
         (t2 | t3).check_and_get_keys()
@@ -70,10 +76,10 @@ def test_conjunct_checks_required_keys():
         (t1 | t2 | t3).check_and_get_keys()
 
 
-def test_conjunct_checks_output_keys():
+def test_conjunct_check_and_get_keys_2():
     """
-    Tests that the conjunction of ``Transform``s checks that the transforms `output_keys` are
-    disjoint.
+    Tests that `check_and_get_keys` works correctly for a conjunction of transforms: their
+    `output_keys` should be disjoint.
     """
 
     a1 = torch.randn([2])
@@ -83,7 +89,10 @@ def test_conjunct_checks_output_keys():
     t2 = FakeTransform(required_keys=set(), output_keys={a1})
     t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
-    (t2 | t3).check_and_get_keys()
+    required_keys, output_keys = (t2 | t3).check_and_get_keys()
+
+    assert required_keys == set()
+    assert output_keys == {a1, a2}
 
     with raises(ValueError):
         (t1 | t3).check_and_get_keys()
