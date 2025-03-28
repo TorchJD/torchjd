@@ -281,3 +281,19 @@ def test_create_graph():
     gradients = grad(input)
 
     assert gradients[a].requires_grad
+
+
+def test_check_and_get_keys():
+    """Tests that the `check_and_get_keys` method works correctly."""
+
+    x = torch.tensor(5.0)
+    a1 = torch.tensor(2.0, requires_grad=True)
+    a2 = torch.tensor(3.0, requires_grad=True)
+    y = torch.stack([a1 * x, a2 * x])
+
+    grad = Grad(outputs=[y], inputs=[a1, a2])
+
+    required_keys, output_keys = grad.check_and_get_keys()
+
+    assert required_keys == {y}
+    assert output_keys == {a1, a2}
