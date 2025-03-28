@@ -133,7 +133,7 @@ def _create_transform(
     # loss w.r.t. the task's specific parameters, and computes and backpropagates the gradient of
     # the losses w.r.t. the shared representations.
     task_transforms = [
-        _make_task_transform(
+        _create_task_transform(
             features,
             task_params,
             loss,
@@ -158,7 +158,7 @@ def _create_transform(
     return accumulate << aggregate << jac << stack
 
 
-def _make_task_transform(
+def _create_task_transform(
     features: list[Tensor],
     tasks_params: list[Tensor],
     loss: Tensor,
