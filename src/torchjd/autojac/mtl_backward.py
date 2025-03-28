@@ -98,6 +98,29 @@ def mtl_backward(
     if len(losses) != len(tasks_params):
         raise ValueError("`losses` and `tasks_params` should have the same size.")
 
+    backward_transform = _create_transform(
+        losses,
+        features,
+        aggregator,
+        tasks_params,
+        shared_params,
+        retain_graph,
+        parallel_chunk_size,
+    )
+
+    backward_transform(EmptyTensorDict())
+
+
+def _create_transform(
+    losses: Sequence[Tensor],
+    features: list[Tensor],
+    aggregator: Aggregator,
+    tasks_params: list[Iterable[Tensor]],
+    shared_params: set[Tensor],
+    retain_graph: bool,
+    parallel_chunk_size: int | None,
+) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+
     shared_params = list(shared_params)
     tasks_params = [list(task_params) for task_params in tasks_params]
 
@@ -127,9 +150,7 @@ def mtl_backward(
     # Transform that accumulates the result in the .grad field of the shared parameters.
     accumulate = Accumulate(shared_params)
 
-    backward_transform = accumulate << aggregate << jac << stack
-
-    backward_transform(EmptyTensorDict())
+    return accumulate << aggregate << jac << stack
 
 
 def _make_task_transform(

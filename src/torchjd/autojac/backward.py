@@ -4,7 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac
+from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Transform
 from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
 
 
@@ -78,6 +78,22 @@ def backward(
     else:
         inputs = set(inputs)
 
+    backward_transform = _create_transform(
+        tensors, aggregator, inputs, retain_graph, parallel_chunk_size
+    )
+
+    backward_transform(EmptyTensorDict())
+
+
+def _create_transform(
+    tensors: list[Tensor],
+    aggregator: Aggregator,
+    inputs: set[Tensor],
+    retain_graph: bool,
+    parallel_chunk_size: int | None,
+) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+    """Creates the Jacobian descent backward transform."""
+
     # Transform that creates gradient outputs containing only ones.
     init = Init(tensors)
 
@@ -93,6 +109,4 @@ def backward(
     # Transform that accumulates the result in the .grad field of the inputs.
     accumulate = Accumulate(inputs)
 
-    backward_transform = accumulate << aggregate << jac << diag << init
-
-    backward_transform(EmptyTensorDict())
+    return accumulate << aggregate << jac << diag << init
