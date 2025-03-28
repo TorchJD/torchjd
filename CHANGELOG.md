@@ -16,6 +16,9 @@ changes that do not affect the user.
 
 - Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
   project onto the dual cone. This may minimally affect the output of these aggregators.
+- Refactored internal verifications in the autojac engine so that they do not run at runtime
+  anymore. This should minimally improve the performance and reduce the memory usage of `backward`
+  and `mtl_backward`.
 
 ### Fixed
 - Fixed the behavior of `backward` and `mtl_backward` when some tensors are repeated (i.e. when they
