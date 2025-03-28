@@ -18,7 +18,7 @@ class Diagonalize(Transform[Gradients, Jacobians]):
             self.indices.append((begin, end))
             begin = end
 
-    def _compute(self, tensors: Gradients) -> Jacobians:
+    def __call__(self, tensors: Gradients) -> Jacobians:
         flattened_considered_values = [tensors[key].reshape([-1]) for key in self.considered]
         diagonal_matrix = torch.cat(flattened_considered_values).diag()
         diagonalized_tensors = {

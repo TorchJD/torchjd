@@ -10,7 +10,7 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
-    def _compute(self, gradients: Gradients) -> EmptyTensorDict:
+    def __call__(self, gradients: Gradients) -> EmptyTensorDict:
         """
         Accumulates gradients with respect to keys in their ``.grad`` field.
         """

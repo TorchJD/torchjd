@@ -23,7 +23,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
         self._aggregator_str = str(aggregator)
         self.transform = reshape << aggregate_matrices << matrixify
 
-    def _compute(self, input: Jacobians) -> Gradients:
+    def __call__(self, input: Jacobians) -> Gradients:
         return self.transform(input)
 
     def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
@@ -35,7 +35,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         self.key_order = ordered_set(key_order)
         self.aggregator = aggregator
 
-    def _compute(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:
+    def __call__(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:
         """
         Concatenates the provided ``jacobian_matrices`` into a single matrix and aggregates it using
         the ``aggregator``. Returns the dictionary mapping each key from ``jacobian_matrices`` to
@@ -111,7 +111,7 @@ class _Matrixify(Transform[Jacobians, JacobianMatrices]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
-    def _compute(self, jacobians: Jacobians) -> JacobianMatrices:
+    def __call__(self, jacobians: Jacobians) -> JacobianMatrices:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
         }
@@ -125,7 +125,7 @@ class _Reshape(Transform[GradientVectors, Gradients]):
     def __init__(self, required_keys: Iterable[Tensor]):
         self._required_keys = set(required_keys)
 
-    def _compute(self, gradient_vectors: GradientVectors) -> Gradients:
+    def __call__(self, gradient_vectors: GradientVectors) -> Gradients:
         gradients = {
             key: gradient_vector.view(key.shape)
             for key, gradient_vector in gradient_vectors.items()

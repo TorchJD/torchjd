@@ -20,7 +20,7 @@ class _Differentiate(Transform[_A, _A], ABC):
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
-    def _compute(self, tensors: _A) -> _A:
+    def __call__(self, tensors: _A) -> _A:
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)

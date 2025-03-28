@@ -40,11 +40,8 @@ class Transform(Generic[_B, _C], ABC):
         return type(self).__name__
 
     @abstractmethod
-    def _compute(self, input: _B) -> _C:
-        """Applies the transform to the input."""
-
     def __call__(self, input: _B) -> _C:
-        return self._compute(input)
+        """Applies the transform to the input."""
 
     @abstractmethod
     def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
@@ -65,7 +62,7 @@ class Composition(Transform[_A, _C]):
     def __str__(self) -> str:
         return str(self.outer) + " ∘ " + str(self.inner)
 
-    def _compute(self, input: _A) -> _C:
+    def __call__(self, input: _A) -> _C:
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
@@ -94,7 +91,7 @@ class Conjunction(Transform[_A, _B]):
                 strings.append(s)
         return "(" + " | ".join(strings) + ")"
 
-    def _compute(self, tensor_dict: _A) -> _B:
+    def __call__(self, tensor_dict: _A) -> _B:
         output = _union([transform(tensor_dict) for transform in self.transforms])
         return output
 

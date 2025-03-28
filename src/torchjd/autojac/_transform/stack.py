@@ -12,7 +12,7 @@ class Stack(Transform[_A, Jacobians]):
     def __init__(self, transforms: Sequence[Transform[_A, Gradients]]):
         self.transforms = transforms
 
-    def _compute(self, input: _A) -> Jacobians:
+    def __call__(self, input: _A) -> Jacobians:
         results = [transform(input) for transform in self.transforms]
         result = _stack(results)
         return result
