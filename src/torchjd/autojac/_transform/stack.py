@@ -17,8 +17,8 @@ class Stack(Transform[_A, Jacobians]):
         result = _stack(results)
         return result
 
-    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys_pairs = [transform.check_keys() for transform in self.transforms]
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys_pairs = [transform.check_and_get_keys() for transform in self.transforms]
 
         required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
         output_keys = set(key for _, output_keys in keys_pairs for key in output_keys)

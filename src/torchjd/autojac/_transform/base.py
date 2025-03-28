@@ -44,7 +44,7 @@ class Transform(Generic[_B, _C], ABC):
         """Applies the transform to the input."""
 
     @abstractmethod
-    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         """
         Returns a pair containing (in order) the required keys and the output keys of the Transform.
         Checks that the transform is valid.
@@ -66,9 +66,9 @@ class Composition(Transform[_A, _C]):
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
-    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        outer_required_keys, outer_output_keys = self.outer.check_keys()
-        inner_required_keys, inner_output_keys = self.inner.check_keys()
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        outer_required_keys, outer_output_keys = self.outer.check_and_get_keys()
+        inner_required_keys, inner_output_keys = self.inner.check_and_get_keys()
         if outer_required_keys != inner_output_keys:
             raise ValueError(
                 "The `output_keys` of `inner` must match with the `required_keys` of "
@@ -95,8 +95,8 @@ class Conjunction(Transform[_A, _B]):
         output = _union([transform(tensor_dict) for transform in self.transforms])
         return output
 
-    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys_pairs = [transform.check_keys() for transform in self.transforms]
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+        keys_pairs = [transform.check_and_get_keys() for transform in self.transforms]
 
         required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
         for transform_required_keys, _ in keys_pairs:

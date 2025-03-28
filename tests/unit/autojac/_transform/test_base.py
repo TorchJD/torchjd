@@ -27,7 +27,7 @@ class FakeTransform(Transform[_B, _C]):
         output_dict = {key: torch.empty(0) for key in self._output_keys}
         return typing.cast(_C, output_dict)
 
-    def check_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         return self._required_keys, self._output_keys
 
 
@@ -42,10 +42,10 @@ def test_compose_checks_keys():
     t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
-    (t1 << t2).check_keys()
+    (t1 << t2).check_and_get_keys()
 
     with raises(ValueError):
-        (t2 << t1).check_keys()
+        (t2 << t1).check_and_get_keys()
 
 
 def test_conjunct_checks_required_keys():
@@ -61,13 +61,13 @@ def test_conjunct_checks_required_keys():
     t2 = FakeTransform(required_keys={a1}, output_keys=set())
     t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
-    (t1 | t2).check_keys()
+    (t1 | t2).check_and_get_keys()
 
     with raises(ValueError):
-        (t2 | t3).check_keys()
+        (t2 | t3).check_and_get_keys()
 
     with raises(ValueError):
-        (t1 | t2 | t3).check_keys()
+        (t1 | t2 | t3).check_and_get_keys()
 
 
 def test_conjunct_checks_output_keys():
@@ -83,13 +83,13 @@ def test_conjunct_checks_output_keys():
     t2 = FakeTransform(required_keys=set(), output_keys={a1})
     t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
-    (t2 | t3).check_keys()
+    (t2 | t3).check_and_get_keys()
 
     with raises(ValueError):
-        (t1 | t3).check_keys()
+        (t1 | t3).check_and_get_keys()
 
     with raises(ValueError):
-        (t1 | t2 | t3).check_keys()
+        (t1 | t2 | t3).check_and_get_keys()
 
 
 def test_empty_conjunction():

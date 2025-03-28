@@ -262,4 +262,4 @@ def test_stack_different_required_keys():
     grad2 = Grad([y2], [a])
 
     with raises(ValueError):
-        Stack([grad1, grad2]).check_keys()
+        Stack([grad1, grad2]).check_and_get_keys()

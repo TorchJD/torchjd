@@ -18,7 +18,7 @@ def test_check_create_transform():
     y2 = (a1**2).sum() + a2.norm()
 
     transform = _create_transform([y1, y2], Mean(), {a1, a2}, False, None)
-    _ = transform.check_keys()
+    _ = transform.check_and_get_keys()
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
