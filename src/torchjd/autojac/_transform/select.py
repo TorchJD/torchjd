@@ -9,7 +9,7 @@ from .base import Transform
 class Select(Transform[_A, _A]):
     def __init__(self, keys: Iterable[Tensor], required_keys: Iterable[Tensor]):
         self.keys = set(keys)
-        self._required_keys = required_keys
+        self._required_keys = set(required_keys)
 
     def __call__(self, tensor_dict: _A) -> _A:
         output = {key: tensor_dict[key] for key in self.keys}
