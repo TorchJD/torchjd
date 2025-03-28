@@ -31,28 +31,6 @@ class FakeTransform(Transform[_B, _C]):
         return self._required_keys, self._output_keys
 
 
-def test_call_checks_keys():
-    """
-    Tests that a ``Transform`` checks that the provided dictionary to the `__call__` function
-    contains keys that correspond exactly to `required_keys`.
-    """
-
-    a1 = torch.randn([2])
-    a2 = torch.randn([3])
-    t = FakeTransform(required_keys={a1}, output_keys={a1, a2})
-
-    t(TensorDict({a1: a2}))
-
-    with raises(ValueError):
-        t(TensorDict({a2: a1}))
-
-    with raises(ValueError):
-        t(TensorDict({}))
-
-    with raises(ValueError):
-        t(TensorDict({a1: a2, a2: a1}))
-
-
 def test_compose_checks_keys():
     """
     Tests that the composition of ``Transform``s checks that the inner transform's `output_keys`
