@@ -64,10 +64,10 @@ def test_compose_checks_keys():
     t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
-    t1 << t2
+    (t1 << t2).check_keys()
 
     with raises(ValueError):
-        t2 << t1
+        (t2 << t1).check_keys()
 
 
 def test_conjunct_checks_required_keys():
@@ -83,13 +83,13 @@ def test_conjunct_checks_required_keys():
     t2 = FakeTransform(required_keys={a1}, output_keys=set())
     t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
-    t1 | t2
+    (t1 | t2).check_keys()
 
     with raises(ValueError):
-        t2 | t3
+        (t2 | t3).check_keys()
 
     with raises(ValueError):
-        t1 | t2 | t3
+        (t1 | t2 | t3).check_keys()
 
 
 def test_conjunct_checks_output_keys():
@@ -105,13 +105,13 @@ def test_conjunct_checks_output_keys():
     t2 = FakeTransform(required_keys=set(), output_keys={a1})
     t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
-    t2 | t3
+    (t2 | t3).check_keys()
 
     with raises(ValueError):
-        t1 | t3
+        (t1 | t3).check_keys()
 
     with raises(ValueError):
-        t1 | t2 | t3
+        (t1 | t2 | t3).check_keys()
 
 
 def test_empty_conjunction():
