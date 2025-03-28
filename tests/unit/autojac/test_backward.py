@@ -17,7 +17,13 @@ def test_check_create_transform():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    transform = _create_transform([y1, y2], Mean(), {a1, a2}, False, None)
+    transform = _create_transform(
+        tensors=[y1, y2],
+        aggregator=Mean(),
+        inputs={a1, a2},
+        retain_graph=False,
+        parallel_chunk_size=None,
+    )
     required_keys, output_keys = transform.check_and_get_keys()
 
     assert required_keys == set()

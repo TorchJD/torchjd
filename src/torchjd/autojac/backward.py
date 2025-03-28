@@ -79,7 +79,11 @@ def backward(
         inputs = set(inputs)
 
     backward_transform = _create_transform(
-        tensors, aggregator, inputs, retain_graph, parallel_chunk_size
+        tensors=tensors,
+        aggregator=aggregator,
+        inputs=inputs,
+        retain_graph=retain_graph,
+        parallel_chunk_size=parallel_chunk_size,
     )
 
     backward_transform(EmptyTensorDict())

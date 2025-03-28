@@ -99,13 +99,13 @@ def mtl_backward(
         raise ValueError("`losses` and `tasks_params` should have the same size.")
 
     backward_transform = _create_transform(
-        losses,
-        features,
-        aggregator,
-        tasks_params,
-        shared_params,
-        retain_graph,
-        parallel_chunk_size,
+        losses=losses,
+        features=features,
+        aggregator=aggregator,
+        tasks_params=tasks_params,
+        shared_params=shared_params,
+        retain_graph=retain_graph,
+        parallel_chunk_size=parallel_chunk_size,
     )
 
     backward_transform(EmptyTensorDict())

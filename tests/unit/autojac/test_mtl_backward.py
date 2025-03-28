@@ -20,7 +20,15 @@ def test_check_create_transform():
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
 
-    transform = _create_transform([y1, y2], [f1, f2], Mean(), [[p1], [p2]], {p0}, False, None)
+    transform = _create_transform(
+        losses=[y1, y2],
+        features=[f1, f2],
+        aggregator=Mean(),
+        tasks_params=[[p1], [p2]],
+        shared_params={p0},
+        retain_graph=False,
+        parallel_chunk_size=None,
+    )
     required_keys, output_keys = transform.check_and_get_keys()
 
     assert required_keys == set()
