@@ -21,7 +21,10 @@ def test_check_create_transform():
     y2 = f1 * p2[0] + f2 * p2[1]
 
     transform = _create_transform([y1, y2], [f1, f2], Mean(), [[p1], [p2]], {p0}, False, None)
-    transform.check_and_get_keys()
+    required_keys, output_keys = transform.check_and_get_keys()
+
+    assert required_keys == set()
+    assert output_keys == set()
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
