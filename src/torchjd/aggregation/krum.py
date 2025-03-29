@@ -80,16 +80,24 @@ class _KrumWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_matrix_shape(matrix)
+        gramian = matrix @ matrix.T
+        return self._compute_from_gramian(gramian)
 
-        distances = torch.cdist(matrix, matrix, compute_mode="donot_use_mm_for_euclid_dist")
-        n_closest = matrix.shape[0] - self.n_byzantine - 2
+    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+        gradient_norms_squared = torch.diagonal(gramian)
+        distances_squared = (
+            gradient_norms_squared.unsqueeze(0) + gradient_norms_squared.unsqueeze(1) - 2 * gramian
+        )
+        distances = torch.sqrt(distances_squared)
+
+        n_closest = gramian.shape[0] - self.n_byzantine - 2
         smallest_distances, _ = torch.topk(distances, k=n_closest + 1, largest=False)
         smallest_distances_excluding_self = smallest_distances[:, 1:]
         scores = smallest_distances_excluding_self.sum(dim=1)
 
         _, selected_indices = torch.topk(scores, k=self.n_selected, largest=False)
-        one_hot_selected_indices = F.one_hot(selected_indices, num_classes=matrix.shape[0])
-        weights = one_hot_selected_indices.sum(dim=0).to(dtype=matrix.dtype) / self.n_selected
+        one_hot_selected_indices = F.one_hot(selected_indices, num_classes=gramian.shape[0])
+        weights = one_hot_selected_indices.sum(dim=0).to(dtype=gramian.dtype) / self.n_selected
 
         return weights
 
