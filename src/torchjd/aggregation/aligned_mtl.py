@@ -91,16 +91,14 @@ class _AlignedMTLWrapper(_Weighting):
     def forward(self, matrix: Tensor) -> Tensor:
         w = self.weighting(matrix)
 
-        G = matrix.T
-        B = self._compute_balance_transformation(G)
+        M = matrix @ matrix.T
+        B = self._compute_balance_transformation(M)
         alpha = B @ w
 
         return alpha
 
     @staticmethod
-    def _compute_balance_transformation(G: Tensor) -> Tensor:
-        M = G.T @ G
-
+    def _compute_balance_transformation(M: Tensor) -> Tensor:
         lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
         rank = sum(lambda_ > tol)
