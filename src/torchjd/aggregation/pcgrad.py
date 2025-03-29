@@ -41,11 +41,14 @@ class _PCGradWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         # Pre-compute the inner products
-        inner_products = matrix @ matrix.T
+        gramian = matrix @ matrix.T
+        return self._compute_from_gramian(gramian)
 
+    @staticmethod
+    def _compute_from_gramian(inner_products: Tensor) -> Tensor:
         # Move all computations on cpu to avoid moving memory between cpu and gpu at each iteration
-        device = matrix.device
-        dtype = matrix.dtype
+        device = inner_products.device
+        dtype = inner_products.dtype
         cpu = torch.device("cpu")
         inner_products = inner_products.to(device=cpu)
 
