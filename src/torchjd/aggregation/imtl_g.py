@@ -38,8 +38,13 @@ class _IMTLGWeighting(_Weighting):
     """
 
     def forward(self, matrix: Tensor) -> Tensor:
-        d = torch.linalg.norm(matrix, dim=1)
-        v = torch.linalg.pinv(matrix @ matrix.T) @ d
+        gramian = matrix @ matrix.T
+        return self._compute_from_gramian(gramian)
+
+    @staticmethod
+    def _compute_from_gramian(gramian: Tensor) -> Tensor:
+        d = torch.sqrt(torch.diagonal(gramian))
+        v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()
 
         if v_sum.abs() < 1e-12:
