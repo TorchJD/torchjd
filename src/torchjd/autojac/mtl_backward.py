@@ -160,12 +160,12 @@ def _create_transform(
 
 def _create_task_transform(
     features: list[Tensor],
-    tasks_params: list[Tensor],
+    task_params: list[Tensor],
     loss: Tensor,
     retain_graph: bool,
 ) -> Transform[EmptyTensorDict, Gradients]:
     # Tensors with respect to which we compute the gradients.
-    to_differentiate = tasks_params + features
+    to_differentiate = task_params + features
 
     # Transform that initializes the gradient output to 1.
     init = Init([loss])
@@ -176,7 +176,7 @@ def _create_task_transform(
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    accumulate = Accumulate(tasks_params) << Select(tasks_params, to_differentiate)
+    accumulate = Accumulate(task_params) << Select(task_params, to_differentiate)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
     backpropagate = Select(features, to_differentiate)
