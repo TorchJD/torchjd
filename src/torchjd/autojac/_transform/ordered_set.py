@@ -6,8 +6,8 @@ from torchjd.autojac._transform._utils import _KeyType
 
 class OrderedSet(OrderedDict[_KeyType, None]):
     """
-    Collection representing a set whose order is preserved at construction and whose order
-    matters in comparisons.
+    Collection representing a set whose order matters in comparisons and is preserved at
+    construction.
     """
 
     def __init__(self, elements: Iterable[_KeyType]):
