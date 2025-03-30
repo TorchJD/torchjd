@@ -19,3 +19,8 @@ class OrderedSet(OrderedDict[_KeyType, None]):
         for element in elements:
             if element in self:
                 del self[element]
+
+    def add(self, element: _KeyType) -> None:
+        """Adds the specified element to the OrderedSet"""
+
+        self[element] = None
