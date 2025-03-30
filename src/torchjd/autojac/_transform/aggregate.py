@@ -7,7 +7,7 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from .base import Transform
-from .ordered_set import OrderedSet, ordered_set
+from .ordered_set import OrderedSet
 from .tensor_dict import EmptyTensorDict, Gradients, GradientVectors, JacobianMatrices, Jacobians
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
@@ -32,7 +32,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
-        self.key_order = ordered_set(key_order)
+        self.key_order = OrderedSet(key_order)
         self.aggregator = aggregator
 
     def __call__(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:

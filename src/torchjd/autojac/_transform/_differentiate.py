@@ -4,7 +4,7 @@ from typing import Iterable, Sequence
 from torch import Tensor
 
 from .base import _A, Transform
-from .ordered_set import ordered_set
+from .ordered_set import OrderedSet
 
 
 class _Differentiate(Transform[_A, _A], ABC):
@@ -16,7 +16,7 @@ class _Differentiate(Transform[_A, _A], ABC):
         create_graph: bool,
     ):
         self.outputs = list(outputs)
-        self.inputs = ordered_set(inputs)
+        self.inputs = OrderedSet(inputs)
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 

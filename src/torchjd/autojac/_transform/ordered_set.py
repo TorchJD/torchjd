@@ -1,10 +1,14 @@
 from collections import OrderedDict
-from typing import Iterable, TypeAlias
+from typing import Iterable
 
 from torchjd.autojac._transform._utils import _KeyType
 
-OrderedSet: TypeAlias = OrderedDict[_KeyType, None]
 
+class OrderedSet(OrderedDict[_KeyType, None]):
+    """
+    Collection representing a set whose order is preserved at construction and whose order
+    matters in comparisons.
+    """
 
-def ordered_set(elements: Iterable[_KeyType]) -> OrderedSet[_KeyType]:
-    return OrderedDict.fromkeys(elements, None)
+    def __init__(self, elements: Iterable[_KeyType]):
+        super().__init__([(element, None) for element in elements])
