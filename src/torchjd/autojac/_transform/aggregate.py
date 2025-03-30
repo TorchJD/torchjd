@@ -7,7 +7,7 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from .base import Transform
-from .ordered_set import _OrderedSet, ordered_set
+from .ordered_set import OrderedSet, ordered_set
 from .tensor_dict import EmptyTensorDict, Gradients, GradientVectors, JacobianMatrices, Jacobians
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
@@ -54,7 +54,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
 
     @staticmethod
     def _select_ordered_subdict(
-        dictionary: dict[_KeyType, _ValueType], ordered_keys: _OrderedSet[_KeyType]
+        dictionary: dict[_KeyType, _ValueType], ordered_keys: OrderedSet[_KeyType]
     ) -> OrderedDict[_KeyType, _ValueType]:
         """
         Selects a subset of a dictionary corresponding to the keys given by ``ordered_keys``.
