@@ -29,6 +29,9 @@ changes that do not affect the user.
 - Removed arbitrary exception handling in `IMTLG` and `AlignedMTL` when the computation fails. In
   practice, this fix should only affect some matrices with extremely large values, which should
   not usually happen.
+- Fixed an issue with `backward` and `mtl_backward` that could make the ordering of the columns of
+  the Jacobians non-deterministic, and that could thus lead to slightly non-deterministic results
+  with some aggregators.
 
 ## [0.5.0] - 2025-02-01
 
