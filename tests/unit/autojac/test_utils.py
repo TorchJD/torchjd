@@ -129,7 +129,7 @@ def test_get_leaf_tensors_empty_roots():
     """Tests that _get_leaf_tensors returns no leaves when roots is the empty set."""
 
     leaves = _get_leaf_tensors(tensors=[], excluded=set())
-    assert set(leaves) == set({})
+    assert set(leaves) == set()
 
 
 def test_get_leaf_tensors_excluded_root():
