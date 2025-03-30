@@ -21,6 +21,7 @@ changes that do not affect the user.
   and `mtl_backward`.
 
 ### Fixed
+
 - Fixed the behavior of `backward` and `mtl_backward` when some tensors are repeated (i.e. when they
   appear several times in a list of tensors provided as argument). Instead of raising an exception
   in these cases, we are now aligned with the behavior of `torch.autograd.backward`. Repeated
