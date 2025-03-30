@@ -23,7 +23,7 @@ def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     return output
 
 
-def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> set[Tensor]:
+def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> OrderedSet[Tensor]:
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.
 
@@ -44,7 +44,7 @@ def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> 
         roots=OrderedSet([tensor.grad_fn for tensor in tensors]),
         excluded_nodes={tensor.grad_fn for tensor in excluded},
     )
-    leaves = {g.variable for g in accumulate_grads}
+    leaves = OrderedSet([g.variable for g in accumulate_grads])
 
     return leaves
 
