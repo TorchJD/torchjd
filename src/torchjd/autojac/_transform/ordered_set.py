@@ -5,10 +5,7 @@ from torchjd.autojac._transform._utils import _KeyType
 
 
 class OrderedSet(OrderedDict[_KeyType, None]):
-    """
-    Collection representing a set whose order matters in comparisons and is preserved at
-    construction.
-    """
+    """Ordered collection of distinct elements."""
 
     def __init__(self, elements: Iterable[_KeyType]):
         super().__init__([(element, None) for element in elements])
