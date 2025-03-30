@@ -3,8 +3,8 @@ from typing import Iterable, Sequence
 
 from torch import Tensor
 
-from ._utils import ordered_set
 from .base import _A, Transform
+from .ordered_set import ordered_set
 
 
 class _Differentiate(Transform[_A, _A], ABC):

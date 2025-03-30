@@ -3,8 +3,8 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from ._utils import ordered_set
 from .base import Transform
+from .ordered_set import ordered_set
 from .tensor_dict import Gradients, Jacobians
 
 
