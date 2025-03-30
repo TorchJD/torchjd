@@ -5,6 +5,7 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Transform
+from ._transform.ordered_set import OrderedSet
 from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
 
 
@@ -76,7 +77,7 @@ def backward(
     if inputs is None:
         inputs = _get_leaf_tensors(tensors=tensors, excluded=set())
     else:
-        inputs = set(inputs)
+        inputs = OrderedSet(inputs)
 
     backward_transform = _create_transform(
         tensors=tensors,
@@ -92,7 +93,7 @@ def backward(
 def _create_transform(
     tensors: list[Tensor],
     aggregator: Aggregator,
-    inputs: set[Tensor],
+    inputs: OrderedSet[Tensor],
     retain_graph: bool,
     parallel_chunk_size: int | None,
 ) -> Transform[EmptyTensorDict, EmptyTensorDict]:

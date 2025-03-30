@@ -16,6 +16,7 @@ from ._transform import (
     Stack,
     Transform,
 )
+from ._transform.ordered_set import OrderedSet
 from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
 
 
@@ -84,8 +85,12 @@ def mtl_backward(
 
     if shared_params is None:
         shared_params = _get_leaf_tensors(tensors=features, excluded=[])
+    else:
+        shared_params = OrderedSet(shared_params)
     if tasks_params is None:
         tasks_params = [_get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
+    else:
+        tasks_params = [OrderedSet(task_params) for task_params in tasks_params]
 
     if len(features) == 0:
         raise ValueError("`features` cannot be empty.")
@@ -115,8 +120,8 @@ def _create_transform(
     losses: Sequence[Tensor],
     features: list[Tensor],
     aggregator: Aggregator,
-    tasks_params: list[Iterable[Tensor]],
-    shared_params: set[Tensor],
+    tasks_params: list[OrderedSet[Tensor]],
+    shared_params: OrderedSet[Tensor],
     retain_graph: bool,
     parallel_chunk_size: int | None,
 ) -> Transform[EmptyTensorDict, EmptyTensorDict]:
@@ -125,9 +130,6 @@ def _create_transform(
     Jacobian descent (for shared parameters) and multiple gradient descent branches (for
     task-specific parameters).
     """
-
-    shared_params = list(shared_params)
-    tasks_params = [list(task_params) for task_params in tasks_params]
 
     # Task-specific transforms. Each of them computes and accumulates the gradient of the task's
     # loss w.r.t. the task's specific parameters, and computes and backpropagates the gradient of
@@ -160,12 +162,13 @@ def _create_transform(
 
 def _create_task_transform(
     features: list[Tensor],
-    task_params: list[Tensor],
+    task_params: OrderedSet[Tensor],
     loss: Tensor,
     retain_graph: bool,
 ) -> Transform[EmptyTensorDict, Gradients]:
     # Tensors with respect to which we compute the gradients.
-    to_differentiate = task_params + features
+    to_differentiate = OrderedSet(task_params)  # Re-instantiate set to avoid modifying input
+    to_differentiate.update(OrderedSet(features))
 
     # Transform that initializes the gradient output to 1.
     init = Init([loss])

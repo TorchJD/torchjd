@@ -3,14 +3,14 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from ._utils import ordered_set
 from .base import Transform
+from .ordered_set import OrderedSet
 from .tensor_dict import Gradients, Jacobians
 
 
 class Diagonalize(Transform[Gradients, Jacobians]):
     def __init__(self, considered: Iterable[Tensor]):
-        self.considered = ordered_set(considered)
+        self.considered = OrderedSet(considered)
         self.indices: list[tuple[int, int]] = []
         begin = 0
         for tensor in self.considered:
