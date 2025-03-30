@@ -75,7 +75,7 @@ class ConFIG(Aggregator):
         else:
             unit_target_vector = best_direction / best_direction.norm()
 
-        length = torch.sum(torch.stack([torch.dot(grad, unit_target_vector) for grad in matrix]))
+        length = torch.sum(matrix @ unit_target_vector)
 
         return length * unit_target_vector
 
