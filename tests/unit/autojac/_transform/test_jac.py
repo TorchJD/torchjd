@@ -293,7 +293,6 @@ def test_check_and_get_keys():
 
     jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None)
 
-    required_keys, output_keys = jac.check_and_get_keys()
+    output_keys = jac.check_keys({y})
 
-    assert required_keys == {y}
     assert output_keys == {a1, a2}

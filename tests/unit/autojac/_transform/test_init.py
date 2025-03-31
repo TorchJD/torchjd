@@ -69,7 +69,6 @@ def test_check_and_get_keys():
     key = torch.tensor([1.0])
     init = Init([key])
 
-    required_keys, output_keys = init.check_and_get_keys()
+    output_keys = init.check_keys(set())
 
-    assert required_keys == set()
     assert output_keys == {key}

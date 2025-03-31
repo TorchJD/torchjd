@@ -1,5 +1,4 @@
 import torch
-from pytest import raises
 from torch.testing import assert_close
 
 from torchjd.autojac._transform import (
@@ -39,8 +38,8 @@ def test_jac_is_stack_of_grads():
 
     grad1 = Grad(outputs=[y1], inputs=[a1, a2])
     grad2 = Grad(outputs=[y2], inputs=[a1, a2])
-    select1 = Select([y1], [y1, y2])
-    select2 = Select([y2], [y1, y2])
+    select1 = Select([y1])
+    select2 = Select([y2])
     stack_of_grads = Stack([grad1 << select1, grad2 << select2])
 
     jacobians = jac_diag(input)
@@ -83,8 +82,8 @@ def test_multiple_differentiations():
 
     grad1 = Grad([y1], [a1])
     grad2 = Grad([y2], [a2])
-    select1 = Select([y1], [y1, y2])
-    select2 = Select([y2], [y1, y2])
+    select1 = Select([y1])
+    select2 = Select([y2])
     init = Init([y1, y2])
     transform = ((grad1 << select1) | (grad2 << select2)) << init
 
@@ -119,9 +118,9 @@ def test_simple_conjunction():
     x3 = torch.tensor(4.0)
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
 
-    select1 = Select([x1], [x1, x2, x3])
-    select2 = Select([x2], [x1, x2, x3])
-    select3 = Select([x3], [x1, x2, x3])
+    select1 = Select([x1])
+    select2 = Select([x2])
+    select3 = Select([x3])
     conjunction = Conjunction([select1, select2, select3])
 
     output = conjunction(input)
@@ -140,8 +139,8 @@ def test_conjunction_is_commutative():
     x2 = torch.tensor([1.0, 3.0, 5.0])
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2)})
 
-    a = Select([x1], [x1, x2])
-    b = Select([x2], [x1, x2])
+    a = Select([x1])
+    b = Select([x2])
     flipped_conjunction = Conjunction([b, a])
     conjunction = Conjunction([a, b])
 
@@ -169,10 +168,10 @@ def test_conjunction_is_associative():
         }
     )
 
-    a = Select([x1], [x1, x2, x3, x4])
-    b = Select([x2], [x1, x2, x3, x4])
-    c = Select([x3], [x1, x2, x3, x4])
-    d = Select([x4], [x1, x2, x3, x4])
+    a = Select([x1])
+    b = Select([x2])
+    c = Select([x3])
+    d = Select([x4])
 
     parenthesized_conjunction = Conjunction([a, Conjunction([Conjunction([b, c]), d])])
     conjunction = Conjunction([a, b, c, d])
@@ -195,7 +194,7 @@ def test_conjunction_accumulate_select():
     value = torch.ones_like(key)
     input = Gradients({key: value})
 
-    select = Select([], [key])
+    select = Select([])
     accumulate = Accumulate([key])
     conjunction = accumulate | select
 
@@ -265,10 +264,10 @@ def test_stack_check_and_get_keys():
     grad2 = Grad([y1], [a])
     grad3 = Grad([y2], [a])
 
-    required_keys, output_keys = Stack([grad1, grad2]).check_and_get_keys()
+    output_keys = Stack([grad1, grad2]).check_keys({y1})
 
-    assert required_keys == {y1}
     assert output_keys == {a}
 
-    with raises(ValueError):
-        Stack([grad1, grad3]).check_and_get_keys()
+    output_keys = Stack([grad1, grad3]).check_keys({y1, y2})
+
+    assert output_keys == {a}

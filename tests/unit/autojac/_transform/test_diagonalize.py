@@ -103,7 +103,6 @@ def test_check_and_get_keys():
     key = torch.tensor([1.0])
     diag = Diagonalize([key])
 
-    required_keys, output_keys = diag.check_and_get_keys()
+    output_keys = diag.check_keys({key})
 
-    assert required_keys == {key}
     assert output_keys == {key}

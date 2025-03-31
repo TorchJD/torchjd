@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd.autojac._transform import Select, TensorDict
+from torchjd.autojac._transform import RequirementError, Select, TensorDict
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -20,8 +20,8 @@ def test_partition():
     value3 = torch.ones_like(key3)
     input = TensorDict({key1: value1, key2: value2, key3: value3})
 
-    select1 = Select([key1, key2], [key1, key2, key3])
-    select2 = Select([key3], [key1, key2, key3])
+    select1 = Select([key1, key2])
+    select2 = Select([key3])
 
     output1 = select1(input)
     expected_output1 = {key1: value1, key2: value2}
@@ -45,10 +45,10 @@ def test_conjunction_of_selects_is_select():
     x3 = torch.tensor(7.0)
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
 
-    select1 = Select([x1], [x1, x2, x3])
-    select2 = Select([x2], [x1, x2, x3])
+    select1 = Select([x1])
+    select2 = Select([x2])
     conjunction_of_selects = select1 | select2
-    select = Select([x1, x2], [x1, x2, x3])
+    select = Select([x1, x2])
 
     output = conjunction_of_selects(input)
     expected_output = select(input)
@@ -66,10 +66,9 @@ def test_check_and_get_keys():
     key2 = torch.tensor([2.0])
     key3 = torch.tensor([3.0])
 
-    required_keys, output_keys = Select([key1, key2], [key1, key2, key3]).check_and_get_keys()
+    output_keys = Select([key1, key2]).check_keys({key1, key2, key3})
 
-    assert required_keys == {key1, key2, key3}
     assert output_keys == {key1, key2}
 
-    with raises(ValueError):
-        Select([key1, key2], [key1]).check_and_get_keys()
+    with raises(RequirementError):
+        Select([key1, key2]).check_keys({key1})

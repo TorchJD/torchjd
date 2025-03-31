@@ -293,7 +293,6 @@ def test_check_and_get_keys():
 
     grad = Grad(outputs=[y], inputs=[a1, a2])
 
-    required_keys, output_keys = grad.check_and_get_keys()
+    output_keys = grad.check_keys({y})
 
-    assert required_keys == {y}
     assert output_keys == {a1, a2}

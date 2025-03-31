@@ -109,7 +109,7 @@ def test_matrixify():
     value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
     input = Jacobians({key1: value1, key2: value2, key3: value3})
 
-    matrixify = _Matrixify([key1, key2, key3])
+    matrixify = _Matrixify()
 
     output = matrixify(input)
     expected_output = {
@@ -132,7 +132,7 @@ def test_reshape():
     value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
     input = GradientVectors({key1: value1, key2: value2, key3: value3})
 
-    reshape = _Reshape([key1, key2, key3])
+    reshape = _Reshape()
 
     output = reshape(input)
     expected_output = {
@@ -151,9 +151,8 @@ def test_aggregate_matrices_check_and_get_keys():
     key2 = torch.tensor([2.0])
     aggregate = _AggregateMatrices(Random(), [key2, key1])
 
-    required_keys, output_keys = aggregate.check_and_get_keys()
+    output_keys = aggregate.check_keys({key1, key2})
 
-    assert required_keys == {key1, key2}
     assert output_keys == {key1, key2}
 
 
@@ -162,11 +161,10 @@ def test_matrixify_check_and_get_keys():
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
-    matrixify = _Matrixify([key1, key2])
+    matrixify = _Matrixify()
 
-    required_keys, output_keys = matrixify.check_and_get_keys()
+    output_keys = matrixify.check_keys({key1, key2})
 
-    assert required_keys == {key1, key2}
     assert output_keys == {key1, key2}
 
 
@@ -175,9 +173,8 @@ def test_reshape_check_and_get_keys():
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
-    reshape = _Reshape([key1, key2])
+    reshape = _Reshape()
 
-    required_keys, output_keys = reshape.check_and_get_keys()
+    output_keys = reshape.check_keys({key1, key2})
 
-    assert required_keys == {key1, key2}
     assert output_keys == {key1, key2}
