@@ -155,7 +155,7 @@ def _create_transform(
     aggregate = Aggregate(aggregator, shared_params)
 
     # Transform that accumulates the result in the .grad field of the shared parameters.
-    accumulate = Accumulate(shared_params)
+    accumulate = Accumulate()
 
     return accumulate << aggregate << jac << stack
 
@@ -179,7 +179,7 @@ def _create_task_transform(
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    accumulate = Accumulate(task_params) << Select(task_params)
+    accumulate = Accumulate() << Select(task_params)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
     backpropagate = Select(features)

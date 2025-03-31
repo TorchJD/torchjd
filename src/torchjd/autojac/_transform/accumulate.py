@@ -1,15 +1,10 @@
-from typing import Iterable
-
 from torch import Tensor
 
-from .base import RequirementError, Transform
+from .base import Transform
 from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Accumulate(Transform[Gradients, EmptyTensorDict]):
-    def __init__(self, required_keys: Iterable[Tensor]):
-        self._required_keys = set(required_keys)
-
     def __call__(self, gradients: Gradients) -> EmptyTensorDict:
         """
         Accumulates gradients with respect to keys in their ``.grad`` field.
@@ -29,11 +24,6 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
         return EmptyTensorDict()
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
-        if not self._required_keys.issubset(input_keys):
-            raise RequirementError(
-                f"The input_keys needs to be a super set of the required_keys. Found {input_keys} "
-                f"and {self._required_keys}"
-            )
         return set()
 
 
