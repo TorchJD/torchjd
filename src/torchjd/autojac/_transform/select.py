@@ -3,7 +3,7 @@ from typing import Iterable
 from torch import Tensor
 
 from ._utils import _A
-from .base import Transform
+from .base import RequirementError, Transform
 
 
 class Select(Transform[_A, _A]):
@@ -18,6 +18,8 @@ class Select(Transform[_A, _A]):
     def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
         required_keys = self._required_keys
         if not self.keys.issubset(required_keys):
-            raise ValueError("Parameter `keys` should be a subset of parameter `required_keys`")
+            raise RequirementError(
+                "Parameter `keys` should be a subset of parameter `required_keys`"
+            )
 
         return required_keys, self.keys

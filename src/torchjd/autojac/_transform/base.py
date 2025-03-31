@@ -8,6 +8,10 @@ from torch import Tensor
 from ._utils import _A, _B, _C, _union
 
 
+class RequirementError(ValueError):
+    pass
+
+
 class Transform(Generic[_B, _C], ABC):
     r"""
     Abstract base class for all transforms. Transforms are elementary building blocks of a jacobian
@@ -77,7 +81,7 @@ class Composition(Transform[_A, _C]):
         outer_required_keys, outer_output_keys = self.outer.check_and_get_keys()
         inner_required_keys, inner_output_keys = self.inner.check_and_get_keys()
         if outer_required_keys != inner_output_keys:
-            raise ValueError(
+            raise RequirementError(
                 "The `output_keys` of `inner` must match with the `required_keys` of "
                 f"outer. Found {outer_required_keys} and {inner_output_keys}"
             )
@@ -108,12 +112,12 @@ class Conjunction(Transform[_A, _B]):
         required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
         for transform_required_keys, _ in keys_pairs:
             if transform_required_keys != required_keys:
-                raise ValueError("All transforms should require the same set of keys.")
+                raise RequirementError("All transforms should require the same set of keys.")
 
         output_keys_with_duplicates = [key for _, output_keys in keys_pairs for key in output_keys]
         output_keys = set(output_keys_with_duplicates)
 
         if len(output_keys) != len(output_keys_with_duplicates):
-            raise ValueError("The sets of output keys of transforms should be disjoint.")
+            raise RequirementError("The sets of output keys of transforms should be disjoint.")
 
         return required_keys, output_keys
