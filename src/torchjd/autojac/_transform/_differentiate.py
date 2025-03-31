@@ -40,9 +40,9 @@ class _Differentiate(Transform[_A, _A], ABC):
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         outputs = set(self.outputs)
-        if not outputs.issubset(input_keys):
+        if not outputs == input_keys:
             raise RequirementError(
-                f"The input_keys needs to be a super set of the outputs. Found {input_keys} and "
-                f"{outputs}"
+                f"The input_keys must match the expected outputs. Found input_keys {input_keys} and"
+                f"outputs {outputs}."
             )
         return set(self.inputs)
