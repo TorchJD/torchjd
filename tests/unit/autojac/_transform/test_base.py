@@ -35,8 +35,8 @@ class FakeTransform(Transform[_B, _C]):
 
 def test_composition_check_keys():
     """
-    Tests that `check_keys` works correctly for a composition of transforms: the inner
-    transform's `output_keys` has to match with the outer transform's `required_keys`.
+    Tests that `check_keys` works correctly for a composition of transforms: the inner transform's
+    `output_keys` has to match with the outer transform's `required_keys`.
     """
 
     a1 = torch.randn([2])
@@ -54,8 +54,8 @@ def test_composition_check_keys():
 
 def test_conjunct_check_keys_1():
     """
-    Tests that `check_keys` works correctly for a conjunction of transforms: all transforms
-    should successfully check their keys.
+    Tests that `check_keys` works correctly for a conjunction of transforms: all transforms should
+    successfully check their keys.
     """
 
     a1 = torch.randn([2])
@@ -78,8 +78,8 @@ def test_conjunct_check_keys_1():
 
 def test_conjunct_check_keys_2():
     """
-    Tests that `check_keys` works correctly for a conjunction of transforms: their
-    `output_keys` should be disjoint.
+    Tests that `check_keys` works correctly for a conjunction of transforms: their `output_keys`
+    should be disjoint.
     """
 
     a1 = torch.randn([2])

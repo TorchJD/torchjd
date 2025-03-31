@@ -253,8 +253,8 @@ def test_equivalence_jac_grads():
 
 def test_stack_check_keys():
     """
-    Tests that the `check_keys` method works correctly for a stack of transforms: all of
-    them should have the same `required_keys`.
+    Tests that the `check_keys` method works correctly for a stack of transforms: all of them should
+    have the same `required_keys`.
     """
 
     a = torch.tensor(1.0, requires_grad=True)

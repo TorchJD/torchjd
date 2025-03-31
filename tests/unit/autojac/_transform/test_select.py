@@ -58,8 +58,8 @@ def test_conjunction_of_selects_is_select():
 
 def test_check_keys():
     """
-    Tests that the `check_keys` method works correctly: the set of keys to select should
-    be a subset of the set of required_keys.
+    Tests that the `check_keys` method works correctly: the set of keys to select should be a subset
+    of the set of required_keys.
     """
 
     key1 = torch.tensor([1.0])
