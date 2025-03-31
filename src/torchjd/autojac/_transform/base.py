@@ -52,11 +52,14 @@ class Transform(Generic[_B, _C], ABC):
     @abstractmethod
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         """
-        Checks the keys of the Transform for the provided input_keys and returns the corresponding
-        output keys for recursion.
+        Checks that the provided input_keys satisfy the transform's requirements and returns the
+        corresponding output keys for recursion.
 
-        The output keys are the set of keys that will be present in the output TensorDict of the
-        transform given that the provided TensorDict has the provided input_keys.
+        If the provided input_keys do not satisfy the transform's requirements, raises a
+        RequirementError.
+
+        The output keys are the set of keys of the output TensorDict of the transform when the input
+        TensorDict's keys are input_keys.
         """
 
     __lshift__ = compose
