@@ -1,6 +1,7 @@
 import torch
+from pytest import raises
 
-from torchjd.autojac._transform import EmptyTensorDict, Init
+from torchjd.autojac._transform import EmptyTensorDict, Init, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -72,3 +73,6 @@ def test_check_keys():
     output_keys = init.check_keys(set())
 
     assert output_keys == {key}
+
+    with raises(RequirementError):
+        init.check_keys({key})
