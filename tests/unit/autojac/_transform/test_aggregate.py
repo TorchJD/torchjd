@@ -7,7 +7,12 @@ from torch import Tensor
 from unit.conftest import DEVICE
 
 from torchjd.aggregation import Random
-from torchjd.autojac._transform import GradientVectors, JacobianMatrices, Jacobians
+from torchjd.autojac._transform import (
+    GradientVectors,
+    JacobianMatrices,
+    Jacobians,
+    RequirementError,
+)
 from torchjd.autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
 
 from ._dict_assertions import assert_tensor_dicts_are_close
@@ -145,15 +150,25 @@ def test_reshape():
 
 
 def test_aggregate_matrices_check_keys():
-    """Tests that the `check_keys` method works correctly."""
+    """
+    Tests that the `check_keys` method works correctly: the input_keys must match the stored
+    key_order.
+    """
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
+    key3 = torch.tensor([2.0])
     aggregate = _AggregateMatrices(Random(), [key2, key1])
 
     output_keys = aggregate.check_keys({key1, key2})
 
     assert output_keys == {key1, key2}
+
+    with raises(RequirementError):
+        aggregate.check_keys({key1})
+
+    with raises(RequirementError):
+        aggregate.check_keys({key1, key2, key3})
 
 
 def test_matrixify_check_keys():
