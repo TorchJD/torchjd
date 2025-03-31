@@ -31,7 +31,7 @@ class Diagonalize(Transform[Gradients, Jacobians]):
         considered = set(self.considered)
         if not considered.issubset(input_keys):
             raise RequirementError(
-                f"The input_keys needs to be a super set of the considered keys. Found {input_keys} "
-                f"and {considered}"
+                f"The input_keys should be a super set of the considered keys. Found input_keys "
+                f"{input_keys} and considered keys {considered}."
             )
         return considered

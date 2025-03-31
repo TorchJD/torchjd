@@ -23,5 +23,5 @@ class Init(Transform[EmptyTensorDict, Gradients]):
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         if input_keys == set():
-            raise RequirementError(f"Init expects an empty set of input_keys. Found {input_keys}")
+            raise RequirementError(f"The input_keys should be the empty set. Found {input_keys}.")
         return self.values
