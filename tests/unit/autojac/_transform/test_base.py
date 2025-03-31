@@ -36,7 +36,7 @@ class FakeTransform(Transform[_B, _C]):
 def test_composition_check_keys():
     """
     Tests that `check_keys` works correctly for a composition of transforms: the inner transform's
-    `output_keys` has to match with the outer transform's `required_keys`.
+    `output_keys` has to satisfy the outer transform's requirements.
     """
 
     a1 = torch.randn([2])
