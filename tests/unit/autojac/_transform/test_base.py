@@ -54,7 +54,7 @@ def test_composition_check_keys():
 
     # Outer Transform fails its check
     with raises(RequirementError):
-        (t2 << t1).check_keys({a1, a2})
+        (t2 << t1).check_keys({a1})
 
 
 def test_conjunct_check_keys_1():
