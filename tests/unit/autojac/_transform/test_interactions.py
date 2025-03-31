@@ -12,6 +12,7 @@ from torchjd.autojac._transform import (
     Init,
     Jac,
     Jacobians,
+    RequirementError,
     Select,
     Stack,
     TensorDict,
@@ -269,5 +270,5 @@ def test_stack_check_keys():
 
     assert output_keys == {a}
 
-    with raises(ValueError):
+    with raises(RequirementError):
         Stack([grad1, grad3]).check_keys({y1, y2})
