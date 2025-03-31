@@ -22,6 +22,6 @@ class Init(Transform[EmptyTensorDict, Gradients]):
         return Gradients({value: torch.ones_like(value) for value in self.values})
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
-        if input_keys == set():
+        if not input_keys == set():
             raise RequirementError(f"The input_keys should be the empty set. Found {input_keys}.")
         return self.values
