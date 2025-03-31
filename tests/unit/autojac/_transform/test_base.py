@@ -69,10 +69,10 @@ def test_conjunct_check_keys_1():
 
     assert output_keys == set()
 
-    with raises(ValueError):
+    with raises(RequirementError):
         (t2 | t3).check_keys({a1, a2})
 
-    with raises(ValueError):
+    with raises(RequirementError):
         (t1 | t2 | t3).check_keys({a1, a2})
 
 
@@ -93,10 +93,10 @@ def test_conjunct_check_keys_2():
 
     assert output_keys == {a1, a2}
 
-    with raises(ValueError):
+    with raises(RequirementError):
         (t1 | t3).check_keys(set())
 
-    with raises(ValueError):
+    with raises(RequirementError):
         (t1 | t2 | t3).check_keys(set())
 
 
