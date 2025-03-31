@@ -28,8 +28,13 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
 
         return EmptyTensorDict()
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return self._required_keys, set()
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        if not self._required_keys.issubset(input_keys):
+            raise RequirementError(
+                f"The input_keys needs to be a super set of the required_keys. Found {input_keys} "
+                f"and {self._required_keys}"
+            )
+        return set()
 
 
 def _check_expects_grad(tensor: Tensor) -> None:

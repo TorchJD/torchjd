@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._utils import _A, _materialize, dicts_union
-from .base import RequirementError, Transform
+from .base import Transform
 from .tensor_dict import Gradients, Jacobians
 
 
@@ -17,17 +17,8 @@ class Stack(Transform[_A, Jacobians]):
         result = _stack(results)
         return result
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys_pairs = [transform.check_and_get_keys() for transform in self.transforms]
-
-        required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
-        output_keys = set(key for _, output_keys in keys_pairs for key in output_keys)
-
-        for transform_required_keys, _ in keys_pairs:
-            if transform_required_keys != required_keys:
-                raise RequirementError("All transforms should require the same set of keys.")
-
-        return required_keys, output_keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return {key for transform in self.transforms for key in transform.check_keys(input_keys)}
 
 
 def _stack(gradient_dicts: list[Gradients]) -> Jacobians:

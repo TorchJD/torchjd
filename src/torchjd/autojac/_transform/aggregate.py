@@ -6,7 +6,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from .base import Transform
+from .base import RequirementError, Transform
 from .ordered_set import OrderedSet
 from .tensor_dict import EmptyTensorDict, Gradients, GradientVectors, JacobianMatrices, Jacobians
 
@@ -16,9 +16,9 @@ _ValueType = TypeVar("_ValueType")
 
 class Aggregate(Transform[Jacobians, Gradients]):
     def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
-        matrixify = _Matrixify(key_order)
+        matrixify = _Matrixify()
         aggregate_matrices = _AggregateMatrices(aggregator, key_order)
-        reshape = _Reshape(key_order)
+        reshape = _Reshape()
 
         self._aggregator_str = str(aggregator)
         self.transform = reshape << aggregate_matrices << matrixify
@@ -26,8 +26,8 @@ class Aggregate(Transform[Jacobians, Gradients]):
     def __call__(self, input: Jacobians) -> Gradients:
         return self.transform(input)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return self.transform.check_and_get_keys()
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return self.transform.check_keys(input_keys)
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
@@ -48,9 +48,12 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         ordered_matrices = self._select_ordered_subdict(jacobian_matrices, self.key_order)
         return self._aggregate_group(ordered_matrices, self.aggregator)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys = set(self.key_order)
-        return keys, keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        if not set(self.key_order) == input_keys:
+            raise RequirementError(
+                f"The input_keys must match the key_order. Found {input_keys} and {self.key_order}"
+            )
+        return input_keys
 
     @staticmethod
     def _select_ordered_subdict(
@@ -108,23 +111,17 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
 
 
 class _Matrixify(Transform[Jacobians, JacobianMatrices]):
-    def __init__(self, required_keys: Iterable[Tensor]):
-        self._required_keys = set(required_keys)
-
     def __call__(self, jacobians: Jacobians) -> JacobianMatrices:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
         }
         return JacobianMatrices(jacobian_matrices)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return self._required_keys, self._required_keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return input_keys
 
 
 class _Reshape(Transform[GradientVectors, Gradients]):
-    def __init__(self, required_keys: Iterable[Tensor]):
-        self._required_keys = set(required_keys)
-
     def __call__(self, gradient_vectors: GradientVectors) -> Gradients:
         gradients = {
             key: gradient_vector.view(key.shape)
@@ -132,5 +129,5 @@ class _Reshape(Transform[GradientVectors, Gradients]):
         }
         return Gradients(gradients)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return self._required_keys, self._required_keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return input_keys
