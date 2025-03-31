@@ -251,9 +251,9 @@ def test_equivalence_jac_grads():
     assert_close(jac_c, torch.stack([grad_1_c, grad_2_c]))
 
 
-def test_stack_check_and_get_keys():
+def test_stack_check_keys():
     """
-    Tests that the `check_and_get_keys` method works correctly for a stack of transforms: all of
+    Tests that the `check_keys` method works correctly for a stack of transforms: all of
     them should have the same `required_keys`.
     """
 

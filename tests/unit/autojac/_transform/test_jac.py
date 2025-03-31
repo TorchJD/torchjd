@@ -283,8 +283,8 @@ def test_create_graph():
     assert jacobians[a2].requires_grad
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     x = torch.tensor(5.0)
     a1 = torch.tensor(2.0, requires_grad=True)

@@ -33,9 +33,9 @@ class FakeTransform(Transform[_B, _C]):
         return self._output_keys
 
 
-def test_composition_check_and_get_keys():
+def test_composition_check_keys():
     """
-    Tests that `check_and_get_keys` works correctly for a composition of transforms: the inner
+    Tests that `check_keys` works correctly for a composition of transforms: the inner
     transform's `output_keys` has to match with the outer transform's `required_keys`.
     """
 
@@ -52,9 +52,9 @@ def test_composition_check_and_get_keys():
         (t2 << t1).check_keys({a1, a2})
 
 
-def test_conjunct_check_and_get_keys_1():
+def test_conjunct_check_keys_1():
     """
-    Tests that `check_and_get_keys` works correctly for a conjunction of transforms: all transforms
+    Tests that `check_keys` works correctly for a conjunction of transforms: all transforms
     should successfully check their keys.
     """
 
@@ -76,9 +76,9 @@ def test_conjunct_check_and_get_keys_1():
         (t1 | t2 | t3).check_keys({a1, a2})
 
 
-def test_conjunct_check_and_get_keys_2():
+def test_conjunct_check_keys_2():
     """
-    Tests that `check_and_get_keys` works correctly for a conjunction of transforms: their
+    Tests that `check_keys` works correctly for a conjunction of transforms: their
     `output_keys` should be disjoint.
     """
 

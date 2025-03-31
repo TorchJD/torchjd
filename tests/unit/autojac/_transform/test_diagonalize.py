@@ -97,8 +97,8 @@ def test_permute_order():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key = torch.tensor([1.0])
     diag = Diagonalize([key])

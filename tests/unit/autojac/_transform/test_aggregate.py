@@ -144,8 +144,8 @@ def test_reshape():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_aggregate_matrices_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_aggregate_matrices_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
@@ -156,8 +156,8 @@ def test_aggregate_matrices_check_and_get_keys():
     assert output_keys == {key1, key2}
 
 
-def test_matrixify_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_matrixify_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
@@ -168,8 +168,8 @@ def test_matrixify_check_and_get_keys():
     assert output_keys == {key1, key2}
 
 
-def test_reshape_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_reshape_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])

@@ -56,9 +56,9 @@ def test_conjunction_of_selects_is_select():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_check_and_get_keys():
+def test_check_keys():
     """
-    Tests that the `check_and_get_keys` method works correctly: the set of keys to select should
+    Tests that the `check_keys` method works correctly: the set of keys to select should
     be a subset of the set of required_keys.
     """
 
