@@ -1,4 +1,5 @@
 import torch
+from pytest import raises
 from torch.testing import assert_close
 
 from torchjd.autojac._transform import (
@@ -268,6 +269,5 @@ def test_stack_check_and_get_keys():
 
     assert output_keys == {a}
 
-    output_keys = Stack([grad1, grad3]).check_keys({y1, y2})
-
-    assert output_keys == {a}
+    with raises(ValueError):
+        Stack([grad1, grad3]).check_keys({y1, y2})
