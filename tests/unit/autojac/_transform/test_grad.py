@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd.autojac._transform import Grad, Gradients
+from torchjd.autojac._transform import Grad, Gradients, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -284,7 +284,10 @@ def test_create_graph():
 
 
 def test_check_keys():
-    """Tests that the `check_keys` method works correctly."""
+    """
+    Tests that the `check_keys` method works correctly: the input_keys should match the stored
+    outputs.
+    """
 
     x = torch.tensor(5.0)
     a1 = torch.tensor(2.0, requires_grad=True)
@@ -296,3 +299,9 @@ def test_check_keys():
     output_keys = grad.check_keys({y})
 
     assert output_keys == {a1, a2}
+
+    with raises(RequirementError):
+        grad.check_keys({y, x})
+
+    with raises(RequirementError):
+        grad.check_keys(set())
