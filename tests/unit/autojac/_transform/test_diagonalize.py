@@ -100,8 +100,8 @@ def test_permute_order():
 
 def test_check_keys():
     """
-    Tests that the `check_keys` method works correctly. The input_keys must the stored considered
-    keys.
+    Tests that the `check_keys` method works correctly. The input_keys must match the stored
+    considered keys.
     """
 
     key1 = torch.tensor([1.0])

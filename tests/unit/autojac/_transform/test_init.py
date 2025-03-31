@@ -65,7 +65,7 @@ def test_conjunction_of_inits_is_init():
 
 
 def test_check_keys():
-    """Tests that the `check_keys` method works correctly."""
+    """Tests that the `check_keys` method works correctly: the input_keys should be empty."""
 
     key = torch.tensor([1.0])
     init = Init([key])
