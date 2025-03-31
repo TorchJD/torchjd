@@ -8,7 +8,7 @@ from .tensor_dict import Gradients, Jacobians
 
 class Diagonalize(Transform[Gradients, Jacobians]):
     def __init__(self, key_order: OrderedSet[Tensor]):
-        self.key_order = OrderedSet(key_order)
+        self.key_order = key_order
         self.indices: list[tuple[int, int]] = []
         begin = 0
         for tensor in self.key_order:
