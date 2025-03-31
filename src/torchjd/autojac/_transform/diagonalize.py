@@ -3,7 +3,7 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from .base import Transform
+from .base import RequirementError, Transform
 from .ordered_set import OrderedSet
 from .tensor_dict import Gradients, Jacobians
 
@@ -27,6 +27,11 @@ class Diagonalize(Transform[Gradients, Jacobians]):
         }
         return Jacobians(diagonalized_tensors)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys = set(self.considered)
-        return keys, keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        considered = set(self.considered)
+        if not considered == input_keys:
+            raise RequirementError(
+                f"The input_keys must match the considered keys. Found input_keys {input_keys} and"
+                f"considered keys {considered}."
+            )
+        return considered

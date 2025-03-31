@@ -112,6 +112,6 @@ def _create_transform(
     aggregate = Aggregate(aggregator, inputs)
 
     # Transform that accumulates the result in the .grad field of the inputs.
-    accumulate = Accumulate(inputs)
+    accumulate = Accumulate()
 
     return accumulate << aggregate << jac << diag << init

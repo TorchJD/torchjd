@@ -1,5 +1,3 @@
-from typing import Iterable
-
 from torch import Tensor
 
 from .base import Transform
@@ -7,9 +5,6 @@ from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Accumulate(Transform[Gradients, EmptyTensorDict]):
-    def __init__(self, required_keys: Iterable[Tensor]):
-        self._required_keys = set(required_keys)
-
     def __call__(self, gradients: Gradients) -> EmptyTensorDict:
         """
         Accumulates gradients with respect to keys in their ``.grad`` field.
@@ -28,8 +23,8 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
 
         return EmptyTensorDict()
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return self._required_keys, set()
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return set()
 
 
 def _check_expects_grad(tensor: Tensor) -> None:
