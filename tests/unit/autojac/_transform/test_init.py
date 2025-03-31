@@ -71,7 +71,6 @@ def test_check_keys():
     init = Init([key])
 
     output_keys = init.check_keys(set())
-
     assert output_keys == {key}
 
     with raises(RequirementError):

@@ -67,7 +67,6 @@ def test_check_keys():
     key3 = torch.tensor([3.0])
 
     output_keys = Select([key1, key2]).check_keys({key1, key2, key3})
-
     assert output_keys == {key1, key2}
 
     with raises(RequirementError):

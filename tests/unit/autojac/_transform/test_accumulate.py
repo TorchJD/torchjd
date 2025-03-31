@@ -102,5 +102,4 @@ def test_check_keys():
     accumulate = Accumulate()
 
     output_keys = accumulate.check_keys({key})
-
     assert output_keys == set()

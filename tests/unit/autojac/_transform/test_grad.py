@@ -297,7 +297,6 @@ def test_check_keys():
     grad = Grad(outputs=[y], inputs=[a1, a2])
 
     output_keys = grad.check_keys({y})
-
     assert output_keys == {a1, a2}
 
     with raises(RequirementError):

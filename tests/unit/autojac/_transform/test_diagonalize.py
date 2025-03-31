@@ -109,7 +109,6 @@ def test_check_keys():
     diag = Diagonalize([key1])
 
     output_keys = diag.check_keys({key1})
-
     assert output_keys == {key1}
 
     with raises(RequirementError):

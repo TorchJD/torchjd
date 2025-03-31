@@ -45,7 +45,6 @@ def test_composition_check_keys():
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
     output_keys = (t1 << t2).check_keys({a2})
-
     assert output_keys == {a1, a2}
 
     # Inner Transform fails its check
@@ -71,7 +70,6 @@ def test_conjunct_check_keys_1():
     t3 = FakeTransform(required_keys={a2}, output_keys=set())
 
     output_keys = (t1 | t2).check_keys({a1})
-
     assert output_keys == set()
 
     with raises(RequirementError):
@@ -95,7 +93,6 @@ def test_conjunct_check_keys_2():
     t3 = FakeTransform(required_keys=set(), output_keys={a2})
 
     output_keys = (t2 | t3).check_keys(set())
-
     assert output_keys == {a1, a2}
 
     with raises(RequirementError):

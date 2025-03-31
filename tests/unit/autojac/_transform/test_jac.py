@@ -297,7 +297,6 @@ def test_check_keys():
     jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None)
 
     output_keys = jac.check_keys({y})
-
     assert output_keys == {a1, a2}
 
     with raises(RequirementError):

@@ -161,7 +161,6 @@ def test_aggregate_matrices_check_keys():
     aggregate = _AggregateMatrices(Random(), [key2, key1])
 
     output_keys = aggregate.check_keys({key1, key2})
-
     assert output_keys == {key1, key2}
 
     with raises(RequirementError):
@@ -179,7 +178,6 @@ def test_matrixify_check_keys():
     matrixify = _Matrixify()
 
     output_keys = matrixify.check_keys({key1, key2})
-
     assert output_keys == {key1, key2}
 
 
@@ -191,5 +189,4 @@ def test_reshape_check_keys():
     reshape = _Reshape()
 
     output_keys = reshape.check_keys({key1, key2})
-
     assert output_keys == {key1, key2}
