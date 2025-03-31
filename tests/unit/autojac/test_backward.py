@@ -24,6 +24,7 @@ def test_check_create_transform():
         retain_graph=False,
         parallel_chunk_size=None,
     )
+
     output_keys = transform.check_keys(set())
     assert output_keys == set()
 
