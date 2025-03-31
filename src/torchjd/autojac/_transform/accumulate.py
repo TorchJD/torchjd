@@ -39,7 +39,7 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
 
 def _check_expects_grad(tensor: Tensor) -> None:
     if not _expects_grad(tensor):
-        raise RequirementError(
+        raise ValueError(
             "Cannot populate the .grad field of a Tensor that does not satisfy:"
             "`tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)`."
         )
