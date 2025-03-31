@@ -255,20 +255,24 @@ def test_equivalence_jac_grads():
 def test_stack_check_keys():
     """
     Tests that the `check_keys` method works correctly for a stack of transforms: all of them should
-    have the same `required_keys`.
+    successfully check their keys.
     """
 
-    a = torch.tensor(1.0, requires_grad=True)
-    y1 = a * 2.0
-    y2 = a * 3.0
+    y1 = torch.tensor(1.0)
+    y2 = torch.tensor(1.0)
 
-    grad1 = Grad([y1], [a])
-    grad2 = Grad([y1], [a])
-    grad3 = Grad([y2], [a])
+    select1 = Select([y1])
+    select2 = Select([y1])
+    select3 = Select([y2])
 
-    output_keys = Stack([grad1, grad2]).check_keys({y1})
-
-    assert output_keys == {a}
+    output_keys = Stack([select1, select2]).check_keys({y1})
+    assert output_keys == {y1}
 
     with raises(RequirementError):
-        Stack([grad1, grad3]).check_keys({y1, y2})
+        Stack([select1, select2]).check_keys({y2})
+
+    output_keys = Stack([select1, select3]).check_keys({y1, y2})
+    assert output_keys == {y1, y2}
+
+    with raises(RequirementError):
+        Stack([select1, select3]).check_keys({y1})
