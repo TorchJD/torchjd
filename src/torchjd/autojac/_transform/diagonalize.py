@@ -29,9 +29,9 @@ class Diagonalize(Transform[Gradients, Jacobians]):
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         considered = set(self.considered)
-        if not considered.issubset(input_keys):
+        if not considered == input_keys:
             raise RequirementError(
-                f"The input_keys should be a super set of the considered keys. Found input_keys "
-                f"{input_keys} and considered keys {considered}."
+                f"The input_keys must match the considered keys. Found input_keys {input_keys} and"
+                f"considered keys {considered}."
             )
         return considered
