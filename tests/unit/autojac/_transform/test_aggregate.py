@@ -14,6 +14,7 @@ from torchjd.autojac._transform import (
     RequirementError,
 )
 from torchjd.autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd.autojac._transform.ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -54,7 +55,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
     output of the desired structure.
     """
 
-    aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet(_keys))
     gradient_vectors = aggregate_matrices(jacobian_matrices)
 
     assert set(jacobian_matrices.keys()) == set(gradient_vectors.keys())
@@ -66,7 +67,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
 def test_aggregate_matrices_empty_dict():
     """Tests that applying _AggregateMatrices to an empty input gives an empty output."""
 
-    aggregate_matrices = _AggregateMatrices(Random(), key_order=[])
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet([]))
     gradient_vectors = aggregate_matrices(JacobianMatrices({}))
     assert len(gradient_vectors) == 0
 
@@ -158,7 +159,7 @@ def test_aggregate_matrices_check_keys():
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
     key3 = torch.tensor([2.0])
-    aggregate = _AggregateMatrices(Random(), [key2, key1])
+    aggregate = _AggregateMatrices(Random(), OrderedSet([key2, key1]))
 
     output_keys = aggregate.check_keys({key1, key2})
     assert output_keys == {key1, key2}

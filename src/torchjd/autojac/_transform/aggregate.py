@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Hashable, Iterable, TypeVar
+from typing import Hashable, TypeVar
 
 import torch
 from torch import Tensor
@@ -15,7 +15,7 @@ _ValueType = TypeVar("_ValueType")
 
 
 class Aggregate(Transform[Jacobians, Gradients]):
-    def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
+    def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
         matrixify = _Matrixify()
         aggregate_matrices = _AggregateMatrices(aggregator, key_order)
         reshape = _Reshape()
@@ -31,7 +31,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
-    def __init__(self, aggregator: Aggregator, key_order: Iterable[Tensor]):
+    def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
         self.key_order = OrderedSet(key_order)
         self.aggregator = aggregator
 
