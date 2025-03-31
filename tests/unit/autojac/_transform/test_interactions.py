@@ -195,7 +195,7 @@ def test_conjunction_accumulate_select():
     input = Gradients({key: value})
 
     select = Select([])
-    accumulate = Accumulate([key])
+    accumulate = Accumulate()
     conjunction = accumulate | select
 
     output = conjunction(input)
