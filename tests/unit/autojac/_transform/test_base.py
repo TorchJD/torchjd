@@ -48,7 +48,12 @@ def test_composition_check_keys():
 
     assert output_keys == {a1, a2}
 
-    with raises(ValueError):
+    # Inner Transform fails its check
+    with raises(RequirementError):
+        (t1 << t2).check_keys({a1})
+
+    # Outer Transform fails its check
+    with raises(RequirementError):
         (t2 << t1).check_keys({a1, a2})
 
 
