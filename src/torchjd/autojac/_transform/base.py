@@ -9,6 +9,8 @@ from ._utils import _A, _B, _C, _union
 
 
 class RequirementError(ValueError):
+    """Inappropriate set of inputs keys."""
+
     pass
 
 
