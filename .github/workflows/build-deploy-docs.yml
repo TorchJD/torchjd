@@ -1,0 +1,70 @@
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies (default & doc)
+        run: pdm install --group doc --frozen-lockfile
+
+      - name: Build Documentation
+        working-directory: docs
+        run: pdm run make dirhtml
+
+      - name: Determine deployment folder
+        id: deploy_folder
+        run: |
+          echo "Determining deployment folder..."
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Deploying to target pr/${{ github.event.number }}"
+            echo "DEPLOY_DIR=pr/${{ github.event.number }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Deploying to target ${{ github.ref_name }}"
+            echo "DEPLOY_DIR=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "Deploying to target main"
+            echo "DEPLOY_DIR=main" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy Documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/dirhtml
+          destination_dir: ${{ steps.deploy_folder.outputs.DEPLOY_DIR }}
+          publish_branch: gh-pages
+
+      - name: Update default site redirect (tag event only)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Extract the tag name from the GITHUB_REF variable.
+          TAG_NAME=${GITHUB_REF##*/}
+          # Create an index.html file that redirects to /<tag>/index.html.
+          echo "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=./${TAG_NAME}/index.html\" /></head><body></body></html>" > docs/build/index.html
+          # Clone the gh-pages branch using token authentication
+          git clone --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages
+          cp docs/build/index.html gh-pages/index.html
+          cd gh-pages
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add index.html
+          git commit -m "Update default documentation redirect to tag ${GITHUB_REF##*/}" || echo "No changes to commit"
+          git push origin gh-pages
