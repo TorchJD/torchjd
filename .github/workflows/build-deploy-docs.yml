@@ -54,17 +54,9 @@ jobs:
 
       - name: Update default site redirect (tag event only)
         if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Extract the tag name from the GITHUB_REF variable.
-          TAG_NAME=${GITHUB_REF##*/}
-          # Create an index.html file that redirects to /<tag>/index.html.
-          echo "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=./${TAG_NAME}/index.html\" /></head><body></body></html>" > docs/build/index.html
-          # Clone the gh-pages branch using token authentication
-          git clone --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages
-          cp docs/build/index.html gh-pages/index.html
-          cd gh-pages
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add index.html
-          git commit -m "Update default documentation redirect to tag ${GITHUB_REF##*/}" || echo "No changes to commit"
-          git push origin gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/dirhtml
+          destination_dir: stable
+          publish_branch: gh-pages
