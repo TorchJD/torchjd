@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 
-def _materialize(
+def materialize(
     optional_tensors: Sequence[Tensor | None], inputs: Sequence[Tensor]
 ) -> tuple[Tensor, ...]:
     """

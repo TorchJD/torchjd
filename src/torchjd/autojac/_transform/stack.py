@@ -3,7 +3,7 @@ from typing import Sequence
 import torch
 from torch import Tensor
 
-from ._materialize import _materialize
+from ._materialize import materialize
 from .base import Transform
 from .tensor_dict import _A, Gradients, Jacobians
 
@@ -46,6 +46,6 @@ def _stack_one_key(gradient_dicts: list[Gradients], input: Tensor) -> Tensor:
     """
 
     optional_gradients = [gradients.get(input, None) for gradients in gradient_dicts]
-    gradients = _materialize(optional_gradients, [input] * len(optional_gradients))
+    gradients = materialize(optional_gradients, [input] * len(optional_gradients))
     jacobian = torch.stack(gradients, dim=0)
     return jacobian

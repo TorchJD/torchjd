@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._differentiate import _Differentiate
-from ._materialize import _materialize
+from ._materialize import materialize
 from .tensor_dict import Gradients
 
 
@@ -47,5 +47,5 @@ class Grad(_Differentiate[Gradients]):
             create_graph=self.create_graph,
             allow_unused=True,
         )
-        grads = _materialize(optional_grads, inputs)
+        grads = materialize(optional_grads, inputs)
         return grads
