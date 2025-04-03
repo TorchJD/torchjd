@@ -1,9 +1,7 @@
-from typing import Hashable, Sequence, TypeVar
+from typing import Sequence
 
 import torch
 from torch import Tensor
-
-_KeyType = TypeVar("_KeyType", bound=Hashable)
 
 
 def _materialize(
