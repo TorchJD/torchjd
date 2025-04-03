@@ -5,7 +5,8 @@ from typing import Generic, Sequence
 
 from torch import Tensor
 
-from ._utils import _A, _B, _C, _union
+from ._utils import _union
+from .tensor_dict import _A, _B, _C
 
 
 class RequirementError(ValueError):

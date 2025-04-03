@@ -3,14 +3,10 @@ from typing import Hashable, Iterable, Sequence, TypeVar
 import torch
 from torch import Tensor
 
-from .tensor_dict import EmptyTensorDict, TensorDict, _least_common_ancestor
+from .tensor_dict import _A, EmptyTensorDict, _least_common_ancestor
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
-
-_A = TypeVar("_A", bound=TensorDict)
-_B = TypeVar("_B", bound=TensorDict)
-_C = TypeVar("_C", bound=TensorDict)
 
 
 def dicts_union(dicts: Iterable[dict[_KeyType, _ValueType]]) -> dict[_KeyType, _ValueType]:

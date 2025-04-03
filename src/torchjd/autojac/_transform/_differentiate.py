@@ -3,8 +3,9 @@ from typing import Iterable, Sequence
 
 from torch import Tensor
 
-from .base import _A, RequirementError, Transform
+from .base import RequirementError, Transform
 from .ordered_set import OrderedSet
+from .tensor_dict import _A
 
 
 class _Differentiate(Transform[_A, _A], ABC):
