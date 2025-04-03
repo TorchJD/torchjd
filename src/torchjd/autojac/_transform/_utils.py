@@ -13,13 +13,6 @@ _B = TypeVar("_B", bound=TensorDict)
 _C = TypeVar("_C", bound=TensorDict)
 
 
-def dicts_union(dicts: Iterable[dict[_KeyType, _ValueType]]) -> dict[_KeyType, _ValueType]:
-    result = {}
-    for d in dicts:
-        result |= d
-    return result
-
-
 def _materialize(
     optional_tensors: Sequence[Tensor | None], inputs: Sequence[Tensor]
 ) -> tuple[Tensor, ...]:
