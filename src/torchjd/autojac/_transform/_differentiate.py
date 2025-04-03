@@ -3,8 +3,8 @@ from typing import Iterable, Sequence
 
 from torch import Tensor
 
-from ._utils import ordered_set
-from .base import _A, Transform
+from .base import _A, RequirementError, Transform
+from .ordered_set import OrderedSet
 
 
 class _Differentiate(Transform[_A, _A], ABC):
@@ -16,7 +16,7 @@ class _Differentiate(Transform[_A, _A], ABC):
         create_graph: bool,
     ):
         self.outputs = list(outputs)
-        self.inputs = ordered_set(inputs)
+        self.inputs = OrderedSet(inputs)
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
@@ -38,6 +38,11 @@ class _Differentiate(Transform[_A, _A], ABC):
         tensor_outputs should be.
         """
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        # outputs in the forward direction become inputs in the backward direction, and vice-versa
-        return set(self.outputs), set(self.inputs)
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        outputs = set(self.outputs)
+        if not outputs == input_keys:
+            raise RequirementError(
+                f"The input_keys must match the expected outputs. Found input_keys {input_keys} and"
+                f"outputs {outputs}."
+            )
+        return set(self.inputs)

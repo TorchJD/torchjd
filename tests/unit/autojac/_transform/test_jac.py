@@ -1,7 +1,7 @@
 import torch
 from pytest import mark, raises
 
-from torchjd.autojac._transform import Jac, Jacobians
+from torchjd.autojac._transform import Jac, Jacobians, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -283,8 +283,11 @@ def test_create_graph():
     assert jacobians[a2].requires_grad
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """
+    Tests that the `check_keys` method works correctly: the input_keys should match the stored
+    outputs.
+    """
 
     x = torch.tensor(5.0)
     a1 = torch.tensor(2.0, requires_grad=True)
@@ -293,7 +296,11 @@ def test_check_and_get_keys():
 
     jac = Jac(outputs=[y], inputs=[a1, a2], chunk_size=None)
 
-    required_keys, output_keys = jac.check_and_get_keys()
-
-    assert required_keys == {y}
+    output_keys = jac.check_keys({y})
     assert output_keys == {a1, a2}
+
+    with raises(RequirementError):
+        jac.check_keys({y, x})
+
+    with raises(RequirementError):
+        jac.check_keys(set())

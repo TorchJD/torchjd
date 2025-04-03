@@ -1,6 +1,7 @@
 import torch
+from pytest import raises
 
-from torchjd.autojac._transform import Diagonalize, Gradients
+from torchjd.autojac._transform import Diagonalize, Gradients, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -97,13 +98,21 @@ def test_permute_order():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """
+    Tests that the `check_keys` method works correctly. The input_keys must match the stored
+    considered keys.
+    """
 
-    key = torch.tensor([1.0])
-    diag = Diagonalize([key])
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([1.0])
+    diag = Diagonalize([key1])
 
-    required_keys, output_keys = diag.check_and_get_keys()
+    output_keys = diag.check_keys({key1})
+    assert output_keys == {key1}
 
-    assert required_keys == {key}
-    assert output_keys == {key}
+    with raises(RequirementError):
+        diag.check_keys(set())
+
+    with raises(RequirementError):
+        diag.check_keys({key1, key2})

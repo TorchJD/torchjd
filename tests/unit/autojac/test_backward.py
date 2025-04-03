@@ -5,6 +5,7 @@ from torch.testing import assert_close
 
 from torchjd import backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac._transform.ordered_set import OrderedSet
 from torchjd.autojac.backward import _create_transform
 
 
@@ -20,13 +21,12 @@ def test_check_create_transform():
     transform = _create_transform(
         tensors=[y1, y2],
         aggregator=Mean(),
-        inputs={a1, a2},
+        inputs=OrderedSet([a1, a2]),
         retain_graph=False,
         parallel_chunk_size=None,
     )
-    required_keys, output_keys = transform.check_and_get_keys()
 
-    assert required_keys == set()
+    output_keys = transform.check_keys(set())
     assert output_keys == set()
 
 

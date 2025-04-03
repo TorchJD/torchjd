@@ -15,7 +15,7 @@ def test_simple_get_leaf_tensors():
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
-    assert leaves == {a1, a2}
+    assert set(leaves) == {a1, a2}
 
 
 def test_get_leaf_tensors_excluded_1():
@@ -36,7 +36,7 @@ def test_get_leaf_tensors_excluded_1():
     y2 = b1
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
-    assert leaves == {a1}
+    assert set(leaves) == {a1}
 
 
 def test_get_leaf_tensors_excluded_2():
@@ -57,7 +57,7 @@ def test_get_leaf_tensors_excluded_2():
     y2 = b1
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
-    assert leaves == {a1, a2}
+    assert set(leaves) == {a1, a2}
 
 
 def test_get_leaf_tensors_leaf_not_requiring_grad():
@@ -72,7 +72,7 @@ def test_get_leaf_tensors_leaf_not_requiring_grad():
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
-    assert leaves == {a1}
+    assert set(leaves) == {a1}
 
 
 def test_get_leaf_tensors_model():
@@ -91,7 +91,7 @@ def test_get_leaf_tensors_model():
     losses = loss_fn(y_hat, y)
 
     leaves = _get_leaf_tensors(tensors=[losses], excluded=set())
-    assert leaves == set(model.parameters())
+    assert set(leaves) == set(model.parameters())
 
 
 def test_get_leaf_tensors_model_excluded_2():
@@ -112,7 +112,7 @@ def test_get_leaf_tensors_model_excluded_2():
     losses = loss_fn(z_hat, z)
 
     leaves = _get_leaf_tensors(tensors=[losses], excluded={y})
-    assert leaves == set(model2.parameters())
+    assert set(leaves) == set(model2.parameters())
 
 
 def test_get_leaf_tensors_single_root():
@@ -122,14 +122,14 @@ def test_get_leaf_tensors_single_root():
     y = p * 2
 
     leaves = _get_leaf_tensors(tensors=[y], excluded=set())
-    assert leaves == {p}
+    assert set(leaves) == {p}
 
 
 def test_get_leaf_tensors_empty_roots():
     """Tests that _get_leaf_tensors returns no leaves when roots is the empty set."""
 
     leaves = _get_leaf_tensors(tensors=[], excluded=set())
-    assert leaves == set()
+    assert set(leaves) == set()
 
 
 def test_get_leaf_tensors_excluded_root():
@@ -142,7 +142,7 @@ def test_get_leaf_tensors_excluded_root():
     y2 = (a1**2).sum()
 
     leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={y1})
-    assert leaves == {a1}
+    assert set(leaves) == {a1}
 
 
 @mark.parametrize("depth", [100, 1000, 10000])
@@ -155,7 +155,7 @@ def test_get_leaf_tensors_deep(depth: int):
         sum_ = sum_ + one
 
     leaves = _get_leaf_tensors(tensors=[sum_], excluded=set())
-    assert leaves == {one}
+    assert set(leaves) == {one}
 
 
 def test_get_leaf_tensors_leaf():
