@@ -3,7 +3,7 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from .base import Transform
+from .base import RequirementError, Transform
 from .tensor_dict import EmptyTensorDict, Gradients
 
 
@@ -21,5 +21,9 @@ class Init(Transform[EmptyTensorDict, Gradients]):
 
         return Gradients({value: torch.ones_like(value) for value in self.values})
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return set(), self.values
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        if not input_keys == set():
+            raise RequirementError(
+                f"The input_keys should be the empty set. Found input_keys {input_keys}."
+            )
+        return self.values

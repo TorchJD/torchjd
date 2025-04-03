@@ -8,6 +8,12 @@ from torch import Tensor
 from ._utils import _A, _B, _C, _union
 
 
+class RequirementError(ValueError):
+    """Inappropriate set of inputs keys."""
+
+    pass
+
+
 class Transform(Generic[_B, _C], ABC):
     r"""
     Abstract base class for all transforms. Transforms are elementary building blocks of a jacobian
@@ -44,17 +50,16 @@ class Transform(Generic[_B, _C], ABC):
         """Applies the transform to the input."""
 
     @abstractmethod
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         """
-        Returns a pair containing (in order) the required keys and the output keys of the Transform
-        and recursively checks that the transform is valid.
+        Checks that the provided input_keys satisfy the transform's requirements and returns the
+        corresponding output keys for recursion.
 
-        The required keys are the set of keys that the transform requires to be present in its input
-        TensorDicts. The output keys are the set of keys that will be present in the output
-        TensorDicts of the transform.
+        If the provided input_keys do not satisfy the transform's requirements, raises a
+        RequirementError.
 
-        Since the computation of the required and output keys and the verification that the
-        transform is valid are sometimes intertwined operations, we do them in a single method.
+        The output keys are the set of keys of the output TensorDict of the transform when the input
+        TensorDict's keys are input_keys.
         """
 
     __lshift__ = compose
@@ -73,15 +78,10 @@ class Composition(Transform[_A, _C]):
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        outer_required_keys, outer_output_keys = self.outer.check_and_get_keys()
-        inner_required_keys, inner_output_keys = self.inner.check_and_get_keys()
-        if outer_required_keys != inner_output_keys:
-            raise ValueError(
-                "The `output_keys` of `inner` must match with the `required_keys` of "
-                f"outer. Found {outer_required_keys} and {inner_output_keys}"
-            )
-        return inner_required_keys, outer_output_keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        intermediate_keys = self.inner.check_keys(input_keys)
+        output_keys = self.outer.check_keys(intermediate_keys)
+        return output_keys
 
 
 class Conjunction(Transform[_A, _B]):
@@ -102,18 +102,11 @@ class Conjunction(Transform[_A, _B]):
         output = _union([transform(tensor_dict) for transform in self.transforms])
         return output
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        keys_pairs = [transform.check_and_get_keys() for transform in self.transforms]
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]
+        output_keys = set(output_keys_list)
 
-        required_keys = set(key for required_keys, _ in keys_pairs for key in required_keys)
-        for transform_required_keys, _ in keys_pairs:
-            if transform_required_keys != required_keys:
-                raise ValueError("All transforms should require the same set of keys.")
+        if len(output_keys) != len(output_keys_list):
+            raise RequirementError("The sets of output keys of transforms should be disjoint.")
 
-        output_keys_with_duplicates = [key for _, output_keys in keys_pairs for key in output_keys]
-        output_keys = set(output_keys_with_duplicates)
-
-        if len(output_keys) != len(output_keys_with_duplicates):
-            raise ValueError("The sets of output keys of transforms should be disjoint.")
-
-        return required_keys, output_keys
+        return output_keys

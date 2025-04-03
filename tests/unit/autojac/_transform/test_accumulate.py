@@ -20,7 +20,7 @@ def test_single_accumulation():
     value3 = torch.ones([2, 3])
     input = Gradients({key1: value1, key2: value2, key3: value3})
 
-    accumulate = Accumulate([key1, key2, key3])
+    accumulate = Accumulate()
 
     output = accumulate(input)
     expected_output = {}
@@ -48,7 +48,7 @@ def test_multiple_accumulation(iterations: int):
     value3 = torch.ones([2, 3])
     input = Gradients({key1: value1, key2: value2, key3: value3})
 
-    accumulate = Accumulate([key1, key2, key3])
+    accumulate = Accumulate()
 
     for i in range(iterations):
         accumulate(input)
@@ -73,7 +73,7 @@ def test_no_requires_grad_fails():
     value = torch.ones([1])
     input = Gradients({key: value})
 
-    accumulate = Accumulate([key])
+    accumulate = Accumulate()
 
     with raises(ValueError):
         accumulate(input)
@@ -89,19 +89,17 @@ def test_no_leaf_and_no_retains_grad_fails():
     value = torch.ones([1])
     input = Gradients({key: value})
 
-    accumulate = Accumulate([key])
+    accumulate = Accumulate()
 
     with raises(ValueError):
         accumulate(input)
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key = torch.tensor([1.0], requires_grad=True)
-    accumulate = Accumulate([key])
+    accumulate = Accumulate()
 
-    required_keys, output_keys = accumulate.check_and_get_keys()
-
-    assert required_keys == {key}
+    output_keys = accumulate.check_keys({key})
     assert output_keys == set()

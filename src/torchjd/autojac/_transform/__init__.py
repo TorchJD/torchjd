@@ -1,6 +1,6 @@
 from .accumulate import Accumulate
 from .aggregate import Aggregate
-from .base import Composition, Conjunction, Transform
+from .base import Composition, Conjunction, RequirementError, Transform
 from .diagonalize import Diagonalize
 from .grad import Grad
 from .init import Init

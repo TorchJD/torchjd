@@ -4,6 +4,8 @@ from typing import Iterable, Sequence
 from torch import Tensor
 from torch.autograd.graph import Node
 
+from ._transform.ordered_set import OrderedSet
+
 
 def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
     if not (parallel_chunk_size is None or parallel_chunk_size > 0):
@@ -21,7 +23,7 @@ def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     return output
 
 
-def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> set[Tensor]:
+def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> OrderedSet[Tensor]:
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.
 
@@ -39,15 +41,17 @@ def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> 
         raise ValueError("All `excluded` tensors should have a `grad_fn`.")
 
     accumulate_grads = _get_descendant_accumulate_grads(
-        roots={tensor.grad_fn for tensor in tensors},
+        roots=OrderedSet([tensor.grad_fn for tensor in tensors]),
         excluded_nodes={tensor.grad_fn for tensor in excluded},
     )
-    leaves = {g.variable for g in accumulate_grads}
+    leaves = OrderedSet([g.variable for g in accumulate_grads])
 
     return leaves
 
 
-def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]) -> set[Node]:
+def _get_descendant_accumulate_grads(
+    roots: OrderedSet[Node], excluded_nodes: set[Node]
+) -> OrderedSet[Node]:
     """
     Gets the AccumulateGrad descendants of the specified nodes.
 
@@ -56,8 +60,9 @@ def _get_descendant_accumulate_grads(roots: set[Node], excluded_nodes: set[Node]
     """
 
     excluded_nodes = set(excluded_nodes)  # Re-instantiate set to avoid modifying input
-    result = set()
-    nodes_to_traverse = deque(roots - excluded_nodes)
+    result = OrderedSet([])
+    roots.difference_update(excluded_nodes)
+    nodes_to_traverse = deque(roots)
 
     # This implementation more or less follows what is advised in
     # https://discuss.pytorch.org/t/autograd-graph-traversal/213658 and what was suggested in

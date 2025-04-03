@@ -1,6 +1,7 @@
 import torch
+from pytest import raises
 
-from torchjd.autojac._transform import EmptyTensorDict, Init
+from torchjd.autojac._transform import EmptyTensorDict, Init, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -63,13 +64,14 @@ def test_conjunction_of_inits_is_init():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_check_keys():
+    """Tests that the `check_keys` method works correctly: the input_keys should be empty."""
 
     key = torch.tensor([1.0])
     init = Init([key])
 
-    required_keys, output_keys = init.check_and_get_keys()
-
-    assert required_keys == set()
+    output_keys = init.check_keys(set())
     assert output_keys == {key}
+
+    with raises(RequirementError):
+        init.check_keys({key})

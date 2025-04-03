@@ -9,10 +9,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
-    """
-    Transform that produces gradients filled with ones, for testing purposes. Note that it does the
-    same thing as Init, but it does not depend on Init.
-    """
+    """Transform that produces gradients filled with ones, for testing purposes."""
 
     def __init__(self, keys: Iterable[Tensor]):
         self.keys = set(keys)
@@ -20,8 +17,8 @@ class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
     def __call__(self, input: EmptyTensorDict) -> Gradients:
         return Gradients({key: torch.ones_like(key) for key in self.keys})
 
-    def check_and_get_keys(self) -> tuple[set[Tensor], set[Tensor]]:
-        return set(), self.keys
+    def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
+        return self.keys
 
 
 def test_single_key():

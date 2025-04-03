@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from typing import Hashable, Iterable, Sequence, TypeAlias, TypeVar
+from typing import Hashable, Iterable, Sequence, TypeVar
 
 import torch
 from torch import Tensor
@@ -8,15 +7,10 @@ from .tensor_dict import EmptyTensorDict, TensorDict, _least_common_ancestor
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
-_OrderedSet: TypeAlias = OrderedDict[_KeyType, None]
 
 _A = TypeVar("_A", bound=TensorDict)
 _B = TypeVar("_B", bound=TensorDict)
 _C = TypeVar("_C", bound=TensorDict)
-
-
-def ordered_set(elements: Iterable[_KeyType]) -> _OrderedSet[_KeyType]:
-    return OrderedDict.fromkeys(elements, None)
 
 
 def dicts_union(dicts: Iterable[dict[_KeyType, _ValueType]]) -> dict[_KeyType, _ValueType]:

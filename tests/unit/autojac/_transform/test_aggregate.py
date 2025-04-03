@@ -7,8 +7,14 @@ from torch import Tensor
 from unit.conftest import DEVICE
 
 from torchjd.aggregation import Random
-from torchjd.autojac._transform import GradientVectors, JacobianMatrices, Jacobians
+from torchjd.autojac._transform import (
+    GradientVectors,
+    JacobianMatrices,
+    Jacobians,
+    RequirementError,
+)
 from torchjd.autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd.autojac._transform.ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -49,7 +55,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
     output of the desired structure.
     """
 
-    aggregate_matrices = _AggregateMatrices(Random(), key_order=_keys)
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet(_keys))
     gradient_vectors = aggregate_matrices(jacobian_matrices)
 
     assert set(jacobian_matrices.keys()) == set(gradient_vectors.keys())
@@ -61,7 +67,7 @@ def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices
 def test_aggregate_matrices_empty_dict():
     """Tests that applying _AggregateMatrices to an empty input gives an empty output."""
 
-    aggregate_matrices = _AggregateMatrices(Random(), key_order=[])
+    aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet([]))
     gradient_vectors = aggregate_matrices(JacobianMatrices({}))
     assert len(gradient_vectors) == 0
 
@@ -109,7 +115,7 @@ def test_matrixify():
     value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
     input = Jacobians({key1: value1, key2: value2, key3: value3})
 
-    matrixify = _Matrixify([key1, key2, key3])
+    matrixify = _Matrixify()
 
     output = matrixify(input)
     expected_output = {
@@ -132,7 +138,7 @@ def test_reshape():
     value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
     input = GradientVectors({key1: value1, key2: value2, key3: value3})
 
-    reshape = _Reshape([key1, key2, key3])
+    reshape = _Reshape()
 
     output = reshape(input)
     expected_output = {
@@ -144,40 +150,44 @@ def test_reshape():
     assert_tensor_dicts_are_close(output, expected_output)
 
 
-def test_aggregate_matrices_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_aggregate_matrices_check_keys():
+    """
+    Tests that the `check_keys` method works correctly: the input_keys must match the stored
+    key_order.
+    """
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
-    aggregate = _AggregateMatrices(Random(), [key2, key1])
+    key3 = torch.tensor([2.0])
+    aggregate = _AggregateMatrices(Random(), OrderedSet([key2, key1]))
 
-    required_keys, output_keys = aggregate.check_and_get_keys()
+    output_keys = aggregate.check_keys({key1, key2})
+    assert output_keys == {key1, key2}
 
-    assert required_keys == {key1, key2}
+    with raises(RequirementError):
+        aggregate.check_keys({key1})
+
+    with raises(RequirementError):
+        aggregate.check_keys({key1, key2, key3})
+
+
+def test_matrixify_check_keys():
+    """Tests that the `check_keys` method works correctly."""
+
+    key1 = torch.tensor([1.0])
+    key2 = torch.tensor([2.0])
+    matrixify = _Matrixify()
+
+    output_keys = matrixify.check_keys({key1, key2})
     assert output_keys == {key1, key2}
 
 
-def test_matrixify_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
+def test_reshape_check_keys():
+    """Tests that the `check_keys` method works correctly."""
 
     key1 = torch.tensor([1.0])
     key2 = torch.tensor([2.0])
-    matrixify = _Matrixify([key1, key2])
+    reshape = _Reshape()
 
-    required_keys, output_keys = matrixify.check_and_get_keys()
-
-    assert required_keys == {key1, key2}
-    assert output_keys == {key1, key2}
-
-
-def test_reshape_check_and_get_keys():
-    """Tests that the `check_and_get_keys` method works correctly."""
-
-    key1 = torch.tensor([1.0])
-    key2 = torch.tensor([2.0])
-    reshape = _Reshape([key1, key2])
-
-    required_keys, output_keys = reshape.check_and_get_keys()
-
-    assert required_keys == {key1, key2}
+    output_keys = reshape.check_keys({key1, key2})
     assert output_keys == {key1, key2}
