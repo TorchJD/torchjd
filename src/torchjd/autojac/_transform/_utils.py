@@ -3,8 +3,6 @@ from typing import Hashable, Iterable, Sequence, TypeVar
 import torch
 from torch import Tensor
 
-from .tensor_dict import _A, EmptyTensorDict, _least_common_ancestor
-
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
 
@@ -34,12 +32,3 @@ def _materialize(
         else:
             tensors.append(optional_tensor)
     return tuple(tensors)
-
-
-def _union(tensor_dicts: Iterable[_A]) -> _A:
-    output_type: type[_A] = EmptyTensorDict
-    output: _A = EmptyTensorDict()
-    for tensor_dict in tensor_dicts:
-        output_type = _least_common_ancestor(output_type, type(tensor_dict))
-        output |= tensor_dict
-    return output_type(output)
