@@ -103,7 +103,7 @@ def _create_transform(
     init = Init(tensors)
 
     # Transform that turns the gradients into Jacobians.
-    diag = Diagonalize(tensors)
+    diag = Diagonalize(OrderedSet(tensors))
 
     # Transform that computes the required Jacobians.
     jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
