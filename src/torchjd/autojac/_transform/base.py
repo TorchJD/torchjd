@@ -5,7 +5,8 @@ from typing import Generic, Sequence
 
 from torch import Tensor
 
-from ._utils import _A, _B, _C, _union
+from ._utils import _A, _B, _C
+from .tensor_dict import EmptyTensorDict, _least_common_ancestor
 
 
 class RequirementError(ValueError):
@@ -99,8 +100,13 @@ class Conjunction(Transform[_A, _B]):
         return "(" + " | ".join(strings) + ")"
 
     def __call__(self, tensor_dict: _A) -> _B:
-        output = _union([transform(tensor_dict) for transform in self.transforms])
-        return output
+        transformed = [transform(tensor_dict) for transform in self.transforms]
+        output_type: type[_A] = EmptyTensorDict
+        output: _A = EmptyTensorDict()
+        for tensor_dict in transformed:
+            output_type = _least_common_ancestor(output_type, type(tensor_dict))
+            output |= tensor_dict
+        return output_type(output)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]
