@@ -3,7 +3,7 @@ from typing import Sequence
 import torch
 from torch import Tensor
 
-from ._utils import _materialize, dicts_union
+from ._utils import _materialize
 from .base import Transform
 from .tensor_dict import _A, Gradients, Jacobians
 
@@ -32,7 +32,10 @@ def _stack(gradient_dicts: list[Gradients]) -> Jacobians:
     # It is important to first remove duplicate keys before computing their associated
     # stacked tensor. Otherwise, some computations would be duplicated. Therefore, we first compute
     # unique_keys, and only then, we compute the stacked tensors.
-    unique_keys = dicts_union(gradient_dicts).keys()
+    union = {}
+    for d in gradient_dicts:
+        union |= d
+    unique_keys = union.keys()
     result = Jacobians({key: _stack_one_key(gradient_dicts, key) for key in unique_keys})
     return result
 

@@ -1,17 +1,9 @@
-from typing import Hashable, Iterable, Sequence, TypeVar
+from typing import Hashable, Sequence, TypeVar
 
 import torch
 from torch import Tensor
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
-_ValueType = TypeVar("_ValueType")
-
-
-def dicts_union(dicts: Iterable[dict[_KeyType, _ValueType]]) -> dict[_KeyType, _ValueType]:
-    result = {}
-    for d in dicts:
-        result |= d
-    return result
 
 
 def _materialize(
