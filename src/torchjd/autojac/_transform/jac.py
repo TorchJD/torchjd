@@ -6,12 +6,12 @@ from typing import Callable, Iterable, Sequence
 import torch
 from torch import Size, Tensor
 
-from ._differentiate import _Differentiate
+from ._differentiate import Differentiate
 from ._materialize import materialize
 from .tensor_dict import Jacobians
 
 
-class Jac(_Differentiate[Jacobians]):
+class Jac(Differentiate[Jacobians]):
     def __init__(
         self,
         outputs: Iterable[Tensor],

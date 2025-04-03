@@ -8,7 +8,7 @@ from .ordered_set import OrderedSet
 from .tensor_dict import _A
 
 
-class _Differentiate(Transform[_A, _A], ABC):
+class Differentiate(Transform[_A, _A], ABC):
     def __init__(
         self,
         outputs: Iterable[Tensor],
