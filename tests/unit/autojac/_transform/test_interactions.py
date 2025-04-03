@@ -17,6 +17,7 @@ from torchjd.autojac._transform import (
     Stack,
     TensorDict,
 )
+from torchjd.autojac._transform.ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -35,7 +36,7 @@ def test_jac_is_stack_of_grads():
     input = Gradients({y1: torch.ones_like(y1), y2: torch.ones_like(y2)})
 
     jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True)
-    diag = Diagonalize([y1, y2])
+    diag = Diagonalize(OrderedSet([y1, y2]))
     jac_diag = jac << diag
 
     grad1 = Grad(outputs=[y1], inputs=[a1, a2])
@@ -101,7 +102,7 @@ def test_multiple_differentiations():
 def test_str():
     """Tests that the __str__ method works correctly even for a complex transform."""
     init = Init([])
-    diag = Diagonalize([])
+    diag = Diagonalize(OrderedSet([]))
     jac = Jac([], [], chunk_size=None)
     transform = jac << diag << init
 

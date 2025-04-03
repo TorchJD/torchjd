@@ -70,12 +70,9 @@ class ConFIG(Aggregator):
         units = torch.nan_to_num((matrix / (matrix.norm(dim=1)).unsqueeze(1)), 0.0)
         best_direction = torch.linalg.pinv(units) @ weights
 
-        if best_direction.norm() == 0:
-            unit_target_vector = torch.zeros_like(best_direction)
-        else:
-            unit_target_vector = best_direction / best_direction.norm()
+        unit_target_vector = torch.nn.functional.normalize(best_direction, dim=0)
 
-        length = torch.sum(torch.stack([torch.dot(grad, unit_target_vector) for grad in matrix]))
+        length = torch.sum(matrix @ unit_target_vector)
 
         return length * unit_target_vector
 
