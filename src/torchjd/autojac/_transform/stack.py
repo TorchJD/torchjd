@@ -3,7 +3,7 @@ from typing import Sequence
 import torch
 from torch import Tensor
 
-from ._utils import _materialize
+from ._materialize import _materialize
 from .base import Transform
 from .tensor_dict import _A, Gradients, Jacobians
 

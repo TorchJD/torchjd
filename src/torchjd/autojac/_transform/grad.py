@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._differentiate import _Differentiate
-from ._utils import _materialize
+from ._materialize import _materialize
 from .tensor_dict import Gradients
 
 
