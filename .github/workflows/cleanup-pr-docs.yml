@@ -1,0 +1,32 @@
+name: Cleanup PR Documentation
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          repository: TorchJD/documentation
+          ref: main
+          ssh-key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
+
+      - name: Remove PR documentation for closed PR
+        run: |
+          PR_NUMBER="${{ github.event.number }}"
+          echo "Removing documentation for PR #${PR_NUMBER}"
+          rm -rf pr/${PR_NUMBER}
+
+      - name: Commit and push cleanup
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Cleanup documentation for closed PR #${{ github.event.number }}" || echo "No changes to commit"
+          git push origin HEAD:main
