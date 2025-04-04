@@ -65,4 +65,4 @@ jobs:
 
       - name: Add documentation link to summary
         run: |
-          echo "### 📄 [View Deployed Documentation](https://https://torchjd.github.io/documentation/${{ steps.deploy_folder.outputs.DEPLOY_DIR }})" >> $GITHUB_STEP_SUMMARY
+          echo "### 📄 [View Deployed Documentation](https://torchjd.github.io/documentation/${{ steps.deploy_folder.outputs.DEPLOY_DIR }})" >> $GITHUB_STEP_SUMMARY
