@@ -44,7 +44,7 @@ jobs:
             echo "DEPLOY_DIR=main" >> $GITHUB_OUTPUT
           fi
 
-      - name: Deploy Documentation to GitHub Pages
+      - name: Deploy to DEPLOY_DIR of TorchJD/documentation
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
@@ -53,7 +53,7 @@ jobs:
           external_repository: TorchJD/documentation
           publish_branch: main
 
-      - name: Update default site redirect (tag event only)
+      - name: Deploy to stable of TorchJD/documentation
         if: startsWith(github.ref, 'refs/tags/')
         uses: peaceiris/actions-gh-pages@v4
         with:
