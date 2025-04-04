@@ -32,7 +32,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
-        self.key_order = OrderedSet(key_order)
+        self.key_order = key_order
         self.aggregator = aggregator
 
     def __call__(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:

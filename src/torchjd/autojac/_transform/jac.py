@@ -6,12 +6,12 @@ from typing import Callable, Iterable, Sequence
 import torch
 from torch import Size, Tensor
 
-from ._differentiate import _Differentiate
-from ._utils import _materialize
+from ._differentiate import Differentiate
+from ._materialize import materialize
 from .tensor_dict import Jacobians
 
 
-class Jac(_Differentiate[Jacobians]):
+class Jac(Differentiate[Jacobians]):
     def __init__(
         self,
         outputs: Iterable[Tensor],
@@ -60,7 +60,7 @@ class Jac(_Differentiate[Jacobians]):
                 create_graph=self.create_graph,
                 allow_unused=True,
             )
-            grads = _materialize(optional_grads, inputs=inputs)
+            grads = materialize(optional_grads, inputs=inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
         # By the Jacobians constraint, this value should be the same for all jac_outputs.

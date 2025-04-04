@@ -1,3 +1,5 @@
+from typing import TypeVar
+
 from torch import Tensor
 
 
@@ -177,3 +179,8 @@ def _check_corresponding_numel(key: Tensor, value: Tensor, dim: int) -> None:
             "the number of elements in the corresponding key tensor. Found pair with key shape "
             f"{key.shape} and value shape {value.shape}."
         )
+
+
+_A = TypeVar("_A", bound=TensorDict)
+_B = TypeVar("_B", bound=TensorDict)
+_C = TypeVar("_C", bound=TensorDict)
