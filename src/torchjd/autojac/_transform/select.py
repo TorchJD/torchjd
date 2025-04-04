@@ -2,8 +2,8 @@ from typing import Iterable
 
 from torch import Tensor
 
-from ._utils import _A
 from .base import RequirementError, Transform
+from .tensor_dict import _A
 
 
 class Select(Transform[_A, _A]):

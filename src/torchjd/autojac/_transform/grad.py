@@ -3,12 +3,12 @@ from typing import Iterable, Sequence
 import torch
 from torch import Tensor
 
-from ._differentiate import _Differentiate
-from ._utils import _materialize
+from ._differentiate import Differentiate
+from ._materialize import materialize
 from .tensor_dict import Gradients
 
 
-class Grad(_Differentiate[Gradients]):
+class Grad(Differentiate[Gradients]):
     def __init__(
         self,
         outputs: Iterable[Tensor],
@@ -47,5 +47,5 @@ class Grad(_Differentiate[Gradients]):
             create_graph=self.create_graph,
             allow_unused=True,
         )
-        grads = _materialize(optional_grads, inputs)
+        grads = materialize(optional_grads, inputs)
         return grads
