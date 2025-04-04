@@ -16,16 +16,14 @@ jobs:
           repository: TorchJD/documentation
           ref: main
           ssh-key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
-          path: gh-pages
 
       - name: Remove PR documentation for closed PR
         run: |
           PR_NUMBER="${{ github.event.number }}"
           echo "Removing documentation for PR #${PR_NUMBER}"
-          rm -rf gh-pages/pr/${PR_NUMBER}
+          rm -rf pr/${PR_NUMBER}
 
       - name: Commit and push cleanup
-        working-directory: gh-pages
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
