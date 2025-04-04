@@ -13,9 +13,9 @@ jobs:
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository }}
-          ref: gh-pages
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: TorchJD/documentation
+          ref: main
+          ssh-key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
           path: gh-pages
 
       - name: Remove PR documentation for closed PR
@@ -31,4 +31,4 @@ jobs:
           git config user.email "github-actions@github.com"
           git add .
           git commit -m "Cleanup documentation for closed PR #${{ github.event.number }}" || echo "No changes to commit"
-          git push origin HEAD:gh-pages
+          git push origin HEAD:main
