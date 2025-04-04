@@ -9,7 +9,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
+  Build_and_deploy_doc:
     runs-on: ubuntu-latest
     permissions:
       contents: write
