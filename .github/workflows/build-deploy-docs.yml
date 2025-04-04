@@ -20,7 +20,7 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Install dependencies (default & doc)
         run: pdm install --group doc --frozen-lockfile
