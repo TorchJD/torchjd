@@ -50,7 +50,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/dirhtml
           destination_dir: ${{ steps.deploy_folder.outputs.DEPLOY_DIR }}
-          github_repository: TorchJD/documentation.github.io
+          external_repository: TorchJD/documentation.github.io
           publish_branch: main
 
       - name: Update default site redirect (tag event only)
@@ -60,5 +60,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/dirhtml
           destination_dir: stable
-          github_repository: TorchJD/documentation.github.io
+          external_repository: TorchJD/documentation.github.io
           publish_branch: main
