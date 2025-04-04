@@ -50,7 +50,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/dirhtml
           destination_dir: ${{ steps.deploy_folder.outputs.DEPLOY_DIR }}
-          publish_branch: gh-pages
+          github_repository: TorchJD/documentation.github.io
+          publish_branch: main
 
       - name: Update default site redirect (tag event only)
         if: startsWith(github.ref, 'refs/tags/')
@@ -59,4 +60,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/dirhtml
           destination_dir: stable
-          publish_branch: gh-pages
+          github_repository: TorchJD/documentation.github.io
+          publish_branch: main
