@@ -5,7 +5,7 @@ on:
     types: [closed]
 
 jobs:
-  cleanup:
+  Cleanup_documentation:
     runs-on: ubuntu-latest
     permissions:
       contents: write
