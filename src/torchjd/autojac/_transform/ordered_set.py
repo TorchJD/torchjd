@@ -1,7 +1,7 @@
 from collections import OrderedDict
-from typing import Iterable
+from typing import Hashable, Iterable, TypeVar
 
-from torchjd.autojac._transform._utils import _KeyType
+_KeyType = TypeVar("_KeyType", bound=Hashable)
 
 
 class OrderedSet(OrderedDict[_KeyType, None]):
