@@ -16,32 +16,23 @@ def _compute_regularized_normalized_gramian(matrix: Tensor, norm_eps: float, reg
 
 
 def _compute_normalized_gramian(matrix: Tensor, eps: float) -> Tensor:
-    r"""
-    Computes :math:`\frac{1}{\sigma_\max^2} J J^T` for an input matrix :math:`J`, where
-    :math:`{\sigma_\max^2}` is :math:`J`'s largest singular value.
-    .. hint::
-        :math:`J J^T` is the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of
-        :math:`J`
-    For a given matrix :math:`J` with SVD: :math:`J = U S V^T`, we can see that:
-    .. math::
-        \frac{1}{\sigma_\max^2} J J^T = \frac{1}{\sigma_\max^2} U S V^T V S^T U^T = U
-        \left( \frac{S}{\sigma_\max} \right)^2 U^T
-    This is the quantity we compute.
-    .. note::
-        If the provided matrix has dimension :math:`m \times n`, the computation only depends on
-        :math:`n` through the SVD algorithm which is efficient, therefore this is rather fast.
-    """
+    gramian = _compute_gramian(matrix)
+    return _normalize(gramian, eps)
 
-    left_unitary_matrix, singular_values, _ = torch.linalg.svd(matrix, full_matrices=False)
-    max_singular_value = torch.max(singular_values)
-    if max_singular_value < eps:
-        scaled_singular_values = torch.zeros_like(singular_values)
+
+def _normalize(gramian: Tensor, eps: float) -> Tensor:
+    """
+    Normalizes the gramian with respect to the Frobenius norm.
+
+    If `G=A A^T`, then the Frobenius norm of `A` is the square root of the trace of `G`, i.e., the
+    sqrt of the sum of the diagonal elements. The gramian of the (Frobenius) normalization of `A` is
+    therefore `G` divided by the sum of its diagonal elements.
+    """
+    squared_frobenius_norm = gramian.diagonal().sum()
+    if squared_frobenius_norm < eps:
+        return torch.zeros_like(gramian)
     else:
-        scaled_singular_values = singular_values / max_singular_value
-    normalized_gramian = (
-        left_unitary_matrix @ torch.diag(scaled_singular_values**2) @ left_unitary_matrix.T
-    )
-    return normalized_gramian
+        return gramian / squared_frobenius_norm
 
 
 def _regularize(gramian: Tensor, eps: float) -> Tensor:
