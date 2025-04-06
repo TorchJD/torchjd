@@ -47,7 +47,10 @@ with maintainers before implementing major changes.
     pdm run pytest tests/unit tests/doc --cov=src
     ```
 
-## Building the documentation locally
+## Building the documentation
+
+### Locally
+
    - From the `docs` folder, run:
      ```bash
      pdm run make html
@@ -58,6 +61,13 @@ with maintainers before implementing major changes.
      ```bash
      pdm run make clean
      ```
+
+### Online
+
+- When you open a pull request, a GitHub action should build and deploy the documentation, which
+  will become available at `torchjd.org/pr/<pr_number>`. Additionally, you can click on the check
+  status of the action, then click on `Summary`, and then click on the link of the built
+  documentation.
 
 ## Development guidelines
 
