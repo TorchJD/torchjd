@@ -12,6 +12,8 @@ from .mean import _MeanWeighting
 
 class UPGrad(_WeightedAggregator):
     """
+    TEST: check if this new sentence appears in the built documentation.
+
     :class:`~torchjd.aggregation.bases.Aggregator` that projects each row of the input matrix onto
     the dual cone of all rows of this matrix, and that combines the result, as proposed in
     `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
