@@ -28,7 +28,7 @@
 import torch
 from torch import Tensor
 
-from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
+from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import Aggregator
 from .sum import _SumWeighting
 
@@ -62,7 +62,7 @@ class ConFIG(Aggregator):
 
     def __init__(self, pref_vector: Tensor | None = None):
         super().__init__()
-        self.weighting = _pref_vector_to_weighting(pref_vector, default=_SumWeighting())
+        self.weighting = pref_vector_to_weighting(pref_vector, default=_SumWeighting())
         self._pref_vector = pref_vector
 
     def forward(self, matrix: Tensor) -> Tensor:
@@ -80,4 +80,4 @@ class ConFIG(Aggregator):
         return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
 
     def __str__(self) -> str:
-        return f"ConFIG{_pref_vector_to_str_suffix(self._pref_vector)}"
+        return f"ConFIG{pref_vector_to_str_suffix(self._pref_vector)}"

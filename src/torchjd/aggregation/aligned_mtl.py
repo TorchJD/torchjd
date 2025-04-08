@@ -28,7 +28,7 @@
 import torch
 from torch import Tensor
 
-from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
+from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -61,7 +61,7 @@ class AlignedMTL(_WeightedAggregator):
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
-        weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(weighting=_AlignedMTLWrapper(weighting))
@@ -70,7 +70,7 @@ class AlignedMTL(_WeightedAggregator):
         return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
 
     def __str__(self) -> str:
-        return f"AlignedMTL{_pref_vector_to_str_suffix(self._pref_vector)}"
+        return f"AlignedMTL{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
 class _AlignedMTLWrapper(_Weighting):

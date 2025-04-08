@@ -3,7 +3,7 @@ import torch
 from pytest import mark, raises
 from torch.testing import assert_close
 
-from torchjd.aggregation._dual_cone_utils import _project_weight_vector, _project_weights
+from torchjd.aggregation._dual_cone_utils import _project_weight_vector, project_weights
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
@@ -33,7 +33,7 @@ def test_solution_weights(shape: tuple[int, int]):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = _project_weights(u, G, "quadprog")
+    w = project_weights(u, G, "quadprog")
     dual_gap = w - u
 
     # Dual feasibility
@@ -64,8 +64,8 @@ def test_tensorization_shape(shape: tuple[int, ...]):
 
     G = matrix @ matrix.T
 
-    W_tensor = _project_weights(U_tensor, G, "quadprog")
-    W_matrix = _project_weights(U_matrix, G, "quadprog")
+    W_tensor = project_weights(U_tensor, G, "quadprog")
+    W_matrix = project_weights(U_matrix, G, "quadprog")
 
     assert_close(W_matrix.reshape(shape), W_tensor)
 
