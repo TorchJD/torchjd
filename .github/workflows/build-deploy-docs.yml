@@ -5,8 +5,6 @@ on:
     branches: [ main ]
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
-  pull_request:
-    types: [opened, synchronize, reopened]
 
 jobs:
   Build_and_deploy_doc:
@@ -33,10 +31,7 @@ jobs:
         id: deploy_folder
         run: |
           echo "Determining deployment folder..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "Deploying to target pr/${{ github.event.number }}"
-            echo "DEPLOY_DIR=pr/${{ github.event.number }}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "Deploying to target ${{ github.ref_name }}"
             echo "DEPLOY_DIR=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           else
