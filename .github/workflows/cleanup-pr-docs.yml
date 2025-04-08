@@ -10,7 +10,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout gh-pages branch
+      - name: Checkout TorchJD/documentation main branch
         uses: actions/checkout@v4
         with:
           repository: TorchJD/documentation
