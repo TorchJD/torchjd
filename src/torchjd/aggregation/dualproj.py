@@ -4,7 +4,7 @@ from torch import Tensor
 
 from ._dual_cone_utils import project_weights
 from ._gramian_utils import _compute_regularized_normalized_gramian
-from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
+from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -47,7 +47,7 @@ class DualProj(_WeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(
@@ -64,7 +64,7 @@ class DualProj(_WeightedAggregator):
         )
 
     def __str__(self) -> str:
-        return f"DualProj{_pref_vector_to_str_suffix(self._pref_vector)}"
+        return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
 class _DualProjWrapper(_Weighting):

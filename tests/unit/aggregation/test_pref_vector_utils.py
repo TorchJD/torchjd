@@ -5,7 +5,7 @@ from pytest import mark, raises
 from torch import Tensor
 from unit._utils import ExceptionContext
 
-from torchjd.aggregation._pref_vector_utils import _pref_vector_to_weighting
+from torchjd.aggregation._pref_vector_utils import pref_vector_to_weighting
 from torchjd.aggregation.mean import _MeanWeighting
 
 
@@ -23,4 +23,4 @@ from torchjd.aggregation.mean import _MeanWeighting
 )
 def test_pref_vector_to_weighting_check(pref_vector: Tensor | None, expectation: ExceptionContext):
     with expectation:
-        _ = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        _ = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
