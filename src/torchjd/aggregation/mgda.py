@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from ._gramian_utils import _compute_gramian
+from ._gramian_utils import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -57,7 +57,7 @@ class _MGDAWeighting(_Weighting):
         self.max_iters = max_iters
 
     def _frank_wolfe_solver(self, matrix: Tensor) -> Tensor:
-        gramian = _compute_gramian(matrix)
+        gramian = compute_gramian(matrix)
         device = matrix.device
         dtype = matrix.dtype
 
