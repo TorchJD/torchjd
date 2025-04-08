@@ -62,8 +62,8 @@ def test_scale_invariant(shape: tuple[int, int], scaling: float):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = _project_weights(u, G, "quadprog")
-    w_scaled = _project_weights(u, scaling * G, "quadprog")
+    w = project_weights(u, G, "quadprog")
+    w_scaled = project_weights(u, scaling * G, "quadprog")
 
     assert_close(w_scaled, w)
 

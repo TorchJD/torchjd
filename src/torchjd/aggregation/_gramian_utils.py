@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 
-def _compute_gramian(matrix: Tensor) -> Tensor:
+def compute_gramian(matrix: Tensor) -> Tensor:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
     """
@@ -10,7 +10,7 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     return matrix @ matrix.T
 
 
-def _normalize(gramian: Tensor, eps: float) -> Tensor:
+def normalize(gramian: Tensor, eps: float) -> Tensor:
     """
     Normalizes the gramian with respect to the Frobenius norm.
 
@@ -25,7 +25,7 @@ def _normalize(gramian: Tensor, eps: float) -> Tensor:
         return gramian / squared_frobenius_norm
 
 
-def _regularize(gramian: Tensor, eps: float) -> Tensor:
+def regularize(gramian: Tensor, eps: float) -> Tensor:
     """
     Adds a regularization term to the gramian to enforce positive definiteness.
 
