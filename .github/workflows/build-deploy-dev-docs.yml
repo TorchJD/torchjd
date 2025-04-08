@@ -33,7 +33,7 @@ jobs:
           echo "Deploying to target ${{ github.event.number }}"
           echo "DEPLOY_DIR=${{ github.event.number }}" >> $GITHUB_OUTPUT
 
-      - name: Deploy to DEPLOY_DIR of TorchJD/documentation
+      - name: Deploy to DEPLOY_DIR of TorchJD/dev-documentation
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.DEV_DOCUMENTATION_DEPLOY_KEY }}
