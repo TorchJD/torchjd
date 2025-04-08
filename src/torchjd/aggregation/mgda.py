@@ -56,15 +56,14 @@ class _MGDAWeighting(_Weighting):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def _frank_wolfe_solver(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        device = matrix.device
-        dtype = matrix.dtype
+    def _frank_wolfe_solver(self, gramian: Tensor) -> Tensor:
+        device = gramian.device
+        dtype = gramian.dtype
 
-        alpha = torch.ones(matrix.shape[0], device=device, dtype=dtype) / matrix.shape[0]
+        alpha = torch.ones(gramian.shape[0], device=device, dtype=dtype) / gramian.shape[0]
         for i in range(self.max_iters):
             t = torch.argmin(gramian @ alpha)
-            e_t = torch.zeros(matrix.shape[0], device=device, dtype=dtype)
+            e_t = torch.zeros(gramian.shape[0], device=device, dtype=dtype)
             e_t[t] = 1.0
             a = alpha @ (gramian @ e_t)
             b = alpha @ (gramian @ alpha)
@@ -81,5 +80,6 @@ class _MGDAWeighting(_Weighting):
         return alpha
 
     def forward(self, matrix: Tensor) -> Tensor:
-        weights = self._frank_wolfe_solver(matrix)
+        gramian = compute_gramian(matrix)
+        weights = self._frank_wolfe_solver(gramian)
         return weights
