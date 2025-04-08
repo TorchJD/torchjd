@@ -10,11 +10,6 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     return matrix @ matrix.T
 
 
-def _compute_normalized_gramian(matrix: Tensor, eps: float) -> Tensor:
-    gramian = _compute_gramian(matrix)
-    return _normalize(gramian, eps)
-
-
 def _normalize(gramian: Tensor, eps: float) -> Tensor:
     """
     Normalizes the gramian with respect to the Frobenius norm.
