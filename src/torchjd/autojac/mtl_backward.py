@@ -17,7 +17,7 @@ from ._transform import (
     Transform,
 )
 from ._transform.ordered_set import OrderedSet
-from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
+from ._utils import as_tensor_list, check_optional_positive_chunk_size, get_leaf_tensors
 
 
 def mtl_backward(
@@ -79,16 +79,16 @@ def mtl_backward(
         ``torch.vmap``.
     """
 
-    _check_optional_positive_chunk_size(parallel_chunk_size)
+    check_optional_positive_chunk_size(parallel_chunk_size)
 
-    features = _as_tensor_list(features)
+    features = as_tensor_list(features)
 
     if shared_params is None:
-        shared_params = _get_leaf_tensors(tensors=features, excluded=[])
+        shared_params = get_leaf_tensors(tensors=features, excluded=[])
     else:
         shared_params = OrderedSet(shared_params)
     if tasks_params is None:
-        tasks_params = [_get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
+        tasks_params = [get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
     else:
         tasks_params = [OrderedSet(task_params) for task_params in tasks_params]
 
