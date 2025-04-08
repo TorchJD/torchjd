@@ -37,8 +37,8 @@ jobs:
             echo "Deploying to target ${{ github.ref_name }}"
             echo "DEPLOY_DIR=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           else
-            echo "Deploying to target main"
-            echo "DEPLOY_DIR=main" >> $GITHUB_OUTPUT
+            echo "Deploying to target latest"
+            echo "DEPLOY_DIR=latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy to DEPLOY_DIR of TorchJD/documentation
