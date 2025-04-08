@@ -6,7 +6,7 @@ from qpsolvers import solve_qp
 from torch import Tensor
 
 
-def _project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tensor:
+def project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tensor:
     """
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.
