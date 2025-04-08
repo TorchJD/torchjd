@@ -7,7 +7,7 @@ from torch.autograd.graph import Node
 from ._transform.ordered_set import OrderedSet
 
 
-def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
+def check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
     if not (parallel_chunk_size is None or parallel_chunk_size > 0):
         raise ValueError(
             "`parallel_chunk_size` should be `None` or greater than `0`. (got "
@@ -15,7 +15,7 @@ def _check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None
         )
 
 
-def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
+def as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     if isinstance(tensors, Tensor):
         output = [tensors]
     else:
@@ -23,7 +23,7 @@ def _as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
     return output
 
 
-def _get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> OrderedSet[Tensor]:
+def get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> OrderedSet[Tensor]:
     """
     Gets the leaves of the autograd graph of all specified ``tensors``.
 

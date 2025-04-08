@@ -6,7 +6,7 @@ from torchjd.aggregation import Aggregator
 
 from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Transform
 from ._transform.ordered_set import OrderedSet
-from ._utils import _as_tensor_list, _check_optional_positive_chunk_size, _get_leaf_tensors
+from ._utils import as_tensor_list, check_optional_positive_chunk_size, get_leaf_tensors
 
 
 def backward(
@@ -67,15 +67,15 @@ def backward(
         experience issues with ``backward`` try to use ``parallel_chunk_size=1`` to avoid relying on
         ``torch.vmap``.
     """
-    _check_optional_positive_chunk_size(parallel_chunk_size)
+    check_optional_positive_chunk_size(parallel_chunk_size)
 
-    tensors = _as_tensor_list(tensors)
+    tensors = as_tensor_list(tensors)
 
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be empty")
 
     if inputs is None:
-        inputs = _get_leaf_tensors(tensors=tensors, excluded=set())
+        inputs = get_leaf_tensors(tensors=tensors, excluded=set())
     else:
         inputs = OrderedSet(inputs)
 
