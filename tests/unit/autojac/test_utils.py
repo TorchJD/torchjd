@@ -2,7 +2,7 @@ import torch
 from pytest import mark, raises
 from torch.nn import Linear, MSELoss, ReLU, Sequential
 
-from torchjd.autojac._utils import _get_leaf_tensors
+from torchjd.autojac._utils import get_leaf_tensors
 
 
 def test_simple_get_leaf_tensors():
@@ -14,7 +14,7 @@ def test_simple_get_leaf_tensors():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
+    leaves = get_leaf_tensors(tensors=[y1, y2], excluded=set())
     assert set(leaves) == {a1, a2}
 
 
@@ -35,7 +35,7 @@ def test_get_leaf_tensors_excluded_1():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + b2
     y2 = b1
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
+    leaves = get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
     assert set(leaves) == {a1}
 
 
@@ -56,7 +56,7 @@ def test_get_leaf_tensors_excluded_2():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = b1
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
+    leaves = get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
     assert set(leaves) == {a1, a2}
 
 
@@ -71,7 +71,7 @@ def test_get_leaf_tensors_leaf_not_requiring_grad():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded=set())
+    leaves = get_leaf_tensors(tensors=[y1, y2], excluded=set())
     assert set(leaves) == {a1}
 
 
@@ -90,7 +90,7 @@ def test_get_leaf_tensors_model():
     y_hat = model(x)
     losses = loss_fn(y_hat, y)
 
-    leaves = _get_leaf_tensors(tensors=[losses], excluded=set())
+    leaves = get_leaf_tensors(tensors=[losses], excluded=set())
     assert set(leaves) == set(model.parameters())
 
 
@@ -111,7 +111,7 @@ def test_get_leaf_tensors_model_excluded_2():
     z_hat = model2(y)
     losses = loss_fn(z_hat, z)
 
-    leaves = _get_leaf_tensors(tensors=[losses], excluded={y})
+    leaves = get_leaf_tensors(tensors=[losses], excluded={y})
     assert set(leaves) == set(model2.parameters())
 
 
@@ -121,14 +121,14 @@ def test_get_leaf_tensors_single_root():
     p = torch.tensor([1.0, 2.0], requires_grad=True)
     y = p * 2
 
-    leaves = _get_leaf_tensors(tensors=[y], excluded=set())
+    leaves = get_leaf_tensors(tensors=[y], excluded=set())
     assert set(leaves) == {p}
 
 
 def test_get_leaf_tensors_empty_roots():
     """Tests that _get_leaf_tensors returns no leaves when roots is the empty set."""
 
-    leaves = _get_leaf_tensors(tensors=[], excluded=set())
+    leaves = get_leaf_tensors(tensors=[], excluded=set())
     assert set(leaves) == set()
 
 
@@ -141,7 +141,7 @@ def test_get_leaf_tensors_excluded_root():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum()
 
-    leaves = _get_leaf_tensors(tensors=[y1, y2], excluded={y1})
+    leaves = get_leaf_tensors(tensors=[y1, y2], excluded={y1})
     assert set(leaves) == {a1}
 
 
@@ -154,7 +154,7 @@ def test_get_leaf_tensors_deep(depth: int):
     for i in range(depth):
         sum_ = sum_ + one
 
-    leaves = _get_leaf_tensors(tensors=[sum_], excluded=set())
+    leaves = get_leaf_tensors(tensors=[sum_], excluded=set())
     assert set(leaves) == {one}
 
 
@@ -163,7 +163,7 @@ def test_get_leaf_tensors_leaf():
 
     a = torch.tensor(1.0, requires_grad=True)
     with raises(ValueError):
-        _ = _get_leaf_tensors(tensors=[a], excluded=set())
+        _ = get_leaf_tensors(tensors=[a], excluded=set())
 
 
 def test_get_leaf_tensors_tensor_not_requiring_grad():
@@ -173,7 +173,7 @@ def test_get_leaf_tensors_tensor_not_requiring_grad():
 
     a = torch.tensor(1.0, requires_grad=False) * 2
     with raises(ValueError):
-        _ = _get_leaf_tensors(tensors=[a], excluded=set())
+        _ = get_leaf_tensors(tensors=[a], excluded=set())
 
 
 def test_get_leaf_tensors_excluded_leaf():
@@ -182,7 +182,7 @@ def test_get_leaf_tensors_excluded_leaf():
     a = torch.tensor(1.0, requires_grad=True) * 2
     b = torch.tensor(2.0, requires_grad=True)
     with raises(ValueError):
-        _ = _get_leaf_tensors(tensors=[a], excluded={b})
+        _ = get_leaf_tensors(tensors=[a], excluded={b})
 
 
 def test_get_leaf_tensors_excluded_not_requiring_grad():
@@ -193,4 +193,4 @@ def test_get_leaf_tensors_excluded_not_requiring_grad():
     a = torch.tensor(1.0, requires_grad=True) * 2
     b = torch.tensor(2.0, requires_grad=False) * 2
     with raises(ValueError):
-        _ = _get_leaf_tensors(tensors=[a], excluded={b})
+        _ = get_leaf_tensors(tensors=[a], excluded={b})

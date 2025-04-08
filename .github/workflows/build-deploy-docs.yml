@@ -5,11 +5,11 @@ on:
     branches: [ main ]
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
-  pull_request:
-    types: [opened, synchronize, reopened]
 
 jobs:
-  Build_and_deploy_doc:
+  build-deploy-doc:
+    name: Build & deploy doc
+    environment: prod-documentation
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -33,21 +33,18 @@ jobs:
         id: deploy_folder
         run: |
           echo "Determining deployment folder..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "Deploying to target pr/${{ github.event.number }}"
-            echo "DEPLOY_DIR=pr/${{ github.event.number }}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "Deploying to target ${{ github.ref_name }}"
             echo "DEPLOY_DIR=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           else
-            echo "Deploying to target main"
-            echo "DEPLOY_DIR=main" >> $GITHUB_OUTPUT
+            echo "Deploying to target latest"
+            echo "DEPLOY_DIR=latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy to DEPLOY_DIR of TorchJD/documentation
         uses: peaceiris/actions-gh-pages@v4
         with:
-          deploy_key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
+          deploy_key: ${{ secrets.PROD_DOCUMENTATION_DEPLOY_KEY }}
           publish_dir: docs/build/dirhtml
           destination_dir: ${{ steps.deploy_folder.outputs.DEPLOY_DIR }}
           external_repository: TorchJD/documentation
@@ -57,7 +54,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: peaceiris/actions-gh-pages@v4
         with:
-          deploy_key: ${{ secrets.DOCUMENTATION_DEPLOY_KEY }}
+          deploy_key: ${{ secrets.PROD_DOCUMENTATION_DEPLOY_KEY }}
           publish_dir: docs/build/dirhtml
           destination_dir: stable
           external_repository: TorchJD/documentation

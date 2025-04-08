@@ -29,3 +29,22 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  build-doc:
+    name: Build doc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies (default & doc)
+        run: pdm install --group doc --frozen-lockfile
+
+      - name: Build Documentation
+        working-directory: docs
+        run: pdm run make dirhtml
