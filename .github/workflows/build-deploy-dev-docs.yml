@@ -1,0 +1,47 @@
+name: Build and Deploy Documentation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  Build_and_deploy_dev_doc:
+    environment: dev-documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies (default & doc)
+        run: pdm install --group doc --frozen-lockfile
+
+      - name: Build Documentation
+        working-directory: docs
+        run: pdm run make dirhtml
+
+      - name: Determine deployment folder
+        id: deploy_folder
+        run: |
+          echo "Determining deployment folder..."
+          echo "Deploying to target ${{ github.event.number }}"
+          echo "DEPLOY_DIR=${{ github.event.number }}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to DEPLOY_DIR of TorchJD/documentation
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.DEV_DOCUMENTATION_DEPLOY_KEY }}
+          publish_dir: docs/build/dirhtml
+          destination_dir: ${{ steps.deploy_folder.outputs.DEPLOY_DIR }}
+          external_repository: TorchJD/dev-documentation
+          publish_branch: main
+
+      - name: Add documentation link to summary
+        run: |
+          echo "### 📄 [View Deployed Documentation](https://dev.torchjd.github.io/documentation/${{ steps.deploy_folder.outputs.DEPLOY_DIR }})" >> $GITHUB_STEP_SUMMARY
