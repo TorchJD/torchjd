@@ -10,11 +10,6 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     return matrix @ matrix.T
 
 
-def _compute_regularized_normalized_gramian(matrix: Tensor, norm_eps: float, reg_eps: float):
-    normalized_gramian = _compute_normalized_gramian(matrix, norm_eps)
-    return _regularize(normalized_gramian, reg_eps)
-
-
 def _compute_normalized_gramian(matrix: Tensor, eps: float) -> Tensor:
     gramian = _compute_gramian(matrix)
     return _normalize(gramian, eps)
