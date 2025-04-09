@@ -20,8 +20,8 @@ class Differentiate(Transform[_A, _A], ABC):
         # torch.autograd.grad is *exactly* equivariant to input permutations and invariant to
         # output (with their corresponding grad_output) permutations.
 
-        self.outputs = outputs
-        self.inputs = inputs
+        self.outputs = list(outputs)
+        self.inputs = list(inputs)
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 

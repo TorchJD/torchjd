@@ -38,30 +38,27 @@ class Jac(Differentiate[Jacobians]):
             jac_outputs.
         """
 
-        outputs = list(self.outputs)
-        inputs = list(self.inputs)
-
-        if len(inputs) == 0:
+        if len(self.inputs) == 0:
             return tuple()
 
-        if len(outputs) == 0:
+        if len(self.outputs) == 0:
             return tuple(
                 [
                     torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
-                    for input in inputs
+                    for input in self.inputs
                 ]
             )
 
         def _get_vjp(grad_outputs: Sequence[Tensor], retain_graph: bool) -> Tensor:
             optional_grads = torch.autograd.grad(
-                outputs,
-                inputs,
+                self.outputs,
+                self.inputs,
                 grad_outputs=grad_outputs,
                 retain_graph=retain_graph,
                 create_graph=self.create_graph,
                 allow_unused=True,
             )
-            grads = materialize(optional_grads, inputs=inputs)
+            grads = materialize(optional_grads, inputs=self.inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
         # By the Jacobians constraint, this value should be the same for all jac_outputs.
@@ -87,10 +84,10 @@ class Jac(Differentiate[Jacobians]):
         jac_matrix_chunks.append(_get_jac_matrix_chunk(jac_outputs_chunk, get_vjp_last))
 
         jac_matrix = torch.vstack(jac_matrix_chunks)
-        lengths = [input.numel() for input in inputs]
+        lengths = [input.numel() for input in self.inputs]
         jac_matrices = _extract_sub_matrices(jac_matrix, lengths)
 
-        shapes = [input.shape for input in inputs]
+        shapes = [input.shape for input in self.inputs]
         jacs = _reshape_matrices(jac_matrices, shapes)
 
         return tuple(jacs)
