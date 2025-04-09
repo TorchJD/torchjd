@@ -22,3 +22,8 @@ class OrderedSet(OrderedDict[_KeyType, None], Set[_KeyType]):
         """Adds the specified element to the OrderedSet."""
 
         self[element] = None
+
+    def __add__(self, other: "OrderedSet[_KeyType]") -> "OrderedSet[_KeyType]":
+        """Creates a new OrderedSet with the elements of self followed by the elements of other."""
+
+        return OrderedSet([*self, *other])
