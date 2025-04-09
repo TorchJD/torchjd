@@ -19,7 +19,7 @@ def test_check_create_transform():
     y2 = (a1**2).sum() + a2.norm()
 
     transform = _create_transform(
-        tensors=[y1, y2],
+        tensors=OrderedSet([y1, y2]),
         aggregator=Mean(),
         inputs=OrderedSet([a1, a2]),
         retain_graph=False,

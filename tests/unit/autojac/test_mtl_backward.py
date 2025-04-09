@@ -22,8 +22,8 @@ def test_check_create_transform():
     y2 = f1 * p2[0] + f2 * p2[1]
 
     transform = _create_transform(
-        losses=[y1, y2],
-        features=[f1, f2],
+        losses=OrderedSet([y1, y2]),
+        features=OrderedSet([f1, f2]),
         aggregator=Mean(),
         tasks_params=[OrderedSet([p1]), OrderedSet([p2])],
         shared_params=OrderedSet([p0]),
