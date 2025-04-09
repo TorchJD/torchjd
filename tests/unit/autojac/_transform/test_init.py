@@ -15,7 +15,7 @@ def test_single_input():
     key = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     input = EmptyTensorDict()
 
-    init = Init([key])
+    init = Init({key})
 
     output = init(input)
     expected_output = {key: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])}
@@ -33,7 +33,7 @@ def test_multiple_inputs():
     key2 = torch.tensor([1.0, 3.0, 5.0])
     input = EmptyTensorDict()
 
-    init = Init([key1, key2])
+    init = Init({key1, key2})
 
     output = init(input)
     expected = {
@@ -53,10 +53,10 @@ def test_conjunction_of_inits_is_init():
     x2 = torch.tensor(6.0)
     input = EmptyTensorDict()
 
-    init1 = Init([x1])
-    init2 = Init([x2])
+    init1 = Init({x1})
+    init2 = Init({x2})
     conjunction_of_inits = init1 | init2
-    init = Init([x1, x2])
+    init = Init({x1, x2})
 
     output = conjunction_of_inits(input)
     expected_output = init(input)
@@ -68,7 +68,7 @@ def test_check_keys():
     """Tests that the `check_keys` method works correctly: the input_keys should be empty."""
 
     key = torch.tensor([1.0])
-    init = Init([key])
+    init = Init({key})
 
     output_keys = init.check_keys(set())
     assert output_keys == {key}
