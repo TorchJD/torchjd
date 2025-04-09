@@ -1,18 +1,19 @@
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import torch
 from torch import Tensor
 
 from ._differentiate import Differentiate
 from ._materialize import materialize
+from .ordered_set import OrderedSet
 from .tensor_dict import Gradients
 
 
 class Grad(Differentiate[Gradients]):
     def __init__(
         self,
-        outputs: Iterable[Tensor],
-        inputs: Iterable[Tensor],
+        outputs: OrderedSet[Tensor],
+        inputs: OrderedSet[Tensor],
         retain_graph: bool = False,
         create_graph: bool = False,
     ):

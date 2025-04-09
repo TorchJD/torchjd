@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from torch import Tensor
 
@@ -11,13 +11,17 @@ from .tensor_dict import _A
 class Differentiate(Transform[_A, _A], ABC):
     def __init__(
         self,
-        outputs: Iterable[Tensor],
-        inputs: Iterable[Tensor],
+        outputs: OrderedSet[Tensor],
+        inputs: OrderedSet[Tensor],
         retain_graph: bool,
         create_graph: bool,
     ):
-        self.outputs = list(outputs)
-        self.inputs = OrderedSet(inputs)
+        # The order of outputs and inputs only matters because we have no guarantee that
+        # torch.autograd.grad is *exactly* equivariant to input permutations and invariant to
+        # output (with their corresponding grad_output) permutations.
+
+        self.outputs = outputs
+        self.inputs = inputs
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 

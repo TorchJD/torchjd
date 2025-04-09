@@ -1,21 +1,22 @@
 import math
 from functools import partial
 from itertools import accumulate
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Sequence
 
 import torch
 from torch import Size, Tensor
 
 from ._differentiate import Differentiate
 from ._materialize import materialize
+from .ordered_set import OrderedSet
 from .tensor_dict import Jacobians
 
 
 class Jac(Differentiate[Jacobians]):
     def __init__(
         self,
-        outputs: Iterable[Tensor],
-        inputs: Iterable[Tensor],
+        outputs: OrderedSet[Tensor],
+        inputs: OrderedSet[Tensor],
         chunk_size: int | None,
         retain_graph: bool = False,
         create_graph: bool = False,
