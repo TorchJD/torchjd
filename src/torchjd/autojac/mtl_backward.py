@@ -169,7 +169,7 @@ def _create_task_transform(
 ) -> Transform[EmptyTensorDict, Gradients]:
     # Tensors with respect to which we compute the gradients.
     to_differentiate = OrderedSet(task_params)  # Re-instantiate set to avoid modifying input
-    to_differentiate.update(OrderedSet(features))
+    to_differentiate.update(features)
 
     # Transform that initializes the gradient output to 1.
     init = Init(loss)
