@@ -2,9 +2,9 @@ from typing import Literal
 
 from torch import Tensor
 
-from ._dual_cone_utils import _project_weights
+from ._dual_cone_utils import project_weights
 from ._gramian_utils import _compute_regularized_normalized_gramian
-from ._pref_vector_utils import _pref_vector_to_str_suffix, _pref_vector_to_weighting
+from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
@@ -47,7 +47,7 @@ class DualProj(_WeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = _pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(
@@ -64,7 +64,7 @@ class DualProj(_WeightedAggregator):
         )
 
     def __str__(self) -> str:
-        return f"DualProj{_pref_vector_to_str_suffix(self._pref_vector)}"
+        return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
 class _DualProjWrapper(_Weighting):
@@ -101,5 +101,5 @@ class _DualProjWrapper(_Weighting):
     def forward(self, matrix: Tensor) -> Tensor:
         u = self.weighting(matrix)
         G = _compute_regularized_normalized_gramian(matrix, self.norm_eps, self.reg_eps)
-        w = _project_weights(u, G, self.solver)
+        w = project_weights(u, G, self.solver)
         return w
