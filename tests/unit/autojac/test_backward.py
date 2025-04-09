@@ -19,7 +19,7 @@ def test_check_create_transform():
     y2 = (a1**2).sum() + a2.norm()
 
     transform = _create_transform(
-        tensors=[y1, y2],
+        tensors=OrderedSet([y1, y2]),
         aggregator=Mean(),
         inputs=OrderedSet([a1, a2]),
         retain_graph=False,
@@ -242,9 +242,11 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
 
 def test_repeated_tensors():
     """
-    Tests that backward correctly works when some tensors are repeated. In this case, since
-    torch.autograd.backward would sum the gradients of the repeated tensors, it is natural for
-    autojac to compute a Jacobian with one row per repeated tensor, and to aggregate it.
+    Tests that backward does not allow repeating tensors.
+
+    This behavior is different from torch.autograd.backward which would sum the gradients of the
+    repeated tensors, but it simplifies a lot the implementation of autojac and there are
+    alternative ways of producing Jacobians with repeated rows anyway.
     """
 
     a1 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -253,13 +255,8 @@ def test_repeated_tensors():
     y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + (a2**2).sum()
 
-    expected_grad_wrt_a1 = grad([y1, y1, y2], a1, retain_graph=True)[0]
-    expected_grad_wrt_a2 = grad([y1, y1, y2], a2, retain_graph=True)[0]
-
-    backward([y1, y1, y2], Sum())
-
-    assert_close(a1.grad, expected_grad_wrt_a1)
-    assert_close(a2.grad, expected_grad_wrt_a2)
+    with raises(ValueError):
+        backward([y1, y1, y2], Sum())
 
 
 def test_repeated_inputs():

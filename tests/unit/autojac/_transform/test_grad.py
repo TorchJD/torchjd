@@ -2,6 +2,7 @@ import torch
 from pytest import raises
 
 from torchjd.autojac._transform import Grad, Gradients, RequirementError
+from torchjd.autojac._transform.ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -18,7 +19,7 @@ def test_single_input():
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[y], inputs=[a])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]))
 
     gradients = grad(input)
     expected_gradients = {a: x}
@@ -35,7 +36,7 @@ def test_empty_inputs_1():
     y = torch.tensor(1.0, requires_grad=True)
     input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[y], inputs=[])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([]))
 
     gradients = grad(input)
     expected_gradients = {}
@@ -54,7 +55,7 @@ def test_empty_inputs_2():
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[y], inputs=[])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([]))
 
     gradients = grad(input)
     expected_gradients = {}
@@ -72,7 +73,7 @@ def test_empty_outputs():
     a2 = torch.tensor([1.0, 2.0], requires_grad=True)
     input = Gradients({})
 
-    grad = Grad(outputs=[], inputs=[a1, a2])
+    grad = Grad(outputs=OrderedSet([]), inputs=OrderedSet([a1, a2]))
 
     gradients = grad(input)
     expected_gradients = {a1: torch.zeros_like(a1), a2: torch.zeros_like(a2)}
@@ -88,8 +89,8 @@ def test_retain_graph():
     y = a * x
     input = Gradients({y: torch.ones_like(y)})
 
-    grad_retain_graph = Grad(outputs=[y], inputs=[a], retain_graph=True)
-    grad_discard_graph = Grad(outputs=[y], inputs=[a], retain_graph=False)
+    grad_retain_graph = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]), retain_graph=True)
+    grad_discard_graph = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]), retain_graph=False)
 
     grad_retain_graph(input)
     grad_retain_graph(input)
@@ -115,8 +116,8 @@ def test_single_input_two_levels():
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
 
-    outer_grad = Grad(outputs=[y], inputs=[a])
-    inner_grad = Grad(outputs=[z], inputs=[y])
+    outer_grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]))
+    inner_grad = Grad(outputs=OrderedSet([z]), inputs=OrderedSet([y]))
     grad = outer_grad << inner_grad
 
     gradients = grad(input)
@@ -138,8 +139,8 @@ def test_empty_inputs_two_levels():
     z = y * x2
     input = Gradients({z: torch.ones_like(z)})
 
-    outer_grad = Grad(outputs=[y], inputs=[])
-    inner_grad = Grad(outputs=[z], inputs=[y])
+    outer_grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([]))
+    inner_grad = Grad(outputs=OrderedSet([z]), inputs=OrderedSet([y]))
     composed_grad = outer_grad << inner_grad
 
     gradients = composed_grad(input)
@@ -160,7 +161,7 @@ def test_vector_output():
     y = torch.stack([a * x, a**2])
     input = Gradients({y: torch.tensor([3.0, 1.0])})
 
-    grad = Grad(outputs=[y], inputs=[a])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]))
 
     gradients = grad(input)
     expected_gradients = {a: x * 3 + 2 * a}
@@ -181,7 +182,7 @@ def test_multiple_outputs():
     y2 = a**2
     input = Gradients({y1: torch.ones_like(y1) * 3, y2: torch.ones_like(y2)})
 
-    grad = Grad(outputs=[y1, y2], inputs=[a])
+    grad = Grad(outputs=OrderedSet([y1, y2]), inputs=OrderedSet([a]))
 
     gradients = grad(input)
     expected_gradients = {a: x * 3 + 2 * a}
@@ -209,7 +210,7 @@ def test_multiple_tensor_outputs():
         }
     )
 
-    grad = Grad(outputs=[y1, y2, y3], inputs=[a])
+    grad = Grad(outputs=OrderedSet([y1, y2, y3]), inputs=OrderedSet([a]))
 
     gradients = grad(input)
     g = x * 3 + 2 * a * 6 + 2 * a * 2 * 7 + 3 * a**2 * 9 + 3 * a**2 * 2 * 10.0
@@ -234,10 +235,10 @@ def test_composition_of_grads_is_grad():
     z2 = y2 + x1
     input = Gradients({z1: torch.ones_like(z1), z2: torch.ones_like(z2)})
 
-    outer_grad = Grad(outputs=[y1, y2], inputs=[a, b], retain_graph=True)
-    inner_grad = Grad(outputs=[z1, z2], inputs=[y1, y2], retain_graph=True)
+    outer_grad = Grad(outputs=OrderedSet([y1, y2]), inputs=OrderedSet([a, b]), retain_graph=True)
+    inner_grad = Grad(outputs=OrderedSet([z1, z2]), inputs=OrderedSet([y1, y2]), retain_graph=True)
     composed_grad = outer_grad << inner_grad
-    grad = Grad(outputs=[z1, z2], inputs=[a, b])
+    grad = Grad(outputs=OrderedSet([z1, z2]), inputs=OrderedSet([a, b]))
 
     gradients = composed_grad(input)
     expected_gradients = grad(input)
@@ -258,10 +259,10 @@ def test_conjunction_of_grads_is_grad():
     y = torch.stack([a1 * x1, a2 * x2])
     input = Gradients({y: torch.ones_like(y)})
 
-    grad1 = Grad(outputs=[y], inputs=[a1], retain_graph=True)
-    grad2 = Grad(outputs=[y], inputs=[a2], retain_graph=True)
+    grad1 = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a1]), retain_graph=True)
+    grad2 = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a2]), retain_graph=True)
     conjunction = grad1 | grad2
-    grad = Grad(outputs=[y], inputs=[a1, a2])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]))
 
     gradients = conjunction(input)
     expected_gradients = grad(input)
@@ -276,7 +277,7 @@ def test_create_graph():
     y = a * a
     input = Gradients({y: torch.ones_like(y)})
 
-    grad = Grad(outputs=[y], inputs=[a], create_graph=True)
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a]), create_graph=True)
 
     gradients = grad(input)
 
@@ -294,7 +295,7 @@ def test_check_keys():
     a2 = torch.tensor(3.0, requires_grad=True)
     y = torch.stack([a1 * x, a2 * x])
 
-    grad = Grad(outputs=[y], inputs=[a1, a2])
+    grad = Grad(outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]))
 
     output_keys = grad.check_keys({y})
     assert output_keys == {a1, a2}

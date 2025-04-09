@@ -6,7 +6,7 @@ from torchjd.aggregation import Aggregator
 
 from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Transform
 from ._transform.ordered_set import OrderedSet
-from ._utils import as_tensor_list, check_optional_positive_chunk_size, get_leaf_tensors
+from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
 def backward(
@@ -69,7 +69,7 @@ def backward(
     """
     check_optional_positive_chunk_size(parallel_chunk_size)
 
-    tensors = as_tensor_list(tensors)
+    tensors = as_checked_ordered_set(tensors, "tensors")
 
     if len(tensors) == 0:
         raise ValueError("`tensors` cannot be empty")
@@ -91,7 +91,7 @@ def backward(
 
 
 def _create_transform(
-    tensors: list[Tensor],
+    tensors: OrderedSet[Tensor],
     aggregator: Aggregator,
     inputs: OrderedSet[Tensor],
     retain_graph: bool,
@@ -103,7 +103,7 @@ def _create_transform(
     init = Init(tensors)
 
     # Transform that turns the gradients into Jacobians.
-    diag = Diagonalize(OrderedSet(tensors))
+    diag = Diagonalize(tensors)
 
     # Transform that computes the required Jacobians.
     jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)

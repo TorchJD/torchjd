@@ -1,4 +1,4 @@
-from typing import Iterable
+from collections.abc import Set
 
 import torch
 from torch import Tensor
@@ -8,8 +8,8 @@ from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Init(Transform[EmptyTensorDict, Gradients]):
-    def __init__(self, values: Iterable[Tensor]):
-        self.values = set(values)
+    def __init__(self, values: Set[Tensor]):
+        self.values = values
 
     def __call__(self, input: EmptyTensorDict) -> Gradients:
         r"""
@@ -26,4 +26,4 @@ class Init(Transform[EmptyTensorDict, Gradients]):
             raise RequirementError(
                 f"The input_keys should be the empty set. Found input_keys {input_keys}."
             )
-        return self.values
+        return set(self.values)

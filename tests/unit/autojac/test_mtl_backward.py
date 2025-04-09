@@ -22,8 +22,8 @@ def test_check_create_transform():
     y2 = f1 * p2[0] + f2 * p2[1]
 
     transform = _create_transform(
-        losses=[y1, y2],
-        features=[f1, f2],
+        losses=OrderedSet([y1, y2]),
+        features=OrderedSet([f1, f2]),
         aggregator=Mean(),
         tasks_params=[OrderedSet([p1]), OrderedSet([p2])],
         shared_params=OrderedSet([p0]),
@@ -590,10 +590,11 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
 
 def test_repeated_losses():
     """
-    Tests that mtl_backward correctly works when some losses are repeated. In this case, since
-    torch.autograd.backward would sum the gradients of the repeated losses, it is natural for
-    autojac to sum the task-specific gradients, and to compute and aggregate a Jacobian with one row
-    per repeated tensor, for shared gradients.
+    Tests that mtl_backward does not allow repeating losses.
+
+    This behavior is different from torch.autograd.backward which would sum the gradients of the
+    repeated losses, but it simplifies a lot the implementation of autojac and there are alternative
+    ways of producing Jacobians with repeated rows anyway.
     """
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -605,24 +606,18 @@ def test_repeated_losses():
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
 
-    expected_grad_wrt_p0 = grad([y1, y1, y2], [p0], retain_graph=True)[0]
-    expected_grad_wrt_p1 = grad([y1, y1], [p1], retain_graph=True)[0]
-    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
-
-    losses = [y1, y1, y2]
-    mtl_backward(losses=losses, features=[f1, f2], aggregator=Sum(), retain_graph=True)
-
-    assert_close(p0.grad, expected_grad_wrt_p0)
-    assert_close(p1.grad, expected_grad_wrt_p1)
-    assert_close(p2.grad, expected_grad_wrt_p2)
+    with raises(ValueError):
+        losses = [y1, y1, y2]
+        mtl_backward(losses=losses, features=[f1, f2], aggregator=Sum(), retain_graph=True)
 
 
 def test_repeated_features():
     """
-    Tests that mtl_backward correctly works when some features are repeated. Repeated features are
-    a bit more tricky, because we differentiate with respect to them (in which case it shouldn't
-    matter that they are repeated) and we also differentiate them (in which case it should lead to
-    extra rows in the Jacobian).
+    Tests that mtl_backward does not allow repeating features.
+
+    Repeated features are a bit more tricky, because we differentiate with respect to them (in which
+    case it shouldn't matter that they are repeated) and we also differentiate them (in which case
+    repetition would be very confusing and should thus be forbidden).
     """
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -634,17 +629,9 @@ def test_repeated_features():
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
 
-    grad_outputs = grad([y1, y2], [f1, f1, f2], retain_graph=True)
-    expected_grad_wrt_p0 = grad([f1, f1, f2], [p0], grad_outputs, retain_graph=True)[0]
-    expected_grad_wrt_p1 = grad([y1], [p1], retain_graph=True)[0]
-    expected_grad_wrt_p2 = grad([y2], [p2], retain_graph=True)[0]
-
-    features = [f1, f1, f2]
-    mtl_backward(losses=[y1, y2], features=features, aggregator=Sum())
-
-    assert_close(p0.grad, expected_grad_wrt_p0)
-    assert_close(p1.grad, expected_grad_wrt_p1)
-    assert_close(p2.grad, expected_grad_wrt_p2)
+    with raises(ValueError):
+        features = [f1, f1, f2]
+        mtl_backward(losses=[y1, y2], features=features, aggregator=Sum())
 
 
 def test_repeated_shared_params():

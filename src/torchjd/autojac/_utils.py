@@ -15,12 +15,19 @@ def check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:
         )
 
 
-def as_tensor_list(tensors: Sequence[Tensor] | Tensor) -> list[Tensor]:
+def as_checked_ordered_set(
+    tensors: Sequence[Tensor] | Tensor, variable_name: str
+) -> OrderedSet[Tensor]:
     if isinstance(tensors, Tensor):
-        output = [tensors]
-    else:
-        output = list(tensors)
-    return output
+        tensors = [tensors]
+
+    original_length = len(tensors)
+    output = OrderedSet(tensors)
+
+    if len(output) != original_length:
+        raise ValueError(f"`{variable_name}` should contain unique elements.")
+
+    return OrderedSet(tensors)
 
 
 def get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> OrderedSet[Tensor]:

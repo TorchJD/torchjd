@@ -17,7 +17,7 @@ from ._transform import (
     Transform,
 )
 from ._transform.ordered_set import OrderedSet
-from ._utils import as_tensor_list, check_optional_positive_chunk_size, get_leaf_tensors
+from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
 def mtl_backward(
@@ -81,7 +81,8 @@ def mtl_backward(
 
     check_optional_positive_chunk_size(parallel_chunk_size)
 
-    features = as_tensor_list(features)
+    losses = as_checked_ordered_set(losses, "losses")
+    features = as_checked_ordered_set(features, "features")
 
     if shared_params is None:
         shared_params = get_leaf_tensors(tensors=features, excluded=[])
@@ -117,8 +118,8 @@ def mtl_backward(
 
 
 def _create_transform(
-    losses: Sequence[Tensor],
-    features: list[Tensor],
+    losses: OrderedSet[Tensor],
+    features: OrderedSet[Tensor],
     aggregator: Aggregator,
     tasks_params: list[OrderedSet[Tensor]],
     shared_params: OrderedSet[Tensor],
@@ -138,7 +139,7 @@ def _create_transform(
         _create_task_transform(
             features,
             task_params,
-            loss,
+            OrderedSet([loss]),
             retain_graph,
         )
         for task_params, loss in zip(tasks_params, losses)
@@ -161,21 +162,21 @@ def _create_transform(
 
 
 def _create_task_transform(
-    features: list[Tensor],
+    features: OrderedSet[Tensor],
     task_params: OrderedSet[Tensor],
-    loss: Tensor,
+    loss: OrderedSet[Tensor],  # contains a single scalar loss
     retain_graph: bool,
 ) -> Transform[EmptyTensorDict, Gradients]:
     # Tensors with respect to which we compute the gradients.
     to_differentiate = OrderedSet(task_params)  # Re-instantiate set to avoid modifying input
-    to_differentiate.update(OrderedSet(features))
+    to_differentiate.update(features)
 
     # Transform that initializes the gradient output to 1.
-    init = Init([loss])
+    init = Init(loss)
 
     # Transform that computes the gradients of the loss w.r.t. the task-specific parameters and
     # the features.
-    grad = Grad([loss], to_differentiate, retain_graph)
+    grad = Grad(loss, to_differentiate, retain_graph)
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.

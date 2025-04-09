@@ -35,14 +35,19 @@ def test_jac_is_stack_of_grads():
     y2 = a2 * x
     input = Gradients({y1: torch.ones_like(y1), y2: torch.ones_like(y2)})
 
-    jac = Jac(outputs=[y1, y2], inputs=[a1, a2], chunk_size=None, retain_graph=True)
+    jac = Jac(
+        outputs=OrderedSet([y1, y2]),
+        inputs=OrderedSet([a1, a2]),
+        chunk_size=None,
+        retain_graph=True,
+    )
     diag = Diagonalize(OrderedSet([y1, y2]))
     jac_diag = jac << diag
 
-    grad1 = Grad(outputs=[y1], inputs=[a1, a2])
-    grad2 = Grad(outputs=[y2], inputs=[a1, a2])
-    select1 = Select([y1])
-    select2 = Select([y2])
+    grad1 = Grad(outputs=OrderedSet([y1]), inputs=OrderedSet([a1, a2]))
+    grad2 = Grad(outputs=OrderedSet([y2]), inputs=OrderedSet([a1, a2]))
+    select1 = Select({y1})
+    select2 = Select({y2})
     stack_of_grads = Stack([grad1 << select1, grad2 << select2])
 
     jacobians = jac_diag(input)
@@ -61,8 +66,8 @@ def test_single_differentiation():
     y = a * 2.0
     input = EmptyTensorDict()
 
-    init = Init([y])
-    grad = Grad([y], [a])
+    init = Init({y})
+    grad = Grad(OrderedSet([y]), OrderedSet([a]))
     transform = grad << init
 
     output = transform(input)
@@ -83,11 +88,11 @@ def test_multiple_differentiations():
     y2 = a2 * 3.0
     input = EmptyTensorDict()
 
-    grad1 = Grad([y1], [a1])
-    grad2 = Grad([y2], [a2])
-    select1 = Select([y1])
-    select2 = Select([y2])
-    init = Init([y1, y2])
+    grad1 = Grad(OrderedSet([y1]), OrderedSet([a1]))
+    grad2 = Grad(OrderedSet([y2]), OrderedSet([a2]))
+    select1 = Select({y1})
+    select2 = Select({y2})
+    init = Init({y1, y2})
     transform = ((grad1 << select1) | (grad2 << select2)) << init
 
     output = transform(input)
@@ -101,9 +106,9 @@ def test_multiple_differentiations():
 
 def test_str():
     """Tests that the __str__ method works correctly even for a complex transform."""
-    init = Init([])
+    init = Init(set())
     diag = Diagonalize(OrderedSet([]))
-    jac = Jac([], [], chunk_size=None)
+    jac = Jac(OrderedSet([]), OrderedSet([]), chunk_size=None)
     transform = jac << diag << init
 
     assert str(transform) == "Jac ∘ Diagonalize ∘ Init"
@@ -121,9 +126,9 @@ def test_simple_conjunction():
     x3 = torch.tensor(4.0)
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
 
-    select1 = Select([x1])
-    select2 = Select([x2])
-    select3 = Select([x3])
+    select1 = Select({x1})
+    select2 = Select({x2})
+    select3 = Select({x3})
     conjunction = Conjunction([select1, select2, select3])
 
     output = conjunction(input)
@@ -142,8 +147,8 @@ def test_conjunction_is_commutative():
     x2 = torch.tensor([1.0, 3.0, 5.0])
     input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2)})
 
-    a = Select([x1])
-    b = Select([x2])
+    a = Select({x1})
+    b = Select({x2})
     flipped_conjunction = Conjunction([b, a])
     conjunction = Conjunction([a, b])
 
@@ -171,10 +176,10 @@ def test_conjunction_is_associative():
         }
     )
 
-    a = Select([x1])
-    b = Select([x2])
-    c = Select([x3])
-    d = Select([x4])
+    a = Select({x1})
+    b = Select({x2})
+    c = Select({x3})
+    d = Select({x4})
 
     parenthesized_conjunction = Conjunction([a, Conjunction([Conjunction([b, c]), d])])
     conjunction = Conjunction([a, b, c, d])
@@ -197,7 +202,7 @@ def test_conjunction_accumulate_select():
     value = torch.ones_like(key)
     input = Gradients({key: value})
 
-    select = Select([])
+    select = Select(set())
     accumulate = Accumulate()
     conjunction = accumulate | select
 
@@ -227,11 +232,11 @@ def test_equivalence_jac_grads():
     outputs = [y1, y2]
     grad_outputs = [torch.ones_like(output) for output in outputs]
 
-    grad1 = Grad(outputs=[outputs[0]], inputs=inputs, retain_graph=True)
+    grad1 = Grad(outputs=OrderedSet([outputs[0]]), inputs=OrderedSet(inputs), retain_graph=True)
     grad_dict_1 = grad1(Gradients({outputs[0]: grad_outputs[0]}))
     grad_1_A, grad_1_b, grad_1_c = grad_dict_1[A], grad_dict_1[b], grad_dict_1[c]
 
-    grad2 = Grad(outputs=[outputs[1]], inputs=inputs, retain_graph=True)
+    grad2 = Grad(outputs=OrderedSet([outputs[1]]), inputs=OrderedSet(inputs), retain_graph=True)
     grad_dict_2 = grad2(Gradients({outputs[1]: grad_outputs[1]}))
     grad_2_A, grad_2_b, grad_2_c = grad_dict_2[A], grad_dict_2[b], grad_dict_2[c]
 
@@ -242,7 +247,7 @@ def test_equivalence_jac_grads():
     for i, grad_output in enumerate(grad_outputs):
         batched_grad_outputs[i][i] = grad_output
 
-    jac = Jac(outputs=outputs, inputs=inputs, chunk_size=None)
+    jac = Jac(outputs=OrderedSet(outputs), inputs=OrderedSet(inputs), chunk_size=None)
     jac_dict = jac(
         Jacobians({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]})
     )
@@ -262,9 +267,9 @@ def test_stack_check_keys():
     y1 = torch.tensor(1.0)
     y2 = torch.tensor(1.0)
 
-    select1 = Select([y1])
-    select2 = Select([y1])
-    select3 = Select([y2])
+    select1 = Select({y1})
+    select2 = Select({y1})
+    select3 = Select({y2})
 
     output_keys = Stack([select1, select2]).check_keys({y1})
     assert output_keys == {y1}
