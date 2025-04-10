@@ -52,7 +52,7 @@ def test_solution_weights(shape: tuple[int, int]):
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (32, 114)])
-@mark.parametrize("scaling", [0.25, 0.5, 4.0, 16.0])
+@mark.parametrize("scaling", [2 ** (-4), 2 ** (-2), 2**2, 2**4])
 def test_scale_invariant(shape: tuple[int, int], scaling: float):
     """
     Tests that `_project_weights` is invariant under scaling.
