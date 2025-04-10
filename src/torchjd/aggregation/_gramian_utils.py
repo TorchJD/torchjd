@@ -12,7 +12,7 @@ def compute_gramian(matrix: Tensor) -> Tensor:
 
 def normalize(gramian: Tensor, eps: float) -> Tensor:
     """
-    Normalizes the gramian with respect to the Frobenius norm.
+    Normalizes the gramian `G=AA^T` with respect to the Frobenius norm of `A`.
 
     If `G=A A^T`, then the Frobenius norm of `A` is the square root of the trace of `G`, i.e., the
     sqrt of the sum of the diagonal elements. The gramian of the (Frobenius) normalization of `A` is
