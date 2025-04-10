@@ -51,6 +51,23 @@ def test_solution_weights(shape: tuple[int, int]):
     assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
 
 
+@mark.parametrize("shape", [(5, 7), (9, 37), (32, 114)])
+@mark.parametrize("scaling", [2 ** (-4), 2 ** (-2), 2**2, 2**4])
+def test_scale_invariant(shape: tuple[int, int], scaling: float):
+    """
+    Tests that `_project_weights` is invariant under scaling.
+    """
+
+    J = torch.randn(shape)
+    G = J @ J.T
+    u = torch.rand(shape[0])
+
+    w = project_weights(u, G, "quadprog")
+    w_scaled = project_weights(u, scaling * G, "quadprog")
+
+    assert_close(w_scaled, w)
+
+
 @mark.parametrize("shape", [(5, 2, 3), (1, 3, 6, 9), (2, 1, 1, 5, 8), (3, 1)])
 def test_tensorization_shape(shape: tuple[int, ...]):
     """
