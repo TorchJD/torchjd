@@ -24,6 +24,8 @@ changes that do not affect the user.
   simplified. This should slightly improve the performance of `backward` and `mtl_backward`.
 - Improved the implementation of `ConFIG` to be simpler and safer when normalizing vectors. It
   should slightly improve the performance of `ConFIG` and minimally affect its behavior.
+- Simplified the normalization of the Gramian in `UPGrad`, `DualProj` and `CAGrad`. This should
+  slightly improve their performance and precision.
 
 ### Fixed
 
