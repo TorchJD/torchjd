@@ -44,6 +44,7 @@ extensions = [
 
 html_theme = "furo"
 html_static_path = ["_static"]
+templates_path = ["_templates"]
 
 autodoc_member_order = "bysource"
 intersphinx_mapping = {

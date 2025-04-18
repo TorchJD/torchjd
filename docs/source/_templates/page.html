@@ -1,0 +1,16 @@
+{#
+    Adds a canonical link to the stable version of the documentation to each built hmtl page.
+    The reason to do that is that search engines require it:
+    https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls
+
+    This template overrides the page.html furo template
+    (https://github.com/pradyunsg/furo/blob/main/src/furo/theme/furo/page.html) by adding an extra
+    line to its <head> section, with the appropriate canonical link. Note that there is no guarantee
+    that the furo theme keeps using a file named page.html, so this could silently break with future
+    updates of furo. See https://pradyunsg.me/furo/customisation/injecting/ and
+    https://github.com/pradyunsg/furo/discussions/248 for more information.
+#}
+{% extends "!page.html" %}
+{% block extrahead %}
+    <link rel="canonical" href="https://torchjd.org/stable/{{ pagename }}.html">
+{% endblock %}
