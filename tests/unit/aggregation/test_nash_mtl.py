@@ -41,9 +41,7 @@ def test_nash_mtl_reset():
     To ensure that the aggregations are not all the same, we create different matrices to aggregate.
     """
 
-    n_aggregations = 4
-    matrices = [torch.randn(3, 5) for _ in range(n_aggregations)]
-
+    matrices = [torch.randn(3, 5) for _ in range(4)]
     aggregator = NashMTL(n_tasks=3, update_weights_every=3)
     expecteds = [aggregator(matrix) for matrix in matrices]
 
