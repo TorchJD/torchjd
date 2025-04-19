@@ -148,6 +148,9 @@ class _NashMTLWeighting(_Weighting):
             try:
                 self.prob.solve(solver=cp.ECOS, warm_start=True, max_iters=100)
             except Exception:
+                # On macOS, this can happen with a cvxpy.error.SolverError: Solver 'ECOS' failed.
+                # No idea why. The corresponding matrix is of shape [9, 11] with rank 5.
+                # Maybe other exceptions can happen in other cases.
                 self.alpha_param.value = self.prvs_alpha_param.value
 
             if self._stop_criteria(gtg, alpha_t):
