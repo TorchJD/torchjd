@@ -35,6 +35,8 @@ changes that do not affect the user.
 - Removed arbitrary exception handling in `IMTLG` and `AlignedMTL` when the computation fails. In
   practice, this fix should only affect some matrices with extremely large values, which should
   not usually happen.
+- Fixed a bug in `NashMTL` that made it fail (due to a type mismatch) when `update_weights_every`
+  was more than 1.
 
 ## [0.5.0] - 2025-02-01
 

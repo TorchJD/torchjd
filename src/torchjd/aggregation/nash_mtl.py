@@ -197,10 +197,11 @@ class _NashMTLWeighting(_Weighting):
             self.normalization_factor = torch.norm(GTG).detach().cpu().numpy().reshape((1,))
             GTG = GTG / self.normalization_factor.item()
             alpha = self._solve_optimization(GTG.cpu().detach().numpy())
-            alpha = torch.from_numpy(alpha).to(device=matrix.device, dtype=matrix.dtype)
         else:
             self.step += 1
             alpha = self.prvs_alpha
+
+        alpha = torch.from_numpy(alpha).to(device=matrix.device, dtype=matrix.dtype)
 
         if self.max_norm > 0:
             norm = torch.linalg.norm(alpha @ matrix)
