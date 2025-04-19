@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-04-19
+
 ### Added
 
 - Added usage example showing how to combine TorchJD with automatic mixed precision (AMP).
