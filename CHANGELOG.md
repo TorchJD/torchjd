@@ -17,11 +17,11 @@ changes that do not affect the user.
 - Refactored the underlying optimization problem that `UPGrad` and `DualProj` have to solve to
   project onto the dual cone. This should slightly improve the performance and precision of these
   aggregators.
-- Refactored internal verifications in the autojac engine so that they do not run at runtime
+- Refactored internal verifications in the `autojac` engine so that they do not run at runtime
   anymore. This should minimally improve the performance and reduce the memory usage of `backward`
   and `mtl_backward`.
-- Refactored internal typing in the autojac engine so that fewer casts are made and so that code is
-  simplified. This should slightly improve the performance of `backward` and `mtl_backward`.
+- Refactored internal typing in the `autojac` engine so that fewer casts are made and so that code
+  is simplified. This should slightly improve the performance of `backward` and `mtl_backward`.
 - Improved the implementation of `ConFIG` to be simpler and safer when normalizing vectors. It
   should slightly improve the performance of `ConFIG` and minimally affect its behavior.
 - Simplified the normalization of the Gramian in `UPGrad`, `DualProj` and `CAGrad`. This should
