@@ -5,7 +5,7 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import NashMTL
 
-from ._inputs import nashmtl_matrices
+from ._inputs import nash_mtl_matrices
 from ._property_testers import ExpectedStructureProperty
 
 
@@ -13,7 +13,7 @@ def _make_aggregator(matrix: Tensor) -> NashMTL:
     return NashMTL(n_tasks=matrix.shape[0])
 
 
-_aggregators = [_make_aggregator(matrix) for matrix in nashmtl_matrices]
+_aggregators = [_make_aggregator(matrix) for matrix in nash_mtl_matrices]
 
 
 @mark.filterwarnings(
@@ -27,7 +27,7 @@ class TestNashMTL(ExpectedStructureProperty):
     # Note that as opposed to most aggregators, the ExpectedStructureProperty is only tested with
     # non-scaled matrices, and with matrices of > 1 row. Otherwise, NashMTL fails.
     @classmethod
-    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators, nashmtl_matrices))
+    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators, nash_mtl_matrices))
     def test_expected_structure_property(cls, aggregator: NashMTL, matrix: Tensor):
         cls._assert_expected_structure_property(aggregator, matrix)
 

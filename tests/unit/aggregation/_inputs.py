@@ -170,4 +170,4 @@ _nashmtl_dims = [
     (9, 11, 5),
     (9, 11, 9),
 ]
-nashmtl_matrices = [_sample_matrix(m, n, r) for m, n, r in _nashmtl_dims]
+nash_mtl_matrices = [_sample_matrix(m, n, r) for m, n, r in _nashmtl_dims]
