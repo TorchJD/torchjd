@@ -36,7 +36,7 @@ class TestNashMTL(ExpectedStructureProperty):
 def test_nash_mtl_reset():
     """
     Tests that the reset method of NashMTL correctly resets its internal state, by verifying that
-    the result is the same after reset as it right after instantiation.
+    the result is the same after reset as it is right after instantiation.
 
     To ensure that the aggregations are not all the same, we create different matrices to aggregate.
     """
