@@ -21,12 +21,6 @@ def test_aligned_mtl():
 
 
 def test_cagrad():
-    # Extra ----------------------------------------------------------------------------------------
-    import warnings
-
-    warnings.filterwarnings("ignore")
-    # ----------------------------------------------------------------------------------------------
-
     from torch import tensor
 
     from torchjd.aggregation import CAGrad
