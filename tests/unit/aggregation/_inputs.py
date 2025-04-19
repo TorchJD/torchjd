@@ -160,3 +160,14 @@ typical_matrices = zero_matrices + matrices + strong_matrices + non_strong_matri
 
 scaled_matrices_2_plus_rows = [matrix for matrix in scaled_matrices if matrix.shape[0] >= 2]
 typical_matrices_2_plus_rows = [matrix for matrix in typical_matrices if matrix.shape[0] >= 2]
+
+# It seems that NashMTL does not work for matrices with 1 row, so we make different matrices for it.
+_nashmtl_dims = [
+    (3, 1, 1),
+    (4, 3, 1),
+    (4, 3, 2),
+    (4, 3, 3),
+    (9, 11, 5),
+    (9, 11, 9),
+]
+nash_mtl_matrices = [_sample_matrix(m, n, r) for m, n, r in _nashmtl_dims]
