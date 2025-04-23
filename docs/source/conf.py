@@ -128,5 +128,8 @@ def _get_line_str(obj) -> str:
 
 
 def _get_version_str() -> str:
-    version_str = "main"
+    try:
+        version_str = os.environ["TORCHJD_VERSION"]
+    except KeyError:
+        version_str = "main"
     return version_str
