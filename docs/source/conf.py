@@ -3,7 +3,9 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import inspect
 import os
+import sys
 
 import tomli
 
@@ -33,6 +35,7 @@ release = pyproject_config["project"]["version"]
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.linkcode",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "myst_parser",  # Enables markdown support
@@ -70,3 +73,63 @@ html_js_files = [
 ]
 
 html_title = "TorchJD"
+
+
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """
+    Returns an optional link to the source code of an object defined by its domain and info.
+
+    See https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html#confval-linkcode_resolve
+    for more information.
+    """
+
+    if domain != "py" or not info["module"]:
+        return None
+
+    obj = _get_obj(info)
+    file_name = _get_file_name(obj)
+
+    if not file_name:
+        return None
+
+    line_str = _get_line_str(obj)
+    version_str = _get_version_str()
+
+    link = f"https://github.com/TorchJD/torchjd/blob/{version_str}/{file_name}{line_str}"
+    return link
+
+
+def _get_obj(_info: dict[str, str]):
+    module_name = _info["module"]
+    full_name = _info["fullname"]
+    sub_module = sys.modules.get(module_name)
+    obj = sub_module
+    for part in full_name.split("."):
+        obj = getattr(obj, part)
+    # strip decorators, which would resolve to the source of the decorator
+    obj = inspect.unwrap(obj)
+    return obj
+
+
+def _get_file_name(obj) -> str | None:
+    try:
+        file_name = inspect.getsourcefile(obj)
+        file_name = os.path.relpath(file_name, start=_PATH_ROOT)
+    except TypeError:  # This seems to happen when obj is a property
+        file_name = None
+    return file_name
+
+
+def _get_line_str(obj) -> str:
+    source, start = inspect.getsourcelines(obj)
+    end = start + len(source) - 1
+    line_str = f"#L{start}-L{end}"
+    return line_str
+
+
+def _get_version_str() -> str:
+    try:
+        version_str = os.environ["TORCHJD_VERSION"]
+    except KeyError:
+        version_str = "main"
+    return version_str
