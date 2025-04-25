@@ -43,7 +43,7 @@ Gradients $\mathcal A_{\text{UPGrad}}$: it
 projects each gradient onto the dual cone, and averages the projections. This ensures that the
 update will always be beneficial to each individual objective (given a sufficiently small step
 size). In addition to $\mathcal A_{\text{UPGrad}}$, TorchJD supports
-[more than 10 aggregators from the literature](https://torchjd.org/docs/aggregation).
+[more than 10 aggregators from the literature](https://torchjd.org/stable/docs/aggregation).
 
 ## Installation
 <!-- start installation -->
@@ -58,7 +58,7 @@ The main way to use TorchJD is to replace the usual call to `loss.backward()` by
 `torchjd.backward` or `torchjd.mtl_backward`, depending on the use-case.
 
 The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
-using [UPGrad](https://torchjd.org/docs/aggregation/upgrad/).
+using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
 
 ```diff
   import torch
@@ -103,33 +103,34 @@ using [UPGrad](https://torchjd.org/docs/aggregation/upgrad/).
 > In this example, the Jacobian is only with respect to the shared parameters. The task-specific
 > parameters are simply updated via the gradient of their task’s loss with respect to them.
 
-More usage examples can be found [here](https://torchjd.org/examples/).
+More usage examples can be found [here](https://torchjd.org/stable/examples/).
 
 ## Supported Aggregators
 TorchJD provides many existing aggregators from the literature, listed in the following table.
 
 <!-- recommended aggregators first, then alphabetical order -->
-| Aggregator                                                           | Publication                                                                                                                                                         |
-|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [UPGrad](https://torchjd.org/docs/aggregation/upgrad/) (recommended) | [Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232)                                                                               |
-| [AlignedMTL](https://torchjd.org/docs/aggregation/aligned_mtl/)      | [Independent Component Alignment for Multi-Task Learning](https://arxiv.org/pdf/2305.19000)                                                                         |
-| [CAGrad](https://torchjd.org/docs/aggregation/cagrad/)               | [Conflict-Averse Gradient Descent for Multi-task Learning](https://arxiv.org/pdf/2110.14048)                                                                        |
-| [ConFIG](https://torchjd.org/docs/aggregation/config/)               | [ConFIG: Towards Conflict-free Training of Physics Informed Neural Networks](https://arxiv.org/pdf/2408.11104)                                                      |
-| [Constant](https://torchjd.org/docs/aggregation/constant/)           | -                                                                                                                                                                   |
-| [DualProj](https://torchjd.org/docs/aggregation/dualproj/)           | [Gradient Episodic Memory for Continual Learning](https://arxiv.org/pdf/1706.08840)                                                                                 |
-| [GradDrop](https://torchjd.org/docs/aggregation/graddrop/)           | [Just Pick a Sign: Optimizing Deep Multitask Models with Gradient Sign Dropout](https://arxiv.org/pdf/2010.06808)                                                   |
-| [IMTL-G](https://torchjd.org/docs/aggregation/imtl_g/)               | [Towards Impartial Multi-task Learning](https://discovery.ucl.ac.uk/id/eprint/10120667/)                                                                            |
-| [Krum](https://torchjd.org/docs/aggregation/krum/)                   | [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf) |
-| [Mean](https://torchjd.org/docs/aggregation/mean/)                   | -                                                                                                                                                                   |
-| [MGDA](https://torchjd.org/docs/aggregation/mgda/)                   | [Multiple-gradient descent algorithm (MGDA) for multiobjective optimization](https://www.sciencedirect.com/science/article/pii/S1631073X12000738)                   |
-| [Nash-MTL](https://torchjd.org/docs/aggregation/nash_mtl/)           | [Multi-Task Learning as a Bargaining Game](https://arxiv.org/pdf/2202.01017)                                                                                        |
-| [PCGrad](https://torchjd.org/docs/aggregation/pcgrad/)               | [Gradient Surgery for Multi-Task Learning](https://arxiv.org/pdf/2001.06782)                                                                                        |
-| [Random](https://torchjd.org/docs/aggregation/random/)               | [Reasonable Effectiveness of Random Weighting: A Litmus Test for Multi-Task Learning](https://arxiv.org/pdf/2111.10603)                                             |
-| [Sum](https://torchjd.org/docs/aggregation/sum/)                     | -                                                                                                                                                                   |
-| [Trimmed Mean](https://torchjd.org/docs/aggregation/trimmed_mean/)   | [Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates](https://proceedings.mlr.press/v80/yin18a/yin18a.pdf)                                     |
+| Aggregator                                                                  | Publication                                                                                                                                                         |
+|-----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/) (recommended) | [Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232)                                                                               |
+| [AlignedMTL](https://torchjd.org/stable/docs/aggregation/aligned_mtl/)      | [Independent Component Alignment for Multi-Task Learning](https://arxiv.org/pdf/2305.19000)                                                                         |
+| [CAGrad](https://torchjd.org/stable/docs/aggregation/cagrad/)               | [Conflict-Averse Gradient Descent for Multi-task Learning](https://arxiv.org/pdf/2110.14048)                                                                        |
+| [ConFIG](https://torchjd.org/stable/docs/aggregation/config/)               | [ConFIG: Towards Conflict-free Training of Physics Informed Neural Networks](https://arxiv.org/pdf/2408.11104)                                                      |
+| [Constant](https://torchjd.org/stable/docs/aggregation/constant/)           | -                                                                                                                                                                   |
+| [DualProj](https://torchjd.org/stable/docs/aggregation/dualproj/)           | [Gradient Episodic Memory for Continual Learning](https://arxiv.org/pdf/1706.08840)                                                                                 |
+| [GradDrop](https://torchjd.org/stable/docs/aggregation/graddrop/)           | [Just Pick a Sign: Optimizing Deep Multitask Models with Gradient Sign Dropout](https://arxiv.org/pdf/2010.06808)                                                   |
+| [IMTL-G](https://torchjd.org/stable/docs/aggregation/imtl_g/)               | [Towards Impartial Multi-task Learning](https://discovery.ucl.ac.uk/id/eprint/10120667/)                                                                            |
+| [Krum](https://torchjd.org/stable/docs/aggregation/krum/)                   | [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf) |
+| [Mean](https://torchjd.org/stable/docs/aggregation/mean/)                   | -                                                                                                                                                                   |
+| [MGDA](https://torchjd.org/stable/docs/aggregation/mgda/)                   | [Multiple-gradient descent algorithm (MGDA) for multiobjective optimization](https://www.sciencedirect.com/science/article/pii/S1631073X12000738)                   |
+| [Nash-MTL](https://torchjd.org/stable/docs/aggregation/nash_mtl/)           | [Multi-Task Learning as a Bargaining Game](https://arxiv.org/pdf/2202.01017)                                                                                        |
+| [PCGrad](https://torchjd.org/stable/docs/aggregation/pcgrad/)               | [Gradient Surgery for Multi-Task Learning](https://arxiv.org/pdf/2001.06782)                                                                                        |
+| [Random](https://torchjd.org/stable/docs/aggregation/random/)               | [Reasonable Effectiveness of Random Weighting: A Litmus Test for Multi-Task Learning](https://arxiv.org/pdf/2111.10603)                                             |
+| [Sum](https://torchjd.org/stable/docs/aggregation/sum/)                     | -                                                                                                                                                                   |
+| [Trimmed Mean](https://torchjd.org/stable/docs/aggregation/trimmed_mean/)   | [Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates](https://proceedings.mlr.press/v80/yin18a/yin18a.pdf)                                     |
 
 The following example shows how to instantiate
-[UPGrad](https://torchjd.org/docs/aggregation/upgrad/) and aggregate a simple matrix `J` with it.
+[UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/) and aggregate a simple matrix `J` with
+it.
 ```python
 from torch import tensor
 from torchjd.aggregation import UPGrad
