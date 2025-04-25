@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+from ._gramian_utils import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -38,7 +39,7 @@ class _IMTLGWeighting(_Weighting):
     """
 
     def forward(self, matrix: Tensor) -> Tensor:
-        gramian = matrix @ matrix.T
+        gramian = compute_gramian(matrix)
         return self._compute_from_gramian(gramian)
 
     @staticmethod

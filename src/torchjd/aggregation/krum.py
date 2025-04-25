@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from ._gramian_utils import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -80,7 +81,7 @@ class _KrumWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_matrix_shape(matrix)
-        gramian = matrix @ matrix.T
+        gramian = compute_gramian(matrix)
         return self._compute_from_gramian(gramian)
 
     def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
