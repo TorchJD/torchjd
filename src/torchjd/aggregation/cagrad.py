@@ -72,13 +72,16 @@ class _CAGradWeighting(_Weighting):
         self.norm_eps = norm_eps
 
     def forward(self, matrix: Tensor) -> Tensor:
-        gramian = normalize(compute_gramian(matrix), self.norm_eps)
-        U, S, _ = torch.svd(gramian)
+        gramian = compute_gramian(matrix)
+        return self._compute_from_gramian(gramian)
+
+    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+        U, S, _ = torch.svd(normalize(gramian, self.norm_eps))
 
         reduced_matrix = U @ S.sqrt().diag()
         reduced_array = reduced_matrix.cpu().detach().numpy().astype(np.float64)
 
-        dimension = matrix.shape[0]
+        dimension = gramian.shape[0]
         reduced_g_0 = reduced_array.T @ np.ones(dimension) / dimension
         sqrt_phi = self.c * np.linalg.norm(reduced_g_0, 2)
 
@@ -97,6 +100,6 @@ class _CAGradWeighting(_Weighting):
             # We are approximately on the pareto front
             weight_array = np.zeros(dimension)
 
-        weights = torch.from_numpy(weight_array).to(device=matrix.device, dtype=matrix.dtype)
+        weights = torch.from_numpy(weight_array).to(device=gramian.device, dtype=gramian.dtype)
 
         return weights

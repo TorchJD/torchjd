@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+from ._gramian_utils import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -38,8 +39,13 @@ class _IMTLGWeighting(_Weighting):
     """
 
     def forward(self, matrix: Tensor) -> Tensor:
-        d = torch.linalg.norm(matrix, dim=1)
-        v = torch.linalg.pinv(matrix @ matrix.T) @ d
+        gramian = compute_gramian(matrix)
+        return self._compute_from_gramian(gramian)
+
+    @staticmethod
+    def _compute_from_gramian(gramian: Tensor) -> Tensor:
+        d = torch.sqrt(torch.diagonal(gramian))
+        v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()
 
         if v_sum.abs() < 1e-12:
