@@ -72,11 +72,11 @@ class _CAGradWeighting(_Weighting):
         self.norm_eps = norm_eps
 
     def forward(self, matrix: Tensor) -> Tensor:
-        gramian = normalize(compute_gramian(matrix), self.norm_eps)
+        gramian = compute_gramian(matrix)
         return self._compute_from_gramian(gramian)
 
     def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
-        U, S, _ = torch.svd(gramian)
+        U, S, _ = torch.svd(normalize(gramian, self.norm_eps))
 
         reduced_matrix = U @ S.sqrt().diag()
         reduced_array = reduced_matrix.cpu().detach().numpy().astype(np.float64)
