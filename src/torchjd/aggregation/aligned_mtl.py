@@ -28,6 +28,7 @@
 import torch
 from torch import Tensor
 
+from ._gramian_utils import compute_gramian
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
@@ -91,16 +92,14 @@ class _AlignedMTLWrapper(_Weighting):
     def forward(self, matrix: Tensor) -> Tensor:
         w = self.weighting(matrix)
 
-        G = matrix.T
-        B = self._compute_balance_transformation(G)
+        M = compute_gramian(matrix)
+        B = self._compute_balance_transformation(M)
         alpha = B @ w
 
         return alpha
 
     @staticmethod
-    def _compute_balance_transformation(G: Tensor) -> Tensor:
-        M = G.T @ G
-
+    def _compute_balance_transformation(M: Tensor) -> Tensor:
         lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
         rank = sum(lambda_ > tol)

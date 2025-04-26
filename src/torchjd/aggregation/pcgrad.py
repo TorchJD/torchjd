@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+from ._gramian_utils import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -41,15 +42,18 @@ class _PCGradWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         # Pre-compute the inner products
-        inner_products = matrix @ matrix.T
+        gramian = compute_gramian(matrix)
+        return self._compute_from_gramian(gramian)
 
+    @staticmethod
+    def _compute_from_gramian(gramian: Tensor) -> Tensor:
         # Move all computations on cpu to avoid moving memory between cpu and gpu at each iteration
-        device = matrix.device
-        dtype = matrix.dtype
+        device = gramian.device
+        dtype = gramian.dtype
         cpu = torch.device("cpu")
-        inner_products = inner_products.to(device=cpu)
+        gramian = gramian.to(device=cpu)
 
-        dimension = inner_products.shape[0]
+        dimension = gramian.shape[0]
         weights = torch.zeros(dimension, device=cpu, dtype=dtype)
 
         for i in range(dimension):
@@ -62,10 +66,10 @@ class _PCGradWeighting(_Weighting):
                     continue
 
                 # Compute the inner product between g_i^{PC} and g_j
-                inner_product = inner_products[j] @ current_weights
+                inner_product = gramian[j] @ current_weights
 
                 if inner_product < 0.0:
-                    current_weights[j] -= inner_product / (inner_products[j, j])
+                    current_weights[j] -= inner_product / (gramian[j, j])
 
             weights = weights + current_weights
 
