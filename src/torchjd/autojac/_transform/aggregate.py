@@ -15,6 +15,17 @@ _ValueType = TypeVar("_ValueType")
 
 
 class Aggregate(Transform[Jacobians, Gradients]):
+    """
+    Transform aggregating Jacobians into Gradients.
+
+    It does so by reshaping these Jacobians into matrices, concatenating them into a single matrix,
+    applying an aggregator to it, separating the result back into one gradient vector per key, and
+    finally reshaping those into gradients of the same shape as their corresponding keys.
+
+    :param aggregator: The aggregator used to aggregate the united jacobian matrix.
+    :param key_order: Ordering in which the different jacobian matrices must be concatenated.
+    """
+
     def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
         matrixify = _Matrixify()
         aggregate_matrices = _AggregateMatrices(aggregator, key_order)
@@ -31,6 +42,16 @@ class Aggregate(Transform[Jacobians, Gradients]):
 
 
 class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
+    """
+    Transform aggregating JacobiansMatrices into GradientsVectors.
+
+    It does so by concatenating the matrices into a single matrix, applying an aggregator to it and
+    separating the result back into one gradient vector per key.
+
+    :param aggregator: The aggregator used to aggregate the united jacobian matrix.
+    :param key_order: Ordering in which the different jacobian matrices must be concatenated.
+    """
+
     def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
         self.key_order = key_order
         self.aggregator = aggregator
@@ -112,6 +133,8 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
 
 
 class _Matrixify(Transform[Jacobians, JacobianMatrices]):
+    """Transform reshaping Jacobians into JacobianMatrices."""
+
     def __call__(self, jacobians: Jacobians) -> JacobianMatrices:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
@@ -123,6 +146,8 @@ class _Matrixify(Transform[Jacobians, JacobianMatrices]):
 
 
 class _Reshape(Transform[GradientVectors, Gradients]):
+    """Transform reshaping GradientVectors into Gradients."""
+
     def __call__(self, gradient_vectors: GradientVectors) -> Gradients:
         gradients = {
             key: gradient_vector.view(key.shape)

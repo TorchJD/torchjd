@@ -7,6 +7,12 @@ from .tensor_dict import _A
 
 
 class Select(Transform[_A, _A]):
+    """
+    Transform returning a subset of the provided TensorDict.
+
+    :param keys: The keys that should be included in the returned subset.
+    """
+
     def __init__(self, keys: Set[Tensor]):
         self.keys = keys
 

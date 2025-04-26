@@ -5,11 +5,9 @@ from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Accumulate(Transform[Gradients, EmptyTensorDict]):
-    def __call__(self, gradients: Gradients) -> EmptyTensorDict:
-        """
-        Accumulates gradients with respect to keys in their ``.grad`` field.
-        """
+    """Transform that accumulates gradients with respect to keys into their ``grad`` field."""
 
+    def __call__(self, gradients: Gradients) -> EmptyTensorDict:
         for key in gradients.keys():
             _check_expects_grad(key)
             if hasattr(key, "grad") and key.grad is not None:

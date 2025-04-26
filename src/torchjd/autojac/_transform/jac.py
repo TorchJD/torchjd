@@ -13,6 +13,26 @@ from .tensor_dict import Jacobians
 
 
 class Jac(Differentiate[Jacobians]):
+    """
+    Transform computing the jacobian of each output with respect to each input, and applying the
+    linear transformations represented by the argument jac_outputs to the results.
+
+    :param outputs: Tensors to differentiate.
+    :param inputs: Tensors with respect to which we differentiate.
+    :param chunk_size: The number of scalars to differentiate simultaneously. If set to ``None``,
+        all outputs will be differentiated in parallel at once. If set to ``1``, all will be
+        differentiated sequentially. A larger value results in faster differentiation, but also
+        higher memory usage. Defaults to ``None``.
+    :param retain_graph: If False, the graph used to compute the grads will be freed. Defaults to
+        False.
+    :param create_graph: If True, graph of the derivative will be constructed, allowing to compute
+        higher order derivative products. Defaults to False.
+
+    .. note:: The order of outputs and inputs only matters because we have no guarantee that
+        torch.autograd.grad is *exactly* equivariant to input permutations and invariant to output
+        (with their corresponding grad_output) permutations.
+    """
+
     def __init__(
         self,
         outputs: OrderedSet[Tensor],

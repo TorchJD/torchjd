@@ -9,6 +9,17 @@ from .tensor_dict import _A, Gradients, Jacobians
 
 
 class Stack(Transform[_A, Jacobians]):
+    """
+    Transform applying several transforms to the same input, and combining the results (by stacking)
+    into a single TensorDict.
+
+    The set of keys of the resulting dict is the union of the sets of keys of the input dicts.
+
+    :param transforms: The transforms to apply. Their outputs may have different sets of keys. If a
+        key is absent in some output dicts, the corresponding stacked tensor is filled with zeroes
+        at the positions corresponding to those dicts.
+    """
+
     def __init__(self, transforms: Sequence[Transform[_A, Gradients]]):
         self.transforms = transforms
 
@@ -22,13 +33,6 @@ class Stack(Transform[_A, Jacobians]):
 
 
 def _stack(gradient_dicts: list[Gradients]) -> Jacobians:
-    """
-    Transforms a list of tensor dicts into a single dict of (stacked) tensors. The set of keys of
-    the resulting dict is the union of the sets of keys of the input dicts.
-    If a key is absent in some input dicts, the corresponding stacked tensor is filled with zeroes
-    at the positions corresponding to those dicts.
-    """
-
     # It is important to first remove duplicate keys before computing their associated
     # stacked tensor. Otherwise, some computations would be duplicated. Therefore, we first compute
     # unique_keys, and only then, we compute the stacked tensors.
@@ -41,9 +45,7 @@ def _stack(gradient_dicts: list[Gradients]) -> Jacobians:
 
 
 def _stack_one_key(gradient_dicts: list[Gradients], input: Tensor) -> Tensor:
-    """
-    Makes the stacked tensor corresponding to a given key, from a list of tensor dicts.
-    """
+    """Makes the stacked tensor corresponding to a given key, from a list of tensor dicts."""
 
     optional_gradients = [gradients.get(input, None) for gradients in gradient_dicts]
     gradients = materialize(optional_gradients, [input] * len(optional_gradients))

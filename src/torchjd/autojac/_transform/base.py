@@ -15,25 +15,9 @@ class RequirementError(ValueError):
 
 
 class Transform(Generic[_B, _C], ABC):
-    r"""
+    """
     Abstract base class for all transforms. Transforms are elementary building blocks of a jacobian
-    descent backward phase. A transform maps a :class:`~torchjd.transform.tensor_dict.TensorDict` to
-    another. The input :class:`~torchjd.transform.tensor_dict.TensorDict` has keys `required_keys`
-    and the output :class:`~torchjd.transform.tensor_dict.TensorDict` has keys `output_keys`.
-
-    Formally a transform is a function:
-
-    .. math::
-        f:\mathbb R^{n_1+\dots+n_p}\to \mathbb R^{m_1+\dots+m_q}
-
-    where we have ``p`` `required_keys`, ``q`` `output_keys`, ``n_i`` is the number of elements in
-    the value associated to the ``i`` th `required_key` of the input
-    :class:`~torchjd.transform.tensor_dict.TensorDict` and ``m_j`` is the number of elements in the
-    value associated to the ``j`` th `output_key` of the output
-    :class:`~torchjd.transform.tensor_dict.TensorDict`.
-
-    As they are mathematical functions, transforms can be composed together as long as their
-    domains and range meaningfully match.
+    descent backward phase. A transform maps a TensorDict to another.
     """
 
     def compose(self, other: Transform[_A, _B]) -> Transform[_A, _C]:
@@ -67,6 +51,13 @@ class Transform(Generic[_B, _C], ABC):
 
 
 class Composition(Transform[_A, _C]):
+    """
+    Transform corresponding to the mathematical composition of two transforms inner and outer.
+
+    :param inner: The transform to apply first, to the input.
+    :param outer: The transform to apply second, to the result of ``inner``.
+    """
+
     def __init__(self, outer: Transform[_B, _C], inner: Transform[_A, _B]):
         self.outer = outer
         self.inner = inner
@@ -85,6 +76,13 @@ class Composition(Transform[_A, _C]):
 
 
 class Conjunction(Transform[_A, _B]):
+    """
+    Transform applying several transforms to the same input, and combining the results (by union)
+    into a single TensorDict.
+
+    :param transforms: The transforms to apply. Their outputs should have disjoint sets of keys.
+    """
+
     def __init__(self, transforms: Sequence[Transform[_A, _B]]):
         self.transforms = transforms
 
