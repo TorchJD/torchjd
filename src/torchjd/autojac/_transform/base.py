@@ -52,7 +52,7 @@ class Transform(Generic[_B, _C], ABC):
 
 class Composition(Transform[_A, _C]):
     """
-    Transform corresponding to the mathematical composition of two transforms inner and outer.
+    Transform corresponding to the composition of two transforms inner and outer.
 
     :param inner: The transform to apply first, to the input.
     :param outer: The transform to apply second, to the result of ``inner``.
