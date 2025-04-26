@@ -8,17 +8,16 @@ from .tensor_dict import EmptyTensorDict, Gradients
 
 
 class Init(Transform[EmptyTensorDict, Gradients]):
+    """
+    Transform returning Gradients filled with ones for each of the provided values.
+
+    :param values: Tensors for which Gradients must be returned.
+    """
+
     def __init__(self, values: Set[Tensor]):
         self.values = values
 
     def __call__(self, input: EmptyTensorDict) -> Gradients:
-        r"""
-        Computes the gradients of the ``value`` with respect to itself. Returns the result as a
-        dictionary. The only key of the dictionary is ``value``. The corresponding gradient is a
-        tensor of 1s of identical shape, because :math:`\frac{\partial v}{\partial v} = 1` for any
-        :math:`v`.
-        """
-
         return Gradients({value: torch.ones_like(value) for value in self.values})
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:

@@ -9,6 +9,21 @@ from .tensor_dict import _A
 
 
 class Differentiate(Transform[_A, _A], ABC):
+    """
+    Abstract base class for transforms responsible for differentiating some outputs with respect to
+    some inputs.
+
+    :param outputs: Tensors to differentiate.
+    :param inputs: Tensors with respect to which we differentiate.
+    :param retain_graph: If False, the graph used to compute the grads will be freed.
+    :param create_graph: If True, graph of the derivative will be constructed, allowing to compute
+        higher order derivative products.
+
+    .. note:: The order of outputs and inputs only matters because we have no guarantee that
+        torch.autograd.grad is *exactly* equivariant to input permutations and invariant to output
+        (with their corresponding grad_output) permutations.
+    """
+
     def __init__(
         self,
         outputs: OrderedSet[Tensor],
@@ -16,10 +31,6 @@ class Differentiate(Transform[_A, _A], ABC):
         retain_graph: bool,
         create_graph: bool,
     ):
-        # The order of outputs and inputs only matters because we have no guarantee that
-        # torch.autograd.grad is *exactly* equivariant to input permutations and invariant to
-        # output (with their corresponding grad_output) permutations.
-
         self.outputs = list(outputs)
         self.inputs = list(inputs)
         self.retain_graph = retain_graph
