@@ -9,8 +9,7 @@ from .tensor_dict import EmptyTensorDict, Gradients
 
 class Init(Transform[EmptyTensorDict, Gradients]):
     """
-    Transform returning Gradients filled with ones, corresponding to the gradients of the provided
-    values with respect to themselves.
+    Transform returning Gradients filled with ones for each of the provided values.
 
     :param values: Tensors for which Gradients must be returned.
     """
