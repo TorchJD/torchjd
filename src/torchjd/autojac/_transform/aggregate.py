@@ -22,7 +22,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
     applying an aggregator to it, separating the result back into one gradient vector per key, and
     finally reshaping those into gradients of the same shape as their corresponding keys.
 
-    :param aggregator: The aggregator used to aggregate the united jacobian matrix.
+    :param aggregator: The aggregator used to aggregate the concatenated jacobian matrix.
     :param key_order: Ordering in which the different jacobian matrices must be concatenated.
     """
 
@@ -48,7 +48,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     It does so by concatenating the matrices into a single matrix, applying an aggregator to it and
     separating the result back into one gradient vector per key.
 
-    :param aggregator: The aggregator used to aggregate the united jacobian matrix.
+    :param aggregator: The aggregator used to aggregate the concatenated jacobian matrix.
     :param key_order: Ordering in which the different jacobian matrices must be concatenated.
     """
 
