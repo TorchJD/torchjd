@@ -56,7 +56,12 @@ class _MGDAWeighting(_Weighting):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def _frank_wolfe_solver(self, gramian: Tensor) -> Tensor:
+    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+        """
+        This is the Frank-Wolfe solver in Algorithm 2 of `Multi-Task Learning as Multi-Objective
+        Optimization
+        <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+        """
         device = gramian.device
         dtype = gramian.dtype
 
@@ -81,5 +86,5 @@ class _MGDAWeighting(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         gramian = compute_gramian(matrix)
-        weights = self._frank_wolfe_solver(gramian)
+        weights = self._compute_from_gramian(gramian)
         return weights
