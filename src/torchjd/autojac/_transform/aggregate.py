@@ -23,7 +23,7 @@ class Aggregate(Transform[Jacobians, Gradients]):
     finally reshaping those into gradients of the same shape as their corresponding keys.
 
     :param aggregator: The aggregator used to aggregate the concatenated jacobian matrix.
-    :param key_order: Ordering in which the different jacobian matrices must be concatenated.
+    :param key_order: Order in which the different jacobian matrices must be concatenated.
     """
 
     def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
@@ -49,7 +49,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     separating the result back into one gradient vector per key.
 
     :param aggregator: The aggregator used to aggregate the concatenated jacobian matrix.
-    :param key_order: Ordering in which the different jacobian matrices must be concatenated.
+    :param key_order: Order in which the different jacobian matrices must be concatenated.
     """
 
     def __init__(self, aggregator: Aggregator, key_order: OrderedSet[Tensor]):
