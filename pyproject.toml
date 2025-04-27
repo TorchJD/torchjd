@@ -17,8 +17,6 @@ dependencies = [
     "quadprog>=0.1.9, != 0.1.10",  # Doesn't work before 0.1.9, 0.1.10 is yanked
     "numpy>=1.21.0",  # Does not work before 1.21
     "qpsolvers>=1.0.1",  # Does not work before 1.0.1
-    "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
-    "ecos>=2.0.14",  # Does not work before 2.0.14
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -66,4 +64,17 @@ plot = [
     "plotly>=5.19.0",  # Recent version to avoid problems, could be relaxed
     "dash>=2.16.0",  # Recent version to avoid problems, could be relaxed
     "kaleido==0.2.1",  # Only works with locked version
+]
+
+[project.optional-dependencies]
+nash_mtl = [
+    "cvxpy>=1.3.0",  # Could be relaxed
+    "ecos>=2.0.14",  # Does not work before 2.0.14
+]
+cagrad = [
+    "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
+]
+all = [
+    "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
+    "ecos>=2.0.14",  # Does not work before 2.0.14
 ]
