@@ -18,5 +18,5 @@ pip install torchjd[nash_mtl]
 
 To install `torchjd` with all of its optional dependencies, you can also use:
 ```
-pip install torchjd[all]
+pip install torchjd[full]
 ```
