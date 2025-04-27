@@ -60,6 +60,10 @@ class NashMTL(_WeightedAggregator):
         >>> A(J)
         tensor([0.0542, 0.7061, 0.7061])
 
+    .. note::
+        The aggregator has dependencies that are not included by default when installing `torchjd`.
+        To install them, use `pip install torchjd[nash_mtl]`.
+
     .. warning::
         This implementation was adapted from the `official implementation
         <https://github.com/AvivNavon/nash-mtl/tree/main>`_, which has some flaws. Use with caution.

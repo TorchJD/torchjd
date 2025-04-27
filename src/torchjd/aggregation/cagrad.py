@@ -29,6 +29,10 @@ class CAGrad(_WeightedAggregator):
         >>>
         >>> A(J)
         tensor([0.1835, 1.2041, 1.2041])
+
+    .. note::
+        The aggregator has dependencies that are not included by default when installing `torchjd`.
+        To install them, use `pip install torchjd[cagrad]`.
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):
