@@ -6,6 +6,11 @@ class _OptionalDepsNotInstalledError(ModuleNotFoundError):
 
 
 def check_dependencies_are_installed(dependency_names: list[str]) -> None:
-    # Check that the dependencies are installed
+    """
+    Check that the required list of dependencies are installed.
+
+    This can be useful for Aggregators whose dependencies are optional when installing torchjd.
+    """
+
     if any(find_spec(name) is None for name in dependency_names):
         raise _OptionalDepsNotInstalledError()
