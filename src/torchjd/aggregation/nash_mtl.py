@@ -61,15 +61,15 @@ class NashMTL(_WeightedAggregator):
         tensor([0.0542, 0.7061, 0.7061])
 
     .. note::
-        The aggregator has dependencies that are not included by default when installing `torchjd`.
-        To install them, use `pip install torchjd[nash_mtl]`.
+        This aggregator has dependencies that are not included by default when installing
+        ``torchjd``. To install them, use ``pip install torchjd[nash_mtl]``.
 
     .. warning::
         This implementation was adapted from the `official implementation
         <https://github.com/AvivNavon/nash-mtl/tree/main>`_, which has some flaws. Use with caution.
 
     .. warning::
-        The aggregator is stateful. Its output will thus depend not only on the input matrix, but
+        This aggregator is stateful. Its output will thus depend not only on the input matrix, but
         also on its state. It thus depends on previously seen matrices. It should be reset between
         experiments.
     """
