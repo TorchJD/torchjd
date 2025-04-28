@@ -39,7 +39,7 @@ jobs:
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
       - name: Install default (without any option) and test dependencies
         run: pdm install --group test --frozen-lockfile
       - name: Run unit and doc tests with coverage report
