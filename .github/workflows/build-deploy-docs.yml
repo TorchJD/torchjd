@@ -17,13 +17,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PDM
-        uses: pdm-project/setup-pdm@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.13'
 
       - name: Install dependencies (default with full options & doc)
-        run: pdm install --group full --group doc --frozen-lockfile
+        run: uv pip install '.[full]' --group doc
 
       - name: Determine deployment folder
         id: deploy_folder
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Documentation
         working-directory: docs
-        run: pdm run make dirhtml
+        run: uv run make dirhtml
         env:
           TORCHJD_VERSION: ${{ steps.deploy_folder.outputs.TORCHJD_VERSION }}
 
