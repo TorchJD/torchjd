@@ -52,6 +52,8 @@ TorchJD can be installed directly with pip:
 pip install torchjd
 ```
 <!-- end installation -->
+Some aggregators may have additional dependencies. Please refer to the
+[installation documentation](https://torchjd.org/stable/installation) for them.
 
 ## Usage
 The main way to use TorchJD is to replace the usual call to `loss.backward()` by a call to

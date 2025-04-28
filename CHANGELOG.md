@@ -8,6 +8,13 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: Changed the dependencies of `CAGrad` and `NashMTL` to be optional when installing
+  TorchJD. Users of these aggregators will have to use `pip install torchjd[cagrad]`, `pip install
+  torchjd[nash_mtl]` or `pip install torchjd[full]` to install TorchJD alongside those dependencies.
+  This should make TorchJD more lightweight.
+
 ## [0.6.0] - 2025-04-19
 
 ### Added
