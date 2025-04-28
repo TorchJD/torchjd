@@ -17,7 +17,7 @@ with maintainers before implementing major changes.
    ```bash
    pdm venv create 3.13.1  # Requires Python 3.13.1 to be installed
    pdm use -i .venv/bin/python
-   pdm install --frozen-lockfile
+   pdm install --group full --frozen-lockfile
    pdm run pre-commit install
    ```
 

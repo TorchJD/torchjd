@@ -22,8 +22,8 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install dependencies (default & doc)
-        run: pdm install --group doc --frozen-lockfile
+      - name: Install dependencies (default with full options & doc)
+        run: pdm install --group full --group doc --frozen-lockfile
 
       - name: Determine deployment folder
         id: deploy_folder

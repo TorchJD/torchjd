@@ -21,7 +21,7 @@ jobs:
         uses: pdm-project/setup-pdm@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install default and test dependencies
+      - name: Install default (with full options) and test dependencies
         run: pdm install --group full --group test --frozen-lockfile
       - name: Run unit and doc tests with coverage report
         run: pdm run pytest tests/unit tests/doc --cov=src --cov-report=xml
@@ -42,8 +42,8 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install dependencies (default & doc)
-        run: pdm install --group doc --frozen-lockfile
+      - name: Install dependencies (default with full options & doc)
+        run: pdm install --group full --group doc --frozen-lockfile
 
       - name: Build Documentation
         working-directory: docs
