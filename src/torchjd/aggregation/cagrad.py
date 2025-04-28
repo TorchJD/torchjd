@@ -1,3 +1,7 @@
+from ._check_dependencies import check_dependencies_are_installed  # noqa
+
+check_dependencies_are_installed(["cvxpy", "clarabel"])
+
 import cvxpy as cp
 import numpy as np
 import torch
@@ -31,8 +35,10 @@ class CAGrad(_WeightedAggregator):
         tensor([0.1835, 1.2041, 1.2041])
 
     .. note::
-        This aggregator has dependencies that are not included by default when installing
-        ``torchjd``. To install them, use ``pip install torchjd[cagrad]``.
+        This aggregator is not installed by default. When not installed, trying to import it should
+        result in the following error:
+        ``ImportError: cannot import name 'CAGrad' from 'torchjd.aggregation'``.
+        To install it, use ``pip install torchjd[cagrad]``.
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):

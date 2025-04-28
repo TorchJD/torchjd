@@ -23,6 +23,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from ._check_dependencies import check_dependencies_are_installed
+
+check_dependencies_are_installed(["cvxpy", "ecos"])
 
 import cvxpy as cp
 import numpy as np
@@ -61,8 +64,10 @@ class NashMTL(_WeightedAggregator):
         tensor([0.0542, 0.7061, 0.7061])
 
     .. note::
-        This aggregator has dependencies that are not included by default when installing
-        ``torchjd``. To install them, use ``pip install torchjd[nash_mtl]``.
+        This aggregator is not installed by default. When not installed, trying to import it should
+        result in the following error:
+        ``ImportError: cannot import name 'NashMTL' from 'torchjd.aggregation'``.
+        To install it, use ``pip install torchjd[nash_mtl]``.
 
     .. warning::
         This implementation was adapted from the `official implementation

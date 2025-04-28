@@ -7,7 +7,8 @@ on:
     - cron: '41 16 * * *'  # Every day at 16:41 UTC (to avoid high load at exact hour values).
 
 jobs:
-  Testing:
+  tests-full-install:
+    name: Run tests with full install
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # Ensure matrix jobs keep running even if one fails
@@ -25,6 +26,29 @@ jobs:
         run: pdm install --group full --group test --frozen-lockfile
       - name: Run unit and doc tests with coverage report
         run: pdm run pytest tests/unit tests/doc --cov=src --cov-report=xml
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  tests-default-install:
+    name: Run (most) tests with default install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.13'
+      - name: Install default (without any option) and test dependencies
+        run: pdm install --group test --frozen-lockfile
+      - name: Run unit and doc tests with coverage report
+        run: |
+          pdm run pytest tests/unit tests/doc \
+          --ignore tests/unit/aggregation/test_cagrad.py \
+          --ignore tests/unit/aggregation/test_nash_mtl.py \
+          --ignore tests/doc/test_aggregation.py \
+          --cov=src --cov-report=xml
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
