@@ -1,10 +1,9 @@
 from importlib.util import find_spec
 
-# Check that the clarabel solver is installed
-if find_spec("clarabel") is None:
+# Check that the dependencies are installed
+if find_spec("cvxpy") is None or find_spec("clarabel") is None:
     raise ModuleNotFoundError(
-        "CAGrad requires the clarabel solver, but it is not installed. Please run"
-        "`pip install torchjd[cagrad]`."
+        "The dependencies of CAGrad are not installed. Please run `pip install torchjd[cagrad]`."
     )
 
 import cvxpy as cp

@@ -26,11 +26,10 @@
 
 from importlib.util import find_spec
 
-# Check that the ecos solver is installed
-if find_spec("ecos") is None:
+# Check that the dependencies are installed
+if find_spec("cvxpy") is None or find_spec("ecos") is None:
     raise ModuleNotFoundError(
-        "NashMTL requires the ecos solver, but it is not installed. Please run"
-        "`pip install torchjd[nash_mtl]`."
+        "The dependencies of NashMTL are not installed. Please run `pip install torchjd[nash_mtl]`."
     )
 
 import cvxpy as cp
