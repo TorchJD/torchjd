@@ -23,14 +23,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from ._check_dependencies import check_dependencies_are_installed
 
-from importlib.util import find_spec
-
-# Check that the dependencies are installed
-if find_spec("cvxpy") is None or find_spec("ecos") is None:
-    raise ModuleNotFoundError(
-        "The dependencies of NashMTL are not installed. Please run `pip install torchjd[nash_mtl]`."
-    )
+check_dependencies_are_installed(["cvxpy", "ecos"])
 
 import cvxpy as cp
 import numpy as np

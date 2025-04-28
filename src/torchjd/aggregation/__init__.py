@@ -1,3 +1,4 @@
+from ._check_dependencies import _OptionalDepsNotInstalledError
 from .aligned_mtl import AlignedMTL
 from .bases import Aggregator
 from .config import ConFIG
@@ -16,10 +17,10 @@ from .upgrad import UPGrad
 
 try:
     from .cagrad import CAGrad
-except ImportError:  # The required dependencies are not installed
+except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass
 
 try:
     from .nash_mtl import NashMTL
-except ImportError:  # The required dependencies are not installed
+except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass

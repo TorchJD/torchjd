@@ -1,10 +1,6 @@
-from importlib.util import find_spec
+from ._check_dependencies import check_dependencies_are_installed  # noqa
 
-# Check that the dependencies are installed
-if find_spec("cvxpy") is None or find_spec("clarabel") is None:
-    raise ModuleNotFoundError(
-        "The dependencies of CAGrad are not installed. Please run `pip install torchjd[cagrad]`."
-    )
+check_dependencies_are_installed(["cvxpy", "clarabel"])
 
 import cvxpy as cp
 import numpy as np
