@@ -26,18 +26,18 @@
 
 from importlib.util import find_spec
 
-import cvxpy as cp
-import numpy as np
-import torch
-from cvxpy import Expression
-from torch import Tensor
-
 # Check that the ecos solver is installed
 if find_spec("ecos") is None:
     raise ModuleNotFoundError(
         "NashMTL requires the ecos solver, but it is not installed. Please run"
         "`pip install torchjd[nash_mtl]`."
     )
+
+import cvxpy as cp
+import numpy as np
+import torch
+from cvxpy import Expression
+from torch import Tensor
 
 from .bases import _WeightedAggregator, _Weighting
 

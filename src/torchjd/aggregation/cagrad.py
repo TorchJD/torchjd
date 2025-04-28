@@ -1,5 +1,12 @@
 from importlib.util import find_spec
 
+# Check that the clarabel solver is installed
+if find_spec("clarabel") is None:
+    raise ModuleNotFoundError(
+        "CAGrad requires the clarabel solver, but it is not installed. Please run"
+        "`pip install torchjd[cagrad]`."
+    )
+
 import cvxpy as cp
 import numpy as np
 import torch
@@ -7,13 +14,6 @@ from torch import Tensor
 
 from ._gramian_utils import compute_gramian, normalize
 from .bases import _WeightedAggregator, _Weighting
-
-# Check that the clarabel solver is installed
-if find_spec("clarabel") is None:
-    raise ModuleNotFoundError(
-        "CAGrad requires the clarabel solver, but it is not installed. Please run"
-        "`pip install torchjd[cagrad]`."
-    )
 
 
 class CAGrad(_WeightedAggregator):
