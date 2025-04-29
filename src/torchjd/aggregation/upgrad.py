@@ -1,5 +1,3 @@
-from typing import Literal
-
 import torch
 from torch import Tensor
 
@@ -45,22 +43,18 @@ class UPGrad(_WeightedAggregator):
         pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
-        solver: Literal["quadprog"] = "quadprog",
     ):
         weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(
-            weighting=_UPGradWrapper(
-                weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver
-            )
+            weighting=_UPGradWrapper(weighting=weighting, norm_eps=norm_eps, reg_eps=reg_eps)
         )
 
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
-            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps}, "
-            f"solver={repr(self.weighting.solver)})"
+            f"{self.weighting.norm_eps}, reg_eps={self.weighting.reg_eps})"
         )
 
     def __str__(self) -> str:
@@ -86,13 +80,11 @@ class _UPGradWrapper(_Weighting):
         weighting: _Weighting,
         norm_eps: float,
         reg_eps: float,
-        solver: Literal["quadprog"],
     ):
         super().__init__()
         self.weighting = weighting
         self.norm_eps = norm_eps
         self.reg_eps = reg_eps
-        self.solver = solver
 
     def forward(self, matrix: Tensor) -> Tensor:
         U = torch.diag(self.weighting(matrix))
