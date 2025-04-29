@@ -14,7 +14,16 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: pdm-project/setup-pdm@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build
+        run: uv build
+
       - name: Publish package distributions to PyPI
-        run: pdm publish
+        run: uv publish -v
