@@ -18,14 +18,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install default (with full options) and test dependencies
-        run: pdm install --group full --group test --frozen-lockfile
+        run: uv pip install '.[full]' --group test
       - name: Run unit and doc tests with coverage report
-        run: pdm run pytest tests/unit tests/doc --cov=src --cov-report=xml
+        run: uv run pytest tests/unit tests/doc --cov=src --cov-report=xml
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -36,15 +36,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.13'
       - name: Install default (without any option) and test dependencies
-        run: pdm install --group test --frozen-lockfile
+        run: uv pip install . --group test
       - name: Run unit and doc tests with coverage report
         run: |
-          pdm run pytest tests/unit tests/doc \
+          uv run pytest tests/unit tests/doc \
           --ignore tests/unit/aggregation/test_cagrad.py \
           --ignore tests/unit/aggregation/test_nash_mtl.py \
           --ignore tests/doc/test_aggregation.py \
@@ -61,14 +61,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PDM
-        uses: pdm-project/setup-pdm@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.13'
 
       - name: Install dependencies (default with full options & doc)
-        run: pdm install --group full --group doc --frozen-lockfile
+        run: uv pip install '.[full]' --group doc
 
       - name: Build Documentation
         working-directory: docs
-        run: pdm run make dirhtml
+        run: uv run make dirhtml
