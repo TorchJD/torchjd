@@ -19,7 +19,7 @@ mandatory, we only provide installation steps with this tool. You can install it
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    uv venv
-   CC=gcc uv pip install '.[full]' --group check --group doc --group test --group plot
+   CC=gcc uv pip install -e '.[full]' --group check --group doc --group test --group plot
    uv run pre-commit install
    ```
 
