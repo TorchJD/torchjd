@@ -6,7 +6,7 @@ with maintainers before implementing major changes.
 ## Installation
 
 To work with TorchJD, we suggest you to use [uv](https://docs.astral.sh/uv/). While this is not
-mandatory, we only provide installation steps this tool. You can install it by following their
+mandatory, we only provide installation steps with this tool. You can install it by following their
 [installation documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
 1) Pre-requisites: Use `uv` to install a Python version compatible with TorchJD and to pin it to the
@@ -15,15 +15,11 @@ mandatory, we only provide installation steps this tool. You can install it by f
    uv python install 3.13.3
    uv python pin 3.13.3
    ```
-   You should also make sure that `gcc` is installed on your machine. Some unmaintained optional
-   dependencies of `torchjd` (such as `ecos`) may have not released compiled packages for newer
-   Python version, and `uv` will thus try to compile them itself using your system's compiler.
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    uv venv
-   export CC=gcc
-   uv pip install '.[full]' --group check --group doc --group test --group plot
+   CC=gcc uv pip install '.[full]' --group check --group doc --group test --group plot
    uv run pre-commit install
    ```
 
