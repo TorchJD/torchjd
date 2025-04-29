@@ -17,7 +17,6 @@ class UPGrad(_WeightedAggregator):
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
     :param norm_eps: A small value to avoid division by zero when normalizing.
-    :param solver: The solver used to optimize the underlying optimization problem.
 
     .. admonition::
         Example
@@ -61,7 +60,6 @@ class _UPGradWrapper(_Weighting):
 
     :param weighting: The wrapped weighting.
     :param norm_eps: A small value to avoid division by zero when normalizing.
-    :param solver: The solver used to optimize the underlying optimization problem.
     """
 
     def __init__(

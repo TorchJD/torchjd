@@ -17,7 +17,6 @@ class DualProj(_WeightedAggregator):
     :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
         the simple averaging.
     :param norm_eps: A small value to avoid division by zero when normalizing.
-    :param solver: The solver used to optimize the underlying optimization problem.
 
     .. admonition::
         Example
@@ -65,7 +64,6 @@ class _DualProjWrapper(_Weighting):
     :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
         responsible for extracting weight vectors from the input matrices.
     :param norm_eps: A small value to avoid division by zero when normalizing.
-    :param solver: The solver used to optimize the underlying optimization problem.
     """
 
     def __init__(
