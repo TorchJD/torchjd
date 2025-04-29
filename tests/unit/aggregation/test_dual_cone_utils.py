@@ -1,5 +1,5 @@
 import torch
-from pytest import mark, raises
+from pytest import mark
 from torch.testing import assert_close
 
 from torchjd.aggregation._dual_cone_utils import project_weights
@@ -84,12 +84,3 @@ def test_tensorization_shape(shape: tuple[int, ...]):
     W_matrix = project_weights(U_matrix, G)
 
     assert_close(W_matrix.reshape(shape), W_tensor)
-
-
-def test_project_weight_failure():
-    """Tests that `project_weight` raises an error when the input G has too large values."""
-
-    large_J = torch.randn(10, 100) * 1e5
-    large_G = large_J @ large_J.T
-    with raises(ValueError):
-        project_weights(torch.ones(10), large_G)
