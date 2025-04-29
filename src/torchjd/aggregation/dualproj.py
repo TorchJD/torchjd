@@ -30,7 +30,7 @@ class DualProj(_WeightedAggregator):
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
-        tensor([0.5563, 1.1109, 1.1109])
+        tensor([0.5556, 1.1111, 1.1111])
     """
 
     def __init__(

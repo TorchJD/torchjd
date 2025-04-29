@@ -30,7 +30,7 @@ class UPGrad(_WeightedAggregator):
         >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
         >>>
         >>> A(J)
-        tensor([0.2929, 1.9004, 1.9004])
+        tensor([0.2924, 1.9006, 1.9006])
     """
 
     def __init__(

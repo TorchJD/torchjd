@@ -61,7 +61,7 @@ def test_dualproj():
     A = DualProj()
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
-    assert_close(A(J), tensor([0.5563, 1.1109, 1.1109]), rtol=0, atol=1e-4)
+    assert_close(A(J), tensor([0.5556, 1.1111, 1.1111]), rtol=0, atol=1e-4)
 
 
 def test_graddrop():
@@ -210,4 +210,4 @@ def test_upgrad():
     A = UPGrad()
     J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
 
-    assert_close(A(J), tensor([0.2929, 1.9004, 1.9004]), rtol=0, atol=1e-4)
+    assert_close(A(J), tensor([0.2924, 1.9006, 1.9006]), rtol=0, atol=1e-4)
