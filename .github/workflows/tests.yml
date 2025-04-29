@@ -22,6 +22,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Install default (with full options) and test dependencies
         run: uv pip install '.[full]' --group test
       - name: Run unit and doc tests with coverage report
@@ -40,6 +42,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.13'
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Install default (without any option) and test dependencies
         run: uv pip install . --group test
       - name: Run unit and doc tests with coverage report
@@ -65,6 +69,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.13'
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies (default with full options & doc)
         run: uv pip install '.[full]' --group doc
