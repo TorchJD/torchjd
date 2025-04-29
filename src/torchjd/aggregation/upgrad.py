@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ._dual_cone_utils import project_weights
-from ._gramian_utils import compute_gramian, normalize
+from ._gramian_utils import compute_gramian
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
@@ -88,6 +88,6 @@ class _UPGradWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         U = torch.diag(self.weighting(matrix))
-        G = normalize(compute_gramian(matrix), self.norm_eps)
+        G = compute_gramian(matrix)
         W = project_weights(U, G)
         return torch.sum(W, dim=0)

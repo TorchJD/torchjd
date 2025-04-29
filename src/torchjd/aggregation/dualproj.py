@@ -1,7 +1,7 @@
 from torch import Tensor
 
 from ._dual_cone_utils import project_weights
-from ._gramian_utils import compute_gramian, normalize
+from ._gramian_utils import compute_gramian
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
@@ -92,6 +92,6 @@ class _DualProjWrapper(_Weighting):
 
     def forward(self, matrix: Tensor) -> Tensor:
         u = self.weighting(matrix)
-        G = normalize(compute_gramian(matrix), self.norm_eps)
+        G = compute_gramian(matrix)
         w = project_weights(u, G)
         return w
