@@ -1,60 +1,45 @@
-from typing import Literal
-
-import numpy as np
 import torch
-from qpsolvers import solve_qp
 from torch import Tensor
 
 
-def project_weights(U: Tensor, G: Tensor, solver: Literal["quadprog"]) -> Tensor:
-    """
+def project_weights(U: Tensor, G: Tensor, max_iter: int = 200, eps: float = 1e-07) -> Tensor:
+    r"""
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.
 
-    :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
-    :param G: The Gramian matrix of shape `[m, m]`. It must be symmetric and positive definite.
-    :param solver: The quadratic programming solver to use.
-    :return: A tensor of projection weights with the same shape as `U`.
-    """
-
-    G_ = _to_array(G)
-    U_ = _to_array(U)
-
-    W = np.apply_along_axis(lambda u: _project_weight_vector(u, G_, solver), axis=-1, arr=U_)
-
-    return torch.as_tensor(W, device=G.device, dtype=G.dtype)
-
-
-def _project_weight_vector(u: np.ndarray, G: np.ndarray, solver: Literal["quadprog"]) -> np.ndarray:
-    r"""
-    Computes the weights `w` of the projection of `J^T u` onto the dual cone of the rows of `J`,
-    given `G = J J^T` and `u`. In other words, this computes the `w` that satisfies
-    `\pi_J(J^T u) = J^T w`, with `\pi_J` defined in Equation 3 of [1].
 
     By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
+
     minimize        v^T G v
     subject to      u \preceq v
+
+    for each u in U.
+
+    This is done by projected gradient descent.
 
     Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
-    :param u: The vector of weights `u` of shape `[m]` corresponding to the vector `J^T u` to
-        project.
-    :param G: The Gramian matrix of `J`, equal to `J J^T`, and of shape `[m, m]`. It must be
-        symmetric and positive definite.
-    :param solver: The quadratic programming solver to use.
+    :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
+    :param G: The Gramian matrix of shape `[m, m]`. It must be symmetric and positive definite.
+    :param max_iter: The maximum number of step of projected gradient descent.
+    :param eps: Tolerance precision threshold to stop optimizing.
+    :return: A tensor of projection weights with the same shape as `U`.
     """
 
-    m = G.shape[0]
-    w = solve_qp(G, np.zeros(m), -np.eye(m), -u, solver=solver)
+    shape = U.shape
+    m = shape[-1]
+    U_matrix = U.reshape([-1, m]).T
+    V = U_matrix.clone()
 
-    if w is None:  # This may happen when G has large values.
-        raise ValueError("Failed to solve the quadratic programming problem.")
-
-    return w
-
-
-def _to_array(tensor: Tensor) -> np.ndarray:
-    """Transforms a tensor into a numpy array with float64 dtype."""
-
-    return tensor.cpu().detach().numpy().astype(np.float64)
+    # torch.linalg.eigvals synchronizes G on the CPU.
+    lambda_max = torch.max(torch.linalg.eigvals(G).real).item()
+    for t in range(1, max_iter + 1):
+        sigma = 1.0 / t**0.5
+        step_size = 2.0 / (lambda_max + sigma)
+        V_new = torch.maximum(V - step_size * (G @ V), U_matrix)
+        gap = (V - V_new).norm()
+        if gap < eps:
+            break
+        V = V_new
+    return V.T.reshape(shape)
