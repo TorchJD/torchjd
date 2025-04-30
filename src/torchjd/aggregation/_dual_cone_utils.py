@@ -34,9 +34,11 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
 
     # torch.linalg.eigvals synchronizes G on the CPU.
     lambda_max = torch.max(torch.linalg.eigvals(G).real).item()
+    if lambda_max < 1e-10:
+        return U
     for t in range(1, max_iter + 1):
         sigma = 1.0 / t**0.5
-        step_size = 2.0 / (lambda_max + sigma)
+        step_size = 2.0 / (lambda_max * (1 + sigma))
         V_new = torch.maximum(V - step_size * (G @ V), U_matrix)
         gap = (V - V_new).norm()
         if gap < eps:

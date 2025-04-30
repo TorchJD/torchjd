@@ -34,7 +34,7 @@ class UPGrad(_WeightedAggregator):
         tensor([0.2924, 1.9006, 1.9006])
     """
 
-    def __init__(self, pref_vector: Tensor | None = None, max_iter: int = 200, eps: float = 1e-07):
+    def __init__(self, pref_vector: Tensor | None = None, max_iter: int = 100, eps: float = 1e-05):
         weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
