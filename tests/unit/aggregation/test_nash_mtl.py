@@ -6,7 +6,7 @@ from torch.testing import assert_close
 from torchjd.aggregation import NashMTL
 
 from ._inputs import nash_mtl_matrices
-from ._property_testers import ExpectedStructureProperty
+from ._property_testers import ExpectedStructureProperty, NonDifferentiableProperty
 
 
 def _make_aggregator(matrix: Tensor) -> NashMTL:
@@ -20,7 +20,7 @@ _aggregators = [_make_aggregator(matrix) for matrix in nash_mtl_matrices]
     "ignore:Solution may be inaccurate.",
     "ignore:You are solving a parameterized problem that is not DPP.",
 )
-class TestNashMTL(ExpectedStructureProperty):
+class TestNashMTL(ExpectedStructureProperty, NonDifferentiableProperty):
     # Override the parametrization of `test_expected_structure_property` to make the test use the
     # right aggregator with each matrix.
 
@@ -29,6 +29,13 @@ class TestNashMTL(ExpectedStructureProperty):
     @classmethod
     @mark.parametrize(["aggregator", "matrix"], zip(_aggregators, nash_mtl_matrices))
     def test_expected_structure_property(cls, aggregator: NashMTL, matrix: Tensor):
+        cls._assert_expected_structure_property(aggregator, matrix)
+
+    @classmethod
+    @mark.parametrize(
+        ["aggregator", "matrix"], [(NashMTL(n_tasks=3), torch.ones(3, 5, requires_grad=True))]
+    )
+    def test_non_differentiable_property(cls, aggregator: NashMTL, matrix: Tensor):
         cls._assert_expected_structure_property(aggregator, matrix)
 
 

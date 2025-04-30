@@ -6,6 +6,7 @@ from torchjd.aggregation import DualProj
 from ._property_testers import (
     ExpectedStructureProperty,
     NonConflictingProperty,
+    NonDifferentiableProperty,
     PermutationInvarianceProperty,
     StrongStationarityProperty,
 )
@@ -17,6 +18,7 @@ class TestDualProj(
     NonConflictingProperty,
     PermutationInvarianceProperty,
     StrongStationarityProperty,
+    NonDifferentiableProperty,
 ):
     pass
 
