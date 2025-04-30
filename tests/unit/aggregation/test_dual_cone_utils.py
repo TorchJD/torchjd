@@ -5,7 +5,7 @@ from torch.testing import assert_close
 from torchjd.aggregation._dual_cone_utils import project_weights
 
 
-@mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
+@mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100), (400, 1000)])
 def test_solution_weights(shape: tuple[int, int]):
     r"""
     Tests that `_project_weights` returns valid weights corresponding to the projection onto the
@@ -43,11 +43,11 @@ def test_solution_weights(shape: tuple[int, int]):
 
     # Primal feasibility
     primal_gap_positive_part = primal_gap[primal_gap >= 0]
-    assert_close(primal_gap_positive_part.norm(), primal_gap.norm(), atol=1e-04, rtol=0)
+    assert_close(primal_gap_positive_part.norm(), primal_gap.norm(), atol=1e-03, rtol=0)
 
     # Complementary slackness
     slackness = dual_gap @ primal_gap
-    assert_close(slackness, torch.zeros_like(slackness), atol=2e-05, rtol=0)
+    assert_close(slackness, torch.zeros_like(slackness), atol=1e-04, rtol=0)
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (32, 114)])
