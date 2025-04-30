@@ -32,10 +32,7 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
     U_matrix = U.reshape([-1, m]).T
     V = U_matrix.clone()
 
-    if G.device.type == "cuda":
-        driver = "gesvdj"
-    else:
-        driver = None
+    driver = "gesvdj" if G.device.type == "cuda" else None
     lambda_max = torch.linalg.svd(G, driver=driver)[1][0]
     if lambda_max < 1e-10:
         return U
