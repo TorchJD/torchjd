@@ -10,10 +10,15 @@ changes that do not affect the user.
 
 ### Changed
 
+- **BREAKING**: Implemented a custom QP solver for projections onto the dual cone of a matrix. This results in:
+  - Great speedups when computing `UPGrad` and `DualProj`. This enables computing those aggregators on large matrices.
+  - No more dependence on the packages `qpsolvers`, `quadprog`.
+  - Change of interface for `UPGrad` and `DUalProj` to parametrize our solver. The call with the default values is not
+    impacted.
 - **BREAKING**: Changed the dependencies of `CAGrad` and `NashMTL` to be optional when installing
   TorchJD. Users of these aggregators will have to use `pip install torchjd[cagrad]`, `pip install
   torchjd[nash_mtl]` or `pip install torchjd[full]` to install TorchJD alongside those dependencies.
-  This should make TorchJD more lightweight.
+  This should make TorchJD more lightweight: the basic installation now only depends on `torch`.
 
 ## [0.6.0] - 2025-04-19
 
