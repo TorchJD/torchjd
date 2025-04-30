@@ -39,7 +39,7 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     matrix = torch.randn(shape)
 
     pc_grad_weighting = _PCGradWeighting()
-    upgrad_sum_weighting = _UPGradWrapper(_SumWeighting(), norm_eps=0.0)
+    upgrad_sum_weighting = _UPGradWrapper(_SumWeighting(), max_iter=200, eps=0.0)
 
     result = pc_grad_weighting(matrix)
     expected = upgrad_sum_weighting(matrix)

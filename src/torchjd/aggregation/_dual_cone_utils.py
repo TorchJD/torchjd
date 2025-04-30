@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 
-def project_weights(U: Tensor, G: Tensor, max_iter: int = 200, eps: float = 1e-07) -> Tensor:
+def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
     r"""
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.

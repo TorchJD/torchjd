@@ -32,7 +32,7 @@ def test_solution_weights(shape: tuple[int, int]):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = project_weights(u, G)
+    w = project_weights(u, G, 200, 1e-07)
     dual_gap = w - u
 
     # Dual feasibility
@@ -61,8 +61,8 @@ def test_scale_invariant(shape: tuple[int, int], scaling: float):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = project_weights(u, G)
-    w_scaled = project_weights(u, scaling * G)
+    w = project_weights(u, G, 200, 1e-07)
+    w_scaled = project_weights(u, scaling * G, 200, 1e-07)
 
     assert_close(w_scaled, w)
 
@@ -80,7 +80,7 @@ def test_tensorization_shape(shape: tuple[int, ...]):
 
     G = matrix @ matrix.T
 
-    W_tensor = project_weights(U_tensor, G)
-    W_matrix = project_weights(U_matrix, G)
+    W_tensor = project_weights(U_tensor, G, 200, 1e-07)
+    W_matrix = project_weights(U_matrix, G, 200, 1e-07)
 
     assert_close(W_matrix.reshape(shape), W_tensor)
