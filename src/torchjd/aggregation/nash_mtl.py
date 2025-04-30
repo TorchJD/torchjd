@@ -33,6 +33,7 @@ import torch
 from cvxpy import Expression
 from torch import Tensor
 
+from ._non_differentiable import raise_non_differentiable_error
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -94,6 +95,9 @@ class NashMTL(_WeightedAggregator):
                 optim_niter=optim_niter,
             )
         )
+
+        # This prevents considering the computed weights as constant w.r.t. the matrix.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
     def reset(self) -> None:
         """Resets the internal state of the algorithm."""

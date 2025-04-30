@@ -3,6 +3,7 @@ from typing import Callable
 import torch
 from torch import Tensor
 
+from ._non_differentiable import raise_non_differentiable_error
 from .bases import Aggregator
 
 
@@ -46,6 +47,9 @@ class GradDrop(Aggregator):
         super().__init__()
         self.f = f
         self.leak = leak
+
+        # This prevents computing gradients that can be very wrong.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_is_matrix(matrix)

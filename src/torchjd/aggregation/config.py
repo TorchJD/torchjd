@@ -28,6 +28,7 @@
 import torch
 from torch import Tensor
 
+from ._non_differentiable import raise_non_differentiable_error
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import Aggregator
 from .sum import _SumWeighting
@@ -64,6 +65,9 @@ class ConFIG(Aggregator):
         super().__init__()
         self.weighting = pref_vector_to_weighting(pref_vector, default=_SumWeighting())
         self._pref_vector = pref_vector
+
+        # This prevents computing gradients that can be very wrong.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
     def forward(self, matrix: Tensor) -> Tensor:
         weights = self.weighting(matrix)
