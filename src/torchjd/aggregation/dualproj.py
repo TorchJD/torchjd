@@ -34,18 +34,11 @@ class DualProj(_WeightedAggregator):
         tensor([0.5556, 1.1111, 1.1111])
     """
 
-    def __init__(
-        self,
-        pref_vector: Tensor | None = None,
-        max_iter: int = 200,
-        eps: float = 1e-07,
-    ):
+    def __init__(self, pref_vector: Tensor | None = None, max_iter: int = 200, eps: float = 1e-07):
         weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
-        super().__init__(
-            weighting=_DualProjWrapper(weighting=weighting, max_iter=max_iter, eps=eps)
-        )
+        super().__init__(weighting=_DualProjWrapper(weighting, max_iter, eps))
 
     def __repr__(self) -> str:
         return (
@@ -71,12 +64,7 @@ class _DualProjWrapper(_Weighting):
     :param eps: The convergence threshold of the solver.
     """
 
-    def __init__(
-        self,
-        weighting: _Weighting,
-        max_iter: int,
-        eps: float,
-    ):
+    def __init__(self, weighting: _Weighting, max_iter: int, eps: float):
         super().__init__()
         self.weighting = weighting
         self.max_iter = max_iter
