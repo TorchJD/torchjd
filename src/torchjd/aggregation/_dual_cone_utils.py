@@ -36,12 +36,14 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
     lambda_max = torch.linalg.svd(G, driver=driver)[1][0]
     if lambda_max < 1e-10:
         return U
+
+    # The typical stepsize should be in [1/lambda_max, 2/lambda_max[. We pick an aggressive step
+    # size as it works well in practice.
+    step_size = 1.9 / lambda_max
+
     for t in range(1, max_iter + 1):
-        sigma = 1.0 / t**0.5
-        step_size = 2.0 / (lambda_max * (1 + sigma))
         V_new = torch.maximum(V - step_size * (G @ V), U_matrix)
-        gap = (V - V_new).norm()
-        if gap < eps:
+        if (V - V_new).norm() < eps:
             break
         V = V_new
     return V.T.reshape(shape)
