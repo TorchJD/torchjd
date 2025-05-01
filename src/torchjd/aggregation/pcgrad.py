@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 
 from ._gramian_utils import compute_gramian
+from ._non_differentiable import raise_non_differentiable_error
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -27,6 +28,9 @@ class PCGrad(_WeightedAggregator):
 
     def __init__(self):
         super().__init__(weighting=_PCGradWeighting())
+
+        # This prevents running into a RuntimeError due to modifying stored tensors in place.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
 class _PCGradWeighting(_Weighting):

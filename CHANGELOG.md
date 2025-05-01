@@ -15,6 +15,13 @@ changes that do not affect the user.
   torchjd[nash_mtl]` or `pip install torchjd[full]` to install TorchJD alongside those dependencies.
   This should make TorchJD more lightweight.
 
+### Fixed
+
+- Made some aggregators (`CAGrad`, `ConFIG`, `DualProj`, `GradDrop`, `IMTLG`, `NashMTL`, `PCGrad`
+  and `UPGrad`) raise a `NonDifferentiableError` whenever one tries to differentiate through them.
+  Before this change, trying to differentiate through them leaded to wrong gradients or unclear
+  errors.
+
 ## [0.6.0] - 2025-04-19
 
 ### Added

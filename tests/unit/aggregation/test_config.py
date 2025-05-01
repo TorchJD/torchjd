@@ -3,13 +3,17 @@ from pytest import mark
 
 from torchjd.aggregation import ConFIG
 
-from ._property_testers import ExpectedStructureProperty, LinearUnderScalingProperty
+from ._property_testers import (
+    ExpectedStructureProperty,
+    LinearUnderScalingProperty,
+    NonDifferentiableProperty,
+)
 
 
 # For some reason, some permutation-invariance property tests fail with the pinv-based
 # implementation.
 @mark.parametrize("aggregator", [ConFIG()])
-class TestConfig(ExpectedStructureProperty, LinearUnderScalingProperty):
+class TestConfig(ExpectedStructureProperty, LinearUnderScalingProperty, NonDifferentiableProperty):
     pass
 
 
