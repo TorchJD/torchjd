@@ -2,7 +2,6 @@ from torch import Tensor
 
 from ._dual_cone_utils import project_weights
 from ._gramian_utils import compute_gramian
-from ._gramian_utils import compute_gramian
 from ._non_differentiable import raise_non_differentiable_error
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
