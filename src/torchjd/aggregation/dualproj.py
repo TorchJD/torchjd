@@ -17,8 +17,9 @@ class DualProj(_WeightedAggregator):
 
     :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
         the simple averaging.
-    :param max_iter: The maximal number of iteration of the solver.
-    :param eps: The convergence threshold of the solver.
+    :param max_iter: The maximal number of iterations of the solver.
+    :param eps: The convergence threshold of the solver. A lower value leads to a higher precision
+        but a potentially larger number of iterations.
 
     .. admonition::
         Example

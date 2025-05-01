@@ -3,7 +3,7 @@ from torch import Tensor
 
 
 def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
-    r"""
+    """
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.
 
@@ -11,8 +11,9 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
 
     :param U: The tensor of weights corresponding to the vectors to project, of shape `[..., m]`.
     :param G: The Gramian matrix of shape `[m, m]`. It must be symmetric and positive definite.
-    :param max_iter: The maximum number of step of projected gradient descent.
-    :param eps: Tolerance precision threshold to stop optimizing.
+    :param max_iter: The maximum number of steps of projected gradient descent.
+    :param eps: Tolerance precision threshold to stop optimizing. A lower value leads to a higher
+        precision but a potentially larger number of iterations.
     :return: A tensor of projection weights with the same shape as `U`.
     """
 
@@ -55,8 +56,9 @@ def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float) -> T
     :param U: The matrix of weight vectors corresponding to the vectors to project, of shape
         `[m, k]`.
     :param G: The Gramian matrix of shape `[m, m]`. It must be symmetric and positive definite.
-    :param max_iter: The maximum number of step of projected gradient descent.
-    :param eps: Tolerance precision threshold to stop optimizing.
+    :param max_iter: The maximal number of iterations of the solver.
+    :param eps: Tolerance precision threshold to stop optimizing. A lower value leads to a higher
+        precision but a potentially larger number of iterations.
     :return: A tensor of projection weights with the same shape as `U`.
     """
     driver = "gesvdj" if G.device.type == "cuda" else None
@@ -67,7 +69,6 @@ def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float) -> T
     step_size = 1.9 / lambda_max
 
     V = U.clone()
-
     for t in range(1, max_iter + 1):
         V_new = torch.maximum(V - step_size * (G @ V), U)
         if (V - V_new).norm() < eps:

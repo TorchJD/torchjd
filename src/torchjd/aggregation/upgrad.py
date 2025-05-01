@@ -17,8 +17,9 @@ class UPGrad(_WeightedAggregator):
 
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
-    :param max_iter: The maximal number of iteration of the solver.
-    :param eps: The convergence threshold of the solver.
+    :param max_iter: The maximal number of iterations of the solver.
+    :param eps: The convergence threshold of the solver. A lower value leads to a higher precision
+        but a potentially larger number of iterations.
 
     .. admonition::
         Example

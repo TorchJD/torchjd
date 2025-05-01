@@ -11,7 +11,7 @@ changes that do not affect the user.
 ### Changed
 
 - **BREAKING**: Implemented a custom QP solver for projections onto the dual cone of a matrix. This results in:
-  - Great speedups when computing `UPGrad` and `DualProj`. This enables computing those aggregators on large matrices.
+  - Great speedups when computing `UPGrad` and `DualProj`. This enables computing those aggregators on tall matrices.
   - No more dependence on the packages `qpsolvers`, `quadprog`.
   - Change of interface for `UPGrad` and `DUalProj` to parametrize our solver. The call with the default values is not
     impacted.
