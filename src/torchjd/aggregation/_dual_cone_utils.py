@@ -10,12 +10,21 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
 
     By Proposition 1 of [1], this is equivalent to solving for `v` the following quadratic program:
 
-    minimize        v^T G v
+    minimize        f(v)=\frac{1}{2} v^T G v
     subject to      u \preceq v
 
     for each u in U.
 
-    This is done by projected gradient descent.
+    This is done by projected gradient descent:
+    - Initialize at $v_0=u$.
+    - At step t, let $w_t = v_{t-1} - \gamma \nabla f(v_{t-1})=v_{t-1}-\gamma G v_{t-1}$
+    - let $v_t$ be the projection of $w_t$ onto the feasible cone $\{ v: u \preceq v\}$, i.e.,
+      $w_t = \max(u, w_t)$ coordinate-wise.
+    - If $v_{t+1}-v_t$ is small, or if we reached the maximal number of iteration, return $v_t$.
+
+    Let $\lambda$ be the maximal eigen-value of $G$. The typical step-size  $\gamma$ should be in
+    $]0, 2/\lambda[$ with some theoretical guarantees at $1/\lambda$. We pick a rather aggressive
+    step-size $\gamma=1.9/\lambda$ as it works well in practice.
 
     Reference:
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
@@ -37,8 +46,6 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
     if lambda_max < 1e-10:
         return U
 
-    # The typical stepsize should be in [1/lambda_max, 2/lambda_max[. We pick an aggressive step
-    # size as it works well in practice.
     step_size = 1.9 / lambda_max
 
     for t in range(1, max_iter + 1):
