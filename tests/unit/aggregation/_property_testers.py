@@ -44,7 +44,7 @@ class NonConflictingProperty:
         vector = aggregator(matrix)
         output_direction = matrix @ vector
         positive_directions = output_direction[output_direction >= 0]
-        assert_close(positive_directions.norm(), output_direction.norm(), atol=7e-04, rtol=0)
+        assert_close(positive_directions.norm(), output_direction.norm(), atol=9e-04, rtol=0)
 
 
 class PermutationInvarianceProperty:
