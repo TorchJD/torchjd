@@ -3,6 +3,7 @@ from torch import Tensor
 
 from ._dual_cone_utils import project_weights
 from ._gramian_utils import compute_gramian
+from ._non_differentiable import raise_non_differentiable_error
 from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
@@ -39,6 +40,9 @@ class UPGrad(_WeightedAggregator):
         self._pref_vector = pref_vector
 
         super().__init__(weighting=_UPGradWrapper(weighting, max_iter, eps))
+
+        # This prevents considering the computed weights as constant w.r.t. the matrix.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
     def __repr__(self) -> str:
         return (

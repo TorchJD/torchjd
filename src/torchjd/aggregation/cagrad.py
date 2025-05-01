@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 
 from ._gramian_utils import compute_gramian, normalize
+from ._non_differentiable import raise_non_differentiable_error
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -43,6 +44,9 @@ class CAGrad(_WeightedAggregator):
 
     def __init__(self, c: float, norm_eps: float = 0.0001):
         super().__init__(weighting=_CAGradWeighting(c=c, norm_eps=norm_eps))
+
+        # This prevents considering the computed weights as constant w.r.t. the matrix.
+        self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
     def __repr__(self) -> str:
         return (

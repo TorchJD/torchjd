@@ -5,11 +5,15 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import CAGrad
 
-from ._property_testers import ExpectedStructureProperty, NonConflictingProperty
+from ._property_testers import (
+    ExpectedStructureProperty,
+    NonConflictingProperty,
+    NonDifferentiableProperty,
+)
 
 
 @mark.parametrize("aggregator", [CAGrad(c=0.5)])
-class TestCAGrad(ExpectedStructureProperty):
+class TestCAGrad(ExpectedStructureProperty, NonDifferentiableProperty):
     pass
 
 

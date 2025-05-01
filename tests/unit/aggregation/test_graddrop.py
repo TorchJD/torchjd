@@ -6,11 +6,11 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import GradDrop
 
-from ._property_testers import ExpectedStructureProperty
+from ._property_testers import ExpectedStructureProperty, NonDifferentiableProperty
 
 
 @mark.parametrize("aggregator", [GradDrop()])
-class TestGradDrop(ExpectedStructureProperty):
+class TestGradDrop(ExpectedStructureProperty, NonDifferentiableProperty):
     pass
 
 

@@ -7,6 +7,7 @@ from ._property_testers import (
     ExpectedStructureProperty,
     LinearUnderScalingProperty,
     NonConflictingProperty,
+    NonDifferentiableProperty,
     PermutationInvarianceProperty,
     StrongStationarityProperty,
 )
@@ -19,6 +20,7 @@ class TestUPGrad(
     PermutationInvarianceProperty,
     LinearUnderScalingProperty,
     StrongStationarityProperty,
+    NonDifferentiableProperty,
 ):
     pass
 

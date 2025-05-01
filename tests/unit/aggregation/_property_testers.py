@@ -1,9 +1,10 @@
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
+from torchjd.aggregation._non_differentiable import NonDifferentiableError
 
 from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
@@ -123,3 +124,21 @@ class StrongStationarityProperty:
         vector = aggregator(matrix)
         norm = vector.norm().item()
         assert norm > 1e-03
+
+
+class NonDifferentiableProperty:
+    """
+    This class tests empirically that a given non-differentiable `Aggregator` correctly raises a
+    NonDifferentiableError whenever we try to backward through it.
+    """
+
+    @classmethod
+    @mark.parametrize("matrix", [torch.ones(3, 5, requires_grad=True)])
+    def test_non_differentiable_property(cls, aggregator: Aggregator, matrix: Tensor):
+        cls._assert_non_differentiable_property(aggregator, matrix)
+
+    @staticmethod
+    def _assert_non_differentiable_property(aggregator: Aggregator, matrix: Tensor):
+        vector = aggregator(matrix)
+        with raises(NonDifferentiableError):
+            vector.backward(torch.ones_like(vector))
