@@ -65,21 +65,23 @@ class _MGDAWeighting(_Weighting):
         device = gramian.device
         dtype = gramian.dtype
 
+        one = torch.tensor(1.0, device=device, dtype=dtype)
+        zero = torch.tensor(0.0, device=device, dtype=dtype)
+
         alpha = torch.ones(gramian.shape[0], device=device, dtype=dtype) / gramian.shape[0]
         for i in range(self.max_iters):
             t = torch.argmin(gramian @ alpha)
-            e_t = torch.zeros(gramian.shape[0], device=device, dtype=dtype)
-            e_t[t] = 1.0
-            a = alpha @ (gramian @ e_t)
+            a = alpha @ (gramian[t])
             b = alpha @ (gramian @ alpha)
-            c = e_t @ (gramian @ e_t)
+            c = gramian[t, t]
             if c <= a:
-                gamma = 1.0
+                gamma = one
             elif b <= a:
-                gamma = 0.0
+                gamma = zero
             else:
                 gamma = (b - a) / (b + c - 2 * a)
-            alpha = (1 - gamma) * alpha + gamma * e_t
+            alpha = (one - gamma) * alpha
+            alpha[t] += gamma
             if gamma < self.epsilon:
                 break
         return alpha
