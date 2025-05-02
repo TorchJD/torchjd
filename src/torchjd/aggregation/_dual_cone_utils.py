@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 
-def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
+def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float, lr: float = 1.9) -> Tensor:
     """
     Computes the tensor of weights corresponding to the projection of the vectors in `U` onto the
     rows of a matrix whose Gramian is provided.
@@ -21,12 +21,12 @@ def project_weights(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
     m = shape[-1]
     U_matrix = U.reshape([-1, m]).T
 
-    V = _project_weight_matrix(U_matrix, G, max_iter, eps)
+    V = _project_weight_matrix(U_matrix, G, max_iter, eps, lr)
 
     return V.T.reshape(shape)
 
 
-def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float) -> Tensor:
+def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float, lr: float) -> Tensor:
     r"""
     Computes the tensor of weights corresponding to the projection of the columns in `U` onto the
     rows of a matrix whose Gramian is provided.
@@ -66,7 +66,7 @@ def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float) -> T
     if lambda_max < 1e-10:
         return U
 
-    step_size = 1.9 / lambda_max
+    step_size = lr / lambda_max
 
     V = U.clone()
     for t in range(1, max_iter + 1):
