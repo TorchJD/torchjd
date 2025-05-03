@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import torch
 from torch import Tensor, nn
 
 
@@ -81,8 +82,7 @@ class _WeightedAggregator(Aggregator):
         weights.
         """
 
-        vector = weights @ matrix
-        return vector
+        return torch.mv(matrix.T, weights)
 
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_is_matrix(matrix)
