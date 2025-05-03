@@ -7,7 +7,7 @@ def compute_gramian(matrix: Tensor) -> Tensor:
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
     """
 
-    return matrix @ matrix.T
+    return torch.mm(matrix, matrix.T)
 
 
 def normalize(gramian: Tensor, eps: float) -> Tensor:
