@@ -66,11 +66,11 @@ def _project_weight_matrix(U: Tensor, G: Tensor, max_iter: int, eps: float, lr: 
     if lambda_max < 1e-10:
         return U
 
-    step_size = lr / lambda_max
+    neg_step_size = (-lr / lambda_max).item()
 
     V = U.clone()
     for t in range(1, max_iter + 1):
-        V_new = torch.maximum(V - step_size * (G @ V), U)
+        V_new = torch.maximum(torch.addmm(V, G, V, alpha=neg_step_size), U)
         if (V - V_new).norm() < eps:
             break
         V = V_new
