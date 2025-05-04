@@ -36,3 +36,7 @@ repos:
     hooks:
     -   id: black  # Format code.
         args: [--line-length=100]
+
+ci:
+    autoupdate_commit_msg: 'chore: Update pre-commit hooks'
+    autoupdate_schedule: quarterly
