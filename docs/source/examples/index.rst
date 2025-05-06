@@ -15,6 +15,8 @@ This section contains some usage examples for TorchJD.
   dedicated backpropagation function :doc:`mtl_backward <../docs/autojac/mtl_backward>`.
 - :doc:`Recurrent Neural Network (RNN) <rnn>` shows how to apply Jacobian descent to RNN training,
   with one loss per output sequence element.
+- :doc:`Monitoring Aggregations <monitoring>` shows how to monitor the aggregation performed by the
+  aggregator, to check if Jacobian descent is prescribed for your use-case.
 - :doc:`PyTorch Lightning Integration <lightning_integration>` showcases how to combine
   TorchJD with PyTorch Lightning, by providing an example implementation of a multi-task
   ``LightningModule`` optimized by Jacobian descent.
@@ -27,5 +29,6 @@ This section contains some usage examples for TorchJD.
     iwrm.rst
     mtl.rst
     rnn.rst
+    monitoring.rst
     lightning_integration.rst
     amp.rst
