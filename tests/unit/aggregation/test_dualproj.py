@@ -24,20 +24,10 @@ class TestDualProj(
 
 
 def test_representations():
-    A = DualProj(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver="quadprog")
-    assert (
-        repr(A) == "DualProj(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver='quadprog')"
-    )
+    A = DualProj(pref_vector=None, max_iter=100, eps=0.0001)
+    assert repr(A) == "DualProj(pref_vector=None, max_iter=100, eps=0.0001)"
     assert str(A) == "DualProj"
 
-    A = DualProj(
-        pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"),
-        norm_eps=0.0001,
-        reg_eps=0.0001,
-        solver="quadprog",
-    )
-    assert (
-        repr(A) == "DualProj(pref_vector=tensor([1., 2., 3.]), norm_eps=0.0001, reg_eps=0.0001, "
-        "solver='quadprog')"
-    )
+    A = DualProj(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"), max_iter=100, eps=0.0001)
+    assert repr(A) == "DualProj(pref_vector=tensor([1., 2., 3.]), max_iter=100, eps=0.0001)"
     assert str(A) == "DualProj([1., 2., 3.])"

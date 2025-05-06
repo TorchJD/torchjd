@@ -1,9 +1,8 @@
-import numpy as np
 import torch
-from pytest import mark, raises
+from pytest import mark
 from torch.testing import assert_close
 
-from torchjd.aggregation._dual_cone_utils import _project_weight_vector, project_weights
+from torchjd.aggregation._dual_cone_utils import project_weights
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])
@@ -33,7 +32,7 @@ def test_solution_weights(shape: tuple[int, int]):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = project_weights(u, G, "quadprog")
+    w = project_weights(u, G, 200, 1e-07)
     dual_gap = w - u
 
     # Dual feasibility
@@ -48,7 +47,7 @@ def test_solution_weights(shape: tuple[int, int]):
 
     # Complementary slackness
     slackness = dual_gap @ primal_gap
-    assert_close(slackness, torch.zeros_like(slackness), atol=3e-03, rtol=0)
+    assert_close(slackness, torch.zeros_like(slackness), atol=2e-05, rtol=0)
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (32, 114)])
@@ -62,8 +61,8 @@ def test_scale_invariant(shape: tuple[int, int], scaling: float):
     G = J @ J.T
     u = torch.rand(shape[0])
 
-    w = project_weights(u, G, "quadprog")
-    w_scaled = project_weights(u, scaling * G, "quadprog")
+    w = project_weights(u, G, 200, 1e-07)
+    w_scaled = project_weights(u, scaling * G, 200, 1e-07)
 
     assert_close(w_scaled, w)
 
@@ -81,16 +80,7 @@ def test_tensorization_shape(shape: tuple[int, ...]):
 
     G = matrix @ matrix.T
 
-    W_tensor = project_weights(U_tensor, G, "quadprog")
-    W_matrix = project_weights(U_matrix, G, "quadprog")
+    W_tensor = project_weights(U_tensor, G, 200, 1e-07)
+    W_matrix = project_weights(U_matrix, G, 200, 1e-07)
 
     assert_close(W_matrix.reshape(shape), W_tensor)
-
-
-def test_project_weight_vector_failure():
-    """Tests that `_project_weight_vector` raises an error when the input G has too large values."""
-
-    large_J = np.random.randn(10, 100) * 1e5
-    large_G = large_J @ large_J.T
-    with raises(ValueError):
-        _project_weight_vector(np.ones(10), large_G, "quadprog")
