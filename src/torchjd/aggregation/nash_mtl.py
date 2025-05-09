@@ -23,7 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ._check_dependencies import check_dependencies_are_installed
+from ._utils.check_dependencies import check_dependencies_are_installed
 
 check_dependencies_are_installed(["cvxpy", "ecos"])
 
@@ -33,7 +33,7 @@ import torch
 from cvxpy import Expression
 from torch import Tensor
 
-from ._non_differentiable import raise_non_differentiable_error
+from ._utils.non_differentiable import raise_non_differentiable_error
 from .bases import _WeightedAggregator, _Weighting
 
 

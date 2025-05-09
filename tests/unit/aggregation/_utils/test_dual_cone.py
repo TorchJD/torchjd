@@ -3,7 +3,7 @@ import torch
 from pytest import mark, raises
 from torch.testing import assert_close
 
-from torchjd.aggregation._dual_cone_utils import _project_weight_vector, project_weights
+from torchjd.aggregation._utils.dual_cone import _project_weight_vector, project_weights
 
 
 @mark.parametrize("shape", [(5, 7), (9, 37), (2, 14), (32, 114), (50, 100)])

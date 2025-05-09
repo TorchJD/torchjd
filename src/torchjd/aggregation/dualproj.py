@@ -2,10 +2,10 @@ from typing import Literal
 
 from torch import Tensor
 
-from ._dual_cone_utils import project_weights
-from ._gramian_utils import compute_gramian, normalize, regularize
-from ._non_differentiable import raise_non_differentiable_error
-from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
+from ._utils.dual_cone import project_weights
+from ._utils.gramian import compute_gramian, normalize, regularize
+from ._utils.non_differentiable import raise_non_differentiable_error
+from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
