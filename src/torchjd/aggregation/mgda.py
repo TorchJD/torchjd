@@ -1,8 +1,7 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._utils.gramian import compute_gramian
-
+from ._utils.gramian import compute_gramian
 from .bases import _WeightedAggregator, _Weighting
 
 

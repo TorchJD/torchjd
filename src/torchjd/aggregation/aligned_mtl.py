@@ -28,12 +28,8 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._utils.gramian import compute_gramian
-from torchjd.aggregation._utils.pref_vector import (
-    pref_vector_to_str_suffix,
-    pref_vector_to_weighting,
-)
-
+from ._utils.gramian import compute_gramian
+from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .bases import _WeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 

@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from torchjd.aggregation._utils.gramian import compute_gramian
-from torchjd.aggregation._utils.non_differentiable import raise_non_differentiable_error
-
+from ._utils.gramian import compute_gramian
+from ._utils.non_differentiable import raise_non_differentiable_error
 from .bases import _WeightedAggregator, _Weighting
 
 
