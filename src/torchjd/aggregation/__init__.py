@@ -1,4 +1,7 @@
-from ._check_dependencies import _OptionalDepsNotInstalledError
+from torchjd.aggregation._utils.check_dependencies import (
+    OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
+)
+
 from .aligned_mtl import AlignedMTL
 from .bases import Aggregator
 from .config import ConFIG

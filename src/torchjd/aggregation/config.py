@@ -28,8 +28,12 @@
 import torch
 from torch import Tensor
 
-from ._non_differentiable import raise_non_differentiable_error
-from ._pref_vector_utils import pref_vector_to_str_suffix, pref_vector_to_weighting
+from torchjd.aggregation._utils.non_differentiable import raise_non_differentiable_error
+from torchjd.aggregation._utils.pref_vector import (
+    pref_vector_to_str_suffix,
+    pref_vector_to_weighting,
+)
+
 from .bases import Aggregator
 from .sum import _SumWeighting
 

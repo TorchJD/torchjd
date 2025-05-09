@@ -1,6 +1,7 @@
 from torch import Tensor
 
-from ._str_utils import _vector_to_str
+from torchjd.aggregation._utils.str import vector_to_str
+
 from .bases import _WeightedAggregator, _Weighting
 
 
@@ -33,7 +34,7 @@ class Constant(_WeightedAggregator):
         return f"{self.__class__.__name__}(weights={repr(self.weighting.weights)})"
 
     def __str__(self) -> str:
-        weights_str = _vector_to_str(self.weighting.weights)
+        weights_str = vector_to_str(self.weighting.weights)
         return f"{self.__class__.__name__}([{weights_str}])"
 
 

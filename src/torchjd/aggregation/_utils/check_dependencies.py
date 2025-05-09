@@ -1,7 +1,7 @@
 from importlib.util import find_spec
 
 
-class _OptionalDepsNotInstalledError(ModuleNotFoundError):
+class OptionalDepsNotInstalledError(ModuleNotFoundError):
     pass
 
 
@@ -13,4 +13,4 @@ def check_dependencies_are_installed(dependency_names: list[str]) -> None:
     """
 
     if any(find_spec(name) is None for name in dependency_names):
-        raise _OptionalDepsNotInstalledError()
+        raise OptionalDepsNotInstalledError()

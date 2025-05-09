@@ -4,7 +4,7 @@ from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import Aggregator
-from torchjd.aggregation._non_differentiable import NonDifferentiableError
+from torchjd.aggregation._utils.non_differentiable import NonDifferentiableError
 
 from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 

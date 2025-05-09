@@ -1,8 +1,9 @@
 from torch import Tensor
 
-from ._str_utils import _vector_to_str
-from .bases import _Weighting
-from .constant import _ConstantWeighting
+from torchjd.aggregation.bases import _Weighting
+from torchjd.aggregation.constant import _ConstantWeighting
+
+from .str import vector_to_str
 
 
 def pref_vector_to_weighting(pref_vector: Tensor | None, default: _Weighting) -> _Weighting:
@@ -28,4 +29,4 @@ def pref_vector_to_str_suffix(pref_vector: Tensor | None) -> str:
     if pref_vector is None:
         return ""
     else:
-        return f"([{_vector_to_str(pref_vector)}])"
+        return f"([{vector_to_str(pref_vector)}])"

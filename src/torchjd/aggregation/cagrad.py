@@ -1,4 +1,4 @@
-from ._check_dependencies import check_dependencies_are_installed  # noqa
+from torchjd.aggregation._utils.check_dependencies import check_dependencies_are_installed  # noqa
 
 check_dependencies_are_installed(["cvxpy", "clarabel"])
 
@@ -7,8 +7,9 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ._gramian_utils import compute_gramian, normalize
-from ._non_differentiable import raise_non_differentiable_error
+from torchjd.aggregation._utils.gramian import compute_gramian, normalize
+from torchjd.aggregation._utils.non_differentiable import raise_non_differentiable_error
+
 from .bases import _WeightedAggregator, _Weighting
 
 

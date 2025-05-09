@@ -3,7 +3,8 @@ from typing import Callable
 import torch
 from torch import Tensor
 
-from ._non_differentiable import raise_non_differentiable_error
+from torchjd.aggregation._utils.non_differentiable import raise_non_differentiable_error
+
 from .bases import Aggregator
 
 
