@@ -6,37 +6,32 @@ from torch.testing import assert_close
 from torchjd.aggregation import NashMTL
 
 from ._inputs import nash_mtl_matrices
-from ._property_testers import ExpectedStructureProperty, NonDifferentiableProperty
+from ._property_testers import assert_expected_structure, assert_non_differentiable
 
 
 def _make_aggregator(matrix: Tensor) -> NashMTL:
     return NashMTL(n_tasks=matrix.shape[0])
 
 
-_aggregators = [_make_aggregator(matrix) for matrix in nash_mtl_matrices]
+standard_pairs = [(_make_aggregator(matrix), matrix) for matrix in nash_mtl_matrices]
+requires_grad_pairs = [(NashMTL(n_tasks=3), torch.ones(3, 5, requires_grad=True))]
 
 
+# Note that as opposed to most aggregators, the expected structure is only tested with non-scaled
+# matrices, and with matrices of > 1 row. Otherwise, NashMTL fails.
 @mark.filterwarnings(
     "ignore:Solution may be inaccurate.",
     "ignore:You are solving a parameterized problem that is not DPP.",
 )
-class TestNashMTL(ExpectedStructureProperty, NonDifferentiableProperty):
-    # Override the parametrization of `test_expected_structure_property` to make the test use the
-    # right aggregator with each matrix.
+@mark.parametrize(["aggregator", "matrix"], standard_pairs)
+def test_expected_structure(aggregator: NashMTL, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
 
-    # Note that as opposed to most aggregators, the ExpectedStructureProperty is only tested with
-    # non-scaled matrices, and with matrices of > 1 row. Otherwise, NashMTL fails.
-    @classmethod
-    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators, nash_mtl_matrices))
-    def test_expected_structure_property(cls, aggregator: NashMTL, matrix: Tensor):
-        cls._assert_expected_structure_property(aggregator, matrix)
 
-    @classmethod
-    @mark.parametrize(
-        ["aggregator", "matrix"], [(NashMTL(n_tasks=3), torch.ones(3, 5, requires_grad=True))]
-    )
-    def test_non_differentiable_property(cls, aggregator: NashMTL, matrix: Tensor):
-        cls._assert_expected_structure_property(aggregator, matrix)
+@mark.filterwarnings("ignore:You are solving a parameterized problem that is not DPP.")
+@mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
+def test_non_differentiable(aggregator: NashMTL, matrix: Tensor):
+    assert_non_differentiable(aggregator, matrix)
 
 
 @mark.filterwarnings("ignore: You are solving a parameterized problem that is not DPP.")

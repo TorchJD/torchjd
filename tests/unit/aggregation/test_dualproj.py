@@ -1,26 +1,47 @@
 import torch
 from pytest import mark
+from torch import Tensor
 
 from torchjd.aggregation import DualProj
 
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 from ._property_testers import (
-    ExpectedStructureProperty,
-    NonConflictingProperty,
-    NonDifferentiableProperty,
-    PermutationInvarianceProperty,
-    StrongStationarityProperty,
+    assert_expected_structure,
+    assert_non_conflicting,
+    assert_non_differentiable,
+    assert_permutation_invariant,
+    assert_strongly_stationary,
 )
 
+scaled_pairs = [(DualProj(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(DualProj(), matrix) for matrix in typical_matrices]
+non_strong_pairs = [(DualProj(), matrix) for matrix in non_strong_matrices]
+requires_grad_pairs = [(DualProj(), torch.ones(3, 5, requires_grad=True))]
 
-@mark.parametrize("aggregator", [DualProj()])
-class TestDualProj(
-    ExpectedStructureProperty,
-    NonConflictingProperty,
-    PermutationInvarianceProperty,
-    StrongStationarityProperty,
-    NonDifferentiableProperty,
-):
-    pass
+
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: DualProj, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_non_conflicting(aggregator: DualProj, matrix: Tensor):
+    assert_non_conflicting(aggregator, matrix, atol=4e-04, rtol=0.0)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_permutation_invariant(aggregator: DualProj, matrix: Tensor):
+    assert_permutation_invariant(aggregator, matrix, n_perms=5, atol=5e-04, rtol=1e-05)
+
+
+@mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
+def test_strongly_stationary(aggregator: DualProj, matrix: Tensor):
+    assert_strongly_stationary(aggregator, matrix, threshold=1e-03)
+
+
+@mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
+def test_non_differentiable(aggregator: DualProj, matrix: Tensor):
+    assert_non_differentiable(aggregator, matrix)
 
 
 def test_representations():

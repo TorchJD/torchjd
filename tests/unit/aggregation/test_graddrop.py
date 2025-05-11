@@ -2,16 +2,27 @@ from contextlib import nullcontext as does_not_raise
 
 import torch
 from pytest import mark, raises
+from torch import Tensor
 from unit._utils import ExceptionContext
 
 from torchjd.aggregation import GradDrop
 
-from ._property_testers import ExpectedStructureProperty, NonDifferentiableProperty
+from ._inputs import scaled_matrices, typical_matrices
+from ._property_testers import assert_expected_structure, assert_non_differentiable
+
+scaled_pairs = [(GradDrop(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(GradDrop(), matrix) for matrix in typical_matrices]
+requires_grad_pairs = [(GradDrop(), torch.ones(3, 5, requires_grad=True))]
 
 
-@mark.parametrize("aggregator", [GradDrop()])
-class TestGradDrop(ExpectedStructureProperty, NonDifferentiableProperty):
-    pass
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: GradDrop, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
+def test_non_differentiable(aggregator: GradDrop, matrix: Tensor):
+    assert_non_differentiable(aggregator, matrix)
 
 
 @mark.parametrize(

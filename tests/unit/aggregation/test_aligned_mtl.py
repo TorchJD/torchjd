@@ -1,14 +1,24 @@
 import torch
 from pytest import mark
+from torch import Tensor
 
 from torchjd.aggregation import AlignedMTL
 
-from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
+from ._inputs import scaled_matrices, typical_matrices
+from ._property_testers import assert_expected_structure, assert_permutation_invariant
+
+scaled_pairs = [(AlignedMTL(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(AlignedMTL(), matrix) for matrix in typical_matrices]
 
 
-@mark.parametrize("aggregator", [AlignedMTL()])
-class TestAlignedMTL(ExpectedStructureProperty, PermutationInvarianceProperty):
-    pass
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: AlignedMTL, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_permutation_invariant(aggregator: AlignedMTL, matrix: Tensor):
+    assert_permutation_invariant(aggregator, matrix, n_perms=5, atol=5e-04, rtol=1e-05)
 
 
 def test_representations():

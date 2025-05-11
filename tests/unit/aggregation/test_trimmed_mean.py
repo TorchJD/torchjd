@@ -5,25 +5,23 @@ from pytest import mark, raises
 from torch import Tensor
 from unit._utils import ExceptionContext
 
-from torchjd.aggregation import Aggregator, TrimmedMean
+from torchjd.aggregation import TrimmedMean
 
 from ._inputs import scaled_matrices_2_plus_rows, typical_matrices_2_plus_rows
-from ._property_testers import ExpectedStructureProperty, PermutationInvarianceProperty
+from ._property_testers import assert_expected_structure, assert_permutation_invariant
+
+scaled_pairs = [(TrimmedMean(trim_number=1), matrix) for matrix in scaled_matrices_2_plus_rows]
+typical_pairs = [(TrimmedMean(trim_number=1), matrix) for matrix in typical_matrices_2_plus_rows]
 
 
-@mark.parametrize("aggregator", [TrimmedMean(trim_number=1)])
-class TestTrimmedMean(ExpectedStructureProperty, PermutationInvarianceProperty):
-    # Override the parametrization of some property-testing methods because `TrimmedMean` with
-    # `trim_number=1` only works on matrices with >= 2 rows.
-    @classmethod
-    @mark.parametrize("matrix", scaled_matrices_2_plus_rows + typical_matrices_2_plus_rows)
-    def test_expected_structure_property(cls, aggregator: TrimmedMean, matrix: Tensor):
-        cls._assert_expected_structure_property(aggregator, matrix)
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: TrimmedMean, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
 
-    @classmethod
-    @mark.parametrize("matrix", typical_matrices_2_plus_rows)
-    def test_permutation_invariance_property(cls, aggregator: Aggregator, matrix: Tensor):
-        cls._assert_permutation_invariance_property(aggregator, matrix)
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_permutation_invariant(aggregator: TrimmedMean, matrix: Tensor):
+    assert_permutation_invariant(aggregator, matrix, n_perms=5, atol=5e-04, rtol=1e-05)
 
 
 @mark.parametrize(

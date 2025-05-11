@@ -1,20 +1,39 @@
 import torch
 from pytest import mark
+from torch import Tensor
 
 from torchjd.aggregation import ConFIG
 
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 from ._property_testers import (
-    ExpectedStructureProperty,
-    LinearUnderScalingProperty,
-    NonDifferentiableProperty,
+    assert_expected_structure,
+    assert_linear_under_scaling,
+    assert_non_differentiable,
 )
+
+scaled_pairs = [(ConFIG(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(ConFIG(), matrix) for matrix in typical_matrices]
+non_strong_pairs = [(ConFIG(), matrix) for matrix in non_strong_matrices]
+requires_grad_pairs = [(ConFIG(), torch.ones(3, 5, requires_grad=True))]
+
+
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: ConFIG, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_linear_under_scaling(aggregator: ConFIG, matrix: Tensor):
+    assert_linear_under_scaling(aggregator, matrix, atol=1e-02, rtol=0)
+
+
+@mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
+def test_non_differentiable(aggregator: ConFIG, matrix: Tensor):
+    assert_non_differentiable(aggregator, matrix)
 
 
 # For some reason, some permutation-invariance property tests fail with the pinv-based
 # implementation.
-@mark.parametrize("aggregator", [ConFIG()])
-class TestConfig(ExpectedStructureProperty, LinearUnderScalingProperty, NonDifferentiableProperty):
-    pass
 
 
 def test_representations():
