@@ -4,8 +4,8 @@ from torch import Tensor
 
 from torchjd.aggregation import AlignedMTL
 
+from ._asserts import assert_expected_structure, assert_permutation_invariant
 from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import assert_expected_structure, assert_permutation_invariant
 
 scaled_pairs = [(AlignedMTL(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(AlignedMTL(), matrix) for matrix in typical_matrices]

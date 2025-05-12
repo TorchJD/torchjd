@@ -7,12 +7,8 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import CAGrad
 
+from ._asserts import assert_expected_structure, assert_non_conflicting, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import (
-    assert_expected_structure,
-    assert_non_conflicting,
-    assert_non_differentiable,
-)
 
 scaled_pairs = [(CAGrad(c=0.5), matrix) for matrix in scaled_matrices]
 typical_pairs = [(CAGrad(c=0.5), matrix) for matrix in typical_matrices]

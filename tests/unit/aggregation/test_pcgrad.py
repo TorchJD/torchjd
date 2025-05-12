@@ -8,8 +8,8 @@ from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
+from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import assert_expected_structure, assert_non_differentiable
 
 scaled_pairs = [(PCGrad(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(PCGrad(), matrix) for matrix in typical_matrices]

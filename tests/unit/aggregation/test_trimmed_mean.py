@@ -7,8 +7,8 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import TrimmedMean
 
+from ._asserts import assert_expected_structure, assert_permutation_invariant
 from ._inputs import scaled_matrices_2_plus_rows, typical_matrices_2_plus_rows
-from ._property_testers import assert_expected_structure, assert_permutation_invariant
 
 scaled_pairs = [(TrimmedMean(trim_number=1), matrix) for matrix in scaled_matrices_2_plus_rows]
 typical_pairs = [(TrimmedMean(trim_number=1), matrix) for matrix in typical_matrices_2_plus_rows]

@@ -6,12 +6,12 @@ from torch.testing import assert_close
 from torchjd.aggregation import MGDA
 from torchjd.aggregation.mgda import _MGDAWeighting
 
-from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import (
+from ._asserts import (
     assert_expected_structure,
     assert_non_conflicting,
     assert_permutation_invariant,
 )
+from ._inputs import scaled_matrices, typical_matrices
 
 scaled_pairs = [(MGDA(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(MGDA(), matrix) for matrix in typical_matrices]

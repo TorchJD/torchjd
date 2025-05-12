@@ -7,12 +7,12 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
 
-from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
-from ._property_testers import (
+from ._asserts import (
     assert_expected_structure,
     assert_linear_under_scaling,
     assert_strongly_stationary,
 )
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 
 def _make_aggregator(matrix: Tensor) -> Constant:

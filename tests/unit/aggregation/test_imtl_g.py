@@ -5,8 +5,8 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import IMTLG
 
+from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices
-from ._property_testers import assert_expected_structure, assert_non_differentiable
 
 scaled_pairs = [(IMTLG(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(IMTLG(), matrix) for matrix in typical_matrices]

@@ -4,14 +4,14 @@ from torch import Tensor
 
 from torchjd.aggregation import DualProj
 
-from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
-from ._property_testers import (
+from ._asserts import (
     assert_expected_structure,
     assert_non_conflicting,
     assert_non_differentiable,
     assert_permutation_invariant,
     assert_strongly_stationary,
 )
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 scaled_pairs = [(DualProj(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(DualProj(), matrix) for matrix in typical_matrices]

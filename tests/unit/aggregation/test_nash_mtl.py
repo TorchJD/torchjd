@@ -5,8 +5,8 @@ from torch.testing import assert_close
 
 from torchjd.aggregation import NashMTL
 
+from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import nash_mtl_matrices
-from ._property_testers import assert_expected_structure, assert_non_differentiable
 
 
 def _make_aggregator(matrix: Tensor) -> NashMTL:

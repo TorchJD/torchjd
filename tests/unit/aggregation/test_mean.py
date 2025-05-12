@@ -3,13 +3,13 @@ from torch import Tensor
 
 from torchjd.aggregation import Mean
 
-from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
-from ._property_testers import (
+from ._asserts import (
     assert_expected_structure,
     assert_linear_under_scaling,
     assert_permutation_invariant,
     assert_strongly_stationary,
 )
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 scaled_pairs = [(Mean(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(Mean(), matrix) for matrix in typical_matrices]

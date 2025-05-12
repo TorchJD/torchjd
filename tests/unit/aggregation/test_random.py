@@ -3,8 +3,8 @@ from torch import Tensor
 
 from torchjd.aggregation import Random
 
+from ._asserts import assert_expected_structure, assert_strongly_stationary
 from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
-from ._property_testers import assert_expected_structure, assert_strongly_stationary
 
 scaled_pairs = [(Random(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(Random(), matrix) for matrix in typical_matrices]
