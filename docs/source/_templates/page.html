@@ -9,10 +9,18 @@
     that the furo theme keeps using a file named page.html, so this could silently break with future
     updates of furo. See https://pradyunsg.me/furo/customisation/injecting/ and
     https://github.com/pradyunsg/furo/discussions/248 for more information.
+
+    There is also a condition to not do that in the main index.html pages. The reason is that Google
+    wants to set the canonical URL of those pages to torchjd.org/index.html anyway, so if we say
+    that we want the canonical page of those pages to be torchjd.org/stable/index.html, Google will
+    say that it has selected a different canonical page than the one indicated, and it will not
+    index those pages.
 #}
 {% extends "!page.html" %}
 {% block extrahead %}
-    <link rel="canonical" href="https://torchjd.org/stable/{{ pagename }}.html">
+    {% if not (pagename.endswith("index") and pagename.count("/") == 0) %}
+        <link rel="canonical" href="https://torchjd.org/stable/{{ pagename }}.html">
+    {% endif %}
     <script src="/version-selector.js"></script>
     <link rel="stylesheet" href="/version-selector.css">
 {% endblock %}
