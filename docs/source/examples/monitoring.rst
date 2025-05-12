@@ -29,7 +29,7 @@ they have a negative inner product).
         """Prints the extracted weights."""
         print(f"Weights: {weights}")
 
-    def print_similarity_with_gd(_, inputs: torch.Tensor, aggregation: torch.Tensor) -> None:
+    def print_similarity_with_gd(_, inputs: tuple[torch.Tensor], aggregation: torch.Tensor) -> None:
         """Prints the cosine similarity between the aggregation and the average gradient."""
         matrix = inputs[0]
         gd_output = matrix.mean(dim=0)
