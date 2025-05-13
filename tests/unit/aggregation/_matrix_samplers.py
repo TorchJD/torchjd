@@ -8,7 +8,7 @@ from torch.nn.functional import normalize
 class MatrixSampler(ABC):
     """Abstract base class for sampling matrices of a given shape, rank and dtype."""
 
-    def __init__(self, m: int, n: int, rank: int, dtype: torch.dtype):
+    def __init__(self, m: int, n: int, rank: int, dtype: torch.dtype = torch.float32):
         self._check_params(m, n, rank, dtype)
         self.m = m
         self.n = n
