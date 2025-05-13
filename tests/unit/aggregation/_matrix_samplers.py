@@ -32,7 +32,7 @@ class MatrixSampler(ABC):
 
     def __str__(self) -> str:
         return (
-            f"{self.__class__.__name__.replace("MatrixSampler", "")}"
+            f"{self.__class__.__name__.replace('MatrixSampler', '')}"
             f"({self.m}x{self.n}r{self.rank}:{str(self.dtype)[6:]})"
         )
 
