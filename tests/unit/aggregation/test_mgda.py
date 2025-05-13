@@ -29,7 +29,7 @@ def test_non_conflicting(aggregator: MGDA, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: MGDA, matrix: Tensor):
-    assert_permutation_invariant(aggregator, matrix, n_perms=5, atol=5e-04, rtol=1e-05)
+    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
 
 
 @mark.parametrize(

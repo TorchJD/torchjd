@@ -23,7 +23,7 @@ def test_expected_structure(aggregator: Mean, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: Mean, matrix: Tensor):
-    assert_permutation_invariant(aggregator, matrix, n_perms=5, atol=5e-04, rtol=1e-05)
+    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)

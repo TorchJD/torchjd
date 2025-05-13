@@ -32,7 +32,7 @@ def assert_non_conflicting(
 
 
 def assert_permutation_invariant(
-    aggregator: Aggregator, matrix: Tensor, n_perms: int, atol: float, rtol: float
+    aggregator: Aggregator, matrix: Tensor, n_runs: int, atol: float, rtol: float
 ) -> None:
     """
     Tests empirically that for a given `Aggregator`, randomly permuting rows of the input matrix
@@ -45,7 +45,7 @@ def assert_permutation_invariant(
 
     vector = aggregator(matrix)
 
-    for _ in range(n_perms):
+    for _ in range(n_runs):
         permuted_matrix = permute_randomly(matrix)
         permuted_vector = aggregator(permuted_matrix)
 
