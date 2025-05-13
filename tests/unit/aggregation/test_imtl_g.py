@@ -24,7 +24,7 @@ def test_expected_structure(aggregator: IMTLG, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: IMTLG, matrix: Tensor):
-    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
+    assert_permutation_invariant(aggregator, matrix)
 
 
 @mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)

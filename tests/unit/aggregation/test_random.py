@@ -18,7 +18,7 @@ def test_expected_structure(aggregator: Random, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: Random, matrix: Tensor):
-    assert_strongly_stationary(aggregator, matrix, threshold=1e-03)
+    assert_strongly_stationary(aggregator, matrix)
 
 
 def test_representations():

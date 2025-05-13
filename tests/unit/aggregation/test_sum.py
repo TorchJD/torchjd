@@ -23,17 +23,17 @@ def test_expected_structure(aggregator: Sum, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: Sum, matrix: Tensor):
-    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
+    assert_permutation_invariant(aggregator, matrix)
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: Sum, matrix: Tensor):
-    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=1e-02, rtol=0)
+    assert_linear_under_scaling(aggregator, matrix)
 
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: Sum, matrix: Tensor):
-    assert_strongly_stationary(aggregator, matrix, threshold=1e-03)
+    assert_strongly_stationary(aggregator, matrix)
 
 
 def test_representations():

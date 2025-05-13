@@ -21,7 +21,7 @@ def assert_expected_structure(aggregator: Aggregator, matrix: Tensor) -> None:
 
 
 def assert_non_conflicting(
-    aggregator: Aggregator, matrix: Tensor, atol: float, rtol: float
+    aggregator: Aggregator, matrix: Tensor, atol: float = 4e-04, rtol: float = 0.0
 ) -> None:
     """Tests empirically that a given `Aggregator` satisfies the non-conflicting property."""
 
@@ -32,7 +32,11 @@ def assert_non_conflicting(
 
 
 def assert_permutation_invariant(
-    aggregator: Aggregator, matrix: Tensor, n_runs: int, atol: float, rtol: float
+    aggregator: Aggregator,
+    matrix: Tensor,
+    n_runs: int = 5,
+    atol: float = 5e-04,
+    rtol: float = 1e-05,
 ) -> None:
     """
     Tests empirically that for a given `Aggregator`, randomly permuting rows of the input matrix
@@ -53,7 +57,7 @@ def assert_permutation_invariant(
 
 
 def assert_linear_under_scaling(
-    aggregator: Aggregator, matrix: Tensor, n_runs: int, atol: float, rtol: float
+    aggregator: Aggregator, matrix: Tensor, n_runs: int = 5, atol: float = 1e-02, rtol: float = 0.0
 ) -> None:
     """Tests empirically that a given `Aggregator` satisfies the linear under scaling property."""
 
@@ -71,7 +75,9 @@ def assert_linear_under_scaling(
         assert_close(x, expected, atol=atol, rtol=rtol)
 
 
-def assert_strongly_stationary(aggregator: Aggregator, matrix: Tensor, threshold: float) -> None:
+def assert_strongly_stationary(
+    aggregator: Aggregator, matrix: Tensor, threshold: float = 1e-03
+) -> None:
     """
     Tests empirically that a given `Aggregator` is strongly stationary.
 

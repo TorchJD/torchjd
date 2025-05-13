@@ -33,12 +33,12 @@ def test_expected_structure(aggregator: Constant, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: Constant, matrix: Tensor):
-    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=1e-02, rtol=0)
+    assert_linear_under_scaling(aggregator, matrix)
 
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: Constant, matrix: Tensor):
-    assert_strongly_stationary(aggregator, matrix, threshold=1e-03)
+    assert_strongly_stationary(aggregator, matrix)
 
 
 @mark.parametrize(
