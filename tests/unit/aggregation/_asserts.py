@@ -53,21 +53,22 @@ def assert_permutation_invariant(
 
 
 def assert_linear_under_scaling(
-    aggregator: Aggregator, matrix: Tensor, atol: float, rtol: float
+    aggregator: Aggregator, matrix: Tensor, n_runs: int, atol: float, rtol: float
 ) -> None:
     """Tests empirically that a given `Aggregator` satisfies the linear under scaling property."""
 
-    c1 = torch.rand(matrix.shape[0])
-    c2 = torch.rand(matrix.shape[0])
-    alpha = torch.rand([])
-    beta = torch.rand([])
+    for _ in range(n_runs):
+        c1 = torch.rand(matrix.shape[0])
+        c2 = torch.rand(matrix.shape[0])
+        alpha = torch.rand([])
+        beta = torch.rand([])
 
-    x1 = aggregator(torch.diag(c1) @ matrix)
-    x2 = aggregator(torch.diag(c2) @ matrix)
-    x = aggregator(torch.diag(alpha * c1 + beta * c2) @ matrix)
-    expected = alpha * x1 + beta * x2
+        x1 = aggregator(torch.diag(c1) @ matrix)
+        x2 = aggregator(torch.diag(c2) @ matrix)
+        x = aggregator(torch.diag(alpha * c1 + beta * c2) @ matrix)
+        expected = alpha * x1 + beta * x2
 
-    assert_close(x, expected, atol=atol, rtol=rtol)
+        assert_close(x, expected, atol=atol, rtol=rtol)
 
 
 def assert_strongly_stationary(aggregator: Aggregator, matrix: Tensor, threshold: float) -> None:

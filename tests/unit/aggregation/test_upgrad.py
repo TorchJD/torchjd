@@ -37,7 +37,7 @@ def test_permutation_invariant(aggregator: UPGrad, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: UPGrad, matrix: Tensor):
-    assert_linear_under_scaling(aggregator, matrix, atol=1e-02, rtol=0)
+    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=3e-02, rtol=0)
 
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)

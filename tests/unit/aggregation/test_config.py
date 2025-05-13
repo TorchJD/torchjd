@@ -24,7 +24,7 @@ def test_expected_structure(aggregator: ConFIG, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: ConFIG, matrix: Tensor):
-    assert_linear_under_scaling(aggregator, matrix, atol=1e-02, rtol=0)
+    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=1e-02, rtol=0)
 
 
 @mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
