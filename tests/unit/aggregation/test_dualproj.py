@@ -26,17 +26,17 @@ def test_expected_structure(aggregator: DualProj, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_non_conflicting(aggregator: DualProj, matrix: Tensor):
-    assert_non_conflicting(aggregator, matrix, atol=4e-04, rtol=0.0)
+    assert_non_conflicting(aggregator, matrix, atol=5e-05, rtol=5e-05)
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: DualProj, matrix: Tensor):
-    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
+    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=2e-07, rtol=2e-07)
 
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: DualProj, matrix: Tensor):
-    assert_strongly_stationary(aggregator, matrix, threshold=1e-03)
+    assert_strongly_stationary(aggregator, matrix, threshold=3e-03)
 
 
 @mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
