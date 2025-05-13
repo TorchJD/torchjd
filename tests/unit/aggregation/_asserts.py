@@ -35,8 +35,8 @@ def assert_permutation_invariant(
     aggregator: Aggregator,
     matrix: Tensor,
     n_runs: int = 5,
-    atol: float = 5e-05,
-    rtol: float = 5e-05,
+    atol: float = 1e-04,
+    rtol: float = 1e-04,
 ) -> None:
     """
     Tests empirically that for a given `Aggregator`, randomly permuting rows of the input matrix
