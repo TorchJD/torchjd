@@ -8,6 +8,7 @@ from ._asserts import (
     assert_expected_structure,
     assert_linear_under_scaling,
     assert_non_differentiable,
+    assert_permutation_invariant,
 )
 from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
@@ -23,6 +24,11 @@ def test_expected_structure(aggregator: ConFIG, matrix: Tensor):
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_permutation_invariant(aggregator: ConFIG, matrix: Tensor):
+    assert_permutation_invariant(aggregator, matrix, n_runs=5, atol=5e-04, rtol=1e-05)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: ConFIG, matrix: Tensor):
     assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=1e-02, rtol=0)
 
@@ -30,10 +36,6 @@ def test_linear_under_scaling(aggregator: ConFIG, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
 def test_non_differentiable(aggregator: ConFIG, matrix: Tensor):
     assert_non_differentiable(aggregator, matrix)
-
-
-# For some reason, some permutation-invariance property tests fail with the pinv-based
-# implementation.
 
 
 def test_representations():
