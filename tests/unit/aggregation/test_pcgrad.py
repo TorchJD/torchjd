@@ -1,5 +1,6 @@
 import torch
 from pytest import mark
+from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import PCGrad
@@ -7,12 +8,22 @@ from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
 
-from ._property_testers import ExpectedStructureProperty, NonDifferentiableProperty
+from ._asserts import assert_expected_structure, assert_non_differentiable
+from ._inputs import scaled_matrices, typical_matrices
+
+scaled_pairs = [(PCGrad(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(PCGrad(), matrix) for matrix in typical_matrices]
+requires_grad_pairs = [(PCGrad(), torch.ones(3, 5, requires_grad=True))]
 
 
-@mark.parametrize("aggregator", [PCGrad()])
-class TestPCGrad(ExpectedStructureProperty, NonDifferentiableProperty):
-    pass
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: PCGrad, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
+def test_non_differentiable(aggregator: PCGrad, matrix: Tensor):
+    assert_non_differentiable(aggregator, matrix)
 
 
 @mark.parametrize(

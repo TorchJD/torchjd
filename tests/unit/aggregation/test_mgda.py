@@ -1,20 +1,35 @@
 import torch
 from pytest import mark
+from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import MGDA
 from torchjd.aggregation.mgda import _MGDAWeighting
 
-from ._property_testers import (
-    ExpectedStructureProperty,
-    NonConflictingProperty,
-    PermutationInvarianceProperty,
+from ._asserts import (
+    assert_expected_structure,
+    assert_non_conflicting,
+    assert_permutation_invariant,
 )
+from ._inputs import scaled_matrices, typical_matrices
+
+scaled_pairs = [(MGDA(), matrix) for matrix in scaled_matrices]
+typical_pairs = [(MGDA(), matrix) for matrix in typical_matrices]
 
 
-@mark.parametrize("aggregator", [MGDA()])
-class TestMGDA(ExpectedStructureProperty, NonConflictingProperty, PermutationInvarianceProperty):
-    pass
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: MGDA, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_non_conflicting(aggregator: MGDA, matrix: Tensor):
+    assert_non_conflicting(aggregator, matrix)
+
+
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_permutation_invariant(aggregator: MGDA, matrix: Tensor):
+    assert_permutation_invariant(aggregator, matrix)
 
 
 @mark.parametrize(

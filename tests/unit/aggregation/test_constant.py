@@ -7,55 +7,38 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
 
-from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
-from ._property_testers import (
-    ExpectedStructureProperty,
-    LinearUnderScalingProperty,
-    StrongStationarityProperty,
+from ._asserts import (
+    assert_expected_structure,
+    assert_linear_under_scaling,
+    assert_strongly_stationary,
 )
-
-# The weights must be a vector of length equal to the number of rows in the matrix that it will be
-# applied to. Thus, each `Constant` instance is specific to matrices of a given number of rows. To
-# test properties on all possible matrices, we have to create one `Constant` with the right number
-# of weights for each matrix.
+from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 
 def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    weights = torch.tensor([1.0 / n_rows] * n_rows)
+    weights = torch.tensor([1.0 / n_rows] * n_rows, dtype=matrix.dtype)
     return Constant(weights)
 
 
-_matrices_1 = scaled_matrices + typical_matrices
-_aggregators_1 = [_make_aggregator(matrix) for matrix in _matrices_1]
-
-_matrices_2 = typical_matrices
-_aggregators_2 = [_make_aggregator(matrix) for matrix in _matrices_2]
-
-_matrices_3 = non_strong_matrices
-_aggregators_3 = [_make_aggregator(matrix) for matrix in _matrices_3]
+scaled_pairs = [(_make_aggregator(matrix), matrix) for matrix in scaled_matrices]
+typical_pairs = [(_make_aggregator(matrix), matrix) for matrix in typical_matrices]
+non_strong_pairs = [(_make_aggregator(matrix), matrix) for matrix in non_strong_matrices]
 
 
-class TestConstant(
-    ExpectedStructureProperty, LinearUnderScalingProperty, StrongStationarityProperty
-):
-    # Override the parametrization of `test_expected_structure_property` to make the test use the
-    # right aggregator with each matrix.
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: Constant, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
 
-    @classmethod
-    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_1, _matrices_1))
-    def test_expected_structure_property(cls, aggregator: Constant, matrix: Tensor):
-        cls._assert_expected_structure_property(aggregator, matrix)
 
-    @classmethod
-    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_2, _matrices_2))
-    def test_linear_under_scaling_property(cls, aggregator: Constant, matrix: Tensor):
-        cls._assert_linear_under_scaling_property(aggregator, matrix)
+@mark.parametrize(["aggregator", "matrix"], typical_pairs)
+def test_linear_under_scaling(aggregator: Constant, matrix: Tensor):
+    assert_linear_under_scaling(aggregator, matrix)
 
-    @classmethod
-    @mark.parametrize(["aggregator", "matrix"], zip(_aggregators_3, _matrices_3))
-    def test_stationarity_property(cls, aggregator: Constant, matrix: Tensor):
-        cls._assert_stationarity_property(aggregator, matrix)
+
+@mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
+def test_strongly_stationary(aggregator: Constant, matrix: Tensor):
+    assert_strongly_stationary(aggregator, matrix)
 
 
 @mark.parametrize(

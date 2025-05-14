@@ -7,18 +7,16 @@ from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Krum
 
+from ._asserts import assert_expected_structure
 from ._inputs import scaled_matrices_2_plus_rows, typical_matrices_2_plus_rows
-from ._property_testers import ExpectedStructureProperty
+
+scaled_pairs = [(Krum(n_byzantine=1), matrix) for matrix in scaled_matrices_2_plus_rows]
+typical_pairs = [(Krum(n_byzantine=1), matrix) for matrix in typical_matrices_2_plus_rows]
 
 
-@mark.parametrize("aggregator", [Krum(n_byzantine=1)])
-class TestKrum(ExpectedStructureProperty):
-    # Override the parametrization of some property-testing methods because Krum only works on
-    # matrices with >= 2 rows.
-    @classmethod
-    @mark.parametrize("matrix", scaled_matrices_2_plus_rows + typical_matrices_2_plus_rows)
-    def test_expected_structure_property(cls, aggregator: Krum, matrix: Tensor):
-        cls._assert_expected_structure_property(aggregator, matrix)
+@mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
+def test_expected_structure(aggregator: Krum, matrix: Tensor):
+    assert_expected_structure(aggregator, matrix)
 
 
 @mark.parametrize(
