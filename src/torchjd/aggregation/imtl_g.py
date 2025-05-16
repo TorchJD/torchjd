@@ -1,10 +1,9 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from ._utils.non_differentiable import raise_non_differentiable_error
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class IMTLG(_WeightedAggregator):
@@ -36,19 +35,14 @@ class IMTLG(_WeightedAggregator):
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _IMTLGWeighting(_Weighting):
+class _IMTLGWeighting(_GramianBasedWeighting):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights as described in the
     definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    @staticmethod
-    def _compute_from_gramian(gramian: Tensor) -> Tensor:
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
         d = torch.sqrt(torch.diagonal(gramian))
         v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()
