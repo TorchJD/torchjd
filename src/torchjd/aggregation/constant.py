@@ -2,7 +2,7 @@ from torch import Tensor
 
 from ._utils.str import vector_to_str
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _RowDimensionBasedWeighting
 
 
 class Constant(_WeightedAggregator):
@@ -38,7 +38,7 @@ class Constant(_WeightedAggregator):
         return f"{self.__class__.__name__}([{weights_str}])"
 
 
-class _ConstantWeighting(_Weighting):
+class _ConstantWeighting(_RowDimensionBasedWeighting):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that returns constant, pre-determined
     weights.
@@ -56,13 +56,13 @@ class _ConstantWeighting(_Weighting):
         super().__init__()
         self.weights = weights
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        self._check_matrix_shape(matrix)
+    def weights_from_dimension(self, m: int) -> Tensor:
+        self._check_row_dimension(m)
         return self.weights
 
-    def _check_matrix_shape(self, matrix: Tensor) -> None:
-        if matrix.shape[0] != len(self.weights):
+    def _check_row_dimension(self, m: int) -> None:
+        if m != len(self.weights):
             raise ValueError(
                 f"Parameter `matrix` should have {len(self.weights)} rows (the number of specified "
-                f"weights). Found `matrix` with {matrix.shape[0]} rows."
+                f"weights). Found `matrix` with {m} rows."
             )
