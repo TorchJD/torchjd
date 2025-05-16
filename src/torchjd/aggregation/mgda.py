@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ._utils.gramian import compute_gramian
-from .bases import _WeightedAggregator
+from .aggregator_bases import _WeightedAggregator
 from .weighting_bases import _Weighting
 
 

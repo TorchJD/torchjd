@@ -6,7 +6,7 @@ from ._utils.dual_cone import project_weights
 from ._utils.gramian import compute_gramian, normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .bases import _WeightedAggregator
+from .aggregator_bases import _WeightedAggregator
 from .mean import _MeanWeighting
 from .weighting_bases import _Weighting
 

@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from .bases import _WeightedAggregator
+from .aggregator_bases import _WeightedAggregator
 from .weighting_bases import _Weighting
 
 

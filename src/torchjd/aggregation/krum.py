@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from ._utils.gramian import compute_gramian
-from .bases import _WeightedAggregator
+from .aggregator_bases import _WeightedAggregator
 from .weighting_bases import _Weighting
 
 
