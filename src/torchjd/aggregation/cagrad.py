@@ -7,10 +7,10 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian, normalize
+from ._utils.gramian import normalize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class CAGrad(_WeightedAggregator):
@@ -59,7 +59,7 @@ class CAGrad(_WeightedAggregator):
         return f"CAGrad{c_str}"
 
 
-class _CAGradWeighting(_Weighting):
+class _CAGradWeighting(_GramianBasedWeighting):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the CAGrad
     algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
@@ -86,11 +86,7 @@ class _CAGradWeighting(_Weighting):
         self.c = c
         self.norm_eps = norm_eps
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
         U, S, _ = torch.svd(normalize(gramian, self.norm_eps))
 
         reduced_matrix = U @ S.sqrt().diag()
