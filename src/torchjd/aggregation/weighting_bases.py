@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from torch import Tensor, nn
 
+from torchjd.aggregation._utils.gramian import compute_gramian
+
 
 class _Weighting(nn.Module, ABC):
     r"""
@@ -21,3 +23,32 @@ class _Weighting(nn.Module, ABC):
         """Computes the vector of weights from the input matrix and applies all registered hooks."""
 
         return super().__call__(matrix)
+
+
+class _GramianBasedWeighting(_Weighting, ABC):
+    """
+    Abstract base class for all weighting methods that only rely on the matrix through its Gramian.
+    """
+
+    def forward(self, matrix: Tensor) -> Tensor:
+        gramian = compute_gramian(matrix)
+        return self.weights_from_gramian(gramian)
+
+    @abstractmethod
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        """Computes the vector of weights from a gramian matrix."""
+
+
+class _RowDimensionBasedWeighting(_GramianBasedWeighting, ABC):
+    """
+    Abstract base class for all weighting methods that only rely on the matrix through its row
+    dimension.
+    """
+
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        m = gramian.shape[0]
+        return self.weights_from_dimension(m)
+
+    @abstractmethod
+    def weights_from_dimension(self, m: int) -> Tensor:
+        """Computes the vector of weights from the row dimension of a matrix."""
