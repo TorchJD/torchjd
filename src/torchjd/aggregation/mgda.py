@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class MGDA(_WeightedAggregator):
@@ -42,7 +41,7 @@ class MGDA(_WeightedAggregator):
         )
 
 
-class _MGDAWeighting(_Weighting):
+class _MGDAWeighting(_GramianBasedWeighting):
     r"""
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm
     2 of `Multi-Task Learning as Multi-Objective Optimization
@@ -57,7 +56,7 @@ class _MGDAWeighting(_Weighting):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
         """
         This is the Frank-Wolfe solver in Algorithm 2 of `Multi-Task Learning as Multi-Objective
         Optimization
@@ -84,8 +83,3 @@ class _MGDAWeighting(_Weighting):
             if gamma < self.epsilon:
                 break
         return alpha
-
-    def forward(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        weights = self._compute_from_gramian(gramian)
-        return weights
