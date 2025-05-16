@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class Mean(_WeightedAggregator):
@@ -28,16 +28,16 @@ class Mean(_WeightedAggregator):
         super().__init__(weighting=_MeanWeighting())
 
 
-class _MeanWeighting(_Weighting):
+class _MeanWeighting(_GramianBasedWeighting):
     r"""
     :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
     :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
     \mathbb{R}^m`.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        device = matrix.device
-        dtype = matrix.dtype
-        m = matrix.shape[0]
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        device = gramian.device
+        dtype = gramian.dtype
+        m = gramian.shape[0]
         weights = torch.full(size=[m], fill_value=1 / m, device=device, dtype=dtype)
         return weights
