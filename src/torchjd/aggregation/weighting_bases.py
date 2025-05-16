@@ -49,6 +49,11 @@ class _RowDimensionBasedWeighting(_GramianBasedWeighting, ABC):
         m = gramian.shape[0]
         return self.weights_from_dimension(m)
 
+    # Override forward to avoid computing the Gramian
+    def forward(self, matrix: Tensor) -> Tensor:
+        m = matrix.shape[0]
+        return self.weights_from_dimension(m)
+
     @abstractmethod
     def weights_from_dimension(self, m: int) -> Tensor:
         """Computes the vector of weights from the row dimension of a matrix."""
