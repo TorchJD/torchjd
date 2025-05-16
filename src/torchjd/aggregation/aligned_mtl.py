@@ -28,11 +28,10 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .aggregator_bases import _WeightedAggregator
 from .mean import _MeanWeighting
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class AlignedMTL(_WeightedAggregator):
@@ -75,7 +74,7 @@ class AlignedMTL(_WeightedAggregator):
         return f"AlignedMTL{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _AlignedMTLWrapper(_Weighting):
+class _AlignedMTLWrapper(_GramianBasedWeighting):
     """
     Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that corrects the extracted
     weights with the balance transformation defined in Algorithm 1 of `Independent Component
@@ -86,15 +85,14 @@ class _AlignedMTLWrapper(_Weighting):
         responsible for extracting weight vectors from the input matrices.
     """
 
-    def __init__(self, weighting: _Weighting):
+    def __init__(self, weighting: _GramianBasedWeighting):
         super().__init__()
         self.weighting = weighting
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        w = self.weighting(matrix)
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        w = self.weighting(gramian)
 
-        M = compute_gramian(matrix)
-        B = self._compute_balance_transformation(M)
+        B = self._compute_balance_transformation(gramian)
         alpha = B @ w
 
         return alpha
