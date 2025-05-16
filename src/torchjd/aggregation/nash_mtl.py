@@ -34,7 +34,8 @@ from cvxpy import Expression
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator
+from .weighting_bases import _Weighting
 
 
 class NashMTL(_WeightedAggregator):

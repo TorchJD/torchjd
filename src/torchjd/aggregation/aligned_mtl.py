@@ -30,8 +30,9 @@ from torch import Tensor
 
 from ._utils.gramian import compute_gramian
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator
 from .mean import _MeanWeighting
+from .weighting_bases import _Weighting
 
 
 class AlignedMTL(_WeightedAggregator):

@@ -1,7 +1,8 @@
 import torch
 from torch import Tensor
 
-from .bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator
+from .weighting_bases import _Weighting
 
 
 class Mean(_WeightedAggregator):

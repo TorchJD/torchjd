@@ -3,7 +3,8 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from ._utils.gramian import compute_gramian
-from .bases import _WeightedAggregator, _Weighting
+from .bases import _WeightedAggregator
+from .weighting_bases import _Weighting
 
 
 class Krum(_WeightedAggregator):
