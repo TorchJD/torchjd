@@ -3,12 +3,12 @@ from typing import Literal
 from torch import Tensor
 
 from ._utils.dual_cone import project_weights
-from ._utils.gramian import compute_gramian, normalize, regularize
+from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .aggregator_bases import _WeightedAggregator
 from .mean import _MeanWeighting
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class DualProj(_WeightedAggregator):
@@ -72,7 +72,7 @@ class DualProj(_WeightedAggregator):
         return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _DualProjWrapper(_Weighting):
+class _DualProjWrapper(_GramianBasedWeighting):
     """
     Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
@@ -92,7 +92,7 @@ class _DualProjWrapper(_Weighting):
 
     def __init__(
         self,
-        weighting: _Weighting,
+        weighting: _GramianBasedWeighting,
         norm_eps: float,
         reg_eps: float,
         solver: Literal["quadprog"],
@@ -103,8 +103,8 @@ class _DualProjWrapper(_Weighting):
         self.reg_eps = reg_eps
         self.solver = solver
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        u = self.weighting(matrix)
-        G = regularize(normalize(compute_gramian(matrix), self.norm_eps), self.reg_eps)
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        u = self.weighting(gramian)
+        G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         w = project_weights(u, G, self.solver)
         return w
