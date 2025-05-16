@@ -2,9 +2,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from ._utils.gramian import compute_gramian
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class Krum(_WeightedAggregator):
@@ -51,7 +50,7 @@ class Krum(_WeightedAggregator):
         return f"Krum{self.weighting.n_byzantine}-{self.weighting.n_selected}"
 
 
-class _KrumWeighting(_Weighting):
+class _KrumWeighting(_GramianBasedWeighting):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
     (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
@@ -80,12 +79,8 @@ class _KrumWeighting(_Weighting):
         self.n_byzantine = n_byzantine
         self.n_selected = n_selected
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        self._check_matrix_shape(matrix)
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        self._check_row_dimension(gramian.shape[0])
         gradient_norms_squared = torch.diagonal(gramian)
         distances_squared = (
             gradient_norms_squared.unsqueeze(0) + gradient_norms_squared.unsqueeze(1) - 2 * gramian
@@ -103,16 +98,16 @@ class _KrumWeighting(_Weighting):
 
         return weights
 
-    def _check_matrix_shape(self, matrix: Tensor) -> None:
+    def _check_row_dimension(self, m: int) -> None:
         min_rows = self.n_byzantine + 3
-        if matrix.shape[0] < min_rows:
+        if m < min_rows:
             raise ValueError(
                 f"Parameter `matrix` should have at least {min_rows} rows (n_byzantine + 3). Found "
-                f"`matrix` with {matrix.shape[0]} rows."
+                f"`matrix` with {m} rows."
             )
 
-        if matrix.shape[0] < self.n_selected:
+        if m < self.n_selected:
             raise ValueError(
                 f"Parameter `matrix` should have at least {self.n_selected} rows (n_selected). "
-                f"Found `matrix` with {matrix.shape[0]} rows."
+                f"Found `matrix` with {m} rows."
             )
