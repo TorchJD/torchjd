@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import Aggregator
+from .aggregator_bases import Aggregator
 
 
 def _identity(P: Tensor) -> Tensor:

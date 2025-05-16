@@ -1,8 +1,8 @@
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
+from .aggregator_bases import Aggregator
 from .aligned_mtl import AlignedMTL
-from .bases import Aggregator
 from .config import ConFIG
 from .constant import Constant
 from .dualproj import DualProj

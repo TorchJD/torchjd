@@ -1,8 +1,8 @@
 from torch import Tensor
 
-from torchjd.aggregation.bases import _Weighting
 from torchjd.aggregation.constant import _ConstantWeighting
 
+from ..weighting_bases import _Weighting
 from .str import vector_to_str
 
 

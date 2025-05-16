@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from .bases import Aggregator
+from .aggregator_bases import Aggregator
 
 
 class TrimmedMean(Aggregator):
