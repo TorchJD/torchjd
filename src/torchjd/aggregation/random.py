@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from .aggregator_bases import _WeightedAggregator
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class Random(_WeightedAggregator):
@@ -35,14 +35,14 @@ class Random(_WeightedAggregator):
         super().__init__(weighting=_RandomWeighting())
 
 
-class _RandomWeighting(_Weighting):
+class _RandomWeighting(_GramianBasedWeighting):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that generates positive random weights
     at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A
     Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        random_vector = torch.randn(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        random_vector = torch.randn(gramian.shape[0], device=gramian.device, dtype=gramian.dtype)
         weights = F.softmax(random_vector, dim=-1)
         return weights
