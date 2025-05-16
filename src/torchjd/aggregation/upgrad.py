@@ -4,12 +4,12 @@ import torch
 from torch import Tensor
 
 from ._utils.dual_cone import project_weights
-from ._utils.gramian import compute_gramian, normalize, regularize
+from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from .aggregator_bases import _WeightedAggregator
 from .mean import _MeanWeighting
-from .weighting_bases import _Weighting
+from .weighting_bases import _GramianBasedWeighting
 
 
 class UPGrad(_WeightedAggregator):
@@ -72,7 +72,7 @@ class UPGrad(_WeightedAggregator):
         return f"UPGrad{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _UPGradWrapper(_Weighting):
+class _UPGradWrapper(_GramianBasedWeighting):
     """
     Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the weights vector such
     that each weighted row is projected onto the dual cone of all rows.
@@ -88,7 +88,7 @@ class _UPGradWrapper(_Weighting):
 
     def __init__(
         self,
-        weighting: _Weighting,
+        weighting: _GramianBasedWeighting,
         norm_eps: float,
         reg_eps: float,
         solver: Literal["quadprog"],
@@ -99,8 +99,8 @@ class _UPGradWrapper(_Weighting):
         self.reg_eps = reg_eps
         self.solver = solver
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        U = torch.diag(self.weighting(matrix))
-        G = regularize(normalize(compute_gramian(matrix), self.norm_eps), self.reg_eps)
+    def weights_from_gramian(self, gramian: Tensor) -> Tensor:
+        U = torch.diag(self.weighting(gramian))
+        G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         W = project_weights(U, G, self.solver)
         return torch.sum(W, dim=0)
