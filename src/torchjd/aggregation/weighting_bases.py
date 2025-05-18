@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import torch
 from torch import Tensor, nn
 
 from torchjd.aggregation._utils.gramian import compute_gramian
@@ -47,13 +48,17 @@ class _RowDimensionBasedWeighting(_GramianBasedWeighting, ABC):
 
     def weights_from_gramian(self, gramian: Tensor) -> Tensor:
         m = gramian.shape[0]
-        return self.weights_from_dimension(m)
+        device = gramian.device
+        dtype = gramian.dtype
+        return self.weights_from_dimension(m, device, dtype)
 
     # Override forward to avoid computing the Gramian
     def forward(self, matrix: Tensor) -> Tensor:
         m = matrix.shape[0]
-        return self.weights_from_dimension(m)
+        device = matrix.device
+        dtype = matrix.dtype
+        return self.weights_from_dimension(m, device, dtype)
 
     @abstractmethod
-    def weights_from_dimension(self, m: int) -> Tensor:
+    def weights_from_dimension(self, m: int, device: torch.device, dtype: torch.dtype) -> Tensor:
         """Computes the vector of weights from the row dimension of a matrix."""

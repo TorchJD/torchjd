@@ -1,3 +1,4 @@
+import torch
 from torch import Tensor
 
 from ._utils.str import vector_to_str
@@ -56,7 +57,7 @@ class _ConstantWeighting(_RowDimensionBasedWeighting):
         super().__init__()
         self.weights = weights
 
-    def weights_from_dimension(self, m: int) -> Tensor:
+    def weights_from_dimension(self, m: int, device: torch.device, dtype: torch.dtype) -> Tensor:
         self._check_row_dimension(m)
         return self.weights
 
