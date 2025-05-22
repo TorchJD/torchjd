@@ -1,12 +1,12 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .aggregator_bases import _GramianWeightedAggregator
 
 
-class PCGrad(_WeightedAggregator):
+class PCGrad(_GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` as defined in algorithm 1 of
     `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
@@ -27,16 +27,16 @@ class PCGrad(_WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(weighting=_PCGradWeighting())
+        super().__init__(_PCGradWeighting())
 
         # This prevents running into a RuntimeError due to modifying stored tensors in place.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _PCGradWeighting(_Weighting):
+class _PCGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the PCGrad
-    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
+    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using the
+    PCGrad algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
     <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. note::
@@ -44,13 +44,7 @@ class _PCGradWeighting(_Weighting):
         implementation <https://github.com/tianheyu927/PCGrad>`_ in the way randomness is handled.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        # Pre-compute the inner products
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    @staticmethod
-    def _compute_from_gramian(gramian: Tensor) -> Tensor:
+    def forward(self, gramian: Tensor) -> Tensor:
         # Move all computations on cpu to avoid moving memory between cpu and gpu at each iteration
         device = gramian.device
         dtype = gramian.dtype

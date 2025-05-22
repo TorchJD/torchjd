@@ -2,7 +2,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import Matrix, Weighting
+from .aggregator_bases import _WeightedAggregator
 
 
 class Random(_WeightedAggregator):
@@ -31,12 +32,12 @@ class Random(_WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(weighting=_RandomWeighting())
+        super().__init__(_RandomWeighting())
 
 
-class _RandomWeighting(_Weighting):
+class _RandomWeighting(Weighting[Matrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that generates positive random weights
+    :class:`~torchjd.aggregation.bases._RowDimBasedWeighting` that generates positive random weights
     at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A
     Litmus Test for Multi-Task Learning <https://arxiv.org/pdf/2111.10603.pdf>`_.
     """

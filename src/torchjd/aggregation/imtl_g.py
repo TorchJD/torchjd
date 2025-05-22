@@ -1,12 +1,12 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .aggregator_bases import _GramianWeightedAggregator
 
 
-class IMTLG(_WeightedAggregator):
+class IMTLG(_GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in
     `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.
@@ -29,25 +29,20 @@ class IMTLG(_WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(weighting=_IMTLGWeighting())
+        super().__init__(_IMTLGWeighting())
 
         # This prevents computing gradients that can be very wrong.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _IMTLGWeighting(_Weighting):
+class _IMTLGWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights as described in the
-    definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization
+    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights as described in
+    the definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    @staticmethod
-    def _compute_from_gramian(gramian: Tensor) -> Tensor:
+    def forward(self, gramian: Tensor) -> Tensor:
         d = torch.sqrt(torch.diagonal(gramian))
         v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()

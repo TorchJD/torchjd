@@ -30,7 +30,7 @@ from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .bases import Aggregator
+from .aggregator_bases import Aggregator
 from .sum import _SumWeighting
 
 

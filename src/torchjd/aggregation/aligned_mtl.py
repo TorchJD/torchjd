@@ -28,13 +28,13 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .aggregator_bases import _GramianWeightedAggregator
 from .mean import _MeanWeighting
 
 
-class AlignedMTL(_WeightedAggregator):
+class AlignedMTL(_GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning
@@ -65,7 +65,7 @@ class AlignedMTL(_WeightedAggregator):
         weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
-        super().__init__(weighting=_AlignedMTLWrapper(weighting))
+        super().__init__(_AlignedMTLWrapper(weighting))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
@@ -74,26 +74,24 @@ class AlignedMTL(_WeightedAggregator):
         return f"AlignedMTL{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _AlignedMTLWrapper(_Weighting):
+class _AlignedMTLWrapper(Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that corrects the extracted
-    weights with the balance transformation defined in Algorithm 1 of `Independent Component
-    Alignment for Multi-Task Learning
+    Wrapper of :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that corrects the
+    extracted weights with the balance transformation defined in Algorithm 1 of `Independent
+    Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
     :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
         responsible for extracting weight vectors from the input matrices.
     """
 
-    def __init__(self, weighting: _Weighting):
+    def __init__(self, weighting: Weighting[PSDMatrix]):
         super().__init__()
         self.weighting = weighting
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        w = self.weighting(matrix)
-
-        M = compute_gramian(matrix)
-        B = self._compute_balance_transformation(M)
+    def forward(self, gramian: Tensor) -> Tensor:
+        w = self.weighting(gramian)
+        B = self._compute_balance_transformation(gramian)
         alpha = B @ w
 
         return alpha

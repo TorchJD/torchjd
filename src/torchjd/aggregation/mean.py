@@ -1,7 +1,8 @@
 import torch
 from torch import Tensor
 
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import Matrix, Weighting
+from .aggregator_bases import _WeightedAggregator
 
 
 class Mean(_WeightedAggregator):
@@ -27,9 +28,9 @@ class Mean(_WeightedAggregator):
         super().__init__(weighting=_MeanWeighting())
 
 
-class _MeanWeighting(_Weighting):
+class _MeanWeighting(Weighting[Matrix]):
     r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
+    :class:`~torchjd.aggregation.bases._RowDimBasedWeighting` that gives the weights
     :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
     \mathbb{R}^m`.
     """

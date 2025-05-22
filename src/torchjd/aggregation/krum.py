@@ -2,11 +2,11 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from ._utils.gramian import compute_gramian
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .aggregator_bases import _GramianWeightedAggregator
 
 
-class Krum(_WeightedAggregator):
+class Krum(_GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation.bases.Aggregator` for adversarial federated learning, as defined
     in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
@@ -38,21 +38,23 @@ class Krum(_WeightedAggregator):
     """
 
     def __init__(self, n_byzantine: int, n_selected: int = 1):
-        super().__init__(weighting=_KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
+        self._n_byzantine = n_byzantine
+        self._n_selected = n_selected
+        super().__init__(_KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(n_byzantine={self.weighting.n_byzantine}, n_selected="
-            f"{self.weighting.n_selected})"
+            f"{self.__class__.__name__}(n_byzantine={self._n_byzantine}, n_selected="
+            f"{self._n_selected})"
         )
 
     def __str__(self) -> str:
-        return f"Krum{self.weighting.n_byzantine}-{self.weighting.n_selected}"
+        return f"Krum{self._n_byzantine}-{self._n_selected}"
 
 
-class _KrumWeighting(_Weighting):
+class _KrumWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
+    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using the
     (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
     Tolerant Gradient Descent
     <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
@@ -79,12 +81,8 @@ class _KrumWeighting(_Weighting):
         self.n_byzantine = n_byzantine
         self.n_selected = n_selected
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        self._check_matrix_shape(matrix)
-        gramian = compute_gramian(matrix)
-        return self._compute_from_gramian(gramian)
-
-    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: Tensor) -> Tensor:
+        self._check_matrix_shape(gramian)
         gradient_norms_squared = torch.diagonal(gramian)
         distances_squared = (
             gradient_norms_squared.unsqueeze(0) + gradient_norms_squared.unsqueeze(1) - 2 * gramian
@@ -102,16 +100,16 @@ class _KrumWeighting(_Weighting):
 
         return weights
 
-    def _check_matrix_shape(self, matrix: Tensor) -> None:
+    def _check_matrix_shape(self, gramian: Tensor) -> None:
         min_rows = self.n_byzantine + 3
-        if matrix.shape[0] < min_rows:
+        if gramian.shape[0] < min_rows:
             raise ValueError(
-                f"Parameter `matrix` should have at least {min_rows} rows (n_byzantine + 3). Found "
-                f"`matrix` with {matrix.shape[0]} rows."
+                f"Parameter `gramian` should have at least {min_rows} rows (n_byzantine + 3). Found"
+                f" `gramian` with {gramian.shape[0]} rows."
             )
 
-        if matrix.shape[0] < self.n_selected:
+        if gramian.shape[0] < self.n_selected:
             raise ValueError(
-                f"Parameter `matrix` should have at least {self.n_selected} rows (n_selected). "
-                f"Found `matrix` with {matrix.shape[0]} rows."
+                f"Parameter `gramian` should have at least {self.n_selected} rows (n_selected). "
+                f"Found `gramian` with {gramian.shape[0]} rows."
             )

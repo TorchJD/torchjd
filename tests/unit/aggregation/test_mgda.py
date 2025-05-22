@@ -4,6 +4,7 @@ from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import MGDA
+from torchjd.aggregation._utils.gramian import compute_gramian
 from torchjd.aggregation.mgda import _MGDAWeighting
 
 from ._asserts import (
@@ -44,11 +45,10 @@ def test_permutation_invariant(aggregator: MGDA, matrix: Tensor):
 )
 def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = torch.randn(shape)
+    gramian = compute_gramian(matrix)
+
     weighting = _MGDAWeighting(epsilon=1e-05, max_iters=1000)
-
-    gramian = matrix @ matrix.T
-
-    weights = weighting(matrix)
+    weights = weighting(gramian)
 
     output_direction = gramian @ weights  # Stationarity
     lamb = -weights @ output_direction  # Complementary slackness

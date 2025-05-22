@@ -24,6 +24,7 @@
 # SOFTWARE.
 
 from ._utils.check_dependencies import check_dependencies_are_installed
+from ._weighting_bases import Matrix, Weighting
 
 check_dependencies_are_installed(["cvxpy", "ecos"])
 
@@ -34,7 +35,7 @@ from cvxpy import Expression
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import _WeightedAggregator, _Weighting
+from .aggregator_bases import _WeightedAggregator
 
 
 class NashMTL(_WeightedAggregator):
@@ -107,9 +108,9 @@ class NashMTL(_WeightedAggregator):
         return f"{self.__class__.__name__}(n_tasks={self.weighting.n_tasks})"
 
 
-class _NashMTLWeighting(_Weighting):
+class _NashMTLWeighting(Weighting[Matrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
+    :class:`~torchjd.aggregation.bases._JacobianBasedWeighting` that extracts weights using the
     step decision of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 

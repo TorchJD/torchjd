@@ -1,12 +1,14 @@
 from torch import Tensor
 
-from torchjd.aggregation.bases import _Weighting
 from torchjd.aggregation.constant import _ConstantWeighting
 
+from .._weighting_bases import Matrix, Weighting
 from .str import vector_to_str
 
 
-def pref_vector_to_weighting(pref_vector: Tensor | None, default: _Weighting) -> _Weighting:
+def pref_vector_to_weighting(
+    pref_vector: Tensor | None, default: Weighting[Matrix]
+) -> Weighting[Matrix]:
     """
     Returns the weighting associated to a given preference vector, with a fallback to a default
     weighting if the preference vector is None.

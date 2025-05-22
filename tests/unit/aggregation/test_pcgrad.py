@@ -4,6 +4,7 @@ from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import PCGrad
+from torchjd.aggregation._utils.gramian import compute_gramian
 from torchjd.aggregation.pcgrad import _PCGradWeighting
 from torchjd.aggregation.sum import _SumWeighting
 from torchjd.aggregation.upgrad import _UPGradWrapper
@@ -48,14 +49,15 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     """
 
     matrix = torch.randn(shape)
+    gramian = compute_gramian(matrix)
 
     pc_grad_weighting = _PCGradWeighting()
     upgrad_sum_weighting = _UPGradWrapper(
         _SumWeighting(), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
     )
 
-    result = pc_grad_weighting(matrix)
-    expected = upgrad_sum_weighting(matrix)
+    result = pc_grad_weighting(gramian)
+    expected = upgrad_sum_weighting(gramian)
 
     assert_close(result, expected, atol=4e-04, rtol=0.0)
 

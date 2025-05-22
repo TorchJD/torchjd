@@ -1,7 +1,8 @@
 import torch
 from torch import Tensor
 
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import Matrix, Weighting
+from .aggregator_bases import _WeightedAggregator
 
 
 class Sum(_WeightedAggregator):
@@ -27,9 +28,9 @@ class Sum(_WeightedAggregator):
         super().__init__(weighting=_SumWeighting())
 
 
-class _SumWeighting(_Weighting):
+class _SumWeighting(Weighting[Matrix]):
     r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that gives the weights
+    :class:`~torchjd.aggregation.bases._RowDimBasedWeighting` that gives the weights
     :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
     """
 

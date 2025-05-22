@@ -1,11 +1,11 @@
 import torch
 from torch import Tensor
 
-from ._utils.gramian import compute_gramian
-from .bases import _WeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .aggregator_bases import _GramianWeightedAggregator
 
 
-class MGDA(_WeightedAggregator):
+class MGDA(_GramianWeightedAggregator):
     r"""
     :class:`~torchjd.aggregation.bases.Aggregator` performing the gradient aggregation step of
     `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
@@ -32,18 +32,18 @@ class MGDA(_WeightedAggregator):
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
-        super().__init__(weighting=_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
+        super().__init__(_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(epsilon={self.weighting.epsilon}, "
-            f"max_iters={self.weighting.max_iters})"
+            f"{self.__class__.__name__}(epsilon={self.weighting.weighting.epsilon}, "
+            f"max_iters={self.weighting.weighting.max_iters})"
         )
 
 
-class _MGDAWeighting(_Weighting):
+class _MGDAWeighting(Weighting[PSDMatrix]):
     r"""
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm
+    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using Algorithm
     2 of `Multi-Task Learning as Multi-Objective Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 
@@ -56,7 +56,7 @@ class _MGDAWeighting(_Weighting):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def _compute_from_gramian(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: Tensor) -> Tensor:
         """
         This is the Frank-Wolfe solver in Algorithm 2 of `Multi-Task Learning as Multi-Objective
         Optimization
@@ -83,8 +83,3 @@ class _MGDAWeighting(_Weighting):
             if gamma < self.epsilon:
                 break
         return alpha
-
-    def forward(self, matrix: Tensor) -> Tensor:
-        gramian = compute_gramian(matrix)
-        weights = self._compute_from_gramian(gramian)
-        return weights
