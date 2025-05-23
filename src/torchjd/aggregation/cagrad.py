@@ -44,9 +44,9 @@ class CAGrad(_GramianWeightedAggregator):
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):
+        super().__init__(_CAGradWeighting(c=c, norm_eps=norm_eps))
         self._c = c
         self._norm_eps = norm_eps
-        super().__init__(_CAGradWeighting(c=c, norm_eps=norm_eps))
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
