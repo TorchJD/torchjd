@@ -5,9 +5,6 @@ from torch import Tensor, nn
 from ._utils.gramian import compute_gramian
 from ._weighting_bases import Matrix, PSDMatrix, Weighting
 
-# TODO: docstrings
-# TODO: fix formatting of str methods
-
 
 class Aggregator(nn.Module, ABC):
     r"""
