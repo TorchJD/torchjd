@@ -27,13 +27,13 @@ class Weighting(Generic[_A], nn.Module, ABC):
 
         return super().__call__(stat)
 
-    def compose(self, fn: Callable[[_B], _A]) -> Weighting[_B]:
-        return Composition(self, fn)
+    def _compose(self, fn: Callable[[_B], _A]) -> Weighting[_B]:
+        return _Composition(self, fn)
 
-    __lshift__ = compose
+    __lshift__ = _compose
 
 
-class Composition(Generic[_A, _B], Weighting[_A]):
+class _Composition(Generic[_A, _B], Weighting[_A]):
     """
     Weighting that composes a Weighting with a function, so that the Weighting is applied to the
     output of the function.
