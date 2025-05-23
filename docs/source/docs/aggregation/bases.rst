@@ -3,7 +3,7 @@
 Aggregator (abstract)
 =====================
 
-.. automodule:: torchjd.aggregation.test_bases
+.. automodule:: torchjd.aggregation.bases
     :members:
     :undoc-members:
     :show-inheritance:
