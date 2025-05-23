@@ -33,11 +33,12 @@ class MGDA(_GramianWeightedAggregator):
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
         super().__init__(_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
+        self._max_iters = max_iters
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(epsilon={self.weighting.weighting.epsilon}, "
-            f"max_iters={self.weighting.weighting.max_iters})"
+            f"{self.__class__.__name__}(epsilon={self.weighting.weighting.epsilon}, max_iters="
+            f"{self._max_iters})"
         )
 
 
