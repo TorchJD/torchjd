@@ -1,8 +1,7 @@
 import torch
 from torch import Tensor
 
-from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
 
 
 class MGDA(_GramianWeightedAggregator):
@@ -42,9 +41,9 @@ class MGDA(_GramianWeightedAggregator):
         )
 
 
-class _MGDAWeighting(Weighting[PSDMatrix]):
+class _MGDAWeighting(_Weighting[PSDMatrix]):
     r"""
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using Algorithm
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using Algorithm
     2 of `Multi-Task Learning as Multi-Objective Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 

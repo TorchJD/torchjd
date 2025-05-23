@@ -2,8 +2,7 @@ import torch
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
 
 
 class PCGrad(_GramianWeightedAggregator):
@@ -33,9 +32,9 @@ class PCGrad(_GramianWeightedAggregator):
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _PCGradWeighting(Weighting[PSDMatrix]):
+class _PCGradWeighting(_Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the PCGrad
+    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the PCGrad
     algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
     <https://arxiv.org/pdf/2001.06782.pdf>`_.
 

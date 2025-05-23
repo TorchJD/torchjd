@@ -6,8 +6,7 @@ from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
 from .mean import _MeanWeighting
 
 
@@ -72,15 +71,15 @@ class DualProj(_GramianWeightedAggregator):
         return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _DualProjWrapper(Weighting[PSDMatrix]):
+class _DualProjWrapper(_Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the extracted
+    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
     of the input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic
     Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
+    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
         responsible for extracting weight vectors from the input matrices.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
@@ -92,7 +91,7 @@ class _DualProjWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix],
+        weighting: _Weighting[PSDMatrix],
         norm_eps: float,
         reg_eps: float,
         solver: Literal["quadprog"],
