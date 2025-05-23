@@ -7,6 +7,8 @@ from torch import Tensor, nn
 
 _A = TypeVar("_A", contravariant=True)
 _B = TypeVar("_B")
+Matrix = Annotated[Tensor, "ndim=2"]
+PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
 
 class Weighting(Generic[_A], nn.Module, ABC):
@@ -29,10 +31,6 @@ class Weighting(Generic[_A], nn.Module, ABC):
         return Composition(self, fn)
 
     __lshift__ = compose
-
-
-Matrix = Annotated[Tensor, "ndim=2"]
-PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
 
 class Composition(Generic[_A, _B], Weighting[_A]):
