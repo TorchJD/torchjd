@@ -15,7 +15,7 @@ from .aggregator_bases import _GramianWeightedAggregator
 
 class CAGrad(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Conflict-Averse Gradient Descent for Multi-task Learning
     <https://arxiv.org/pdf/2110.14048.pdf>`_.
 
@@ -61,8 +61,8 @@ class CAGrad(_GramianWeightedAggregator):
 
 class _CAGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using the
-    CAGrad algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the CAGrad
+    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
     Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
 
     :param c: The scale of the radius of the ball constraint.

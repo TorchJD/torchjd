@@ -8,8 +8,8 @@ from .aggregator_bases import _GramianWeightedAggregator
 
 class PCGrad(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in algorithm 1 of
-    `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in algorithm 1 of `Gradient
+    Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. admonition::
         Example
@@ -35,8 +35,8 @@ class PCGrad(_GramianWeightedAggregator):
 
 class _PCGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using the
-    PCGrad algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the PCGrad
+    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
     <https://arxiv.org/pdf/2001.06782.pdf>`_.
 
     .. note::

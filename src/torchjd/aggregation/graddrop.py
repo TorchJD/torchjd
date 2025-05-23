@@ -13,9 +13,10 @@ def _identity(P: Tensor) -> Tensor:
 
 class GradDrop(Aggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that applies the gradient combination steps from
-    GradDrop, as defined in lines 10 to 15 of Algorithm 1 of `Just Pick a Sign: Optimizing Deep
-    Multitask Models with Gradient Sign Dropout <https://arxiv.org/pdf/2010.06808.pdf>`_.
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that applies the gradient combination
+    steps from GradDrop, as defined in lines 10 to 15 of Algorithm 1 of `Just Pick a Sign:
+    Optimizing Deep Multitask Models with Gradient Sign Dropout
+    <https://arxiv.org/pdf/2010.06808.pdf>`_.
 
     :param f: The function to apply to the Gradient Positive Sign Purity. It should be monotically
         increasing. Defaults to identity.

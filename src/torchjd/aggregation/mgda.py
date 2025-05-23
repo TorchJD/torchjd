@@ -7,8 +7,8 @@ from .aggregator_bases import _GramianWeightedAggregator
 
 class MGDA(_GramianWeightedAggregator):
     r"""
-    :class:`~torchjd.aggregation.bases.Aggregator` performing the gradient aggregation step of
-    `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` performing the gradient aggregation
+    step of `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
     <https://www.sciencedirect.com/science/article/pii/S1631073X12000738>`_. The implementation is
     based on Algorithm 2 of `Multi-Task Learning as Multi-Objective Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
@@ -44,7 +44,7 @@ class MGDA(_GramianWeightedAggregator):
 
 class _MGDAWeighting(Weighting[PSDMatrix]):
     r"""
-    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using Algorithm
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using Algorithm
     2 of `Multi-Task Learning as Multi-Objective Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 

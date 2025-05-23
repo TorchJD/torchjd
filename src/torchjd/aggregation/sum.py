@@ -7,7 +7,8 @@ from .aggregator_bases import _WeightedAggregator
 
 class Sum(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that sums of the rows of the input matrices.
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that sums of the rows of the input
+    matrices.
 
     .. admonition::
         Example
@@ -30,7 +31,7 @@ class Sum(_WeightedAggregator):
 
 class _SumWeighting(Weighting[Matrix]):
     r"""
-    :class:`~torchjd.aggregation.bases._RowDimBasedWeighting` that gives the weights
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that gives the weights
     :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.
     """
 

@@ -14,9 +14,9 @@ from .mean import _MeanWeighting
 
 class UPGrad(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that projects each row of the input matrix onto
-    the dual cone of all rows of this matrix, and that combines the result, as proposed in
-    `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that projects each row of the input
+    matrix onto the dual cone of all rows of this matrix, and that combines the result, as proposed
+    in `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
     :param pref_vector: The preference vector used to combine the projected rows. If not provided,
         defaults to the simple averaging of the projected rows.
@@ -74,7 +74,7 @@ class UPGrad(_GramianWeightedAggregator):
 
 class _UPGradWrapper(Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that changes the weights
+    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the weights
     vector such that each weighted row is projected onto the dual cone of all rows.
 
     :param weighting: The wrapped weighting.

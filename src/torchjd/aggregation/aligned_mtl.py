@@ -36,7 +36,7 @@ from .mean import _MeanWeighting
 
 class AlignedMTL(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
@@ -76,12 +76,12 @@ class AlignedMTL(_GramianWeightedAggregator):
 
 class _AlignedMTLWrapper(Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that corrects the
-    extracted weights with the balance transformation defined in Algorithm 1 of `Independent
-    Component Alignment for Multi-Task Learning
+    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that corrects the extracted
+    weights with the balance transformation defined in Algorithm 1 of `Independent Component
+    Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
+    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
         responsible for extracting weight vectors from the input matrices.
     """
 

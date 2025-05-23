@@ -8,8 +8,8 @@ from .aggregator_bases import _GramianWeightedAggregator
 
 class Krum(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` for adversarial federated learning, as defined
-    in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` for adversarial federated learning, as
+    defined in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
     <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
 
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
@@ -54,7 +54,7 @@ class Krum(_GramianWeightedAggregator):
 
 class _KrumWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights using the
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the
     (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
     Tolerant Gradient Descent
     <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.

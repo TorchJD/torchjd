@@ -13,9 +13,9 @@ from .mean import _MeanWeighting
 
 class DualProj(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that averages the rows of the input matrix, and
-    projects the result onto the dual cone of the rows of the matrix. This corresponds to the
-    solution to Equation 11 of `Gradient Episodic Memory for Continual Learning
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that averages the rows of the input
+    matrix, and projects the result onto the dual cone of the rows of the matrix. This corresponds
+    to the solution to Equation 11 of `Gradient Episodic Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
     :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
@@ -74,13 +74,13 @@ class DualProj(_GramianWeightedAggregator):
 
 class _DualProjWrapper(Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the extracted
+    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
     of the input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic
     Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation.bases._Weighting`
+    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
         responsible for extracting weight vectors from the input matrices.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to

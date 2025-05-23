@@ -8,7 +8,7 @@ from .aggregator_bases import _GramianWeightedAggregator
 
 class IMTLG(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` generalizing the method described in
     `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.
     This generalization, defined formally in `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_, supports matrices with some linearly dependant rows.
@@ -37,7 +37,7 @@ class IMTLG(_GramianWeightedAggregator):
 
 class _IMTLGWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._GramianBasedWeighting` that extracts weights as described in
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights as described in
     the definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_.
     """
