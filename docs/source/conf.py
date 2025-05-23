@@ -53,6 +53,7 @@ autodoc_member_order = "bysource"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "torch": ("https://pytorch.org/docs/stable/", None),
+    "lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
 }
 
 html_favicon = "icons/favicon.ico"
