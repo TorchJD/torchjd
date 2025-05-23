@@ -10,6 +10,11 @@ _B = TypeVar("_B")
 
 
 class Weighting(Generic[_A], nn.Module, ABC):
+    r"""
+    Abstract base class for all weighting methods. It has the role of extracting a vector of weights
+    of dimension :math:`m` from some statistic of a matrix of dimension :math:`m \times n`.
+    """
+
     @abstractmethod
     def forward(self, stat: _A) -> Tensor:
         """Computes the vector of weights from the input stat."""
@@ -31,12 +36,15 @@ PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
 
 class Composition(Generic[_A, _B], Weighting[_A]):
+    """
+    Weighting that composes a Weighting with a function, so that the Weighting is applied to the
+    output of the function.
+    """
+
     def __init__(self, weighting: Weighting[_B], fn: Callable[[_A], _B]):
         super().__init__()
         self.fn = fn
         self.weighting = weighting
 
     def forward(self, stat: _A) -> Tensor:
-        """Computes the vector of weights from the input stat."""
-
         return self.weighting(self.fn(stat))
