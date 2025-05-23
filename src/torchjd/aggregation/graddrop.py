@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .aggregator_bases import Aggregator
+from .bases import Aggregator
 
 
 def _identity(P: Tensor) -> Tensor:
@@ -13,7 +13,7 @@ def _identity(P: Tensor) -> Tensor:
 
 class GradDrop(Aggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that applies the gradient combination
+    :class:`~torchjd.aggregation.bases.Aggregator` that applies the gradient combination
     steps from GradDrop, as defined in lines 10 to 15 of Algorithm 1 of `Just Pick a Sign:
     Optimizing Deep Multitask Models with Gradient Sign Dropout
     <https://arxiv.org/pdf/2010.06808.pdf>`_.

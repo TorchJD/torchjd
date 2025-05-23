@@ -35,12 +35,12 @@ from cvxpy import Expression
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .aggregator_bases import _WeightedAggregator
+from .bases import _WeightedAggregator
 
 
 class NashMTL(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as proposed in Algorithm 1 of
+    :class:`~torchjd.aggregation.bases.Aggregator` as proposed in Algorithm 1 of
     `Multi-Task Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
     :param n_tasks: The number of tasks, corresponding to the number of rows in the provided

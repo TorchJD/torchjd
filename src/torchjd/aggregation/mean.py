@@ -2,12 +2,12 @@ import torch
 from torch import Tensor
 
 from ._weighting_bases import Matrix, Weighting
-from .aggregator_bases import _WeightedAggregator
+from .bases import _WeightedAggregator
 
 
 class Mean(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that averages the rows of the input
+    :class:`~torchjd.aggregation.bases.Aggregator` that averages the rows of the input
     matrices.
 
     .. admonition::
