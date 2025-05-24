@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .bases import _GramianWeightedAggregator, _PSDMatrix, _Weighting
+from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
 
 
 class IMTLG(_GramianWeightedAggregator):
@@ -34,7 +34,7 @@ class IMTLG(_GramianWeightedAggregator):
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _IMTLGWeighting(_Weighting[_PSDMatrix]):
+class _IMTLGWeighting(_Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights as described in
     the definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization

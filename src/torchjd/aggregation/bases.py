@@ -10,8 +10,8 @@ from ._utils.gramian import compute_gramian
 _T = TypeVar("_T", contravariant=True)
 _FnInputT = TypeVar("_FnInputT")
 _FnOutputT = TypeVar("_FnOutputT")
-_Matrix = Annotated[Tensor, "ndim=2"]
-_PSDMatrix = Annotated[_Matrix, "Positive semi-definite"]
+Matrix = Annotated[Tensor, "ndim=2"]
+PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
 
 class Aggregator(nn.Module, ABC):
@@ -61,7 +61,7 @@ class _WeightedAggregator(Aggregator):
     :param weighting: The object responsible for extracting the vector of weights from the matrix.
     """
 
-    def __init__(self, weighting: _Weighting[_Matrix]):
+    def __init__(self, weighting: _Weighting[Matrix]):
         super().__init__()
         self.weighting = weighting
 
@@ -92,7 +92,7 @@ class _GramianWeightedAggregator(_WeightedAggregator):
     :param weighting: The object responsible for extracting the vector of weights from the gramian.
     """
 
-    def __init__(self, weighting: _Weighting[_PSDMatrix]):
+    def __init__(self, weighting: _Weighting[PSDMatrix]):
         super().__init__(weighting << compute_gramian)
 
 

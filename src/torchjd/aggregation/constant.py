@@ -1,7 +1,7 @@
 from torch import Tensor
 
 from ._utils.str import vector_to_str
-from .bases import _Matrix, _WeightedAggregator, _Weighting
+from .bases import Matrix, _WeightedAggregator, _Weighting
 
 
 class Constant(_WeightedAggregator):
@@ -37,7 +37,7 @@ class Constant(_WeightedAggregator):
         return f"{self.__class__.__name__}([{weights_str}])"
 
 
-class _ConstantWeighting(_Weighting[_Matrix]):
+class _ConstantWeighting(_Weighting[Matrix]):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that returns constant, pre-determined
     weights.

@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .bases import _GramianWeightedAggregator, _PSDMatrix, _Weighting
+from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
 
 
 class Krum(_GramianWeightedAggregator):
@@ -51,7 +51,7 @@ class Krum(_GramianWeightedAggregator):
         return f"Krum{self._n_byzantine}-{self._n_selected}"
 
 
-class _KrumWeighting(_Weighting[_PSDMatrix]):
+class _KrumWeighting(_Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the
     (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
