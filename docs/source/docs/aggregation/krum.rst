@@ -3,7 +3,7 @@
 Krum
 ====
 
-.. automodule:: torchjd.aggregation.krum
+.. autoclass:: torchjd.aggregation.Krum
     :members:
     :undoc-members:
     :exclude-members: forward

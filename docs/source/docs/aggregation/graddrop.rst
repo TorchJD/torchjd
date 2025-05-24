@@ -3,7 +3,7 @@
 GradDrop
 ========
 
-.. automodule:: torchjd.aggregation.graddrop
+.. autoclass:: torchjd.aggregation.GradDrop
     :members:
     :undoc-members:
     :exclude-members: forward

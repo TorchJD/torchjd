@@ -1,8 +1,8 @@
 import torch
 from pytest import raises
 
-from torchjd.autojac._transform import Diagonalize, Gradients, RequirementError
-from torchjd.autojac._transform.ordered_set import OrderedSet
+from torchjd._autojac._transform import Diagonalize, Gradients, RequirementError
+from torchjd._autojac._transform._ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 

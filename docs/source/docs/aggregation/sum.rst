@@ -3,7 +3,7 @@
 Sum
 ===
 
-.. automodule:: torchjd.aggregation.sum
+.. autoclass:: torchjd.aggregation.Sum
     :members:
     :undoc-members:
     :exclude-members: forward

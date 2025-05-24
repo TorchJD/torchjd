@@ -3,7 +3,7 @@
 Random
 ======
 
-.. automodule:: torchjd.aggregation.random
+.. autoclass:: torchjd.aggregation.Random
     :members:
     :undoc-members:
     :exclude-members: forward

@@ -2,7 +2,7 @@ import torch
 from pytest import raises
 from torch.testing import assert_close
 
-from torchjd.autojac._transform import (
+from torchjd._autojac._transform import (
     Accumulate,
     Conjunction,
     Diagonalize,
@@ -17,7 +17,7 @@ from torchjd.autojac._transform import (
     Stack,
     TensorDict,
 )
-from torchjd.autojac._transform.ordered_set import OrderedSet
+from torchjd._autojac._transform._ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 

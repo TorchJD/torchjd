@@ -3,7 +3,7 @@
 MGDA
 ====
 
-.. automodule:: torchjd.aggregation.mgda
+.. autoclass:: torchjd.aggregation.MGDA
     :members:
     :undoc-members:
     :exclude-members: forward

@@ -3,7 +3,7 @@
 Nash-MTL
 ========
 
-.. automodule:: torchjd.aggregation.nash_mtl
+.. autoclass:: torchjd.aggregation.NashMTL
     :members:
     :undoc-members:
     :exclude-members: forward

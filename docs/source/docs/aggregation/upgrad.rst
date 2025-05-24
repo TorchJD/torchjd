@@ -3,7 +3,7 @@
 UPGrad
 ======
 
-.. automodule:: torchjd.aggregation.upgrad
+.. autoclass:: torchjd.aggregation.UPGrad
     :members:
     :undoc-members:
     :exclude-members: forward

@@ -3,7 +3,7 @@
 PCGrad
 ======
 
-.. automodule:: torchjd.aggregation.pcgrad
+.. autoclass:: torchjd.aggregation.PCGrad
     :members:
     :undoc-members:
     :exclude-members: forward

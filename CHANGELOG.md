@@ -14,6 +14,13 @@ changes that do not affect the user.
   TorchJD. Users of these aggregators will have to use `pip install torchjd[cagrad]`, `pip install
   torchjd[nash_mtl]` or `pip install torchjd[full]` to install TorchJD alongside those dependencies.
   This should make TorchJD more lightweight.
+- **BREAKING**: Made the aggregator modules and the `autojac` package protected. The aggregators
+  must now always be imported via their package (e.g.
+  `from torchjd.aggregation.upgrad import UPGrad` must be changed to
+  `from torchjd.aggregation import UPGrad`). The `backward` and `mtl_backward` functions must now
+  always be imported directly from the `torchjd` package (e.g.
+  `from torchjd.autojac.mtl_backward import mtl_backward` must be changed to
+  `from torchjd import mtl_backward`).
 
 ### Fixed
 

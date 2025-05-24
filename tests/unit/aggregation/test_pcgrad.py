@@ -4,10 +4,10 @@ from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import PCGrad
+from torchjd.aggregation._pcgrad import _PCGradWeighting
+from torchjd.aggregation._sum import _SumWeighting
+from torchjd.aggregation._upgrad import _UPGradWrapper
 from torchjd.aggregation._utils.gramian import compute_gramian
-from torchjd.aggregation.pcgrad import _PCGradWeighting
-from torchjd.aggregation.sum import _SumWeighting
-from torchjd.aggregation.upgrad import _UPGradWrapper
 
 from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices

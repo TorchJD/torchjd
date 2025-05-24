@@ -3,7 +3,7 @@
 Mean
 ====
 
-.. automodule:: torchjd.aggregation.mean
+.. autoclass:: torchjd.aggregation.Mean
     :members:
     :undoc-members:
     :exclude-members: forward

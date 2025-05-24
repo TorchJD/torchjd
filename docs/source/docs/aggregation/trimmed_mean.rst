@@ -3,7 +3,7 @@
 Trimmed Mean
 ============
 
-.. automodule:: torchjd.aggregation.trimmed_mean
+.. autoclass:: torchjd.aggregation.TrimmedMean
     :members:
     :undoc-members:
     :exclude-members: forward
