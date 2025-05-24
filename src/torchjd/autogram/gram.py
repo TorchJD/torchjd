@@ -4,7 +4,7 @@ from typing import Set
 import torch
 from torch import Tensor
 
-from ._utils import get_jacobian_and_next_nodes
+from ._utils import accumulate_to_gramian, get_jacobian_and_next_nodes
 
 
 def gram(output: Tensor, inputs: Set[Tensor]) -> Tensor:
@@ -15,8 +15,7 @@ def gram(output: Tensor, inputs: Set[Tensor]) -> Tensor:
         curr_node, curr_jac = jacs.pop()
         if curr_node.__class__.__name__ == "AccumulateGrad":
             if curr_node.variable in inputs:
-                reshaped_jac = curr_jac.reshape([m, -1])
-                result = torch.addmm(result, reshaped_jac, reshaped_jac.T)
+                result = accumulate_to_gramian(result, curr_node.variable, curr_jac)
         else:
             jacobian, next_functions = get_jacobian_and_next_nodes(curr_node)
             next_jacs = torch.vmap(jacobian)(curr_jac)
