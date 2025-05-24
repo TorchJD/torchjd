@@ -7,7 +7,8 @@ from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .bases import PSDMatrix, _GramianWeightedAggregator, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
+from .bases import _GramianWeightedAggregator
 from .mean import _MeanWeighting
 
 
@@ -71,9 +72,9 @@ class UPGrad(_GramianWeightedAggregator):
         return f"UPGrad{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _UPGradWrapper(_Weighting[PSDMatrix]):
+class _UPGradWrapper(Weighting[PSDMatrix]):
     """
-    Wrapper of :class:`~torchjd.aggregation.bases._Weighting` that changes the weights
+    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the weights
     vector such that each weighted row is projected onto the dual cone of all rows.
 
     :param weighting: The wrapped weighting.
@@ -87,7 +88,7 @@ class _UPGradWrapper(_Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: _Weighting[PSDMatrix],
+        weighting: Weighting[PSDMatrix],
         norm_eps: float,
         reg_eps: float,
         solver: Literal["quadprog"],

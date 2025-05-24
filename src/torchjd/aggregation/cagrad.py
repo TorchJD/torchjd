@@ -1,5 +1,5 @@
 from ._utils.check_dependencies import check_dependencies_are_installed
-from .bases import PSDMatrix, _Weighting
+from ._weighting_bases import PSDMatrix, Weighting
 
 check_dependencies_are_installed(["cvxpy", "clarabel"])
 
@@ -59,9 +59,9 @@ class CAGrad(_GramianWeightedAggregator):
         return f"CAGrad{c_str}"
 
 
-class _CAGradWeighting(_Weighting[PSDMatrix]):
+class _CAGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation.bases._Weighting` that extracts weights using the CAGrad
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the CAGrad
     algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
     Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
 
