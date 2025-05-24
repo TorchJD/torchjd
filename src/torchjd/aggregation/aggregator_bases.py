@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 
 from torch import Tensor, nn
 
+from ._utils.gramian import compute_gramian
+from ._weighting_bases import Matrix, PSDMatrix, Weighting
+
 
 class Aggregator(nn.Module, ABC):
     r"""
@@ -42,35 +45,15 @@ class Aggregator(nn.Module, ABC):
         return f"{self.__class__.__name__}"
 
 
-class _Weighting(nn.Module, ABC):
-    r"""
-    Abstract base class for all weighting methods. It has the role of extracting a vector of weights
-    of dimension :math:`m` from a matrix of dimension :math:`m \times n`.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    @abstractmethod
-    def forward(self, matrix: Tensor) -> Tensor:
-        """Computes the vector of weights from the input matrix."""
-
-    # Override to make type hints and documentation more specific
-    def __call__(self, matrix: Tensor) -> Tensor:
-        """Computes the vector of weights from the input matrix and applies all registered hooks."""
-
-        return super().__call__(matrix)
-
-
 class _WeightedAggregator(Aggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that combines the rows of the input matrix with
-    weights given by applying a :class:`~torchjd.aggregation.bases._Weighting` to the matrix.
+    Aggregator that combines the rows of the input jacobian matrix with weights given by applying a
+    Weighting to it.
 
     :param weighting: The object responsible for extracting the vector of weights from the matrix.
     """
 
-    def __init__(self, weighting: _Weighting):
+    def __init__(self, weighting: Weighting[Matrix]):
         super().__init__()
         self.weighting = weighting
 
@@ -91,3 +74,15 @@ class _WeightedAggregator(Aggregator):
         weights = self.weighting(matrix)
         vector = self.combine(matrix, weights)
         return vector
+
+
+class _GramianWeightedAggregator(_WeightedAggregator):
+    """
+    WeightedAggregator that computes the gramian of the input jacobian matrix before applying a
+    Weighting to it.
+
+    :param weighting: The object responsible for extracting the vector of weights from the gramian.
+    """
+
+    def __init__(self, weighting: Weighting[PSDMatrix]):
+        super().__init__(weighting << compute_gramian)

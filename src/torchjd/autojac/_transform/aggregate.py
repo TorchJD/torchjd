@@ -94,7 +94,8 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     ) -> GradientVectors:
         """
         Unites the jacobian matrices and aggregates them using an
-        :class:`~torchjd.aggregation.bases.Aggregator`. Returns the obtained gradient vectors.
+        :class:`~torchjd.aggregation.aggregator_bases.Aggregator`. Returns the obtained gradient
+        vectors.
         """
 
         if len(jacobian_matrices) == 0:
