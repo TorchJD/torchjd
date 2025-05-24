@@ -2,15 +2,15 @@ from collections import deque
 from typing import Set
 
 import torch
-from torch import Tensor
+from torch import Node, Tensor
 
 from ._utils import accumulate_to_gramian, get_jacobian_and_next_nodes
 
 
-def gram(output: Tensor, inputs: Set[Tensor]) -> Tensor:
-    m = output.shape[0]
-    result = torch.zeros([m, m], device=output.device, dtype=output.dtype)
-    jacs = deque([(output.grad_fn, torch.ones_like(output).diag())])
+def gram(starting_node: Node, inputs: Set[Tensor]) -> Tensor:
+    m = starting_node.shape[0]
+    result = torch.zeros([m, m], device=starting_node.device, dtype=starting_node.dtype)
+    jacs = deque([(starting_node, torch.ones_like(starting_node).diag())])
     while jacs:
         curr_node, curr_jac = jacs.pop()
         if curr_node.__class__.__name__ == "AccumulateGrad":

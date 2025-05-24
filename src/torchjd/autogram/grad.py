@@ -2,14 +2,14 @@ from collections import deque
 from typing import Set
 
 import torch
-from torch import Tensor
+from torch import Node, Tensor
 
 from ._utils import append_to_dict, get_jacobian_and_next_nodes
 
 
-def grad(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
+def grad(starting_node: Node, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
-    grads = deque([(output.grad_fn, torch.ones_like(output))])
+    grads = deque([(starting_node, torch.ones_like(starting_node))])
     while grads:
         curr_node, curr_grad = grads.pop()
         if curr_node.__class__.__name__ == "AccumulateGrad":
