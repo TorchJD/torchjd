@@ -4,8 +4,8 @@ from torch import Tensor
 from torch.testing import assert_close
 
 from torchjd.aggregation import MGDA
+from torchjd.aggregation._mgda import _MGDAWeighting
 from torchjd.aggregation._utils.gramian import compute_gramian
-from torchjd.aggregation.mgda import _MGDAWeighting
 
 from ._asserts import (
     assert_expected_structure,

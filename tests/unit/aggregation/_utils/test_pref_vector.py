@@ -5,8 +5,8 @@ from pytest import mark, raises
 from torch import Tensor
 from unit._utils import ExceptionContext
 
+from torchjd.aggregation._mean import _MeanWeighting
 from torchjd.aggregation._utils.pref_vector import pref_vector_to_weighting
-from torchjd.aggregation.mean import _MeanWeighting
 
 
 @mark.parametrize(

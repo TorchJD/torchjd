@@ -3,7 +3,7 @@
 DualProj
 ========
 
-.. automodule:: torchjd.aggregation.dualproj
+.. autoclass:: torchjd.aggregation.DualProj
     :members:
     :undoc-members:
     :exclude-members: forward

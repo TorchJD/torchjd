@@ -3,18 +3,18 @@ from typing import Literal
 import torch
 from torch import Tensor
 
+from ._aggregator_bases import _GramianWeightedAggregator
+from ._mean import _MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
-from .aggregator_bases import _GramianWeightedAggregator
-from .mean import _MeanWeighting
 
 
 class UPGrad(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that projects each row of the input
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that projects each row of the input
     matrix onto the dual cone of all rows of this matrix, and that combines the result, as proposed
     in `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 

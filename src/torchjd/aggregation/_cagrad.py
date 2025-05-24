@@ -8,14 +8,14 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from ._aggregator_bases import _GramianWeightedAggregator
 from ._utils.gramian import normalize
 from ._utils.non_differentiable import raise_non_differentiable_error
-from .aggregator_bases import _GramianWeightedAggregator
 
 
 class CAGrad(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in Algorithm 1 of
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Conflict-Averse Gradient Descent for Multi-task Learning
     <https://arxiv.org/pdf/2110.14048.pdf>`_.
 

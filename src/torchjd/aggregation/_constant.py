@@ -1,14 +1,14 @@
 from torch import Tensor
 
+from ._aggregator_bases import _WeightedAggregator
 from ._utils.str import vector_to_str
 from ._weighting_bases import Matrix, Weighting
-from .aggregator_bases import _WeightedAggregator
 
 
 class Constant(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that makes a linear combination of the
-    rows of the provided matrix, with constant, pre-determined weights.
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that makes a linear combination of
+    the rows of the provided matrix, with constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
 

@@ -3,7 +3,7 @@
 Aligned-MTL
 ===========
 
-.. automodule:: torchjd.aggregation.aligned_mtl
+.. autoclass:: torchjd.aggregation.AlignedMTL
     :members:
     :undoc-members:
     :exclude-members: forward

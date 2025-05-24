@@ -3,7 +3,7 @@
 IMTL-G
 ======
 
-.. automodule:: torchjd.aggregation.imtl_g
+.. autoclass:: torchjd.aggregation.IMTLG
     :members:
     :undoc-members:
     :exclude-members: forward

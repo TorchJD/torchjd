@@ -28,15 +28,15 @@
 import torch
 from torch import Tensor
 
+from ._aggregator_bases import Aggregator
+from ._sum import _SumWeighting
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from .aggregator_bases import Aggregator
-from .sum import _SumWeighting
 
 
 class ConFIG(Aggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in Equation 2 of `ConFIG:
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Equation 2 of `ConFIG:
     Towards Conflict-free Training of Physics Informed Neural Networks
     <https://arxiv.org/pdf/2408.11104>`_.
 

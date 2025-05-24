@@ -1,28 +1,28 @@
+from ._aggregator_bases import Aggregator
+from ._aligned_mtl import AlignedMTL
+from ._config import ConFIG
+from ._constant import Constant
+from ._dualproj import DualProj
+from ._graddrop import GradDrop
+from ._imtl_g import IMTLG
+from ._krum import Krum
+from ._mean import Mean
+from ._mgda import MGDA
+from ._pcgrad import PCGrad
+from ._random import Random
+from ._sum import Sum
+from ._trimmed_mean import TrimmedMean
+from ._upgrad import UPGrad
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
-from .aggregator_bases import Aggregator
-from .aligned_mtl import AlignedMTL
-from .config import ConFIG
-from .constant import Constant
-from .dualproj import DualProj
-from .graddrop import GradDrop
-from .imtl_g import IMTLG
-from .krum import Krum
-from .mean import Mean
-from .mgda import MGDA
-from .pcgrad import PCGrad
-from .random import Random
-from .sum import Sum
-from .trimmed_mean import TrimmedMean
-from .upgrad import UPGrad
 
 try:
-    from .cagrad import CAGrad
+    from ._cagrad import CAGrad
 except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass
 
 try:
-    from .nash_mtl import NashMTL
+    from ._nash_mtl import NashMTL
 except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass

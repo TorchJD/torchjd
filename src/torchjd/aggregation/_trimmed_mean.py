@@ -1,12 +1,12 @@
 import torch
 from torch import Tensor
 
-from .aggregator_bases import Aggregator
+from ._aggregator_bases import Aggregator
 
 
 class TrimmedMean(Aggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` for adversarial federated learning,
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` for adversarial federated learning,
     that trims the most extreme values of the input matrix, before averaging its rows, as defined in
     `Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates
     <https://proceedings.mlr.press/v80/yin18a/yin18a.pdf>`_.

@@ -1,13 +1,13 @@
 import torch
 from torch import Tensor
 
+from ._aggregator_bases import _WeightedAggregator
 from ._weighting_bases import Matrix, Weighting
-from .aggregator_bases import _WeightedAggregator
 
 
 class Sum(_WeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that sums of the rows of the input
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that sums of the rows of the input
     matrices.
 
     .. admonition::

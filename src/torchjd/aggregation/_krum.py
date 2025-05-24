@@ -2,14 +2,14 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from ._aggregator_bases import _GramianWeightedAggregator
 from ._weighting_bases import PSDMatrix, Weighting
-from .aggregator_bases import _GramianWeightedAggregator
 
 
 class Krum(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` for adversarial federated learning, as
-    defined in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` for adversarial federated learning,
+    as defined in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent
     <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
 
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
