@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 
-def gram(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
+def gram(output: Tensor, inputs: Set[Tensor]) -> Tensor:
     m = output.shape[0]
     result = torch.zeros([m, m], device=output.device, dtype=output.dtype)
     jacs = deque([(output.grad_fn, torch.ones_like(output).diag())])
