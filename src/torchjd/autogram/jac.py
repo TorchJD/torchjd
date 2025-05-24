@@ -4,6 +4,8 @@ from typing import Set
 import torch
 from torch import Tensor
 
+from ._utils import get_jacobian_and_next_nodes
+
 
 def jac(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
@@ -14,20 +16,11 @@ def jac(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
             if curr_node.variable in inputs:
                 result[curr_node.variable] = curr_jac
         else:
-            next_functions = [fn[0] for fn in curr_node.next_functions]
-            next_functions, indices = zip(
-                *[(fn, i) for i, fn in enumerate(next_functions) if fn is not None]
-            )
-
-            def get_vjp(grad: Tensor) -> tuple[Tensor, ...]:
-                output = [t for i, t in enumerate(curr_node(grad)) if i in indices]
-                return tuple(output)
-
-            next_jacs = torch.vmap(get_vjp)(curr_jac)
+            jacobian, next_functions = get_jacobian_and_next_nodes(curr_node)
+            next_jacs = torch.vmap(jacobian)(curr_jac)
             next_couples = [
                 (next_function, next_jac)
                 for next_function, next_jac in zip(next_functions, next_jacs)
-                if next_function is not None
             ]
             jacs.extend(next_couples)
     return result
