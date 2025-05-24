@@ -5,8 +5,8 @@ from torch.testing import assert_close
 
 from torchjd import mtl_backward
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac._mtl_backward import _create_transform
 from torchjd.autojac._transform.ordered_set import OrderedSet
-from torchjd.autojac.mtl_backward import _create_transform
 
 
 def test_check_create_transform():
