@@ -30,13 +30,13 @@ from torch import Tensor
 
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .aggregator_bases import _GramianWeightedAggregator
 from .mean import _MeanWeighting
 
 
 class AlignedMTL(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` as defined in Algorithm 1 of
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 

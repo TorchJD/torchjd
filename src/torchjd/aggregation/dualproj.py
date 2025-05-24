@@ -7,13 +7,13 @@ from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .aggregator_bases import _GramianWeightedAggregator
 from .mean import _MeanWeighting
 
 
 class DualProj(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` that averages the rows of the input
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` that averages the rows of the input
     matrix, and projects the result onto the dual cone of the rows of the matrix. This corresponds
     to the solution to Equation 11 of `Gradient Episodic Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.

@@ -3,12 +3,12 @@ from torch import Tensor
 
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._weighting_bases import PSDMatrix, Weighting
-from .bases import _GramianWeightedAggregator
+from .aggregator_bases import _GramianWeightedAggregator
 
 
 class IMTLG(_GramianWeightedAggregator):
     """
-    :class:`~torchjd.aggregation.bases.Aggregator` generalizing the method described in
+    :class:`~torchjd.aggregation.aggregator_bases.Aggregator` generalizing the method described in
     `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.
     This generalization, defined formally in `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_, supports matrices with some linearly dependant rows.
