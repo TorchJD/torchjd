@@ -4,7 +4,7 @@ from typing import Set
 import torch
 from torch import Tensor
 
-from ._utils import get_jacobian_and_next_nodes
+from ._utils import append_to_dict, get_jacobian_and_next_nodes
 
 
 def grad(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
@@ -14,7 +14,7 @@ def grad(output: Tensor, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
         curr_node, curr_grad = grads.pop()
         if curr_node.__class__.__name__ == "AccumulateGrad":
             if curr_node.variable in inputs:
-                result[curr_node.variable] = curr_grad
+                result = append_to_dict(result, curr_node.variable, curr_grad)
         else:
             jacobian, next_functions = get_jacobian_and_next_nodes(curr_node)
             next_grads = jacobian(curr_grad)
