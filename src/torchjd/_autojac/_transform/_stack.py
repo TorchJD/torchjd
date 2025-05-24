@@ -3,9 +3,9 @@ from typing import Sequence
 import torch
 from torch import Tensor
 
+from ._base import Transform
 from ._materialize import materialize
-from .base import Transform
-from .tensor_dict import _A, Gradients, Jacobians
+from ._tensor_dict import _A, Gradients, Jacobians
 
 
 class Stack(Transform[_A, Jacobians]):

@@ -2,8 +2,8 @@ from collections.abc import Set
 
 from torch import Tensor
 
-from .base import RequirementError, Transform
-from .tensor_dict import _A
+from ._base import RequirementError, Transform
+from ._tensor_dict import _A
 
 
 class Select(Transform[_A, _A]):

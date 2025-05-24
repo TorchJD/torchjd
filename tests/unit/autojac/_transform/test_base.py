@@ -4,8 +4,8 @@ import torch
 from pytest import raises
 from torch import Tensor
 
-from torchjd._autojac._transform.base import Conjunction, RequirementError, Transform
-from torchjd._autojac._transform.tensor_dict import _B, _C, TensorDict
+from torchjd._autojac._transform._base import Conjunction, RequirementError, Transform
+from torchjd._autojac._transform._tensor_dict import _B, _C, TensorDict
 
 
 class FakeTransform(Transform[_B, _C]):

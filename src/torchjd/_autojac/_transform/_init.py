@@ -3,8 +3,8 @@ from collections.abc import Set
 import torch
 from torch import Tensor
 
-from .base import RequirementError, Transform
-from .tensor_dict import EmptyTensorDict, Gradients
+from ._base import RequirementError, Transform
+from ._tensor_dict import EmptyTensorDict, Gradients
 
 
 class Init(Transform[EmptyTensorDict, Gradients]):

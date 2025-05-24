@@ -13,7 +13,7 @@ from torchjd._autojac._transform import (
     Jacobians,
     TensorDict,
 )
-from torchjd._autojac._transform.tensor_dict import _least_common_ancestor
+from torchjd._autojac._transform._tensor_dict import _least_common_ancestor
 
 _key_shapes = [[], [1], [2, 3]]
 

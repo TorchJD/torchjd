@@ -5,7 +5,7 @@ from typing import Generic, Sequence
 
 from torch import Tensor
 
-from .tensor_dict import _A, _B, _C, EmptyTensorDict, _least_common_ancestor
+from ._tensor_dict import _A, _B, _C, EmptyTensorDict, _least_common_ancestor
 
 
 class RequirementError(ValueError):

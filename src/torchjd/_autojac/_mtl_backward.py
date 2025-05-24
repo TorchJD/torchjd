@@ -16,7 +16,7 @@ from ._transform import (
     Stack,
     Transform,
 )
-from ._transform.ordered_set import OrderedSet
+from ._transform._ordered_set import OrderedSet
 from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 

@@ -12,8 +12,8 @@ from torchjd._autojac._transform import (
     Jacobians,
     RequirementError,
 )
-from torchjd._autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
-from torchjd._autojac._transform.ordered_set import OrderedSet
+from torchjd._autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd._autojac._transform._ordered_set import OrderedSet
 from torchjd.aggregation import Random
 
 from ._dict_assertions import assert_tensor_dicts_are_close

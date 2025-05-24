@@ -1,7 +1,7 @@
 from torch import Tensor
 
-from .base import Transform
-from .tensor_dict import EmptyTensorDict, Gradients
+from ._base import Transform
+from ._tensor_dict import EmptyTensorDict, Gradients
 
 
 class Accumulate(Transform[Gradients, EmptyTensorDict]):

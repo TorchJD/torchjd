@@ -1,13 +1,13 @@
-from .accumulate import Accumulate
-from .aggregate import Aggregate
-from .base import Composition, Conjunction, RequirementError, Transform
-from .diagonalize import Diagonalize
-from .grad import Grad
-from .init import Init
-from .jac import Jac
-from .select import Select
-from .stack import Stack
-from .tensor_dict import (
+from ._accumulate import Accumulate
+from ._aggregate import Aggregate
+from ._base import Composition, Conjunction, RequirementError, Transform
+from ._diagonalize import Diagonalize
+from ._grad import Grad
+from ._init import Init
+from ._jac import Jac
+from ._select import Select
+from ._stack import Stack
+from ._tensor_dict import (
     EmptyTensorDict,
     Gradients,
     GradientVectors,

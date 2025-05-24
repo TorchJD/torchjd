@@ -1,9 +1,9 @@
 import torch
 from torch import Tensor
 
-from .base import RequirementError, Transform
-from .ordered_set import OrderedSet
-from .tensor_dict import Gradients, Jacobians
+from ._base import RequirementError, Transform
+from ._ordered_set import OrderedSet
+from ._tensor_dict import Gradients, Jacobians
 
 
 class Diagonalize(Transform[Gradients, Jacobians]):
