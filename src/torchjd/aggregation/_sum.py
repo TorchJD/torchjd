@@ -1,11 +1,11 @@
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _WeightedAggregator
+from ._aggregator_bases import WeightedAggregator
 from ._weighting_bases import Matrix, Weighting
 
 
-class Sum(_WeightedAggregator):
+class Sum(WeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that sums of the rows of the input
     matrices.

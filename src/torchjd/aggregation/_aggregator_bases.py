@@ -45,7 +45,7 @@ class Aggregator(nn.Module, ABC):
         return f"{self.__class__.__name__}"
 
 
-class _WeightedAggregator(Aggregator):
+class WeightedAggregator(Aggregator):
     """
     Aggregator that combines the rows of the input jacobian matrix with weights given by applying a
     Weighting to it.
@@ -76,7 +76,7 @@ class _WeightedAggregator(Aggregator):
         return vector
 
 
-class _GramianWeightedAggregator(_WeightedAggregator):
+class GramianWeightedAggregator(WeightedAggregator):
     """
     WeightedAggregator that computes the gramian of the input jacobian matrix before applying a
     Weighting to it.

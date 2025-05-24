@@ -1,12 +1,12 @@
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class IMTLG(_GramianWeightedAggregator):
+class IMTLG(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` generalizing the method described in
     `Towards Impartial Multi-task Learning <https://discovery.ucl.ac.uk/id/eprint/10120667/>`_.

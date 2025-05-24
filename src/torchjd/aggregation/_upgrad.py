@@ -3,7 +3,7 @@ from typing import Literal
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import _MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
@@ -12,7 +12,7 @@ from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weight
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class UPGrad(_GramianWeightedAggregator):
+class UPGrad(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that projects each row of the input
     matrix onto the dual cone of all rows of this matrix, and that combines the result, as proposed

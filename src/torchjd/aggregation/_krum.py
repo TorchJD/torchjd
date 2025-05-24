@@ -2,11 +2,11 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class Krum(_GramianWeightedAggregator):
+class Krum(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` for adversarial federated learning,
     as defined in `Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent

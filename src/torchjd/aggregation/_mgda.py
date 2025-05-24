@@ -1,11 +1,11 @@
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class MGDA(_GramianWeightedAggregator):
+class MGDA(GramianWeightedAggregator):
     r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` performing the gradient aggregation
     step of `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization

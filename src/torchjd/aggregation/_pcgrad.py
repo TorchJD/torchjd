@@ -1,12 +1,12 @@
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class PCGrad(_GramianWeightedAggregator):
+class PCGrad(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in algorithm 1 of
     `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.

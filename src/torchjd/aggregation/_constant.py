@@ -1,11 +1,11 @@
 from torch import Tensor
 
-from ._aggregator_bases import _WeightedAggregator
+from ._aggregator_bases import WeightedAggregator
 from ._utils.str import vector_to_str
 from ._weighting_bases import Matrix, Weighting
 
 
-class Constant(_WeightedAggregator):
+class Constant(WeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that makes a linear combination of
     the rows of the provided matrix, with constant, pre-determined weights.

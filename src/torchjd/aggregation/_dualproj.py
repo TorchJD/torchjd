@@ -2,7 +2,7 @@ from typing import Literal
 
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import _MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
@@ -11,7 +11,7 @@ from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weight
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class DualProj(_GramianWeightedAggregator):
+class DualProj(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that averages the rows of the input
     matrix, and projects the result onto the dual cone of the rows of the matrix. This corresponds

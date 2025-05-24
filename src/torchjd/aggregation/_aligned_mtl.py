@@ -28,13 +28,13 @@
 import torch
 from torch import Tensor
 
-from ._aggregator_bases import _GramianWeightedAggregator
+from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import _MeanWeighting
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class AlignedMTL(_GramianWeightedAggregator):
+class AlignedMTL(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning

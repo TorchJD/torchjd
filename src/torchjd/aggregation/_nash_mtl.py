@@ -34,11 +34,11 @@ import torch
 from cvxpy import Expression
 from torch import Tensor
 
-from ._aggregator_bases import _WeightedAggregator
+from ._aggregator_bases import WeightedAggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
 
 
-class NashMTL(_WeightedAggregator):
+class NashMTL(WeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as proposed in Algorithm 1 of
     `Multi-Task Learning as a Bargaining Game <https://arxiv.org/pdf/2202.01017.pdf>`_.

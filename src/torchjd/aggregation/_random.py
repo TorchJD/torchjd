@@ -2,11 +2,11 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from ._aggregator_bases import _WeightedAggregator
+from ._aggregator_bases import WeightedAggregator
 from ._weighting_bases import Matrix, Weighting
 
 
-class Random(_WeightedAggregator):
+class Random(WeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that computes a random combination of
     the rows of the provided matrices, as defined in algorithm 2 of `Reasonable Effectiveness of
