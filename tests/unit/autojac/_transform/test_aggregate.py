@@ -6,15 +6,15 @@ from pytest import mark, raises
 from torch import Tensor
 from unit.conftest import DEVICE
 
-from torchjd.aggregation import Random
-from torchjd.autojac._transform import (
+from torchjd._autojac._transform import (
     GradientVectors,
     JacobianMatrices,
     Jacobians,
     RequirementError,
 )
-from torchjd.autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
-from torchjd.autojac._transform.ordered_set import OrderedSet
+from torchjd._autojac._transform.aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd._autojac._transform.ordered_set import OrderedSet
+from torchjd.aggregation import Random
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 

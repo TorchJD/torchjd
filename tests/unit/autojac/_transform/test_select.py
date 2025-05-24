@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd.autojac._transform import RequirementError, Select, TensorDict
+from torchjd._autojac._transform import RequirementError, Select, TensorDict
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 

@@ -5,7 +5,7 @@ from pytest import mark, raises
 from torch import Tensor
 from unit._utils import ExceptionContext
 
-from torchjd.autojac._transform import (
+from torchjd._autojac._transform import (
     EmptyTensorDict,
     Gradients,
     GradientVectors,
@@ -13,7 +13,7 @@ from torchjd.autojac._transform import (
     Jacobians,
     TensorDict,
 )
-from torchjd.autojac._transform.tensor_dict import _least_common_ancestor
+from torchjd._autojac._transform.tensor_dict import _least_common_ancestor
 
 _key_shapes = [[], [1], [2, 3]]
 

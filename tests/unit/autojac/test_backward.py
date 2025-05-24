@@ -4,9 +4,9 @@ from torch.autograd import grad
 from torch.testing import assert_close
 
 from torchjd import backward
+from torchjd._autojac._backward import _create_transform
+from torchjd._autojac._transform.ordered_set import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
-from torchjd.autojac._backward import _create_transform
-from torchjd.autojac._transform.ordered_set import OrderedSet
 
 
 def test_check_create_transform():

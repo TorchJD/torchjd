@@ -3,7 +3,7 @@ from typing import Iterable
 import torch
 from torch import Tensor
 
-from torchjd.autojac._transform import EmptyTensorDict, Gradients, Stack, Transform
+from torchjd._autojac._transform import EmptyTensorDict, Gradients, Stack, Transform
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
