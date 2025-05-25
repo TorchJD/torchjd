@@ -7,8 +7,8 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from ._base import RequirementError, Transform
-from ._ordered_set import OrderedSet
 from ._tensor_dict import EmptyTensorDict, Gradients, GradientVectors, JacobianMatrices, Jacobians
+from .ordered_set import OrderedSet
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")

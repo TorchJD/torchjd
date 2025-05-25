@@ -8,8 +8,8 @@ from torch import Size, Tensor
 
 from ._differentiate import Differentiate
 from ._materialize import materialize
-from ._ordered_set import OrderedSet
 from ._tensor_dict import Jacobians
+from .ordered_set import OrderedSet
 
 
 class Jac(Differentiate[Jacobians]):

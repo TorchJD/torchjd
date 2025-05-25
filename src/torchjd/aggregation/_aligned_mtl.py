@@ -34,7 +34,9 @@ from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weight
 from ._weighting_bases import PSDMatrix, Weighting
 
 
+# noinspection GrazieInspection
 class AlignedMTL(GramianWeightedAggregator):
+    # noinspection GrazieInspection
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning

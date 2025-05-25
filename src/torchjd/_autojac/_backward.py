@@ -5,10 +5,11 @@ from torch import Tensor
 from torchjd.aggregation import Aggregator
 
 from ._transform import Accumulate, Aggregate, Diagonalize, EmptyTensorDict, Init, Jac, Transform
-from ._transform._ordered_set import OrderedSet
+from ._transform.ordered_set import OrderedSet
 from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
+# noinspection GrazieInspection
 def backward(
     tensors: Sequence[Tensor] | Tensor,
     aggregator: Aggregator,
@@ -16,6 +17,7 @@ def backward(
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
+    # noinspection GrazieInspection
     r"""
     Computes the Jacobian of all values in ``tensors`` with respect to all ``inputs``. Computes its
     aggregation by the provided ``aggregator`` and accumulates it in the ``.grad`` fields of the

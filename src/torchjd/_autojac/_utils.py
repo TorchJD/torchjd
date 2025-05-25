@@ -4,7 +4,7 @@ from typing import Iterable, Sequence
 from torch import Tensor
 from torch.autograd.graph import Node
 
-from ._transform._ordered_set import OrderedSet
+from ._transform.ordered_set import OrderedSet
 
 
 def check_optional_positive_chunk_size(parallel_chunk_size: int | None) -> None:

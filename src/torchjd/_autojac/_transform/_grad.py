@@ -5,8 +5,8 @@ from torch import Tensor
 
 from ._differentiate import Differentiate
 from ._materialize import materialize
-from ._ordered_set import OrderedSet
 from ._tensor_dict import Gradients
+from .ordered_set import OrderedSet
 
 
 class Grad(Differentiate[Gradients]):
