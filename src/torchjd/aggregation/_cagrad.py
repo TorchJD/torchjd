@@ -94,7 +94,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
 
         dimension = gramian.shape[0]
         reduced_g_0 = reduced_array.T @ np.ones(dimension) / dimension
-        sqrt_phi = self.c * np.linalg.norm(reduced_g_0, 2)
+        sqrt_phi = self.c * np.linalg.norm(reduced_g_0, 2).item()
 
         w = cp.Variable(shape=dimension)
         cost = (reduced_array @ reduced_g_0).T @ w + sqrt_phi * cp.norm(reduced_array.T @ w, 2)
@@ -103,7 +103,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
         problem.solve(cp.CLARABEL)
         w_opt = w.value
 
-        g_w_norm = np.linalg.norm(reduced_array.T @ w_opt)
+        g_w_norm = np.linalg.norm(reduced_array.T @ w_opt, 2).item()
         if g_w_norm >= self.norm_eps:
             weight_array = np.ones(dimension) / dimension
             weight_array += (sqrt_phi / g_w_norm) * w_opt
