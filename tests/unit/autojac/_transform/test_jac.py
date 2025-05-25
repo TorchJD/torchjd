@@ -1,8 +1,7 @@
 import torch
 from pytest import mark, raises
 
-from torchjd._autojac._transform import Jac, Jacobians, RequirementError
-from torchjd._autojac._transform._ordered_set import OrderedSet
+from torchjd._autojac._transform import Jac, Jacobians, OrderedSet, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 

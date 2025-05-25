@@ -12,12 +12,12 @@ from torchjd._autojac._transform import (
     Init,
     Jac,
     Jacobians,
+    OrderedSet,
     RequirementError,
     Select,
     Stack,
     TensorDict,
 )
-from torchjd._autojac._transform._ordered_set import OrderedSet
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
