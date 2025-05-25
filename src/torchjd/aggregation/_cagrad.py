@@ -103,7 +103,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
         problem.solve(cp.CLARABEL)
         w_opt = w.value
 
-        g_w_norm = np.linalg.norm(reduced_array.T @ w_opt, 2.0).item()
+        g_w_norm = np.linalg.norm(reduced_array.T @ w_opt, 2).item()
         if g_w_norm >= self.norm_eps:
             weight_array = np.ones(dimension) / dimension
             weight_array += (sqrt_phi / g_w_norm) * w_opt
