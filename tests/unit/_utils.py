@@ -1,3 +1,4 @@
-from typing import ContextManager, TypeAlias
+from contextlib import AbstractContextManager
+from typing import TypeAlias
 
-ExceptionContext: TypeAlias = ContextManager[Exception | None]
+ExceptionContext: TypeAlias = AbstractContextManager[Exception | None]

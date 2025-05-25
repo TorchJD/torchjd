@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from torch import Tensor
 from torch.autograd.graph import Node

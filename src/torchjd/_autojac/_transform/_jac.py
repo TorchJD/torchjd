@@ -1,7 +1,7 @@
 import math
+from collections.abc import Callable, Sequence
 from functools import partial
 from itertools import accumulate
-from typing import Callable, Sequence
 
 import torch
 from torch import Size, Tensor
