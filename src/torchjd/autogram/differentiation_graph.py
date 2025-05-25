@@ -1,3 +1,4 @@
+from collections.abc import Iterable, MutableMapping
 from typing import Annotated, Callable
 
 import torch
@@ -6,9 +7,35 @@ from torch import Node, Tensor
 Jacobian = Annotated[Callable[[Tensor], tuple[Tensor, ...]], "linear"]
 
 
+class Derivatives(MutableMapping[Tensor, Tensor]):
+    def __init__(self, data: Iterable[tuple[Tensor, Tensor]] = ()):
+        self.mapping = {}
+        self.update(data)
+
+    def __getitem__(self, key: Tensor) -> Tensor:
+        return self.mapping[key]
+
+    def __delitem__(self, key: Tensor) -> None:
+        del self.mapping[key]
+
+    def __setitem__(self, key: Tensor, value: Tensor) -> None:
+        if key in self:
+            self.mapping[key] += value
+        self.mapping[key] = value
+
+    def __iter__(self) -> Iterable[Tensor]:
+        return iter(self.mapping)
+
+    def __len__(self) -> int:
+        return len(self.mapping)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.mapping})"
+
+
 def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
-    grads = {output: torch.ones_like(output) for output in outputs}
+    grads = Derivatives([(output, torch.ones_like(output)) for output in outputs])
     nodes = _topological_sort(outputs)
     for node in nodes:
         curr_node, curr_grad = grads.pop(node)
