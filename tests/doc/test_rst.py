@@ -222,7 +222,7 @@ def test_monitoring():
         """Prints the extracted weights."""
         print(f"Weights: {weights}")
 
-    def print_similarity_with_gd(_, inputs: tuple[torch.Tensor], aggregation: torch.Tensor) -> None:
+    def print_gd_similarity(_, inputs: tuple[torch.Tensor, ...], aggregation: torch.Tensor) -> None:
         """Prints the cosine similarity between the aggregation and the average gradient."""
         matrix = inputs[0]
         gd_output = matrix.mean(dim=0)
@@ -243,7 +243,7 @@ def test_monitoring():
     aggregator = UPGrad()
 
     aggregator.weighting.register_forward_hook(print_weights)
-    aggregator.register_forward_hook(print_similarity_with_gd)
+    aggregator.register_forward_hook(print_gd_similarity)
 
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
