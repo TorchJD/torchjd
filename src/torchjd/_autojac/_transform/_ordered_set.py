@@ -1,11 +1,11 @@
 from collections import OrderedDict
-from collections.abc import Set
+from collections.abc import MutableSet
 from typing import Hashable, Iterable, TypeVar
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 
 
-class OrderedSet(OrderedDict[_KeyType, None], Set[_KeyType]):
+class OrderedSet(OrderedDict[_KeyType, None], MutableSet[_KeyType]):
     """Ordered collection of distinct elements."""
 
     def __init__(self, elements: Iterable[_KeyType]):
