@@ -15,8 +15,7 @@ class OrderedSet(OrderedDict[_KeyType, None], MutableSet[_KeyType]):
         """Removes all specified elements from the OrderedSet."""
 
         for element in elements:
-            if element in self:
-                del self[element]
+            self.discard(element)
 
     def add(self, element: _KeyType) -> None:
         """Adds the specified element to the OrderedSet."""
@@ -27,3 +26,7 @@ class OrderedSet(OrderedDict[_KeyType, None], MutableSet[_KeyType]):
         """Creates a new OrderedSet with the elements of self followed by the elements of other."""
 
         return OrderedSet([*self, *other])
+
+    def discard(self, value: _KeyType) -> None:
+        if value in self:
+            del self[value]
