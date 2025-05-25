@@ -36,7 +36,7 @@ class Derivatives(MutableMapping[Tensor, Tensor]):
 def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
     grads = Derivatives([(output, torch.ones_like(output)) for output in outputs])
-    nodes = _topological_sort(outputs)
+    nodes = _topological_sort(outputs, inputs, set())
     for node in nodes:
         curr_node, curr_grad = grads.pop(node)
         if _is_leaf(curr_node):
@@ -50,7 +50,7 @@ def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
     return result
 
 
-def _topological_sort(roots: list[Node], inputs: set[Node]) -> list[Node]:
+def _topological_sort(roots: list[Node], inputs: set[Tensor], excluded: set[Node]) -> list[Node]:
     """
     Returns an ordered list of node in the graph represented by the roots where a node that precede
     another in the graph should precede it in the list.
@@ -59,7 +59,7 @@ def _topological_sort(roots: list[Node], inputs: set[Node]) -> list[Node]:
     there is no cycle).
     """
 
-    visited = {}
+    visited = {node: False for node in excluded}
     reverse_sorted = list()
 
     def visit(node: Node) -> bool:
