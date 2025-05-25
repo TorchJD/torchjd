@@ -26,3 +26,5 @@ try:
     from ._nash_mtl import NashMTL
 except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass
+
+del _OptionalDepsNotInstalledError
