@@ -1,11 +1,11 @@
 from collections import OrderedDict
-from collections.abc import Hashable, Iterable, Set
+from collections.abc import Hashable, Iterable, MutableSet
 from typing import TypeVar
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 
 
-class OrderedSet(OrderedDict[_KeyType, None], Set[_KeyType]):
+class OrderedSet(OrderedDict[_KeyType, None], MutableSet[_KeyType]):
     """Ordered collection of distinct elements."""
 
     def __init__(self, elements: Iterable[_KeyType]):
@@ -15,8 +15,7 @@ class OrderedSet(OrderedDict[_KeyType, None], Set[_KeyType]):
         """Removes all specified elements from the OrderedSet."""
 
         for element in elements:
-            if element in self:
-                del self[element]
+            self.discard(element)
 
     def add(self, element: _KeyType) -> None:
         """Adds the specified element to the OrderedSet."""
@@ -27,3 +26,7 @@ class OrderedSet(OrderedDict[_KeyType, None], Set[_KeyType]):
         """Creates a new OrderedSet with the elements of self followed by the elements of other."""
 
         return OrderedSet([*self, *other])
+
+    def discard(self, value: _KeyType) -> None:
+        if value in self:
+            del self[value]
