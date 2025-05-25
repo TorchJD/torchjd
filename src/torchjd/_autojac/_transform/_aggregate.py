@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Hashable, TypeVar
+from collections.abc import Hashable
+from typing import TypeVar
 
 import torch
 from torch import Tensor

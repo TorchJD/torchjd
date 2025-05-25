@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from collections.abc import MutableSet
-from typing import Hashable, Iterable, TypeVar
+from collections.abc import Hashable, Iterable, MutableSet
+from typing import TypeVar
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 

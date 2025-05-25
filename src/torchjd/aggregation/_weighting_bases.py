@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Annotated, Callable, Generic, TypeVar
+from collections.abc import Callable
+from typing import Annotated, Generic, TypeVar
 
 from torch import Tensor, nn
 
