@@ -1,0 +1,81 @@
+from typing import Annotated, Callable
+
+import torch
+from torch import Node, Tensor
+
+Jacobian = Annotated[Callable[[Tensor], tuple[Tensor, ...]], "linear"]
+
+
+def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
+    result = {}
+    grads = {output: torch.ones_like(output) for output in outputs}
+    nodes = _topological_sort(outputs)
+    for node in nodes:
+        curr_node, curr_grad = grads.pop(node)
+        if _is_leaf(curr_node):
+            t = _get_leaf_tensor(curr_node)
+            if t in inputs:
+                result[t] = curr_grad
+        else:
+            jacobian, next_functions = get_jacobian_and_children(curr_node)
+            next_grads = jacobian(curr_grad)
+            grads.update(zip(next_functions, next_grads))
+    return result
+
+
+def _topological_sort(roots: list[Node]) -> list[Node]:
+    """
+    Returns an ordered list of node in the graph represented by the roots where a node that precede
+    another in the graph should precede it in the list.
+    This is implemented with Depth-first search (roughly follows
+    https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search with the guarantee that
+    there is no cycle).
+    """
+
+    visited = set()
+    reverse_sorted = list()
+
+    def visit(node: Node) -> None:
+        for child, _ in node.next_functions:
+            if child is not None and node not in visited:
+                visit(child)
+        visited.add(node)
+        reverse_sorted.append(node)
+
+    for root in roots:
+        visit(root)
+
+    reverse_sorted.reverse()
+    return reverse_sorted
+
+
+def _accumulate_derivative(
+    t: Tensor, derivative: Tensor, derivatives: dict[Tensor, Tensor]
+) -> None:
+    if t in derivatives:
+        derivatives[t] += derivative
+    else:
+        derivatives[t] = derivative
+
+
+def _is_leaf(node: Node) -> bool:
+    return node.__class__.__name__ == "AccumulateGrad"
+
+
+def _get_leaf_tensor(node: Node) -> Tensor:
+    return node.variable
+
+
+def get_jacobian_and_children(
+    node: Node,
+) -> tuple[Jacobian, list[Node]]:
+    next_functions = [fn[0] for fn in node.next_functions]
+    next_functions, indices = zip(
+        *[(fn, i) for i, fn in enumerate(next_functions) if fn is not None]
+    )
+
+    def jacobian(grad: Tensor) -> tuple[Tensor, ...]:
+        output = [t for i, t in enumerate(node(grad)) if i in indices]
+        return tuple(output)
+
+    return jacobian, next_functions
