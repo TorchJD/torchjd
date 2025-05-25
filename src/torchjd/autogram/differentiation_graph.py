@@ -50,7 +50,7 @@ def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
     return result
 
 
-def _topological_sort(roots: list[Node]) -> list[Node]:
+def _topological_sort(roots: list[Node], inputs: set[Node]) -> list[Node]:
     """
     Returns an ordered list of node in the graph represented by the roots where a node that precede
     another in the graph should precede it in the list.
@@ -59,15 +59,21 @@ def _topological_sort(roots: list[Node]) -> list[Node]:
     there is no cycle).
     """
 
-    visited = set()
+    visited = {}
     reverse_sorted = list()
 
-    def visit(node: Node) -> None:
+    def visit(node: Node) -> bool:
+        has_leaf = _is_included_leaf(node, inputs)
         for child, _ in node.next_functions:
-            if child is not None and node not in visited:
-                visit(child)
-        visited.add(node)
-        reverse_sorted.append(node)
+            if child is not None:
+                if node in visited:
+                    has_leaf |= visited[node]
+                else:
+                    has_leaf |= visit(child)
+        visited[node] = has_leaf
+        if has_leaf:
+            reverse_sorted.append(node)
+        return has_leaf
 
     for root in roots:
         visit(root)
@@ -83,6 +89,10 @@ def _accumulate_derivative(
         derivatives[t] += derivative
     else:
         derivatives[t] = derivative
+
+
+def _is_included_leaf(node: Node, included: set[Tensor]) -> bool:
+    return _is_leaf(node) and _get_leaf_tensor(node) in included
 
 
 def _is_leaf(node: Node) -> bool:
