@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
-from typing import Sequence
 
 import torch
 from pytest import mark, raises
