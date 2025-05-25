@@ -132,7 +132,7 @@ To release a new `torchjd` version, you have to:
 - Change the version in `pyproject.toml`.
 - Make a pull request with those changes and merge it.
 - Make a draft of the release on GitHub (click on `Releases`, then `Draft a new release`, then fill
-  the details.
+  the details).
 - Publish the release (click on  `Publish release`). This should trigger the deployment of the new
   version on PyPI and the building and deployment of the documentation on github-pages.
 - Check that the new version is correctly deployed to PyPI, that it is installable and that it
