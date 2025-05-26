@@ -1,3 +1,9 @@
+"""
+This package provides implementations of several popular aggregation strategies from the literature.
+The role of these aggregators is to combine a matrix (e.g. the Jacobian matrix) into a single
+vector, generally to be used like a gradient.
+"""
+
 from ._aggregator_bases import Aggregator
 from ._aligned_mtl import AlignedMTL
 from ._config import ConFIG
