@@ -236,7 +236,7 @@ def combine_bounds(
 def coord_to_angle(x: float, y: float) -> tuple[float, float]:
     """
     Converts an (x, y) pair into its angle from the (1, 0) vector, as a value in [0, 2pi[, and its
-    length
+    length.
     """
 
     r = np.sqrt(x**2 + y**2)

@@ -29,7 +29,7 @@ def test_non_differentiable(aggregator: CAGrad, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], non_conflicting_pairs_1 + non_conflicting_pairs_2)
 def test_non_conflicting(aggregator: CAGrad, matrix: Tensor):
-    """Tests that CAGrad is non-conflicting when c >= 1 (it should not hold when c < 1)"""
+    """Tests that CAGrad is non-conflicting when c >= 1 (it should not hold when c < 1)."""
     assert_non_conflicting(aggregator, matrix)
 
 
