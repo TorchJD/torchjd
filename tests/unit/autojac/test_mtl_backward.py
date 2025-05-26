@@ -10,7 +10,7 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 
 
 def test_check_create_transform():
-    """Tests that _create_transform creates a valid Transform"""
+    """Tests that _create_transform creates a valid Transform."""
 
     p0 = torch.tensor([1.0, 2.0], requires_grad=True)
     p1 = torch.tensor([1.0, 2.0], requires_grad=True)
