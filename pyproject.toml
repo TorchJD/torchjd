@@ -78,3 +78,9 @@ full = [
     "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
     "ecos>=2.0.14",  # Does not work before 2.0.14
 ]
+
+[tool.ruff]
+line-length = 100
+lint.select = ["E", "F", "D"]
+lint.ignore = ["E402", "D205", "D401", "D212", "D202", "D200", "D404", "D203"]
+lint.per-file-ignores = {"*/__init__.py" = ["F401"], "tests/*" = ["D100", "D101", "D102", "D103", "D104"], "docs/*" = ["D100", "D101", "D102", "D103", "D104"]}
