@@ -1,7 +1,6 @@
 from collections.abc import Iterable, MutableMapping
 from typing import Annotated, Callable
 
-import torch
 from torch import Node, Tensor
 
 Jacobian = Annotated[Callable[[Tensor], tuple[Tensor, ...]], "linear"]
@@ -33,24 +32,9 @@ class Derivatives(MutableMapping[Tensor, Tensor]):
         return f"{type(self).__name__}({self.mapping})"
 
 
-def grad(outputs: list[Node], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
-    result = {}
-    grads = Derivatives([(output, torch.ones_like(output)) for output in outputs])
-    nodes = _topological_sort(outputs, inputs, set())
-    for node in nodes:
-        curr_node, curr_grad = grads.pop(node)
-        if _is_leaf(curr_node):
-            t = _get_leaf_tensor(curr_node)
-            if t in inputs:
-                result[t] = curr_grad
-        else:
-            jacobian, next_functions = get_jacobian_and_children(curr_node)
-            next_grads = jacobian(curr_grad)
-            grads.update(zip(next_functions, next_grads))
-    return result
-
-
-def _topological_sort(roots: list[Node], inputs: set[Tensor], excluded: set[Node]) -> list[Node]:
+def topological_sort(
+    roots: list[Node], included_leaves: set[Node], excluded: set[Node]
+) -> list[Node]:
     """
     Returns an ordered list of node in the graph represented by the roots where a node that precede
     another in the graph should precede it in the list.
@@ -63,7 +47,7 @@ def _topological_sort(roots: list[Node], inputs: set[Tensor], excluded: set[Node
     reverse_sorted = list()
 
     def visit(node: Node) -> bool:
-        has_leaf = _is_included_leaf(node, inputs)
+        has_leaf = node in included_leaves
         for child, _ in node.next_functions:
             if child is not None:
                 if node in visited:
@@ -80,27 +64,6 @@ def _topological_sort(roots: list[Node], inputs: set[Tensor], excluded: set[Node
 
     reverse_sorted.reverse()
     return reverse_sorted
-
-
-def _accumulate_derivative(
-    t: Tensor, derivative: Tensor, derivatives: dict[Tensor, Tensor]
-) -> None:
-    if t in derivatives:
-        derivatives[t] += derivative
-    else:
-        derivatives[t] = derivative
-
-
-def _is_included_leaf(node: Node, included: set[Tensor]) -> bool:
-    return _is_leaf(node) and _get_leaf_tensor(node) in included
-
-
-def _is_leaf(node: Node) -> bool:
-    return node.__class__.__name__ == "AccumulateGrad"
-
-
-def _get_leaf_tensor(node: Node) -> Tensor:
-    return node.variable
 
 
 def get_jacobian_and_children(

@@ -1,26 +1,23 @@
-from collections import deque
-from typing import Set
-
 import torch
-from torch import Node, Tensor
+from torch import Tensor
+from torch.autograd.graph import get_gradient_edge
 
-from ._utils import append_to_dict, get_jacobian_and_next_nodes
+from .differentiation_graph import Derivatives, get_jacobian_and_children, topological_sort
 
 
-def grad(starting_node: Node, inputs: Set[Tensor]) -> dict[Tensor, Tensor]:
+def grad(outputs: list[Tensor], inputs: set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
-    grads = deque([(starting_node, torch.ones_like(starting_node))])
-    while grads:
-        curr_node, curr_grad = grads.pop()
-        if curr_node.__class__.__name__ == "AccumulateGrad":
-            if curr_node.variable in inputs:
-                result = append_to_dict(result, curr_node.variable, curr_grad)
+    grads = Derivatives([(output, torch.ones_like(output)) for output in outputs])
+    roots = [get_gradient_edge(output)[0] for output in outputs]
+    leaves = {get_gradient_edge(input)[0]: input for input in inputs}
+    nodes = topological_sort(roots, set(leaves.keys()), set())
+    for node in nodes:
+        node_grad = grads.pop(node)
+        if node in leaves:
+            t = leaves[node]
+            result[t] = node_grad
         else:
-            jacobian, next_functions = get_jacobian_and_next_nodes(curr_node)
-            next_grads = jacobian(curr_grad)
-            next_couples = [
-                (next_function, next_grad)
-                for next_function, next_grad in zip(next_functions, next_grads)
-            ]
-            grads.extend(next_couples)
+            jacobian, next_functions = get_jacobian_and_children(node)
+            next_grads = jacobian(node_grad)
+            grads.update(zip(next_functions, next_grads))
     return result
