@@ -2,6 +2,7 @@ from collections.abc import Iterable, MutableMapping
 from typing import Annotated, Callable
 
 from torch import Node, Tensor
+from torch.autograd.graph import get_gradient_edge
 
 Jacobian = Annotated[Callable[[Tensor], tuple[Tensor, ...]], "linear"]
 
@@ -79,3 +80,7 @@ def get_jacobian_and_children(
         return tuple(output)
 
     return jacobian, next_functions
+
+
+def get_node(tensor: Tensor) -> Node:
+    return get_gradient_edge(tensor)[0]
