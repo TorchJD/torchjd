@@ -1,3 +1,4 @@
+import re
 from contextlib import nullcontext as does_not_raise
 
 import torch
@@ -69,9 +70,13 @@ def test_matrix_shape_check(leak_shape: list[int], n_rows: int, expectation: Exc
 
 def test_representations():
     A = GradDrop(leak=torch.tensor([0.0, 1.0], device="cpu"))
-    assert repr(A) == "GradDrop(leak=tensor([0., 1.]))"
+    assert re.match(
+        r"GradDrop\(f=<function _identity at 0x[0-9a-fA-F]+>, leak=tensor\(\[0\., 1\.\]\)\)",
+        repr(A),
+    )
+
     assert str(A) == "GradDrop([0., 1.])"
 
     A = GradDrop()
-    assert repr(A) == "GradDrop(leak=None)"
+    assert re.match(r"GradDrop\(f=<function _identity at 0x[0-9a-fA-F]+>, leak=None\)", repr(A))
     assert str(A) == "GradDrop"
