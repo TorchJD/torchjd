@@ -1,16 +1,20 @@
 import torch
 from torch import Tensor
-from torch.autograd.graph import get_gradient_edge
 
-from .differentiation_graph import Derivatives, get_jacobian_and_children, topological_sort
+from .differentiation_graph import (
+    Derivatives,
+    get_jacobian_and_children,
+    get_node,
+    topological_sort,
+)
 
 
 def grad(outputs: list[Tensor], inputs: set[Tensor], excluded: set[Tensor]) -> dict[Tensor, Tensor]:
     result = {}
     grads = Derivatives([(output, torch.ones_like(output)) for output in outputs])
-    roots = [get_gradient_edge(output)[0] for output in outputs]
-    leaves = {get_gradient_edge(input)[0]: input for input in inputs}
-    excluded = {get_gradient_edge(tensor)[0] for tensor in excluded}
+    roots = [get_node(output) for output in outputs]
+    leaves = {get_node(input): input for input in inputs}
+    excluded = {get_node(tensor) for tensor in excluded}
     nodes = topological_sort(roots, set(leaves.keys()), excluded)
     for node in nodes:
         node_grad = grads.pop(node)
