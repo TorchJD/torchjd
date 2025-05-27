@@ -96,6 +96,10 @@ class NashMTL(WeightedAggregator):
                 optim_niter=optim_niter,
             )
         )
+        self._n_tasks = n_tasks
+        self._max_norm = max_norm
+        self._update_weights_every = update_weights_every
+        self._optim_niter = optim_niter
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
@@ -105,7 +109,10 @@ class NashMTL(WeightedAggregator):
         self.weighting.reset()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(n_tasks={self.weighting.n_tasks})"
+        return (
+            f"{self.__class__.__name__}(n_tasks={self._n_tasks}, max_norm={self._max_norm}, "
+            f"update_weights_every={self._update_weights_every}, optim_niter={self._optim_niter})"
+        )
 
 
 class _NashMTLWeighting(Weighting[Matrix]):
