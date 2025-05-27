@@ -29,12 +29,13 @@ class Constant(WeightedAggregator):
 
     def __init__(self, weights: Tensor):
         super().__init__(weighting=_ConstantWeighting(weights=weights))
+        self._weights = weights
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(weights={repr(self.weighting.weights)})"
+        return f"{self.__class__.__name__}(weights={repr(self._weights)})"
 
     def __str__(self) -> str:
-        weights_str = vector_to_str(self.weighting.weights)
+        weights_str = vector_to_str(self._weights)
         return f"{self.__class__.__name__}([{weights_str}])"
 
 

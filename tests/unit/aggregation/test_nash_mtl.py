@@ -55,6 +55,6 @@ def test_nash_mtl_reset():
 
 
 def test_representations():
-    A = NashMTL(n_tasks=2)
-    assert repr(A) == "NashMTL(n_tasks=2)"
+    A = NashMTL(n_tasks=2, max_norm=1.5, update_weights_every=2, optim_niter=5)
+    assert repr(A) == "NashMTL(n_tasks=2, max_norm=1.5, update_weights_every=2, optim_niter=5)"
     assert str(A) == "NashMTL"
