@@ -51,7 +51,10 @@ def get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> O
         roots=OrderedSet([tensor.grad_fn for tensor in tensors]),
         excluded_nodes={tensor.grad_fn for tensor in excluded},
     )
-    leaves = OrderedSet([g.variable for g in accumulate_grads])
+
+    # accumulate_grads contains instances of AccumulateGrad, which contain a `variable` field.
+    # They cannot be typed as such because AccumulateGrad is not public.
+    leaves = OrderedSet([g.variable for g in accumulate_grads])  # type: ignore[attr-defined]
 
     return leaves
 
