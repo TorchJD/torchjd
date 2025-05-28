@@ -29,6 +29,12 @@ changes that do not affect the user.
   Before this change, trying to differentiate through them leaded to wrong gradients or unclear
   errors.
 
+### Added
+
+- Added a `py.typed` file in the top package of `torchjd` to ensure compliance with
+  [PEP 561](https://peps.python.org/pep-0561/). This should make it possible for users to use
+  [mypy](https://github.com/python/mypy) against the type annotations provided in `torchjd`.
+
 ## [0.6.0] - 2025-04-19
 
 ### Added
