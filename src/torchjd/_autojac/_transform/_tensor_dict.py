@@ -32,16 +32,18 @@ class TensorDict(dict[Tensor, Tensor]):
     # Make TensorDict immutable, following answer in
     # https://stackoverflow.com/questions/11014262/how-to-create-an-immutable-dictionary-in-python
     # coming from https://peps.python.org/pep-0351/
+    # Note that this is not a perfect solution, because it breaks Liskov Substitution Principle, but
+    # it works.
     def _raise_immutable_error(self, *args, **kwargs) -> None:
         raise TypeError(f"{self.__class__.__name__} is immutable.")
 
     __setitem__ = _raise_immutable_error
     __delitem__ = _raise_immutable_error
     clear = _raise_immutable_error
-    update = _raise_immutable_error
-    setdefault = _raise_immutable_error
-    pop = _raise_immutable_error
-    popitem = _raise_immutable_error
+    update = _raise_immutable_error  # type: ignore[assignment]
+    setdefault = _raise_immutable_error  # type: ignore[assignment]
+    pop = _raise_immutable_error  # type: ignore[assignment]
+    popitem = _raise_immutable_error  # type: ignore[assignment]
 
 
 class Gradients(TensorDict):
