@@ -13,7 +13,6 @@ from torchjd._autojac._transform import (
     Jacobians,
     TensorDict,
 )
-from torchjd._autojac._transform._tensor_dict import _least_common_ancestor
 
 _key_shapes = [[], [1], [2, 3]]
 
@@ -78,25 +77,6 @@ def test_jacobian_matrices(value_shapes: list[list[int]], expectation: Exception
     """Tests that the JacobianMatrices class checks properly its inputs."""
 
     _assert_class_checks_properly(JacobianMatrices, value_shapes, expectation)
-
-
-@mark.parametrize(
-    ["first", "second", "result"],
-    [
-        (EmptyTensorDict, EmptyTensorDict, EmptyTensorDict),
-        (EmptyTensorDict, Jacobians, Jacobians),
-        (Jacobians, EmptyTensorDict, Jacobians),
-        (Jacobians, Jacobians, Jacobians),
-        (EmptyTensorDict, Gradients, Gradients),
-        (EmptyTensorDict, GradientVectors, GradientVectors),
-        (EmptyTensorDict, JacobianMatrices, JacobianMatrices),
-        (GradientVectors, JacobianMatrices, TensorDict),
-    ],
-)
-def test_least_common_ancestor(
-    first: type[TensorDict], second: type[TensorDict], result: type[TensorDict]
-):
-    assert _least_common_ancestor(first, second) == result
 
 
 def _assert_class_checks_properly(

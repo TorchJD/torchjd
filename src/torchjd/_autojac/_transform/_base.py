@@ -6,7 +6,7 @@ from typing import Generic
 
 from torch import Tensor
 
-from ._tensor_dict import _A, _B, _C, EmptyTensorDict, _least_common_ancestor
+from ._tensor_dict import _A, _B, _C
 
 
 class RequirementError(ValueError):
@@ -81,7 +81,8 @@ class Conjunction(Transform[_A, _B]):
     Transform applying several transforms to the same input, and combining the results (by union)
     into a single TensorDict.
 
-    :param transforms: The transforms to apply. Their outputs should have disjoint sets of keys.
+    :param transforms: The non-empty sequence of transforms to apply. Their outputs should have
+        disjoint sets of keys.
     """
 
     def __init__(self, transforms: Sequence[Transform[_A, _B]]):
@@ -98,13 +99,13 @@ class Conjunction(Transform[_A, _B]):
         return "(" + " | ".join(strings) + ")"
 
     def __call__(self, tensor_dict: _A) -> _B:
-        tensor_dicts = [transform(tensor_dict) for transform in self.transforms]
-        output_type: type[_A] = EmptyTensorDict
-        output: _A = EmptyTensorDict()
-        for tensor_dict in tensor_dicts:
-            output_type = _least_common_ancestor(output_type, type(tensor_dict))
-            output |= tensor_dict
-        return output_type(output)
+        union: dict[Tensor, Tensor] = {}
+        first_output = self.transforms[0](tensor_dict)
+        union |= first_output
+        output_type = type(first_output)
+        for transform in self.transforms[1:]:
+            union |= transform(tensor_dict)
+        return output_type(union)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]

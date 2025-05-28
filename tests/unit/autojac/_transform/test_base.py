@@ -4,8 +4,8 @@ import torch
 from pytest import raises
 from torch import Tensor
 
-from torchjd._autojac._transform._base import Conjunction, RequirementError, Transform
-from torchjd._autojac._transform._tensor_dict import _B, _C, TensorDict
+from torchjd._autojac._transform._base import RequirementError, Transform
+from torchjd._autojac._transform._tensor_dict import _B, _C
 
 
 class FakeTransform(Transform[_B, _C]):
@@ -100,17 +100,6 @@ def test_conjunct_check_keys_2():
 
     with raises(RequirementError):
         (t1 | t2 | t3).check_keys(set())
-
-
-def test_empty_conjunction():
-    """
-    Tests that it is possible to take the conjunction of no transform. This should return an empty
-    dictionary.
-    """
-
-    conjunction = Conjunction([])
-
-    assert len(conjunction(TensorDict({}))) == 0
 
 
 def test_str():

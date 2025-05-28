@@ -126,16 +126,6 @@ class EmptyTensorDict(
         super().__init__({})
 
 
-def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) -> type[TensorDict]:
-    first_mro = first.mro()[:-1]  # removes `object` from `mro`.
-    output = TensorDict
-    for candidate_type in first_mro:
-        if issubclass(second, candidate_type):
-            output = candidate_type
-            break
-    return output
-
-
 def _check_values_have_unique_first_dim(tensor_dict: dict[Tensor, Tensor]) -> None:
     first_dims = [value.shape[0] for value in tensor_dict.values()]
     if len(set(first_dims)) > 1:
