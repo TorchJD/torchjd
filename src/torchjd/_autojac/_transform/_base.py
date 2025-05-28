@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Generic
+from typing import Generic, cast
 
 from torch import Tensor
 
@@ -99,12 +99,14 @@ class Conjunction(Transform[_A, _B]):
 
     def __call__(self, tensor_dict: _A) -> _B:
         tensor_dicts = [transform(tensor_dict) for transform in self.transforms]
-        output_type: type[_A] = EmptyTensorDict
-        output: _A = EmptyTensorDict()
-        for tensor_dict in tensor_dicts:
-            output_type = _least_common_ancestor(output_type, type(tensor_dict))
-            output |= tensor_dict
-        return output_type(output)
+        union: dict[Tensor, Tensor] = {}
+        for d in tensor_dicts:
+            union |= d
+
+        output_type = cast(type[_B], EmptyTensorDict)
+        for td in tensor_dicts:
+            output_type = cast(type[_B], _least_common_ancestor(output_type, type(td)))
+        return output_type(union)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]
