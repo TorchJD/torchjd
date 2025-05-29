@@ -127,7 +127,7 @@ class EmptyTensorDict(
 
 
 def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) -> type[TensorDict]:
-    first_mro = first.mro()[:-1]  # removes `object` from `mro`.
+    first_mro = first.mro()
     output = TensorDict
     for candidate_type in first_mro:
         if issubclass(second, candidate_type):
