@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from collections.abc import Hashable, Iterable, MutableSet
+from collections.abc import Hashable, Iterable, Iterator, MutableSet
 from typing import TypeVar
 
 _T = TypeVar("_T", bound=Hashable)
@@ -32,11 +32,11 @@ class OrderedSet(MutableSet[_T]):
         if value in self:
             del self.ordered_dict[value]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[_T]:
         return self.ordered_dict.__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.ordered_dict)
 
-    def __contains__(self, element: object):
+    def __contains__(self, element: object) -> bool:
         return element in self.ordered_dict
