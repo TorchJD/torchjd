@@ -67,7 +67,7 @@ def _get_descendant_accumulate_grads(
     """
 
     excluded_nodes = set(excluded_nodes)  # Re-instantiate set to avoid modifying input
-    result = OrderedSet([])
+    result: OrderedSet[Node] = OrderedSet([])
     roots.difference_update(excluded_nodes)
     nodes_to_traverse = deque(roots)
 

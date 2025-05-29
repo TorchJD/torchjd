@@ -36,7 +36,7 @@ def _stack(gradient_dicts: list[Gradients]) -> Jacobians:
     # It is important to first remove duplicate keys before computing their associated
     # stacked tensor. Otherwise, some computations would be duplicated. Therefore, we first compute
     # unique_keys, and only then, we compute the stacked tensors.
-    union = {}
+    union: dict[Tensor, Tensor] = {}
     for d in gradient_dicts:
         union |= d
     unique_keys = union.keys()
