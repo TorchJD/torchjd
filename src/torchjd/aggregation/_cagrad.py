@@ -1,3 +1,5 @@
+from typing import cast
+
 from ._utils.check_dependencies import check_dependencies_are_installed
 from ._weighting_bases import PSDMatrix, Weighting
 
@@ -101,7 +103,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
         problem = cp.Problem(objective=cp.Minimize(cost), constraints=[w >= 0, cp.sum(w) == 1])
 
         problem.solve(cp.CLARABEL)
-        w_opt = w.value
+        w_opt = cast(np.ndarray, w.value)
 
         g_w_norm = np.linalg.norm(reduced_array.T @ w_opt, 2).item()
         if g_w_norm >= self.norm_eps:

@@ -1,5 +1,6 @@
 from collections import deque
 from collections.abc import Iterable, Sequence
+from typing import cast
 
 from torch import Tensor
 from torch.autograd.graph import Node
@@ -48,8 +49,8 @@ def get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> O
         raise ValueError("All `excluded` tensors should have a `grad_fn`.")
 
     accumulate_grads = _get_descendant_accumulate_grads(
-        roots=OrderedSet([tensor.grad_fn for tensor in tensors]),
-        excluded_nodes={tensor.grad_fn for tensor in excluded},
+        roots=cast(OrderedSet[Node], OrderedSet([tensor.grad_fn for tensor in tensors])),
+        excluded_nodes=cast(set[Node], {tensor.grad_fn for tensor in excluded}),
     )
     leaves = OrderedSet([g.variable for g in accumulate_grads])
 
