@@ -190,7 +190,7 @@ def _create_task_transform(
     return backward_task
 
 
-def _check_losses_are_scalar(losses: Sequence[Tensor]) -> None:
+def _check_losses_are_scalar(losses: Iterable[Tensor]) -> None:
     for loss in losses:
         if loss.ndim > 0:
             raise ValueError("`losses` should contain only scalars.")
