@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import OrderedDict
 from collections.abc import Hashable, Iterable, Iterator, MutableSet
 from typing import TypeVar
@@ -23,7 +25,7 @@ class OrderedSet(MutableSet[_T]):
 
         self.ordered_dict[element] = None
 
-    def __add__(self, other: "OrderedSet[_T]") -> "OrderedSet[_T]":
+    def __add__(self, other: OrderedSet[_T]) -> OrderedSet[_T]:
         """Creates a new OrderedSet with the elements of self followed by the elements of other."""
 
         return OrderedSet([*self, *other])
