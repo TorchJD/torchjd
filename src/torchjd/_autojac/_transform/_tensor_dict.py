@@ -12,8 +12,6 @@ class TensorDict(dict[Tensor, Tensor]):
     """
 
     def __init__(self, tensor_dict: dict[Tensor, Tensor]):
-        self._check_dict(tensor_dict)
-        self._check_all_pairs(tensor_dict)
         super().__init__(tensor_dict)
 
     @staticmethod
