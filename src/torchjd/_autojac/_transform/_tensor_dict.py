@@ -12,18 +12,18 @@ class TensorDict(dict[Tensor, Tensor]):
     """
 
     def __init__(self, tensor_dict: dict[Tensor, Tensor]):
-        self._check_dict(tensor_dict)
-        self._check_all_pairs(tensor_dict)
         super().__init__(tensor_dict)
 
-    @staticmethod
-    def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
+    def check(self) -> None:
+        self._check_dict()
+        self._check_all_pairs()
+
+    def _check_dict(self) -> None:
         pass
 
-    @classmethod
-    def _check_all_pairs(cls, tensor_dict: dict[Tensor, Tensor]) -> None:
-        for key, value in tensor_dict.items():
-            cls._check_key_value_pair(key, value)
+    def _check_all_pairs(self) -> None:
+        for key, value in self.items():
+            self._check_key_value_pair(key, value)
 
     @staticmethod
     def _check_key_value_pair(key: Tensor, value: Tensor) -> None:
@@ -66,9 +66,8 @@ class Jacobians(TensorDict):
     - The rest of the shape of each value must be the same as the shape of its corresponding key.
     """
 
-    @staticmethod
-    def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
-        _check_values_have_unique_first_dim(tensor_dict)
+    def _check_dict(self) -> None:
+        _check_values_have_unique_first_dim(self)
 
     @staticmethod
     def _check_key_value_pair(key: Tensor, value: Tensor) -> None:
@@ -98,9 +97,8 @@ class JacobianMatrices(TensorDict):
       the number of elements of their corresponding key.
     """
 
-    @staticmethod
-    def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
-        _check_values_have_unique_first_dim(tensor_dict)
+    def _check_dict(self) -> None:
+        _check_values_have_unique_first_dim(self)
 
     @staticmethod
     def _check_key_value_pair(key: Tensor, value: Tensor) -> None:
@@ -120,10 +118,11 @@ class EmptyTensorDict(
     explicitly checking them.
     """
 
-    def __init__(self, tensor_dict: dict[Tensor, Tensor] | None = None):
-        if tensor_dict is not None and len(tensor_dict) != 0:
-            raise ValueError("Cannot build a non-empty `EmptyTensorDict`")
-        super().__init__({})
+    def _check_dict(self) -> None:
+        if len(self) != 0:
+            raise ValueError(
+                f"Parameter `tensor_dict` should be empty. Found its length to be {len(self)}."
+            )
 
 
 def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) -> type[TensorDict]:

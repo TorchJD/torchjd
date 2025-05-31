@@ -64,7 +64,7 @@ def test_single_differentiation():
 
     a = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     y = a * 2.0
-    input = EmptyTensorDict()
+    input = EmptyTensorDict({})
 
     init = Init({y})
     grad = Grad(OrderedSet([y]), OrderedSet([a]))
@@ -86,7 +86,7 @@ def test_multiple_differentiations():
     a2 = torch.tensor([1.0, 3.0, 5.0], requires_grad=True)
     y1 = a1 * 2.0
     y2 = a2 * 3.0
-    input = EmptyTensorDict()
+    input = EmptyTensorDict({})
 
     grad1 = Grad(OrderedSet([y1]), OrderedSet([a1]))
     grad2 = Grad(OrderedSet([y2]), OrderedSet([a2]))

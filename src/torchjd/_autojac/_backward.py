@@ -95,7 +95,7 @@ def backward(
         parallel_chunk_size=parallel_chunk_size,
     )
 
-    backward_transform(EmptyTensorDict())
+    backward_transform(EmptyTensorDict({}))
 
 
 def _create_transform(

@@ -100,7 +100,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         """
 
         if len(jacobian_matrices) == 0:
-            return EmptyTensorDict()
+            return EmptyTensorDict({})
 
         united_jacobian_matrix = _AggregateMatrices._unite(jacobian_matrices)
         united_gradient_vector = aggregator(united_jacobian_matrix)

@@ -28,7 +28,7 @@ def test_single_key():
     """
 
     key = torch.zeros([3, 4])
-    input = EmptyTensorDict()
+    input = EmptyTensorDict({})
 
     transform = FakeGradientsTransform([key])
     stack = Stack([transform, transform])
@@ -48,7 +48,7 @@ def test_disjoint_key_sets():
 
     key1 = torch.zeros([1, 2])
     key2 = torch.zeros([3])
-    input = EmptyTensorDict()
+    input = EmptyTensorDict({})
 
     transform1 = FakeGradientsTransform([key1])
     transform2 = FakeGradientsTransform([key2])
@@ -73,7 +73,7 @@ def test_overlapping_key_sets():
     key1 = torch.zeros([1, 2])
     key2 = torch.zeros([3])
     key3 = torch.zeros([4])
-    input = EmptyTensorDict()
+    input = EmptyTensorDict({})
 
     transform12 = FakeGradientsTransform([key1, key2])
     transform23 = FakeGradientsTransform([key2, key3])
