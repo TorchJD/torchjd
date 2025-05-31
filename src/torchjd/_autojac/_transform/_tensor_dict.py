@@ -35,6 +35,7 @@ class TensorDict(dict[Tensor, Tensor]):
     def _raise_immutable_error(self, *args, **kwargs) -> None:
         raise TypeError(f"{self.__class__.__name__} is immutable.")
 
+    __ior__ = _raise_immutable_error
     __setitem__ = _raise_immutable_error
     __delitem__ = _raise_immutable_error
     clear = _raise_immutable_error
