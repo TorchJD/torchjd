@@ -118,10 +118,16 @@ class EmptyTensorDict(
     explicitly checking them.
     """
 
-    def __init__(self, tensor_dict: dict[Tensor, Tensor] | None = None):
-        if tensor_dict is not None and len(tensor_dict) != 0:
-            raise ValueError("Cannot build a non-empty `EmptyTensorDict`")
+    def __init__(self, _: dict[Tensor, Tensor] | None = None):
         super().__init__({})
+
+    @staticmethod
+    def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
+        if len(tensor_dict) != 0:
+            raise ValueError(
+                "Parameter `tensor_dict` should be empty. "
+                f"Found its length to be {len(tensor_dict)}."
+            )
 
 
 def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) -> type[TensorDict]:
