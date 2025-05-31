@@ -118,9 +118,6 @@ class EmptyTensorDict(
     explicitly checking them.
     """
 
-    def __init__(self, _: dict[Tensor, Tensor] | None = None):
-        super().__init__({})
-
     @staticmethod
     def _check_dict(tensor_dict: dict[Tensor, Tensor]) -> None:
         if len(tensor_dict) != 0:

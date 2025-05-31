@@ -19,7 +19,7 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
                 # (in case it was obtained via create_graph=True and a differentiable aggregator).
                 key.grad = gradients[key].clone()
 
-        return EmptyTensorDict()
+        return EmptyTensorDict({})
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return set()
