@@ -35,6 +35,7 @@ class TensorDict(dict[Tensor, Tensor]):
     def _raise_immutable_error(self, *args, **kwargs) -> None:
         raise TypeError(f"{self.__class__.__name__} is immutable.")
 
+    __ior__ = _raise_immutable_error
     __setitem__ = _raise_immutable_error
     __delitem__ = _raise_immutable_error
     clear = _raise_immutable_error
@@ -124,16 +125,6 @@ class EmptyTensorDict(
         if tensor_dict is not None and len(tensor_dict) != 0:
             raise ValueError("Cannot build a non-empty `EmptyTensorDict`")
         super().__init__({})
-
-
-def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) -> type[TensorDict]:
-    first_mro = first.mro()[:-1]  # removes `object` from `mro`.
-    output = TensorDict
-    for candidate_type in first_mro:
-        if issubclass(second, candidate_type):
-            output = candidate_type
-            break
-    return output
 
 
 def _check_values_have_unique_first_dim(tensor_dict: dict[Tensor, Tensor]) -> None:
