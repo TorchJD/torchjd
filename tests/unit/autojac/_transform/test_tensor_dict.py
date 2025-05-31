@@ -81,6 +81,22 @@ def test_jacobian_matrices(value_shapes: list[list[int]], expectation: Exception
 
 
 @mark.parametrize(
+    ["tensor_mapping", "expectation"],
+    [
+        ({}, does_not_raise()),
+        ({torch.ones(1): torch.ones(1)}, raises(ValueError)),  # Non-empty
+    ],
+)
+def test_empty_tensor_dict(
+    tensor_mapping: dict[Tensor, Tensor] | None, expectation: ExceptionContext
+):
+    """Tests that the JacobianMatrices class checks properly its inputs."""
+
+    with expectation:
+        EmptyTensorDict(tensor_mapping).check()
+
+
+@mark.parametrize(
     ["first", "second", "result"],
     [
         (EmptyTensorDict, EmptyTensorDict, EmptyTensorDict),
@@ -105,7 +121,7 @@ def _assert_class_checks_properly(
     tensor_mapping = _make_tensor_dict(value_shapes)
 
     with expectation:
-        class_(tensor_mapping)
+        class_(tensor_mapping).check()
 
 
 def _make_tensor_dict(value_shapes: list[list[int]]) -> dict[Tensor, Tensor]:
@@ -120,10 +136,3 @@ def test_immutability():
         t[torch.ones(1)] = torch.ones(1)
 
     assert t == Gradients({})
-
-
-def test_empty_tensor_dict():
-    """Tests that it's impossible to instantiate a non-empty EmptyTensorDict."""
-
-    with raises(ValueError):
-        _ = EmptyTensorDict({torch.ones(1): torch.ones(1)})
