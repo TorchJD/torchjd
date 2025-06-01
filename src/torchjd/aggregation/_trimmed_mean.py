@@ -47,7 +47,6 @@ class TrimmedMean(Aggregator):
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_is_matrix(matrix)
         self._check_matrix_has_enough_rows(matrix)
-        self._check_is_finite(matrix)
 
         n_rows = matrix.shape[0]
         n_remaining = n_rows - 2 * self.trim_number
