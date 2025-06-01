@@ -1,6 +1,7 @@
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
+from torch.linalg import LinAlgError
 
 from torchjd.aggregation import AlignedMTL
 
@@ -19,6 +20,51 @@ def test_expected_structure(aggregator: AlignedMTL, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: AlignedMTL, matrix: Tensor):
     assert_permutation_invariant(aggregator, matrix)
+
+
+def test_one_nan():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_nan():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], torch.nan)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_inf():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_inf():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_neg_inf():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_neg_inf():
+    aggregator = AlignedMTL()
+    matrix = torch.full([10, 100], -torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
 
 
 def test_representations():

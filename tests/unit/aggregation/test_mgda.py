@@ -66,6 +66,51 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     assert_close(positive_mu.norm(), mu.norm(), atol=1e-02, rtol=0.0)
 
 
+def test_one_nan():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_nan():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_inf():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_neg_inf():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_neg_inf():
+    aggregator = MGDA()
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
 def test_representations():
     A = MGDA(epsilon=0.001, max_iters=100)
     assert repr(A) == "MGDA(epsilon=0.001, max_iters=100)"

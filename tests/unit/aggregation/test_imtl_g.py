@@ -1,6 +1,7 @@
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
+from torch.linalg import LinAlgError
 from torch.testing import assert_close
 
 from torchjd.aggregation import IMTLG
@@ -41,6 +42,51 @@ def test_imtlg_zero():
     A = IMTLG()
     J = torch.zeros(2, 3)
     assert_close(A(J), torch.zeros(3))
+
+
+def test_one_nan():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_nan():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], torch.nan)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_inf():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_inf():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_neg_inf():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_neg_inf():
+    aggregator = IMTLG()
+    matrix = torch.full([10, 100], -torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
 
 
 def test_representations():

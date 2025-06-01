@@ -1,5 +1,5 @@
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
 from torch.testing import assert_close
 
@@ -52,6 +52,51 @@ def test_nash_mtl_reset():
 
     for result, expected in zip(results, expecteds):
         assert_close(result, expected)
+
+
+def test_one_nan():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    with raises(ValueError):
+        _ = aggregator(matrix)
+
+
+def test_full_nan():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], torch.nan)
+    with raises(ValueError):
+        _ = aggregator(matrix)
+
+
+def test_one_inf():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    with raises(ValueError):
+        _ = aggregator(matrix)
+
+
+def test_full_inf():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], torch.inf)
+    with raises(ValueError):
+        _ = aggregator(matrix)
+
+
+def test_one_neg_inf():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    with raises(ValueError):
+        _ = aggregator(matrix)
+
+
+def test_full_neg_inf():
+    aggregator = NashMTL(n_tasks=10)
+    matrix = torch.full([10, 100], -torch.inf)
+    with raises(ValueError):
+        _ = aggregator(matrix)
 
 
 def test_representations():

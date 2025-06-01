@@ -3,6 +3,7 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
+from torch.linalg import LinAlgError
 from unit._utils import ExceptionContext
 
 from torchjd.aggregation import CAGrad
@@ -46,6 +47,51 @@ def test_non_conflicting(aggregator: CAGrad, matrix: Tensor):
 def test_c_check(c: float, expectation: ExceptionContext):
     with expectation:
         _ = CAGrad(c=c)
+
+
+def test_one_nan():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_nan():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], torch.nan)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_inf():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_inf():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_one_neg_inf():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
+
+
+def test_full_neg_inf():
+    aggregator = CAGrad(c=0.5)
+    matrix = torch.full([10, 100], -torch.inf)
+    with raises(LinAlgError):
+        _ = aggregator(matrix)
 
 
 def test_representations():

@@ -38,6 +38,51 @@ def test_non_differentiable(aggregator: ConFIG, matrix: Tensor):
     assert_non_differentiable(aggregator, matrix)
 
 
+def test_one_nan():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_nan():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, torch.inf)).all()
+
+
+def test_full_inf():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_neg_inf():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, -torch.inf)).all()
+
+
+def test_full_neg_inf():
+    aggregator = ConFIG()
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
 def test_representations():
     A = ConFIG()
     assert repr(A) == "ConFIG(pref_vector=None)"

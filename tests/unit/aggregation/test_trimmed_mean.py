@@ -3,6 +3,7 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
+from torch.testing import assert_close
 from unit._utils import ExceptionContext
 
 from torchjd.aggregation import TrimmedMean
@@ -55,6 +56,51 @@ def test_matrix_shape_check(n_rows: int, trim_number: int, expectation: Exceptio
 
     with expectation:
         _ = aggregator(matrix)
+
+
+def test_one_nan():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert_close(result, torch.ones_like(result))
+
+
+def test_full_nan():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert_close(result, torch.ones_like(result))
+
+
+def test_full_inf():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, torch.inf)).all()
+
+
+def test_one_neg_inf():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert_close(result, torch.ones_like(result))
+
+
+def test_full_neg_inf():
+    aggregator = TrimmedMean(trim_number=1)
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, -torch.inf)).all()
 
 
 def test_representations():

@@ -3,6 +3,7 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
+from torch.testing import assert_close
 from unit._utils import ExceptionContext
 
 from torchjd.aggregation import Constant
@@ -81,6 +82,54 @@ def test_matrix_shape_check(weights_shape: list[int], n_rows: int, expectation: 
 
     with expectation:
         _ = aggregator(matrix)
+
+
+def test_one_nan():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert result[0].isnan()
+    assert_close(result[1:], torch.full_like(result[1:], 10.0))
+
+
+def test_full_nan():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert result[0] == torch.inf
+    assert_close(result[1:], torch.full_like(result[1:], 10.0))
+
+
+def test_full_inf():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, torch.inf)).all()
+
+
+def test_one_neg_inf():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert result[0] == -torch.inf
+    assert_close(result[1:], torch.full_like(result[1:], 10.0))
+
+
+def test_full_neg_inf():
+    aggregator = Constant(torch.tensor([1.0] * 10))
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert result.eq(torch.full_like(result, -torch.inf)).all()
 
 
 def test_representations():

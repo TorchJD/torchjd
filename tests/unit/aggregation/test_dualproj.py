@@ -44,6 +44,51 @@ def test_non_differentiable(aggregator: DualProj, matrix: Tensor):
     assert_non_differentiable(aggregator, matrix)
 
 
+def test_one_nan():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_nan():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_inf():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_neg_inf():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_full_neg_inf():
+    aggregator = DualProj()
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
 def test_representations():
     A = DualProj(pref_vector=None, norm_eps=0.0001, reg_eps=0.0001, solver="quadprog")
     assert (

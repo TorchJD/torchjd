@@ -62,6 +62,54 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     assert_close(result, expected, atol=4e-04, rtol=0.0)
 
 
+def test_one_nan():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.nan
+    result = aggregator(matrix)
+    assert result[0].isnan()
+    assert_close(result[1:], torch.full_like(result[1:], 10.0))
+
+
+def test_full_nan():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], torch.nan)
+    result = aggregator(matrix)
+    assert result.isnan().all()
+
+
+def test_one_inf():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = torch.inf
+    result = aggregator(matrix)
+    assert result[0] == torch.inf
+    assert_close(result[1:], torch.full_like(result[1:], 10.0))
+
+
+def test_full_inf():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], torch.inf)
+    result = aggregator(matrix)
+    assert_close(result, torch.full_like(result, torch.inf))
+
+
+def test_one_neg_inf():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], 1.0)
+    matrix[0, 0] = -torch.inf
+    result = aggregator(matrix)
+    assert result[0].isnan()
+    assert result[1:].eq(torch.full_like(result[1:], torch.inf)).all()
+
+
+def test_full_neg_inf():
+    aggregator = PCGrad()
+    matrix = torch.full([10, 100], -torch.inf)
+    result = aggregator(matrix)
+    assert_close(result, torch.full_like(result, -torch.inf))
+
+
 def test_representations():
     A = PCGrad()
     assert repr(A) == "PCGrad()"
