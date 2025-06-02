@@ -72,6 +72,13 @@ mandatory, we only provide installation steps with this tool. You can install it
      uv run make clean
      ```
 
+## Running `mypy`
+
+From the root of the repo, run:
+```bash
+uv run mypy src/torchjd
+```
+
 ## Development guidelines
 
 The following guidelines should help preserve a good code quality in TorchJD. Contributions that do
