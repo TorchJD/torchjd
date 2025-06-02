@@ -5,10 +5,10 @@ from torch import Tensor
 
 from ._base import Transform
 from ._materialize import materialize
-from ._tensor_dict import _A, Gradients, Jacobians
+from ._tensor_dict import _B, Gradients, Jacobians
 
 
-class Stack(Transform[_A, Jacobians]):
+class Stack(Transform[_B, Jacobians]):
     """
     Transform applying several transforms to the same input, and combining the results (by stacking)
     into a single TensorDict.
@@ -20,10 +20,10 @@ class Stack(Transform[_A, Jacobians]):
         at the positions corresponding to those dicts.
     """
 
-    def __init__(self, transforms: Sequence[Transform[_A, Gradients]]):
+    def __init__(self, transforms: Sequence[Transform[_B, Gradients]]):
         self.transforms = transforms
 
-    def __call__(self, input: _A) -> Jacobians:
+    def __call__(self, input: _B) -> Jacobians:
         results = [transform(input) for transform in self.transforms]
         result = _stack(results)
         return result
@@ -36,7 +36,7 @@ def _stack(gradient_dicts: list[Gradients]) -> Jacobians:
     # It is important to first remove duplicate keys before computing their associated
     # stacked tensor. Otherwise, some computations would be duplicated. Therefore, we first compute
     # unique_keys, and only then, we compute the stacked tensors.
-    union = {}
+    union: dict[Tensor, Tensor] = {}
     for d in gradient_dicts:
         union |= d
     unique_keys = union.keys()
