@@ -179,10 +179,10 @@ def _create_task_transform(
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    accumulate = Accumulate() << Select(task_params)
+    accumulate = Accumulate() << Select[Gradients](task_params)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
-    backpropagate = Select(features)
+    backpropagate = Select[Gradients](features)
 
     # Transform that accumulates the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
@@ -190,7 +190,7 @@ def _create_task_transform(
     return backward_task
 
 
-def _check_losses_are_scalar(losses: Sequence[Tensor]) -> None:
+def _check_losses_are_scalar(losses: Iterable[Tensor]) -> None:
     for loss in losses:
         if loss.ndim > 0:
             raise ValueError("`losses` should contain only scalars.")
