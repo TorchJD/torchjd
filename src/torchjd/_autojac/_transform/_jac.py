@@ -9,10 +9,9 @@ from torch import Size, Tensor
 from ._differentiate import Differentiate
 from ._materialize import materialize
 from ._ordered_set import OrderedSet
-from ._tensor_dict import Jacobians
 
 
-class Jac(Differentiate[Jacobians]):
+class Jac(Differentiate):
     """
     Transform computing the jacobian of each output with respect to each input, and applying the
     linear transformations represented by the argument jac_outputs to the results.

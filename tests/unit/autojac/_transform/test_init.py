@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd._autojac._transform import EmptyTensorDict, Init, RequirementError
+from torchjd._autojac._transform import Init, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -13,7 +13,7 @@ def test_single_input():
     """
 
     key = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    input = EmptyTensorDict()
+    input = {}
 
     init = Init({key})
 
@@ -31,7 +31,7 @@ def test_multiple_inputs():
 
     key1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     key2 = torch.tensor([1.0, 3.0, 5.0])
-    input = EmptyTensorDict()
+    input = {}
 
     init = Init({key1, key2})
 
@@ -51,7 +51,7 @@ def test_conjunction_of_inits_is_init():
 
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
-    input = EmptyTensorDict()
+    input = {}
 
     init1 = Init({x1})
     init2 = Init({x2})

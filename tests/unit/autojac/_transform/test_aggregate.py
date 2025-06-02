@@ -4,23 +4,18 @@ import torch
 from pytest import mark, raises
 from unit.conftest import DEVICE
 
-from torchjd._autojac._transform import (
-    GradientVectors,
-    JacobianMatrices,
-    Jacobians,
-    OrderedSet,
-    RequirementError,
-)
+from torchjd._autojac._transform import OrderedSet, RequirementError
 from torchjd._autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd._autojac._transform._base import TD
 from torchjd.aggregation import Random
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> JacobianMatrices:
+def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> TD:
     jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
     jacobian_list = [torch.rand(shape, generator=rng) for shape in jacobian_shapes]
-    jacobian_matrices = JacobianMatrices({key: jac for key, jac in zip(_keys, jacobian_list)})
+    jacobian_matrices = {key: jac for key, jac in zip(_keys, jacobian_list)}
     return jacobian_matrices
 
 
@@ -47,7 +42,7 @@ _jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs, _rng) for n_outputs
 
 
 @mark.parametrize("jacobian_matrices", _jacobian_matrix_dicts)
-def test_aggregate_matrices_output_structure(jacobian_matrices: JacobianMatrices):
+def test_aggregate_matrices_output_structure(jacobian_matrices: TD):
     """
     Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
     output of the desired structure.
@@ -66,7 +61,7 @@ def test_aggregate_matrices_empty_dict():
     """Tests that applying _AggregateMatrices to an empty input gives an empty output."""
 
     aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet([]))
-    gradient_vectors = aggregate_matrices(JacobianMatrices({}))
+    gradient_vectors = aggregate_matrices({})
     assert len(gradient_vectors) == 0
 
 
@@ -80,7 +75,7 @@ def test_matrixify():
     value1 = torch.tensor([1.0] * n_outputs)
     value2 = torch.tensor([[2.0]] * n_outputs)
     value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
-    input = Jacobians({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     matrixify = _Matrixify()
 
@@ -103,7 +98,7 @@ def test_reshape():
     value1 = torch.tensor([1.0])
     value2 = torch.tensor([2.0])
     value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-    input = GradientVectors({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     reshape = _Reshape()
 

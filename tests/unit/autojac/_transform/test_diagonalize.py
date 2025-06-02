@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd._autojac._transform import Diagonalize, Gradients, OrderedSet, RequirementError
+from torchjd._autojac._transform import Diagonalize, OrderedSet, RequirementError
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -11,7 +11,7 @@ def test_single_input():
 
     key = torch.tensor([1.0, 2.0, 3.0])
     value = torch.ones_like(key)
-    input = Gradients({key: value})
+    input = {key: value}
 
     diag = Diagonalize(OrderedSet([key]))
 
@@ -30,7 +30,7 @@ def test_multiple_inputs():
     value1 = torch.ones_like(key1)
     value2 = torch.ones_like(key2)
     value3 = torch.ones_like(key3)
-    input = Gradients({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     diag = Diagonalize(OrderedSet([key1, key2, key3]))
 
@@ -86,7 +86,7 @@ def test_permute_order():
     key2 = torch.tensor(1.0)
     value1 = torch.ones_like(key1)
     value2 = torch.ones_like(key2)
-    input = Gradients({key1: value1, key2: value2})
+    input = {key1: value1, key2: value2}
 
     permuted_diag = Diagonalize(OrderedSet([key2, key1]))
     diag = Diagonalize(OrderedSet([key1, key2]))

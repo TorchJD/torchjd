@@ -1,7 +1,7 @@
 import torch
 from pytest import mark, raises
 
-from torchjd._autojac._transform import Accumulate, Gradients
+from torchjd._autojac._transform import Accumulate
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -18,7 +18,7 @@ def test_single_accumulation():
     value1 = torch.ones([])
     value2 = torch.ones([1])
     value3 = torch.ones([2, 3])
-    input = Gradients({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     accumulate = Accumulate()
 
@@ -46,7 +46,7 @@ def test_multiple_accumulation(iterations: int):
     value1 = torch.ones([])
     value2 = torch.ones([1])
     value3 = torch.ones([2, 3])
-    input = Gradients({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     accumulate = Accumulate()
 
@@ -71,7 +71,7 @@ def test_no_requires_grad_fails():
 
     key = torch.zeros([1], requires_grad=False)
     value = torch.ones([1])
-    input = Gradients({key: value})
+    input = {key: value}
 
     accumulate = Accumulate()
 
@@ -87,7 +87,7 @@ def test_no_leaf_and_no_retains_grad_fails():
 
     key = torch.tensor([1.0], requires_grad=True) * 2
     value = torch.ones([1])
-    input = Gradients({key: value})
+    input = {key: value}
 
     accumulate = Accumulate()
 

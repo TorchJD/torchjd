@@ -7,15 +7,14 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._base import RequirementError, Transform
+from ._base import TD, RequirementError, Transform
 from ._ordered_set import OrderedSet
-from ._tensor_dict import EmptyTensorDict, Gradients, GradientVectors, JacobianMatrices, Jacobians
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
 _ValueType = TypeVar("_ValueType")
 
 
-class Aggregate(Transform[Jacobians, Gradients]):
+class Aggregate(Transform):
     """
     Transform aggregating Jacobians into Gradients.
 
@@ -35,14 +34,14 @@ class Aggregate(Transform[Jacobians, Gradients]):
         self._aggregator_str = str(aggregator)
         self.transform = reshape << aggregate_matrices << matrixify
 
-    def __call__(self, input: Jacobians) -> Gradients:
+    def __call__(self, input: TD) -> TD:
         return self.transform(input)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return self.transform.check_keys(input_keys)
 
 
-class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
+class _AggregateMatrices(Transform):
     """
     Transform aggregating JacobiansMatrices into GradientsVectors.
 
@@ -57,7 +56,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         self.key_order = key_order
         self.aggregator = aggregator
 
-    def __call__(self, jacobian_matrices: JacobianMatrices) -> GradientVectors:
+    def __call__(self, jacobian_matrices: TD) -> TD:
         """
         Concatenates the provided ``jacobian_matrices`` into a single matrix and aggregates it using
         the ``aggregator``. Returns the dictionary mapping each key from ``jacobian_matrices`` to
@@ -92,7 +91,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     @staticmethod
     def _aggregate_group(
         jacobian_matrices: OrderedDict[Tensor, Tensor], aggregator: Aggregator
-    ) -> GradientVectors:
+    ) -> TD:
         """
         Unites the jacobian matrices and aggregates them using an
         :class:`~torchjd.aggregation._aggregator_bases.Aggregator`. Returns the obtained gradient
@@ -100,7 +99,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
         """
 
         if len(jacobian_matrices) == 0:
-            return EmptyTensorDict()
+            return {}
 
         united_jacobian_matrix = _AggregateMatrices._unite(jacobian_matrices)
         united_gradient_vector = aggregator(united_jacobian_matrix)
@@ -114,7 +113,7 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     @staticmethod
     def _disunite(
         united_gradient_vector: Tensor, jacobian_matrices: OrderedDict[Tensor, Tensor]
-    ) -> GradientVectors:
+    ) -> TD:
         gradient_vectors = {}
         start = 0
         for key, jacobian_matrix in jacobian_matrices.items():
@@ -122,31 +121,31 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
             current_gradient_vector = united_gradient_vector[start:end]
             gradient_vectors[key] = current_gradient_vector
             start = end
-        return GradientVectors(gradient_vectors)
+        return gradient_vectors
 
 
-class _Matrixify(Transform[Jacobians, JacobianMatrices]):
+class _Matrixify(Transform):
     """Transform reshaping Jacobians into JacobianMatrices."""
 
-    def __call__(self, jacobians: Jacobians) -> JacobianMatrices:
+    def __call__(self, jacobians: TD) -> TD:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
         }
-        return JacobianMatrices(jacobian_matrices)
+        return jacobian_matrices
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return input_keys
 
 
-class _Reshape(Transform[GradientVectors, Gradients]):
+class _Reshape(Transform):
     """Transform reshaping GradientVectors into Gradients."""
 
-    def __call__(self, gradient_vectors: GradientVectors) -> Gradients:
+    def __call__(self, gradient_vectors: TD) -> TD:
         gradients = {
             key: gradient_vector.view(key.shape)
             for key, gradient_vector in gradient_vectors.items()
         }
-        return Gradients(gradients)
+        return gradients
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return input_keys

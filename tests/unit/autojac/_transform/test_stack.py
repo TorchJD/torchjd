@@ -3,19 +3,20 @@ from collections.abc import Iterable
 import torch
 from torch import Tensor
 
-from torchjd._autojac._transform import EmptyTensorDict, Gradients, Stack, Transform
+from torchjd._autojac._transform import Stack, Transform
+from torchjd._autojac._transform._base import TD
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-class FakeGradientsTransform(Transform[EmptyTensorDict, Gradients]):
+class FakeGradientsTransform(Transform):
     """Transform that produces gradients filled with ones, for testing purposes."""
 
     def __init__(self, keys: Iterable[Tensor]):
         self.keys = set(keys)
 
-    def __call__(self, input: EmptyTensorDict) -> Gradients:
-        return Gradients({key: torch.ones_like(key) for key in self.keys})
+    def __call__(self, input: TD) -> TD:
+        return {key: torch.ones_like(key) for key in self.keys}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return self.keys
@@ -28,7 +29,7 @@ def test_single_key():
     """
 
     key = torch.zeros([3, 4])
-    input = EmptyTensorDict()
+    input = {}
 
     transform = FakeGradientsTransform([key])
     stack = Stack([transform, transform])
@@ -48,7 +49,7 @@ def test_disjoint_key_sets():
 
     key1 = torch.zeros([1, 2])
     key2 = torch.zeros([3])
-    input = EmptyTensorDict()
+    input = {}
 
     transform1 = FakeGradientsTransform([key1])
     transform2 = FakeGradientsTransform([key2])
@@ -73,7 +74,7 @@ def test_overlapping_key_sets():
     key1 = torch.zeros([1, 2])
     key2 = torch.zeros([3])
     key3 = torch.zeros([4])
-    input = EmptyTensorDict()
+    input = {}
 
     transform12 = FakeGradientsTransform([key1, key2])
     transform23 = FakeGradientsTransform([key2, key3])
@@ -93,8 +94,8 @@ def test_empty():
     """Tests that the Stack transform correctly handles an empty list of transforms."""
 
     stack = Stack([])
-    input = EmptyTensorDict({})
+    input = {}
     output = stack(input)
-    expected_output = EmptyTensorDict({})
+    expected_output = {}
 
     assert_tensor_dicts_are_close(output, expected_output)

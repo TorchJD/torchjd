@@ -3,11 +3,10 @@ from collections.abc import Set
 import torch
 from torch import Tensor
 
-from ._base import RequirementError, Transform
-from ._tensor_dict import EmptyTensorDict, Gradients
+from ._base import TD, RequirementError, Transform
 
 
-class Init(Transform[EmptyTensorDict, Gradients]):
+class Init(Transform):
     """
     Transform returning Gradients filled with ones for each of the provided values.
 
@@ -17,8 +16,8 @@ class Init(Transform[EmptyTensorDict, Gradients]):
     def __init__(self, values: Set[Tensor]):
         self.values = values
 
-    def __call__(self, input: EmptyTensorDict) -> Gradients:
-        return Gradients({value: torch.ones_like(value) for value in self.values})
+    def __call__(self, input: TD) -> TD:
+        return {value: torch.ones_like(value) for value in self.values}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         if not input_keys == set():

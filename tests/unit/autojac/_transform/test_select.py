@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 
-from torchjd._autojac._transform import RequirementError, Select, TensorDict
+from torchjd._autojac._transform import RequirementError, Select
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -18,7 +18,7 @@ def test_partition():
     value1 = torch.ones_like(key1)
     value2 = torch.ones_like(key2)
     value3 = torch.ones_like(key3)
-    input = TensorDict({key1: value1, key2: value2, key3: value3})
+    input = {key1: value1, key2: value2, key3: value3}
 
     select1 = Select({key1, key2})
     select2 = Select({key3})
@@ -43,7 +43,7 @@ def test_conjunction_of_selects_is_select():
     x1 = torch.tensor(5.0)
     x2 = torch.tensor(6.0)
     x3 = torch.tensor(7.0)
-    input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
+    input = {x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)}
 
     select1 = Select({x1})
     select2 = Select({x2})
