@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from torch import Tensor
 
@@ -131,7 +131,7 @@ def _least_common_ancestor(first: type[TensorDict], second: type[TensorDict]) ->
     output = TensorDict
     for candidate_type in first_mro:
         if issubclass(second, candidate_type):
-            output = candidate_type
+            output = cast(type[TensorDict], candidate_type)
             break
     return output
 
