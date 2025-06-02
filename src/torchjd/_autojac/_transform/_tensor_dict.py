@@ -1,4 +1,4 @@
-from typing import TypeVar, cast
+from typing import TypeVar
 
 from torch import Tensor
 
