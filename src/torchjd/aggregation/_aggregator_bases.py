@@ -20,14 +20,6 @@ class Aggregator(nn.Module, ABC):
                 f"{matrix.shape}`."
             )
 
-    @staticmethod
-    def _check_is_finite(matrix: Tensor) -> None:
-        if not matrix.isfinite().all():
-            raise ValueError(
-                "Parameter `matrix` should be a tensor of finite elements (no nan, inf or -inf "
-                f"values). Found `matrix = {matrix}`."
-            )
-
     @abstractmethod
     def forward(self, matrix: Tensor) -> Tensor:
         """Computes the aggregation from the input matrix."""
@@ -69,8 +61,6 @@ class WeightedAggregator(Aggregator):
 
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_is_matrix(matrix)
-        self._check_is_finite(matrix)
-
         weights = self.weighting(matrix)
         vector = self.combine(matrix, weights)
         return vector

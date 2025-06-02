@@ -23,6 +23,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# mypy: ignore-errors
+
 from ._utils.check_dependencies import check_dependencies_are_installed
 from ._weighting_bases import Matrix, Weighting
 
