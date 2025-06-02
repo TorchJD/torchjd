@@ -51,7 +51,7 @@ class Transform(Generic[_B, _C], ABC):
     __or__ = conjunct
 
 
-class Composition(Transform[_A, _C]):
+class Composition(Transform[_B, _C]):
     """
     Transform corresponding to the composition of two transforms inner and outer.
 
@@ -59,14 +59,14 @@ class Composition(Transform[_A, _C]):
     :param outer: The transform to apply second, to the result of ``inner``.
     """
 
-    def __init__(self, outer: Transform[_B, _C], inner: Transform[_A, _B]):
+    def __init__(self, outer: Transform[_A, _C], inner: Transform[_B, _A]):
         self.outer = outer
         self.inner = inner
 
     def __str__(self) -> str:
         return str(self.outer) + " ∘ " + str(self.inner)
 
-    def __call__(self, input: _A) -> _C:
+    def __call__(self, input: _B) -> _C:
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
@@ -76,7 +76,7 @@ class Composition(Transform[_A, _C]):
         return output_keys
 
 
-class Conjunction(Transform[_A, _B]):
+class Conjunction(Transform[_B, _C]):
     """
     Transform applying several transforms to the same input, and combining the results (by union)
     into a single TensorDict.
@@ -84,7 +84,7 @@ class Conjunction(Transform[_A, _B]):
     :param transforms: The transforms to apply. Their outputs should have disjoint sets of keys.
     """
 
-    def __init__(self, transforms: Sequence[Transform[_A, _B]]):
+    def __init__(self, transforms: Sequence[Transform[_B, _C]]):
         self.transforms = transforms
 
     def __str__(self) -> str:
@@ -97,10 +97,10 @@ class Conjunction(Transform[_A, _B]):
                 strings.append(s)
         return "(" + " | ".join(strings) + ")"
 
-    def __call__(self, tensor_dict: _A) -> _B:
+    def __call__(self, tensor_dict: _B) -> _C:
         tensor_dicts = [transform(tensor_dict) for transform in self.transforms]
-        output_type: type[_A] = EmptyTensorDict
-        output: _A = EmptyTensorDict({})
+        output_type: type[_B] = EmptyTensorDict
+        output: _B = EmptyTensorDict({})
         for tensor_dict in tensor_dicts:
             output_type = _least_common_ancestor(output_type, type(tensor_dict))
             output |= tensor_dict

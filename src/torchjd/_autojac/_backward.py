@@ -77,20 +77,20 @@ def backward(
     """
     check_optional_positive_chunk_size(parallel_chunk_size)
 
-    tensors = as_checked_ordered_set(tensors, "tensors")
+    tensors_ = as_checked_ordered_set(tensors, "tensors")
 
-    if len(tensors) == 0:
+    if len(tensors_) == 0:
         raise ValueError("`tensors` cannot be empty")
 
     if inputs is None:
-        inputs = get_leaf_tensors(tensors=tensors, excluded=set())
+        inputs_ = get_leaf_tensors(tensors=tensors_, excluded=set())
     else:
-        inputs = OrderedSet(inputs)
+        inputs_ = OrderedSet(inputs)
 
     backward_transform = _create_transform(
-        tensors=tensors,
+        tensors=tensors_,
         aggregator=aggregator,
-        inputs=inputs,
+        inputs=inputs_,
         retain_graph=retain_graph,
         parallel_chunk_size=parallel_chunk_size,
     )

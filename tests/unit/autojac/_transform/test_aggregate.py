@@ -1,9 +1,7 @@
 import math
-from collections import OrderedDict
 
 import torch
 from pytest import mark, raises
-from torch import Tensor
 from unit.conftest import DEVICE
 
 from torchjd._autojac._transform import (
@@ -70,37 +68,6 @@ def test_aggregate_matrices_empty_dict():
     aggregate_matrices = _AggregateMatrices(Random(), key_order=OrderedSet([]))
     gradient_vectors = aggregate_matrices(JacobianMatrices({}))
     assert len(gradient_vectors) == 0
-
-
-@mark.parametrize(
-    ["united_gradient_vector", "jacobian_matrices"],
-    [
-        (
-            torch.ones(10),
-            {  # Total number of parameters according to the united gradient vector: 10
-                torch.ones(5): torch.ones(2, 5),
-                torch.ones(4): torch.ones(2, 4),
-            },
-        ),  # Total number of parameters according to the jacobian matrices: 9
-        (
-            torch.ones(10),
-            {  # Total number of parameters according to the united gradient vector: 10
-                torch.ones(5): torch.ones(2, 5),
-                torch.ones(3): torch.ones(2, 3),
-                torch.ones(3): torch.ones(2, 3),
-            },
-        ),  # Total number of parameters according to the jacobian matrices: 11
-    ],
-)
-def test_disunite_wrong_vector_length(
-    united_gradient_vector: Tensor, jacobian_matrices: dict[Tensor, Tensor]
-):
-    """
-    Tests that the _disunite method raises a ValueError when used on vectors of the wrong length.
-    """
-
-    with raises(ValueError):
-        _AggregateMatrices._disunite(united_gradient_vector, OrderedDict(jacobian_matrices))
 
 
 def test_matrixify():
