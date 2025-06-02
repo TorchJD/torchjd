@@ -21,6 +21,10 @@ changes that do not affect the user.
   always be imported directly from the `torchjd` package (e.g.
   `from torchjd.autojac.mtl_backward import mtl_backward` must be changed to
   `from torchjd import mtl_backward`).
+- Removed the check that the input Jacobian matrix provided to an aggregator does not contain `nan`,
+  `inf` or `-inf` values. This check was costly in memory and in time for large matrices so this
+  should improve performance. However, if the optimization diverges for some reason (for instance
+  due to a too large learning rate), the resulting exceptions may come from other sources.
 
 ### Fixed
 
