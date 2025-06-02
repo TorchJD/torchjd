@@ -55,7 +55,6 @@ class GradDrop(Aggregator):
     def forward(self, matrix: Tensor) -> Tensor:
         self._check_is_matrix(matrix)
         self._check_matrix_has_enough_rows(matrix)
-        self._check_is_finite(matrix)
 
         if matrix.shape[0] == 0 or matrix.shape[1] == 0:
             return torch.zeros(matrix.shape[1], dtype=matrix.dtype, device=matrix.device)
