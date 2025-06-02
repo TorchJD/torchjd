@@ -81,35 +81,35 @@ def mtl_backward(
 
     check_optional_positive_chunk_size(parallel_chunk_size)
 
-    losses = as_checked_ordered_set(losses, "losses")
-    features = as_checked_ordered_set(features, "features")
+    losses_ = as_checked_ordered_set(losses, "losses")
+    features_ = as_checked_ordered_set(features, "features")
 
     if shared_params is None:
-        shared_params = get_leaf_tensors(tensors=features, excluded=[])
+        shared_params_ = get_leaf_tensors(tensors=features_, excluded=[])
     else:
-        shared_params = OrderedSet(shared_params)
+        shared_params_ = OrderedSet(shared_params)
     if tasks_params is None:
-        tasks_params = [get_leaf_tensors(tensors=[loss], excluded=features) for loss in losses]
+        tasks_params_ = [get_leaf_tensors(tensors=[loss], excluded=features_) for loss in losses_]
     else:
-        tasks_params = [OrderedSet(task_params) for task_params in tasks_params]
+        tasks_params_ = [OrderedSet(task_params) for task_params in tasks_params]
 
-    if len(features) == 0:
+    if len(features_) == 0:
         raise ValueError("`features` cannot be empty.")
 
-    _check_no_overlap(shared_params, tasks_params)
-    _check_losses_are_scalar(losses)
+    _check_no_overlap(shared_params_, tasks_params_)
+    _check_losses_are_scalar(losses_)
 
-    if len(losses) == 0:
+    if len(losses_) == 0:
         raise ValueError("`losses` cannot be empty")
-    if len(losses) != len(tasks_params):
+    if len(losses_) != len(tasks_params_):
         raise ValueError("`losses` and `tasks_params` should have the same size.")
 
     backward_transform = _create_transform(
-        losses=losses,
-        features=features,
+        losses=losses_,
+        features=features_,
         aggregator=aggregator,
-        tasks_params=tasks_params,
-        shared_params=shared_params,
+        tasks_params=tasks_params_,
+        shared_params=shared_params_,
         retain_graph=retain_graph,
         parallel_chunk_size=parallel_chunk_size,
     )
@@ -179,10 +179,10 @@ def _create_task_transform(
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    accumulate = Accumulate() << Select(task_params)
+    accumulate = Accumulate() << Select[Gradients](task_params)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
-    backpropagate = Select(features)
+    backpropagate = Select[Gradients](features)
 
     # Transform that accumulates the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
@@ -190,7 +190,7 @@ def _create_task_transform(
     return backward_task
 
 
-def _check_losses_are_scalar(losses: Sequence[Tensor]) -> None:
+def _check_losses_are_scalar(losses: Iterable[Tensor]) -> None:
     for loss in losses:
         if loss.ndim > 0:
             raise ValueError("`losses` should contain only scalars.")
