@@ -28,7 +28,7 @@ _key_shapes = [[], [1], [2, 3]]
     ],
 )
 def test_gradients(value_shapes: list[list[int]], expectation: ExceptionContext):
-    """Tests that the Gradients class checks properly its inputs."""
+    """Tests Gradients.check."""
 
     _assert_class_checks_properly(Gradients, value_shapes, expectation)
 
@@ -44,7 +44,7 @@ def test_gradients(value_shapes: list[list[int]], expectation: ExceptionContext)
     ],
 )
 def test_jacobians(value_shapes: list[list[int]], expectation: ExceptionContext):
-    """Tests that the Jacobians class checks properly its inputs."""
+    """Tests Jacobians.check."""
 
     _assert_class_checks_properly(Jacobians, value_shapes, expectation)
 
@@ -59,7 +59,7 @@ def test_jacobians(value_shapes: list[list[int]], expectation: ExceptionContext)
     ],
 )
 def test_gradient_vectors(value_shapes: list[list[int]], expectation: ExceptionContext):
-    """Tests that the GradientVectors class checks properly its inputs."""
+    """Tests GradientVectors.check."""
 
     _assert_class_checks_properly(GradientVectors, value_shapes, expectation)
 
@@ -75,7 +75,7 @@ def test_gradient_vectors(value_shapes: list[list[int]], expectation: ExceptionC
     ],
 )
 def test_jacobian_matrices(value_shapes: list[list[int]], expectation: ExceptionContext):
-    """Tests that the JacobianMatrices class checks properly its inputs."""
+    """Tests JacobianMatrices.check."""
 
     _assert_class_checks_properly(JacobianMatrices, value_shapes, expectation)
 
@@ -90,7 +90,7 @@ def test_jacobian_matrices(value_shapes: list[list[int]], expectation: Exception
 def test_empty_tensor_dict(
     tensor_mapping: dict[Tensor, Tensor] | None, expectation: ExceptionContext
 ):
-    """Tests that the JacobianMatrices class checks properly its inputs."""
+    """Tests EmptyTensorDict.check."""
 
     with expectation:
         EmptyTensorDict(tensor_mapping).check()
