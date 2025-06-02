@@ -115,15 +115,6 @@ class _AggregateMatrices(Transform[JacobianMatrices, GradientVectors]):
     def _disunite(
         united_gradient_vector: Tensor, jacobian_matrices: OrderedDict[Tensor, Tensor]
     ) -> GradientVectors:
-        expected_length = sum([matrix.shape[1] for matrix in jacobian_matrices.values()])
-        if len(united_gradient_vector) != expected_length:
-            raise ValueError(
-                "Parameter `united_gradient_vector` should be a vector with length equal to the sum"
-                "of the numbers of columns in the jacobian matrices. Found"
-                f"`len(united_gradient_vector) = {len(united_gradient_vector)}` and the sum of the "
-                f"numbers of columns in the jacobian matrices is {expected_length}."
-            )
-
         gradient_vectors = {}
         start = 0
         for key, jacobian_matrix in jacobian_matrices.items():
