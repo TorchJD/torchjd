@@ -1,12 +1,12 @@
 from torch import Tensor
 
-from ._base import TD, Transform
+from ._base import TensorDict, Transform
 
 
 class Accumulate(Transform):
     """Transform that accumulates gradients with respect to keys into their ``grad`` field."""
 
-    def __call__(self, gradients: TD) -> TD:
+    def __call__(self, gradients: TensorDict) -> TensorDict:
         for key in gradients.keys():
             _check_expects_grad(key)
             if hasattr(key, "grad") and key.grad is not None:

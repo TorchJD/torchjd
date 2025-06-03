@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from ._base import TD, RequirementError, Transform
+from ._base import RequirementError, TensorDict, Transform
 from ._ordered_set import OrderedSet
 
 
@@ -60,7 +60,7 @@ class Diagonalize(Transform):
             self.indices.append((begin, end))
             begin = end
 
-    def __call__(self, tensors: TD) -> TD:
+    def __call__(self, tensors: TensorDict) -> TensorDict:
         flattened_considered_values = [tensors[key].reshape([-1]) for key in self.key_order]
         diagonal_matrix = torch.cat(flattened_considered_values).diag()
         diagonalized_tensors = {

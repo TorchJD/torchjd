@@ -3,7 +3,7 @@ from collections.abc import Sequence
 
 from torch import Tensor
 
-from ._base import TD, RequirementError, Transform
+from ._base import RequirementError, TensorDict, Transform
 from ._ordered_set import OrderedSet
 
 
@@ -35,7 +35,7 @@ class Differentiate(Transform, ABC):
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
-    def __call__(self, tensors: TD) -> TD:
+    def __call__(self, tensors: TensorDict) -> TensorDict:
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)

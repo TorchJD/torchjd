@@ -7,7 +7,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._base import TD, RequirementError, Transform
+from ._base import RequirementError, TensorDict, Transform
 from ._ordered_set import OrderedSet
 
 _KeyType = TypeVar("_KeyType", bound=Hashable)
@@ -34,7 +34,7 @@ class Aggregate(Transform):
         self._aggregator_str = str(aggregator)
         self.transform = reshape << aggregate_matrices << matrixify
 
-    def __call__(self, input: TD) -> TD:
+    def __call__(self, input: TensorDict) -> TensorDict:
         return self.transform(input)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
@@ -56,7 +56,7 @@ class _AggregateMatrices(Transform):
         self.key_order = key_order
         self.aggregator = aggregator
 
-    def __call__(self, jacobian_matrices: TD) -> TD:
+    def __call__(self, jacobian_matrices: TensorDict) -> TensorDict:
         """
         Concatenates the provided ``jacobian_matrices`` into a single matrix and aggregates it using
         the ``aggregator``. Returns the dictionary mapping each key from ``jacobian_matrices`` to
@@ -91,7 +91,7 @@ class _AggregateMatrices(Transform):
     @staticmethod
     def _aggregate_group(
         jacobian_matrices: OrderedDict[Tensor, Tensor], aggregator: Aggregator
-    ) -> TD:
+    ) -> TensorDict:
         """
         Unites the jacobian matrices and aggregates them using an
         :class:`~torchjd.aggregation._aggregator_bases.Aggregator`. Returns the obtained gradient
@@ -113,7 +113,7 @@ class _AggregateMatrices(Transform):
     @staticmethod
     def _disunite(
         united_gradient_vector: Tensor, jacobian_matrices: OrderedDict[Tensor, Tensor]
-    ) -> TD:
+    ) -> TensorDict:
         gradient_vectors = {}
         start = 0
         for key, jacobian_matrix in jacobian_matrices.items():
@@ -127,7 +127,7 @@ class _AggregateMatrices(Transform):
 class _Matrixify(Transform):
     """Transform reshaping Jacobians into JacobianMatrices."""
 
-    def __call__(self, jacobians: TD) -> TD:
+    def __call__(self, jacobians: TensorDict) -> TensorDict:
         jacobian_matrices = {
             key: jacobian.view(jacobian.shape[0], -1) for key, jacobian in jacobians.items()
         }
@@ -140,7 +140,7 @@ class _Matrixify(Transform):
 class _Reshape(Transform):
     """Transform reshaping GradientVectors into Gradients."""
 
-    def __call__(self, gradient_vectors: TD) -> TD:
+    def __call__(self, gradient_vectors: TensorDict) -> TensorDict:
         gradients = {
             key: gradient_vector.view(key.shape)
             for key, gradient_vector in gradient_vectors.items()

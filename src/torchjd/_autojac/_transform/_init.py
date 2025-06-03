@@ -3,7 +3,7 @@ from collections.abc import Set
 import torch
 from torch import Tensor
 
-from ._base import TD, RequirementError, Transform
+from ._base import RequirementError, TensorDict, Transform
 
 
 class Init(Transform):
@@ -16,7 +16,7 @@ class Init(Transform):
     def __init__(self, values: Set[Tensor]):
         self.values = values
 
-    def __call__(self, input: TD) -> TD:
+    def __call__(self, input: TensorDict) -> TensorDict:
         return {value: torch.ones_like(value) for value in self.values}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:

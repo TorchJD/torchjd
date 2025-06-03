@@ -2,7 +2,7 @@ import torch
 from pytest import raises
 from torch import Tensor
 
-from torchjd._autojac._transform._base import TD, Conjunction, RequirementError, Transform
+from torchjd._autojac._transform._base import Conjunction, RequirementError, TensorDict, Transform
 
 
 class FakeTransform(Transform):
@@ -17,7 +17,7 @@ class FakeTransform(Transform):
     def __str__(self):
         return "T"
 
-    def __call__(self, input: TD) -> TD:
+    def __call__(self, input: TensorDict) -> TensorDict:
         # Ignore the input, create a dictionary with the right keys as an output.
         # Cast the type for the purpose of type-checking.
         output_dict = {key: torch.empty(0) for key in self._output_keys}

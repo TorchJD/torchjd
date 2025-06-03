@@ -2,7 +2,7 @@ from collections.abc import Set
 
 from torch import Tensor
 
-from ._base import TD, RequirementError, Transform
+from ._base import RequirementError, TensorDict, Transform
 
 
 class Select(Transform):
@@ -15,7 +15,7 @@ class Select(Transform):
     def __init__(self, keys: Set[Tensor]):
         self.keys = keys
 
-    def __call__(self, tensor_dict: TD) -> TD:
+    def __call__(self, tensor_dict: TensorDict) -> TensorDict:
         output = {key: tensor_dict[key] for key in self.keys}
         return type(tensor_dict)(output)
 

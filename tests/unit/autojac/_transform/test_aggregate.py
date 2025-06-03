@@ -6,13 +6,13 @@ from unit.conftest import DEVICE
 
 from torchjd._autojac._transform import OrderedSet, RequirementError
 from torchjd._autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape
-from torchjd._autojac._transform._base import TD
+from torchjd._autojac._transform._base import TensorDict
 from torchjd.aggregation import Random
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
 
-def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> TD:
+def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> TensorDict:
     jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
     jacobian_list = [torch.rand(shape, generator=rng) for shape in jacobian_shapes]
     jacobian_matrices = {key: jac for key, jac in zip(_keys, jacobian_list)}
@@ -42,7 +42,7 @@ _jacobian_matrix_dicts = [_make_jacobian_matrices(n_outputs, _rng) for n_outputs
 
 
 @mark.parametrize("jacobian_matrices", _jacobian_matrix_dicts)
-def test_aggregate_matrices_output_structure(jacobian_matrices: TD):
+def test_aggregate_matrices_output_structure(jacobian_matrices: TensorDict):
     """
     Tests that applying _AggregateMatrices to various dictionaries of jacobian matrices gives an
     output of the desired structure.

@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from torchjd._autojac._transform import Stack, Transform
-from torchjd._autojac._transform._base import TD
+from torchjd._autojac._transform._base import TensorDict
 
 from ._dict_assertions import assert_tensor_dicts_are_close
 
@@ -15,7 +15,7 @@ class FakeGradientsTransform(Transform):
     def __init__(self, keys: Iterable[Tensor]):
         self.keys = set(keys)
 
-    def __call__(self, input: TD) -> TD:
+    def __call__(self, input: TensorDict) -> TensorDict:
         return {key: torch.ones_like(key) for key in self.keys}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:

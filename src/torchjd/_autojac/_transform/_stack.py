@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-from ._base import TD, Transform
+from ._base import TensorDict, Transform
 from ._materialize import materialize
 
 
@@ -22,7 +22,7 @@ class Stack(Transform):
     def __init__(self, transforms: Sequence[Transform]):
         self.transforms = transforms
 
-    def __call__(self, input: TD) -> TD:
+    def __call__(self, input: TensorDict) -> TensorDict:
         results = [transform(input) for transform in self.transforms]
         result = _stack(results)
         return result
@@ -31,11 +31,11 @@ class Stack(Transform):
         return {key for transform in self.transforms for key in transform.check_keys(input_keys)}
 
 
-def _stack(gradient_dicts: list[TD]) -> TD:
+def _stack(gradient_dicts: list[TensorDict]) -> TensorDict:
     # It is important to first remove duplicate keys before computing their associated
     # stacked tensor. Otherwise, some computations would be duplicated. Therefore, we first compute
     # unique_keys, and only then, we compute the stacked tensors.
-    union: TD = {}
+    union: TensorDict = {}
     for d in gradient_dicts:
         union |= d
     unique_keys = union.keys()
@@ -43,7 +43,7 @@ def _stack(gradient_dicts: list[TD]) -> TD:
     return result
 
 
-def _stack_one_key(gradient_dicts: list[TD], input: Tensor) -> Tensor:
+def _stack_one_key(gradient_dicts: list[TensorDict], input: Tensor) -> Tensor:
     """Makes the stacked tensor corresponding to a given key, from a list of tensor dicts."""
 
     optional_gradients = [gradients.get(input, None) for gradients in gradient_dicts]
