@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Generic
+from typing import Any, Generic
 
 from torch import Tensor
 
-from ._tensor_dict import _A, _B, _C
+from ._tensor_dict import _A, _B, _C, TensorDict
 
 
 class RequirementError(ValueError):
@@ -98,14 +98,15 @@ class Conjunction(Transform[_B, _C]):
                 strings.append(s)
         return "(" + " | ".join(strings) + ")"
 
-    def __call__(self, tensor_dict: _B) -> _C:
+    def __call__(self, tensor_dict: _B) -> Any:
+        # Technically, we should infer what _C is (it might not just be type(self.transforms[0]))
+        # and instantiate _C(union), but this is too costly so we just return a TensorDict and use
+        # the `Any` return type hint to indicate to the type checker to be lenient here.
+
         union: dict[Tensor, Tensor] = {}
-        first_output = self.transforms[0](tensor_dict)
-        union |= first_output
-        output_type = type(first_output)
-        for transform in self.transforms[1:]:
+        for transform in self.transforms:
             union |= transform(tensor_dict)
-        return output_type(union)
+        return TensorDict(union)
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]
