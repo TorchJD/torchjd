@@ -2,11 +2,21 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Generic
+from typing import TypeAlias
 
 from torch import Tensor
 
-from ._tensor_dict import _A, _B, _C, EmptyTensorDict, _least_common_ancestor
+TensorDict: TypeAlias = dict[Tensor, Tensor]
+# Some interesting cases of TensorDict that are worth defining informally (for performance reasons):
+# Gradients: A TensorDict in which the shape of each value must be the same as the shape of its
+#   corresponding key.
+# Jacobians: A TensorDict in which the values must all have the same first dimension and the rest of
+#   the shape of each value must be the same as the shape of its corresponding key.
+# GradientVectors: A TensorDict containing flattened gradients: the values must be vectors with the
+#   same number of elements as their corresponding key.
+# JacobianMatrices: A TensorDict containing matrixified (flattened into matrix shape) jacobians: the
+#   values must be matrices with a unique first dimension and with a second dimension equal to the
+#   number of elements of their corresponding key.
 
 
 class RequirementError(ValueError):
@@ -15,23 +25,23 @@ class RequirementError(ValueError):
     pass
 
 
-class Transform(Generic[_B, _C], ABC):
+class Transform(ABC):
     """
     Abstract base class for all transforms. Transforms are elementary building blocks of a jacobian
     descent backward phase. A transform maps a TensorDict to another.
     """
 
-    def compose(self, other: Transform[_A, _B]) -> Transform[_A, _C]:
+    def compose(self, other: Transform) -> Transform:
         return Composition(self, other)
 
-    def conjunct(self, other: Transform[_B, _C]) -> Transform[_B, _C]:
+    def conjunct(self, other: Transform) -> Transform:
         return Conjunction([self, other])
 
     def __str__(self) -> str:
         return type(self).__name__
 
     @abstractmethod
-    def __call__(self, input: _B) -> _C:
+    def __call__(self, input: TensorDict) -> TensorDict:
         """Applies the transform to the input."""
 
     @abstractmethod
@@ -51,7 +61,7 @@ class Transform(Generic[_B, _C], ABC):
     __or__ = conjunct
 
 
-class Composition(Transform[_B, _C]):
+class Composition(Transform):
     """
     Transform corresponding to the composition of two transforms inner and outer.
 
@@ -59,14 +69,14 @@ class Composition(Transform[_B, _C]):
     :param outer: The transform to apply second, to the result of ``inner``.
     """
 
-    def __init__(self, outer: Transform[_A, _C], inner: Transform[_B, _A]):
+    def __init__(self, outer: Transform, inner: Transform):
         self.outer = outer
         self.inner = inner
 
     def __str__(self) -> str:
         return str(self.outer) + " ∘ " + str(self.inner)
 
-    def __call__(self, input: _B) -> _C:
+    def __call__(self, input: TensorDict) -> TensorDict:
         intermediate = self.inner(input)
         return self.outer(intermediate)
 
@@ -76,7 +86,7 @@ class Composition(Transform[_B, _C]):
         return output_keys
 
 
-class Conjunction(Transform[_B, _C]):
+class Conjunction(Transform):
     """
     Transform applying several transforms to the same input, and combining the results (by union)
     into a single TensorDict.
@@ -84,7 +94,7 @@ class Conjunction(Transform[_B, _C]):
     :param transforms: The transforms to apply. Their outputs should have disjoint sets of keys.
     """
 
-    def __init__(self, transforms: Sequence[Transform[_B, _C]]):
+    def __init__(self, transforms: Sequence[Transform]):
         self.transforms = transforms
 
     def __str__(self) -> str:
@@ -97,14 +107,11 @@ class Conjunction(Transform[_B, _C]):
                 strings.append(s)
         return "(" + " | ".join(strings) + ")"
 
-    def __call__(self, tensor_dict: _B) -> _C:
-        tensor_dicts = [transform(tensor_dict) for transform in self.transforms]
-        output_type: type[_B] = EmptyTensorDict
-        output: _B = EmptyTensorDict()
-        for tensor_dict in tensor_dicts:
-            output_type = _least_common_ancestor(output_type, type(tensor_dict))
-            output |= tensor_dict
-        return output_type(output)
+    def __call__(self, tensor_dict: TensorDict) -> TensorDict:
+        union: TensorDict = {}
+        for transform in self.transforms:
+            union |= transform(tensor_dict)
+        return union
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         output_keys_list = [key for t in self.transforms for key in t.check_keys(input_keys)]

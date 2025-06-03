@@ -1,14 +1,11 @@
-import typing
-
 import torch
 from pytest import raises
 from torch import Tensor
 
-from torchjd._autojac._transform._base import Conjunction, RequirementError, Transform
-from torchjd._autojac._transform._tensor_dict import _B, _C, TensorDict
+from torchjd._autojac._transform._base import Conjunction, RequirementError, TensorDict, Transform
 
 
-class FakeTransform(Transform[_B, _C]):
+class FakeTransform(Transform):
     """
     Fake ``Transform`` to test `check_keys` when composing and conjuncting.
     """
@@ -20,11 +17,10 @@ class FakeTransform(Transform[_B, _C]):
     def __str__(self):
         return "T"
 
-    def __call__(self, input: _B) -> _C:
+    def __call__(self, input: TensorDict) -> TensorDict:
         # Ignore the input, create a dictionary with the right keys as an output.
-        # Cast the type for the purpose of type-checking.
         output_dict = {key: torch.empty(0) for key in self._output_keys}
-        return typing.cast(_C, output_dict)
+        return output_dict
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         # Arbitrary requirement for testing purposes.
@@ -110,7 +106,7 @@ def test_empty_conjunction():
 
     conjunction = Conjunction([])
 
-    assert len(conjunction(TensorDict({}))) == 0
+    assert len(conjunction({})) == 0
 
 
 def test_str():
