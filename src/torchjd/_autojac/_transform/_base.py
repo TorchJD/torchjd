@@ -12,9 +12,9 @@ TensorDict: TypeAlias = dict[Tensor, Tensor]
 #   corresponding key.
 # Jacobians: A TensorDict in which the values must all have the same first dimension and the rest of
 #   the shape of each value must be the same as the shape of its corresponding key.
-# GradientVectors: TensorDict containing flattened gradients: The values must be vectors with the
+# GradientVectors: A TensorDict containing flattened gradients: the values must be vectors with the
 #   same number of elements as their corresponding key.
-# JacobianMatrices: TensorDict containing matrixified (flattened into matrix shape) jacobians: The
+# JacobianMatrices: A TensorDict containing matrixified (flattened into matrix shape) jacobians: the
 #   values must be matrices with a unique first dimension and with a second dimension equal to the
 #   number of elements of their corresponding key.
 

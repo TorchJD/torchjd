@@ -19,7 +19,6 @@ class FakeTransform(Transform):
 
     def __call__(self, input: TensorDict) -> TensorDict:
         # Ignore the input, create a dictionary with the right keys as an output.
-        # Cast the type for the purpose of type-checking.
         output_dict = {key: torch.empty(0) for key in self._output_keys}
         return output_dict
 
