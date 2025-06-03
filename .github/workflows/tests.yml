@@ -89,4 +89,4 @@ jobs:
       run: uv pip install '.[full]' --group check
 
     - name: Run mypy
-      run: uv run mypy src/torchjd --follow-untyped-imports
+      run: uv run mypy src/torchjd
