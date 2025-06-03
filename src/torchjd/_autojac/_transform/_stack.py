@@ -9,14 +9,15 @@ from ._materialize import materialize
 
 class Stack(Transform):
     """
-    Transform applying several transforms to the same input, and combining the results (by stacking)
-    into a single TensorDict.
+    Transform from something to Jacobians, applying several transforms to the same input, and
+    combining the results (by stacking) into a single TensorDict.
 
     The set of keys of the resulting dict is the union of the sets of keys of the input dicts.
 
-    :param transforms: The transforms to apply. Their outputs may have different sets of keys. If a
-        key is absent in some output dicts, the corresponding stacked tensor is filled with zeroes
-        at the positions corresponding to those dicts.
+    :param transforms: The transforms to apply. They should all be from the same thing and map to
+        Gradients. Their outputs may have different sets of keys. If a key is absent in some output
+        dicts, the corresponding stacked tensor is filled with zeroes at the positions corresponding
+        to those dicts.
     """
 
     def __init__(self, transforms: Sequence[Transform]):

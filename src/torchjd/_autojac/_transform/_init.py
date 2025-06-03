@@ -8,7 +8,7 @@ from ._base import RequirementError, TensorDict, Transform
 
 class Init(Transform):
     """
-    Transform returning Gradients filled with ones for each of the provided values.
+    Transform from {} returning Gradients filled with ones for each of the provided values.
 
     :param values: Tensors for which Gradients must be returned.
     """

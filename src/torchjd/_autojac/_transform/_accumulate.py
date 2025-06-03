@@ -4,7 +4,10 @@ from ._base import TensorDict, Transform
 
 
 class Accumulate(Transform):
-    """Transform that accumulates gradients with respect to keys into their ``grad`` field."""
+    """
+    Transform from Gradients to {} that accumulates gradients with respect to keys into their
+    ``grad`` field.
+    """
 
     def __call__(self, gradients: TensorDict) -> TensorDict:
         for key in gradients.keys():
