@@ -1,13 +1,15 @@
 from torch import Tensor
 
-from ._base import Transform
-from ._tensor_dict import EmptyTensorDict, Gradients
+from ._base import TensorDict, Transform
 
 
-class Accumulate(Transform[Gradients, EmptyTensorDict]):
-    """Transform that accumulates gradients with respect to keys into their ``grad`` field."""
+class Accumulate(Transform):
+    """
+    Transform from Gradients to {} that accumulates gradients with respect to keys into their
+    ``grad`` field.
+    """
 
-    def __call__(self, gradients: Gradients) -> EmptyTensorDict:
+    def __call__(self, gradients: TensorDict) -> TensorDict:
         for key in gradients.keys():
             _check_expects_grad(key)
             if hasattr(key, "grad") and key.grad is not None:
@@ -19,7 +21,7 @@ class Accumulate(Transform[Gradients, EmptyTensorDict]):
                 # (in case it was obtained via create_graph=True and a differentiable aggregator).
                 key.grad = gradients[key].clone()
 
-        return EmptyTensorDict()
+        return {}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         return set()

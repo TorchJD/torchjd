@@ -4,19 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._transform import (
-    Accumulate,
-    Aggregate,
-    EmptyTensorDict,
-    Grad,
-    Gradients,
-    Init,
-    Jac,
-    OrderedSet,
-    Select,
-    Stack,
-    Transform,
-)
+from ._transform import Accumulate, Aggregate, Grad, Init, Jac, OrderedSet, Select, Stack, Transform
 from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
@@ -114,7 +102,7 @@ def mtl_backward(
         parallel_chunk_size=parallel_chunk_size,
     )
 
-    backward_transform(EmptyTensorDict())
+    backward_transform({})
 
 
 def _create_transform(
@@ -125,7 +113,7 @@ def _create_transform(
     shared_params: OrderedSet[Tensor],
     retain_graph: bool,
     parallel_chunk_size: int | None,
-) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+) -> Transform:
     """
     Creates the backward transform for a multi-task learning problem. It is a hybrid between
     Jacobian descent (for shared parameters) and multiple gradient descent branches (for
@@ -166,7 +154,7 @@ def _create_task_transform(
     task_params: OrderedSet[Tensor],
     loss: OrderedSet[Tensor],  # contains a single scalar loss
     retain_graph: bool,
-) -> Transform[EmptyTensorDict, Gradients]:
+) -> Transform:
     # Tensors with respect to which we compute the gradients.
     to_differentiate = task_params + features
 
@@ -179,10 +167,10 @@ def _create_task_transform(
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.
-    accumulate = Accumulate() << Select[Gradients](task_params)
+    accumulate = Accumulate() << Select(task_params)
 
     # Transform that backpropagates the gradients of the losses w.r.t. the features.
-    backpropagate = Select[Gradients](features)
+    backpropagate = Select(features)
 
     # Transform that accumulates the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.

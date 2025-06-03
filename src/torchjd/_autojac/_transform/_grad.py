@@ -6,13 +6,13 @@ from torch import Tensor
 from ._differentiate import Differentiate
 from ._materialize import materialize
 from ._ordered_set import OrderedSet
-from ._tensor_dict import Gradients
 
 
-class Grad(Differentiate[Gradients]):
+class Grad(Differentiate):
     """
-    Transform computing the gradient of each output element with respect to each input tensor, and
-    applying the linear transformations represented by provided the grad_outputs to the results.
+    Transform from Gradients to Gradients, computing the gradient of each output element with
+    respect to each input tensor, and applying the linear transformations represented by provided
+    the grad_outputs to the results.
 
     :param outputs: Tensors to differentiate.
     :param inputs: Tensors with respect to which we differentiate.

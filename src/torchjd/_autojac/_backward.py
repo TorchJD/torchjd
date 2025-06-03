@@ -4,16 +4,7 @@ from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._transform import (
-    Accumulate,
-    Aggregate,
-    Diagonalize,
-    EmptyTensorDict,
-    Init,
-    Jac,
-    OrderedSet,
-    Transform,
-)
+from ._transform import Accumulate, Aggregate, Diagonalize, Init, Jac, OrderedSet, Transform
 from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
@@ -95,7 +86,7 @@ def backward(
         parallel_chunk_size=parallel_chunk_size,
     )
 
-    backward_transform(EmptyTensorDict())
+    backward_transform({})
 
 
 def _create_transform(
@@ -104,7 +95,7 @@ def _create_transform(
     inputs: OrderedSet[Tensor],
     retain_graph: bool,
     parallel_chunk_size: int | None,
-) -> Transform[EmptyTensorDict, EmptyTensorDict]:
+) -> Transform:
     """Creates the Jacobian descent backward transform."""
 
     # Transform that creates gradient outputs containing only ones.

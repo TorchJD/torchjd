@@ -6,17 +6,13 @@ from torchjd._autojac._transform import (
     Accumulate,
     Conjunction,
     Diagonalize,
-    EmptyTensorDict,
     Grad,
-    Gradients,
     Init,
     Jac,
-    Jacobians,
     OrderedSet,
     RequirementError,
     Select,
     Stack,
-    TensorDict,
 )
 
 from ._dict_assertions import assert_tensor_dicts_are_close
@@ -33,7 +29,7 @@ def test_jac_is_stack_of_grads():
     a2 = torch.tensor(3.0, requires_grad=True)
     y1 = a1 * x
     y2 = a2 * x
-    input = Gradients({y1: torch.ones_like(y1), y2: torch.ones_like(y2)})
+    input = {y1: torch.ones_like(y1), y2: torch.ones_like(y2)}
 
     jac = Jac(
         outputs=OrderedSet([y1, y2]),
@@ -64,7 +60,7 @@ def test_single_differentiation():
 
     a = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     y = a * 2.0
-    input = EmptyTensorDict()
+    input = {}
 
     init = Init({y})
     grad = Grad(OrderedSet([y]), OrderedSet([a]))
@@ -86,7 +82,7 @@ def test_multiple_differentiations():
     a2 = torch.tensor([1.0, 3.0, 5.0], requires_grad=True)
     y1 = a1 * 2.0
     y2 = a2 * 3.0
-    input = EmptyTensorDict()
+    input = {}
 
     grad1 = Grad(OrderedSet([y1]), OrderedSet([a1]))
     grad2 = Grad(OrderedSet([y2]), OrderedSet([a2]))
@@ -124,7 +120,7 @@ def test_simple_conjunction():
     x1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     x2 = torch.tensor([1.0, 3.0, 5.0])
     x3 = torch.tensor(4.0)
-    input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)})
+    input = {x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)}
 
     select1 = Select({x1})
     select2 = Select({x2})
@@ -145,7 +141,7 @@ def test_conjunction_is_commutative():
 
     x1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     x2 = torch.tensor([1.0, 3.0, 5.0])
-    input = TensorDict({x1: torch.ones_like(x1), x2: torch.ones_like(x2)})
+    input = {x1: torch.ones_like(x1), x2: torch.ones_like(x2)}
 
     a = Select({x1})
     b = Select({x2})
@@ -167,14 +163,12 @@ def test_conjunction_is_associative():
     x2 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
     x3 = torch.tensor([1.0, 3.0, 5.0])
     x4 = torch.tensor(4.0)
-    input = TensorDict(
-        {
-            x1: torch.ones_like(x1),
-            x2: torch.ones_like(x2),
-            x3: torch.ones_like(x3),
-            x4: torch.ones_like(x4),
-        }
-    )
+    input = {
+        x1: torch.ones_like(x1),
+        x2: torch.ones_like(x2),
+        x3: torch.ones_like(x3),
+        x4: torch.ones_like(x4),
+    }
 
     a = Select({x1})
     b = Select({x2})
@@ -200,7 +194,7 @@ def test_conjunction_accumulate_select():
 
     key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     value = torch.ones_like(key)
-    input = Gradients({key: value})
+    input = {key: value}
 
     select = Select(set())
     accumulate = Accumulate()
@@ -233,11 +227,11 @@ def test_equivalence_jac_grads():
     grad_outputs = [torch.ones_like(output) for output in outputs]
 
     grad1 = Grad(outputs=OrderedSet([outputs[0]]), inputs=OrderedSet(inputs), retain_graph=True)
-    grad_dict_1 = grad1(Gradients({outputs[0]: grad_outputs[0]}))
+    grad_dict_1 = grad1({outputs[0]: grad_outputs[0]})
     grad_1_A, grad_1_b, grad_1_c = grad_dict_1[A], grad_dict_1[b], grad_dict_1[c]
 
     grad2 = Grad(outputs=OrderedSet([outputs[1]]), inputs=OrderedSet(inputs), retain_graph=True)
-    grad_dict_2 = grad2(Gradients({outputs[1]: grad_outputs[1]}))
+    grad_dict_2 = grad2({outputs[1]: grad_outputs[1]})
     grad_2_A, grad_2_b, grad_2_c = grad_dict_2[A], grad_dict_2[b], grad_dict_2[c]
 
     n_outputs = len(outputs)
@@ -248,9 +242,7 @@ def test_equivalence_jac_grads():
         batched_grad_outputs[i][i] = grad_output
 
     jac = Jac(outputs=OrderedSet(outputs), inputs=OrderedSet(inputs), chunk_size=None)
-    jac_dict = jac(
-        Jacobians({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]})
-    )
+    jac_dict = jac({outputs[0]: batched_grad_outputs[0], outputs[1]: batched_grad_outputs[1]})
     jac_A, jac_b, jac_c = jac_dict[A], jac_dict[b], jac_dict[c]
 
     assert_close(jac_A, torch.stack([grad_1_A, grad_2_A]))

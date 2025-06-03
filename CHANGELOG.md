@@ -25,6 +25,8 @@ changes that do not affect the user.
   `inf` or `-inf` values. This check was costly in memory and in time for large matrices so this
   should improve performance. However, if the optimization diverges for some reason (for instance
   due to a too large learning rate), the resulting exceptions may come from other sources.
+- Removed some runtime checks on the shapes of the internal tensors used by the `autojac` engine.
+  This should lead to a small performance improvement.
 
 ### Fixed
 

@@ -9,13 +9,13 @@ from torch import Size, Tensor
 from ._differentiate import Differentiate
 from ._materialize import materialize
 from ._ordered_set import OrderedSet
-from ._tensor_dict import Jacobians
 
 
-class Jac(Differentiate[Jacobians]):
+class Jac(Differentiate):
     """
-    Transform computing the jacobian of each output with respect to each input, and applying the
-    linear transformations represented by the argument jac_outputs to the results.
+    Transform from Jacobians to Jacobians computing the jacobian of each output with respect to each
+    input, and applying the linear transformations represented by the argument jac_outputs to the
+    results.
 
     :param outputs: Tensors to differentiate.
     :param inputs: Tensors with respect to which we differentiate.
@@ -81,7 +81,7 @@ class Jac(Differentiate[Jacobians]):
             grads = materialize(optional_grads, inputs=self.inputs)
             return torch.concatenate([grad.reshape([-1]) for grad in grads])
 
-        # By the Jacobians constraint, this value should be the same for all jac_outputs.
+        # If the jac_outputs are correct, this value should be the same for all jac_outputs.
         m = jac_outputs[0].shape[0]
         max_chunk_size = self.chunk_size if self.chunk_size is not None else m
         n_chunks = math.ceil(m / max_chunk_size)

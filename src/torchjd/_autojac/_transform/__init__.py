@@ -8,11 +8,3 @@ from ._jac import Jac
 from ._ordered_set import OrderedSet
 from ._select import Select
 from ._stack import Stack
-from ._tensor_dict import (
-    EmptyTensorDict,
-    Gradients,
-    GradientVectors,
-    JacobianMatrices,
-    Jacobians,
-    TensorDict,
-)
