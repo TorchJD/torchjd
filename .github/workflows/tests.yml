@@ -72,3 +72,21 @@ jobs:
       - name: Build Documentation
         working-directory: docs
         run: uv run make dirhtml
+
+  mypy:
+    name: Run mypy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies (default with full options & check)
+      run: uv pip install '.[full]' --group check
+
+    - name: Run mypy
+      run: uv run mypy src/torchjd
