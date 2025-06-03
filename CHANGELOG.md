@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-06-04
+
 ### Changed
 
 - **BREAKING**: Changed the dependencies of `CAGrad` and `NashMTL` to be optional when installing
