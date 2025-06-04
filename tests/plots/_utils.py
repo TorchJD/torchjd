@@ -1,8 +1,7 @@
 import numpy as np
 import torch
-from dash.html import Figure
 from plotly import graph_objects as go
-from plotly.graph_objs import Scatter
+from plotly.graph_objs import Figure, Scatter
 
 from torchjd.aggregation import Aggregator
 

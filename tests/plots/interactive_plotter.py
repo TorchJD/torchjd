@@ -6,7 +6,7 @@ from threading import Timer
 import numpy as np
 import torch
 from dash import Dash, Input, Output, callback, dcc, html
-from dash.html import Figure
+from plotly.graph_objs import Figure
 from plots._utils import Plotter, angle_to_coord, coord_to_angle
 
 from torchjd.aggregation import (
