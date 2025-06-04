@@ -6,7 +6,7 @@ from threading import Timer
 import numpy as np
 import torch
 from dash import Dash, Input, Output, callback, dcc, html
-from dash.html import Figure
+from plotly.graph_objs import Figure
 from plots._utils import Plotter, angle_to_coord, coord_to_angle
 
 from torchjd.aggregation import (
@@ -121,11 +121,11 @@ def main() -> None:
         prevent_initial_call=True,
     )
     def update_gradient_coordinate(*values) -> Figure:
-        values = [float(value) for value in values]
+        values_ = [float(value) for value in values]
 
-        for j in range(len(values) // 2):
-            angle = values[2 * j]
-            r = values[2 * j + 1]
+        for j in range(len(values_) // 2):
+            angle = values_[2 * j]
+            r = values_[2 * j + 1]
             x, y = angle_to_coord(angle, r)
             plotter.matrix[j, 0] = x
             plotter.matrix[j, 1] = y
