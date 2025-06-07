@@ -6,19 +6,21 @@ from torchjd.autogram import vgp
 
 
 def test_vgp():
-    m = 5
-    x = torch.randn([m], requires_grad=True)
+    m = 2
+    x = torch.tensor([1.0, 2.0, 3.0])
 
     def f(x: Tensor) -> Tensor:
-        return x.sin()
+        return torch.concatenate([x.sum().unsqueeze(0), (x**2).sum().unsqueeze(0)])
 
     (y, vgp_fn) = vgp(f, x)
 
-    gramian = torch.zeros([m, m])
+    columns = []
     for i, e in enumerate(torch.eye(m)):
-        gramian[i] = vgp_fn(e)
+        columns.append(vgp_fn(e))
 
-    grad = torch.autograd.grad(y, x, torch.ones_like(y))[0]
-    expected_gramian = (grad**2).diag()
+    gramian = torch.vstack(columns)
+
+    expected_jacobian = torch.tensor([[1.0, 1.0, 1.0], [2.0, 4.0, 6.0]])
+    expected_gramian = expected_jacobian @ expected_jacobian.T
 
     assert_close(gramian, expected_gramian)
