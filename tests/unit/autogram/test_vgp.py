@@ -16,9 +16,9 @@ def test_vgp():
 
     columns = []
     for i, e in enumerate(torch.eye(m)):
-        columns.append(vgp_fn(e))
+        columns.append(vgp_fn(e).unsqueeze(1))
 
-    gramian = torch.vstack(columns)
+    gramian = torch.hstack(columns)
 
     expected_jacobian = torch.tensor([[1.0, 1.0, 1.0], [2.0, 4.0, 6.0]])
     expected_gramian = expected_jacobian @ expected_jacobian.T
