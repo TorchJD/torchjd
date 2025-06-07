@@ -7,6 +7,9 @@ from torch import Tensor
 def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
     output, vjp_fn = torch.func.vjp(func, *primals)
 
+    if output.dim != 1:
+        raise ValueError("The function should return a vector")
+
     def vgp_fn(v: Tensor) -> Tensor:
         return torch.func.jvp(func, primals, tangents=vjp_fn(v))[1]
 
