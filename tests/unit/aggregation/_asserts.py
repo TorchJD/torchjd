@@ -2,7 +2,7 @@ import torch
 from pytest import raises
 from torch import Tensor
 from torch.testing import assert_close
-from unit._utils import rand_, randperm_
+from utils.tensors import rand_, randperm_
 
 from torchjd.aggregation import Aggregator
 from torchjd.aggregation._utils.non_differentiable import NonDifferentiableError

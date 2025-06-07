@@ -41,7 +41,7 @@ def backward(
 
             >>> import torch
             >>>
-            >>> from torchjd import backward
+            >>> from torchjd.autojac import backward
             >>> from torchjd.aggregation import UPGrad
             >>>
             >>> param = torch.tensor([1., 2.], requires_grad=True)

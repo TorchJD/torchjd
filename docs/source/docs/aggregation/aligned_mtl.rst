@@ -7,3 +7,8 @@ Aligned-MTL
     :members:
     :undoc-members:
     :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.AlignedMTLWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward

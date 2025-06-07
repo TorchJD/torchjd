@@ -15,24 +15,10 @@ class MGDA(GramianWeightedAggregator):
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.
-
-    .. admonition::
-        Example
-
-        Use MGDA to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import MGDA
-        >>>
-        >>> A = MGDA()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([1.1921e-07, 1.0000e+00, 1.0000e+00])
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
-        super().__init__(_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
+        super().__init__(MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
         self._epsilon = epsilon
         self._max_iters = max_iters
 
@@ -40,17 +26,16 @@ class MGDA(GramianWeightedAggregator):
         return f"{self.__class__.__name__}(epsilon={self._epsilon}, max_iters={self._max_iters})"
 
 
-class _MGDAWeighting(Weighting[PSDMatrix]):
+class MGDAWeighting(Weighting[PSDMatrix]):
     r"""
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using Algorithm
-    2 of `Multi-Task Learning as Multi-Objective Optimization
-    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.MGDA`.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.
     """
 
-    def __init__(self, epsilon: float, max_iters: int):
+    def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
         super().__init__()
         self.epsilon = epsilon
         self.max_iters = max_iters

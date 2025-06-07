@@ -25,7 +25,7 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd.autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
