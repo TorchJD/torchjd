@@ -2,7 +2,9 @@ from collections.abc import Callable
 from typing import Any
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torch.func import functional_call
+from torch.nn.parameter import Parameter
 
 
 def vgp(
@@ -38,3 +40,22 @@ def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
     gramian = get_gramian(vgp_fn, output.shape[0])
 
     return output, gramian
+
+
+def vgp_from_module_1(module: nn.Module, *inputs) -> tuple[Tensor, Callable[[Tensor], Tensor]]:
+    def functional_model_call(*primals) -> Tensor:
+        params_dict = {
+            key: primal for key, primal in zip(dict(module.named_parameters()).keys(), primals)
+        }
+        all_state = {**params_dict, **dict(module.named_buffers())}
+        return functional_call(module, all_state, *inputs)
+
+    return vgp(functional_model_call, *module.parameters())
+
+
+def vgp_from_module_2(module: nn.Module, *inputs) -> tuple[Tensor, Callable[[Tensor], Tensor]]:
+    def functional_model_call_v2(primals: dict[str, Parameter]) -> Tensor:
+        all_state = {**primals, **dict(module.named_buffers())}
+        return functional_call(module, all_state, *inputs)
+
+    return vgp(functional_model_call_v2, dict(module.named_parameters()))
