@@ -54,7 +54,7 @@ def test_vgp_3(vgp_from_module):
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1), nn.Flatten(start_dim=0))
 
     output, vgp_fn = vgp_from_module(model, x)
-    gramian = get_gramian(vgp_fn, output.shape[0])
+    gramian = get_gramian(vgp_fn, output)
 
     expected_gramian = get_model_gramian_via_autojac(model, x)
 
