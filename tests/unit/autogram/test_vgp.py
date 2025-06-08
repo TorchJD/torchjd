@@ -5,15 +5,15 @@ from torch.nn import Linear, ReLU, Sequential
 from torch.testing import assert_close
 from torch.utils._ordered_set import OrderedSet
 
-from torchjd._autojac._transform import Diagonalize, Init, Jac
-from torchjd._autojac._transform._aggregate import _Matrixify
-from torchjd.aggregation._weighting_bases import PSDMatrix
-from torchjd.autogram._vgp import (
+from torchjd._autogram._vgp import (
     get_gramian,
     get_output_and_gramian,
     vgp_from_module_1,
     vgp_from_module_2,
 )
+from torchjd._autojac._transform import Diagonalize, Init, Jac
+from torchjd._autojac._transform._aggregate import _Matrixify
+from torchjd.aggregation._weighting_bases import PSDMatrix
 
 
 def test_vgp():
