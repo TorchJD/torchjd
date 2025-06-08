@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 
-def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
+def vgp(func: Callable, *primals) -> tuple[Tensor, Callable]:
     output, vjp_fn = torch.func.vjp(func, *primals)
 
     if output.ndim != 1:
@@ -12,6 +12,12 @@ def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
 
     def vgp_fn(v: Tensor) -> Tensor:
         return torch.func.jvp(func, primals, tangents=vjp_fn(v))[1]
+
+    return output, vgp_fn
+
+
+def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
+    output, vgp_fn = vgp(func, *primals)
 
     identity = torch.eye(output.shape[0])
     gramian = torch.func.vmap(vgp_fn)(identity)
