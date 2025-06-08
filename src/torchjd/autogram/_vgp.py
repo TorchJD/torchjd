@@ -4,8 +4,12 @@ import torch
 from torch import Tensor
 
 
-def vgp(func: Callable, *primals) -> tuple[Tensor, Callable[[Tensor], Tensor]]:
-    output, vjp_fn = torch.func.vjp(func, *primals)
+def vgp(func: Callable, *primals, has_aux: bool = False) -> tuple:
+    if has_aux:
+        output, vjp_fn, aux = torch.func.vjp(func, *primals, has_aux=True)
+    else:
+        output, vjp_fn = torch.func.vjp(func, *primals, has_aux=False)
+        aux = None
 
     if output.ndim != 1:
         raise ValueError("The function should return a vector")
@@ -13,7 +17,10 @@ def vgp(func: Callable, *primals) -> tuple[Tensor, Callable[[Tensor], Tensor]]:
     def vgp_fn(v: Tensor) -> Tensor:
         return torch.func.jvp(func, primals, tangents=vjp_fn(v))[1]
 
-    return output, vgp_fn
+    if has_aux:
+        return output, vgp_fn, aux
+    else:
+        return output, vgp_fn
 
 
 def get_gramian(vgp_fn: Callable[[Tensor], Tensor], m: int) -> Tensor:
