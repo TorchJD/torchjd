@@ -28,8 +28,8 @@ def vgp(
         return output, vgp_fn
 
 
-def get_gramian(vgp_fn: Callable[[Tensor], Tensor], m: int) -> Tensor:
-    identity = torch.eye(m)
+def get_gramian(vgp_fn: Callable[[Tensor], Tensor], output: Tensor) -> Tensor:
+    identity = torch.eye(output.shape[0], device=output.device, dtype=output.dtype)
     gramian = torch.func.vmap(vgp_fn)(identity)
 
     return gramian
@@ -37,7 +37,7 @@ def get_gramian(vgp_fn: Callable[[Tensor], Tensor], m: int) -> Tensor:
 
 def get_output_and_gramian(func: Callable, *primals) -> tuple[Tensor, Tensor]:
     output, vgp_fn = vgp(func, *primals)
-    gramian = get_gramian(vgp_fn, output.shape[0])
+    gramian = get_gramian(vgp_fn, output)
 
     return output, gramian
 
