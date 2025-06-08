@@ -1,10 +1,13 @@
 from collections.abc import Callable
+from typing import Any
 
 import torch
 from torch import Tensor
 
 
-def vgp(func: Callable, *primals, has_aux: bool = False) -> tuple:
+def vgp(
+    func: Callable, *primals, has_aux: bool = False
+) -> tuple[Tensor, Callable[[Tensor], Tensor]] | tuple[Tensor, Callable[[Tensor], Tensor], Any]:
     if has_aux:
         output, vjp_fn, aux = torch.func.vjp(func, *primals, has_aux=True)
     else:
