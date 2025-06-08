@@ -54,8 +54,8 @@ def vgp_from_module_1(module: nn.Module, *inputs) -> tuple[Tensor, Callable[[Ten
 
 
 def vgp_from_module_2(module: nn.Module, *inputs) -> tuple[Tensor, Callable[[Tensor], Tensor]]:
-    def functional_model_call_v2(primals: dict[str, Parameter]) -> Tensor:
+    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
         all_state = {**primals, **dict(module.named_buffers())}
         return functional_call(module, all_state, *inputs)
 
-    return vgp(functional_model_call_v2, dict(module.named_parameters()))
+    return vgp(functional_model_call, dict(module.named_parameters()))
