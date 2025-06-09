@@ -19,7 +19,6 @@ def vgp(
     if output.ndim != 1:
         raise ValueError("The function should return a vector")
 
-    @torch.compile
     def vgp_fn(v: Tensor) -> Tensor:
         return torch.func.jvp(func, primals, tangents=vjp_fn(v))[1]
 
