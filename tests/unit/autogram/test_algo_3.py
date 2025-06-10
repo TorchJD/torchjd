@@ -62,11 +62,10 @@ def test_algo_3():
 
 
 class Timer:
-    def __init__(self, device=None, verbose=True):
+    def __init__(self, device=None):
         self.device = device
         self.start_time = None
         self.end_time = None
-        self.verbose = verbose
 
     def __enter__(self):
         if self.device == "cuda":
@@ -79,8 +78,7 @@ class Timer:
             torch.cuda.synchronize()
         self.end_time = time.perf_counter()
         self.elapsed_time = self.end_time - self.start_time
-        if self.verbose:
-            print(f"Elapsed time: {self.elapsed_time:.4f} seconds")
+        print(f"Elapsed time: {self.elapsed_time:.4f} seconds")
 
 
 def compute_gramian_via_autojac(activations, model: nn.Sequential):
