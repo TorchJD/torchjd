@@ -3,6 +3,7 @@ import time
 import torch
 from torch import Tensor, nn
 from torch.nn import ReLU
+from torch.testing import assert_close
 
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
@@ -51,16 +52,17 @@ def test_algo_3():
         params = list(layer.parameters())
         if len(params) > 0:
 
-            def get_vjp(x):
-                return torch.autograd.grad(output, params, x, retain_graph=True)
+            # def get_vjp(x):
+            #     return torch.autograd.grad(output, params, x, retain_graph=True)
 
             # diagonalized_grad = diagonalize(grad)
-            j_rows = []
+            jacobian_rows = []
             for j in range(len(grad)):
-                g = diagonalize_one_row(grad, j)
-                j_rows.append(torch.concatenate([jrow.flatten() for jrow in get_vjp(g)]))
+                # g = diagonalize_one_row(grad, j)
+                grad_tuple = torch.autograd.grad(output[j], params, grad[j], retain_graph=True)
+                jacobian_rows.append(torch.concatenate([g.flatten() for g in grad_tuple]))
 
-            jacobian = torch.stack(j_rows)
+            jacobian = torch.stack(jacobian_rows)
             gramian += jacobian @ jacobian.T
 
             # jacobians = vmap(get_vjp, chunk_size=1)(diagonalized_grad)
@@ -75,7 +77,6 @@ def test_algo_3():
 
     end = time.perf_counter()
     print(end - start)
-    print("gramian (autogram): ", gramian)
 
     start = time.perf_counter()
 
@@ -88,11 +89,12 @@ def test_algo_3():
     matrixify = _Matrixify()
     transform = matrixify << jac << diag << init
     jacobian_matrices = transform({})
-    gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
+    exptected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
 
     end = time.perf_counter()
     print(end - start)
-    print("gramian (autojac): ", gramian)
+
+    assert_close(gramian, exptected_gramian)
 
 
 def test_diagonalize():
