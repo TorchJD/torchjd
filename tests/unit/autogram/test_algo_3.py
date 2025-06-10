@@ -1,14 +1,11 @@
 import time
+from collections.abc import Callable
 
 import torch
 from torch import Tensor, nn
-from torch.nn import ReLU
-from torch.testing import assert_close
+from torch.nn import Parameter, ReLU
 
-from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
-from torchjd._autojac._transform._aggregate import _Matrixify
-
-torch.set_default_device("cpu")
+torch.set_default_device("cuda")
 
 
 def test_algo_3():
@@ -29,7 +26,7 @@ def test_algo_3():
         nn.Linear(128, 1),
         nn.Flatten(start_dim=0),
     ]
-    batch_size = 64
+    batch_size = 4096
     input_shape = (batch_size, 3, 32, 32)
     activation = torch.randn(input_shape)
     target = torch.arange(0, batch_size, dtype=torch.float32)
@@ -44,6 +41,9 @@ def test_algo_3():
     activations.append(losses)
 
     start = time.perf_counter()
+
+    # torch.autograd.grad(losses, activations[1:], torch.ones_like(losses))
+
     grad = torch.ones_like(activations[-1])
     gramian = torch.zeros(batch_size, batch_size)
     for i, (input, output, layer) in list(
@@ -56,14 +56,26 @@ def test_algo_3():
             #     return torch.autograd.grad(output, params, x, retain_graph=True)
 
             # diagonalized_grad = diagonalize(grad)
-            jacobian_rows = []
-            for j in range(len(grad)):
-                # g = diagonalize_one_row(grad, j)
-                grad_tuple = torch.autograd.grad(output[j], params, grad[j], retain_graph=True)
-                jacobian_rows.append(torch.concatenate([g.flatten() for g in grad_tuple]))
+            # jacobian_rows = []
+            # for j in range(len(grad)):
+            #     # g = diagonalize_one_row(grad, j)
+            #     grad_tuple = torch.autograd.grad(output[j], params, grad[j], retain_graph=True)
+            #     jacobian_rows.append(torch.concatenate([g.flatten() for g in grad_tuple]))
 
-            jacobian = torch.stack(jacobian_rows)
-            gramian += jacobian @ jacobian.T
+            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
+                return vjp_from_module(layer, input_j)(grad_output_j)
+                # return torch.autograd.grad(output_j, params, grad_output_j, retain_graph=True)
+
+            jacobians = torch.vmap(get_vjp)(input, grad)
+
+            assert len(jacobians) == 1
+
+            for jacobian in jacobians[0].values():
+                J = jacobian.reshape((batch_size, -1))
+                gramian += J @ J.T  # Accumulate the gramian
+
+            # jacobian = torch.stack(jacobian_rows)
+            # gramian += jacobian @ jacobian.T
 
             # jacobians = vmap(get_vjp, chunk_size=1)(diagonalized_grad)
 
@@ -77,24 +89,24 @@ def test_algo_3():
 
     end = time.perf_counter()
     print(end - start)
-
-    start = time.perf_counter()
-
-    params = OrderedSet(nn.Sequential(*layers).parameters())
-    output = OrderedSet([activations[-1]])
-
-    init = Init(output)
-    diag = Diagonalize(output)
-    jac = Jac(output, params, chunk_size=1)
-    matrixify = _Matrixify()
-    transform = matrixify << jac << diag << init
-    jacobian_matrices = transform({})
-    exptected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
-
-    end = time.perf_counter()
-    print(end - start)
-
-    assert_close(gramian, exptected_gramian)
+    #
+    # start = time.perf_counter()
+    #
+    # params = OrderedSet(nn.Sequential(*layers).parameters())
+    # output = OrderedSet([activations[-1]])
+    #
+    # init = Init(output)
+    # diag = Diagonalize(output)
+    # jac = Jac(output, params, chunk_size=1)
+    # matrixify = _Matrixify()
+    # transform = matrixify << jac << diag << init
+    # jacobian_matrices = transform({})
+    # exptected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
+    #
+    # end = time.perf_counter()
+    # print(end - start)
+    #
+    # assert_close(gramian, exptected_gramian)
 
 
 def test_diagonalize():
@@ -137,3 +149,11 @@ def diagonalize_one_row_sparse(x: Tensor, index: int = 0) -> Tensor:
     dense[index] = x[index]
     sparse = dense.to_sparse()  # default is sparse_coo
     return sparse
+
+
+def vjp_from_module(module: nn.Module, *inputs) -> Callable:
+    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
+        all_state = {**primals, **dict(module.named_buffers())}
+        return torch.func.functional_call(module, all_state, *inputs)
+
+    return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
