@@ -4,67 +4,119 @@ from collections.abc import Callable
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter, ReLU
+from torch.testing import assert_close
+from torch.utils._ordered_set import OrderedSet
 
-torch.set_default_device("cuda")
+from torchjd._autojac._transform import Diagonalize, Init, Jac
+from torchjd._autojac._transform._aggregate import _Matrixify
+
+DEVICE = "cuda"
+torch.set_default_device(DEVICE)
+
+
+class Cifar10Model(nn.Sequential):
+    def __init__(self):
+        layers = [
+            nn.Conv2d(3, 32, 3),
+            ReLU(),
+            nn.Conv2d(32, 64, 3, groups=32),
+            nn.MaxPool2d(2),
+            ReLU(),
+            nn.Conv2d(64, 64, 3, groups=64),
+            nn.MaxPool2d(3),
+            ReLU(),
+            nn.Flatten(),
+            nn.Linear(1024, 128),
+            ReLU(),
+            nn.Linear(128, 10),
+        ]
+        super().__init__(*layers)
 
 
 def test_algo_3():
     torch.use_deterministic_algorithms(False)
 
-    layers = [
-        nn.Conv2d(3, 32, 3),
-        ReLU(),
-        nn.Conv2d(32, 64, 3, groups=32),
-        nn.MaxPool2d(2),
-        ReLU(),
-        nn.Conv2d(64, 64, 3, groups=64),
-        nn.MaxPool2d(3),
-        ReLU(),
-        nn.Flatten(),
-        nn.Linear(1024, 128),
-        ReLU(),
-        nn.Linear(128, 1),
-        nn.Flatten(start_dim=0),
-    ]
-    batch_size = 4096
+    batch_size = 128
     input_shape = (batch_size, 3, 32, 32)
-    activation = torch.randn(input_shape)
-    target = torch.arange(0, batch_size, dtype=torch.float32)
-    criterion = torch.nn.MSELoss(reduction="none")
+    input = torch.randn(input_shape)
+    target = torch.randint(0, 10, (batch_size,))
 
-    activations = [activation]
-    for layer in layers:
-        activation = layer(activation)
-        activations.append(activation)
+    model = Cifar10Model()
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
-    losses = criterion(activation, target)
-    activations.append(losses)
+    # Compute gramian to initialize everything correctly, prior to making the timed call
+    activations = compute_activations(criterion, input, model, target)
+    _ = autogram_(activations, batch_size, criterion, model)
 
+    # Re-compute the activations because autogram_ needs the non-freed graph
+    activations = compute_activations(criterion, input, model, target)
+
+    if DEVICE == "cuda":
+        torch.cuda.synchronize()
     start = time.perf_counter()
 
-    # torch.autograd.grad(losses, activations[1:], torch.ones_like(losses))
+    gramian = autogram_(activations, batch_size, criterion, model)
 
+    if DEVICE == "cuda":
+        torch.cuda.synchronize()
+    end = time.perf_counter()
+
+    print(end - start)
+
+    activations = compute_activations(criterion, input, model, target)
+    _ = compute_gramian_via_autojac(activations, model)
+
+    activations = compute_activations(criterion, input, model, target)
+
+    if DEVICE == "cuda":
+        torch.cuda.synchronize()
+    start = time.perf_counter()
+
+    expected_gramian = compute_gramian_via_autojac(activations, model)
+
+    if DEVICE == "cuda":
+        torch.cuda.synchronize()
+    end = time.perf_counter()
+    print(end - start)
+
+    assert_close(gramian, expected_gramian)
+
+
+def compute_gramian_via_autojac(activations, model: nn.Sequential):
+    params = OrderedSet(model.parameters())
+    output = OrderedSet([activations[-1]])
+    init = Init(output)
+    diag = Diagonalize(output)
+    jac = Jac(output, params, chunk_size=1)
+    matrixify = _Matrixify()
+    transform = matrixify << jac << diag << init
+    jacobian_matrices = transform({})
+    expected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
+    return expected_gramian
+
+
+def compute_activations(criterion, input, model: nn.Sequential, target) -> list[Tensor]:
+    activations = [input]
+    for layer in model:
+        activation = layer(activations[-1])
+        activations.append(activation)
+
+    losses = criterion(activations[-1], target)
+    activations.append(losses)
+    return activations
+
+
+def autogram_(activations, batch_size, criterion, model: nn.Sequential):
     grad = torch.ones_like(activations[-1])
     gramian = torch.zeros(batch_size, batch_size)
     for i, (input, output, layer) in list(
-        enumerate(zip(activations[:-1], activations[1:], layers + [criterion]))
+        enumerate(zip(activations[:-1], activations[1:], list(model) + [criterion]))
     )[::-1]:
         params = list(layer.parameters())
         if len(params) > 0:
 
-            # def get_vjp(x):
-            #     return torch.autograd.grad(output, params, x, retain_graph=True)
-
-            # diagonalized_grad = diagonalize(grad)
-            # jacobian_rows = []
-            # for j in range(len(grad)):
-            #     # g = diagonalize_one_row(grad, j)
-            #     grad_tuple = torch.autograd.grad(output[j], params, grad[j], retain_graph=True)
-            #     jacobian_rows.append(torch.concatenate([g.flatten() for g in grad_tuple]))
-
             def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
                 return vjp_from_module(layer, input_j)(grad_output_j)
-                # return torch.autograd.grad(output_j, params, grad_output_j, retain_graph=True)
 
             jacobians = torch.vmap(get_vjp)(input, grad)
 
@@ -74,39 +126,11 @@ def test_algo_3():
                 J = jacobian.reshape((batch_size, -1))
                 gramian += J @ J.T  # Accumulate the gramian
 
-            # jacobian = torch.stack(jacobian_rows)
-            # gramian += jacobian @ jacobian.T
-
-            # jacobians = vmap(get_vjp, chunk_size=1)(diagonalized_grad)
-
-            # for jacobian in jacobians:
-            #     jacobian = jacobian.reshape((batch_size, -1))
-            #     gramian += jacobian @ jacobian.T  # Accumulate the gramian
-
         if i == 0:
             break  # Don't try to differentiate with respect to the model's input
-        grad = torch.autograd.grad(output, input, grad, retain_graph=True)[0]
+        grad = torch.autograd.grad(output, input, grad, retain_graph=False)[0]
 
-    end = time.perf_counter()
-    print(end - start)
-    #
-    # start = time.perf_counter()
-    #
-    # params = OrderedSet(nn.Sequential(*layers).parameters())
-    # output = OrderedSet([activations[-1]])
-    #
-    # init = Init(output)
-    # diag = Diagonalize(output)
-    # jac = Jac(output, params, chunk_size=1)
-    # matrixify = _Matrixify()
-    # transform = matrixify << jac << diag << init
-    # jacobian_matrices = transform({})
-    # exptected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
-    #
-    # end = time.perf_counter()
-    # print(end - start)
-    #
-    # assert_close(gramian, exptected_gramian)
+    return gramian
 
 
 def test_diagonalize():
