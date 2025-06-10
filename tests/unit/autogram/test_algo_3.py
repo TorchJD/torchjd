@@ -45,41 +45,42 @@ def test_algo_3():
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     # Compute gramian to initialize everything correctly, prior to making the timed call
-    activations = compute_activations(criterion, input, model, target)
-    _ = autogram_(activations, batch_size, criterion, model)
-
     # Re-compute the activations because autogram_ needs the non-freed graph
     activations = compute_activations(criterion, input, model, target)
-
-    if DEVICE == "cuda":
-        torch.cuda.synchronize()
-    start = time.perf_counter()
-
-    gramian = autogram_(activations, batch_size, criterion, model)
-
-    if DEVICE == "cuda":
-        torch.cuda.synchronize()
-    end = time.perf_counter()
-
-    print(end - start)
+    _ = autogram_(activations, batch_size, criterion, model)
+    activations = compute_activations(criterion, input, model, target)
+    with Timer(device=DEVICE):
+        gramian = autogram_(activations, batch_size, criterion, model)
 
     activations = compute_activations(criterion, input, model, target)
     _ = compute_gramian_via_autojac(activations, model)
-
     activations = compute_activations(criterion, input, model, target)
-
-    if DEVICE == "cuda":
-        torch.cuda.synchronize()
-    start = time.perf_counter()
-
-    expected_gramian = compute_gramian_via_autojac(activations, model)
-
-    if DEVICE == "cuda":
-        torch.cuda.synchronize()
-    end = time.perf_counter()
-    print(end - start)
+    with Timer(device=DEVICE):
+        expected_gramian = compute_gramian_via_autojac(activations, model)
 
     assert_close(gramian, expected_gramian)
+
+
+class Timer:
+    def __init__(self, device=None, verbose=True):
+        self.device = device
+        self.start_time = None
+        self.end_time = None
+        self.verbose = verbose
+
+    def __enter__(self):
+        if self.device == "cuda":
+            torch.cuda.synchronize()
+        self.start_time = time.perf_counter()
+        return self  # This allows you to access the timer object within the 'with' block
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.device == "cuda":
+            torch.cuda.synchronize()
+        self.end_time = time.perf_counter()
+        self.elapsed_time = self.end_time - self.start_time
+        if self.verbose:
+            print(f"Elapsed time: {self.elapsed_time:.4f} seconds")
 
 
 def compute_gramian_via_autojac(activations, model: nn.Sequential):
