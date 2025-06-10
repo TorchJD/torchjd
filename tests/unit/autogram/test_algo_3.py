@@ -134,48 +134,6 @@ def autogram_(activations, batch_size, criterion, model: nn.Sequential):
     return gramian
 
 
-def test_diagonalize():
-    t = torch.randn([2, 3])
-    print(t)
-    d = diagonalize(t)
-    print(d.shape)
-    print(d)
-
-
-def diagonalize(t: Tensor) -> Tensor:
-    d = torch.zeros((t.shape[0],) + t.shape)
-    for i, row in enumerate(t):
-        d[i, i] = row
-
-    return d
-
-
-def diagonalize_one_row(t: Tensor, i: int) -> Tensor:
-    d = torch.zeros_like(t)
-    d[i] = t[i]
-
-    return d
-
-
-def test_diagonalize_one_row_sparse():
-    t = torch.randn(10, 5)
-    print(diagonalize_one_row_sparse(t, 0))
-    print(diagonalize_one_row_sparse(t, 1))
-    print(diagonalize_one_row_sparse(t, 2))
-    print(diagonalize_one_row_sparse(t, 3))
-
-
-def diagonalize_one_row_sparse(x: Tensor, index: int = 0) -> Tensor:
-    """
-    Returns a sparse tensor with only the slice at `index` along dim=0 kept, in COO format.
-    Works for x.ndim >= 1 of any shape.
-    """
-    dense = torch.zeros_like(x)
-    dense[index] = x[index]
-    sparse = dense.to_sparse()  # default is sparse_coo
-    return sparse
-
-
 def vjp_from_module(module: nn.Module, *inputs) -> Callable:
     def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
         all_state = {**primals, **dict(module.named_buffers())}
