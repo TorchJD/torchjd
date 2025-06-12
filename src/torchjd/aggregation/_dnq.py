@@ -29,8 +29,9 @@ class _DNQWeightingWrapper(Weighting[PSDMatrix]):
             return torch.ones((1,), device=gramian.device, dtype=gramian.dtype)
         else:
             # Divide
-            sub_gramian_1 = gramian[: m // 2, : m // 2]
-            sub_gramian_2 = gramian[m // 2 :, m // 2 :]
+            cutoff = int(m / 2)
+            sub_gramian_1 = gramian[:cutoff, :cutoff]
+            sub_gramian_2 = gramian[cutoff:, cutoff:]
 
             # Conquer
             weights_1 = self(sub_gramian_1)
@@ -47,9 +48,10 @@ class _DNQWeightingWrapper(Weighting[PSDMatrix]):
         weights_outer = weights.outer(weights)
         reweighted_gramian = gramian * weights_outer
         m = reweighted_gramian.shape[0]
+        cutoff = int(m / 2)
 
-        G00 = reweighted_gramian[: m // 2, : m // 2].sum()
-        G01 = reweighted_gramian[: m // 2, m // 2 :].sum()
-        G11 = reweighted_gramian[m // 2 :, m // 2 :].sum()
+        G00 = reweighted_gramian[:cutoff, :cutoff].sum()
+        G01 = reweighted_gramian[:cutoff, cutoff:].sum()
+        G11 = reweighted_gramian[cutoff:, cutoff:].sum()
 
         return torch.tensor([[G00, G01], [G01, G11]], device=gramian.device, dtype=gramian.dtype)
