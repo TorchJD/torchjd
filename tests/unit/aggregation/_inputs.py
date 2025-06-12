@@ -54,23 +54,3 @@ _nashmtl_dims = [
     (9, 11, 9),
 ]
 nash_mtl_matrices = [NormalSampler(m, n, r)(_rng) for m, n, r in _nashmtl_dims]
-
-_dnq_upgrad_dims = [
-    (2, 1, 1),
-    (2, 2, 2),
-    (4, 100, 4),
-    (8, 100, 8),
-    (16, 100, 16),
-    (32, 100, 32),
-    (64, 100, 64),
-    (128, 100, 100),
-    (16, 100, 16),
-    (32, 100, 32),
-    (64, 100, 64),
-    (128, 100, 100),
-    (256, 100, 100),
-    (512, 100, 100),
-    (1024, 100, 100),
-    (2048, 100, 100),
-]
-dnq_matrices = [NormalSampler(m, n, r)(_rng) for m, n, r in _dnq_upgrad_dims]
