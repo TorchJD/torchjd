@@ -2,7 +2,7 @@ Quick example
 ==============================
 
 TorchJD now offers helpers that make working with sparse adjacency matrices
-transparent.  
+transparent.
 The key entry-point is :pyfunc:`torchjd.sparse.sparse_mm`,
 a vmap-aware autograd function that replaces the usual
 ``torch.sparse.mm`` inside Jacobian Descent pipelines.

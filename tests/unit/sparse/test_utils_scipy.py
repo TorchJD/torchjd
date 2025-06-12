@@ -1,9 +1,11 @@
 import importlib
-import pytest
+
 import numpy as np
+import pytest
 
 scipy = pytest.importorskip("scipy")  # skip if SciPy not available
 from torchjd.sparse._utils import to_coalesced_coo
+
 
 def test_to_coalesced_coo_from_scipy():
     sp = importlib.import_module("scipy.sparse")

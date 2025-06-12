@@ -1,5 +1,8 @@
-import importlib, sys, types
+import importlib
+import sys
+import types
 from contextlib import contextmanager
+
 
 @contextmanager
 def fake_torch_sparse():
@@ -15,7 +18,7 @@ def fake_torch_sparse():
         def matmul(self, dense):
             raise NotImplementedError
 
-    mod.SparseTensor = Dummy                                    # type: ignore
+    mod.SparseTensor = Dummy  # type: ignore
     sys.modules["torch_sparse"] = mod
     try:
         yield
@@ -26,13 +29,18 @@ def fake_torch_sparse():
 def test_patch_without_torch_sparse(monkeypatch):
     monkeypatch.setitem(sys.modules, "torch_sparse", None)
     from importlib import reload
+
     import torchjd.sparse._patch as p
-    reload(p)                      # re-import to trigger patch
+
+    reload(p)  # re-import to trigger patch
     assert p.torch_sparse is None  # slow fallback branch hit
+
 
 def test_patch_with_dummy_torch_sparse(monkeypatch):
     with fake_torch_sparse():
         from importlib import reload
+
         import torchjd.sparse._patch as p
+
         reload(p)
-        assert p.torch_sparse is not None   # optional branch hit
+        assert p.torch_sparse is not None  # optional branch hit

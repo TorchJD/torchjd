@@ -1,4 +1,9 @@
-import importlib, sys, types, torch
+import importlib
+import sys
+import types
+
+import torch
+
 
 def test_to_coalesced_coo_torch_sparse(monkeypatch):
     dummy = types.ModuleType("torch_sparse")
@@ -10,9 +15,7 @@ def test_to_coalesced_coo_torch_sparse(monkeypatch):
             self.value = torch.tensor([1.0])
 
         def to_torch_sparse_coo_tensor(self):
-            return torch.sparse_coo_tensor(
-                torch.stack([self.row, self.col]), self.value, (1, 1)
-            )
+            return torch.sparse_coo_tensor(torch.stack([self.row, self.col]), self.value, (1, 1))
 
         def matmul(self, other):
             raise NotImplementedError

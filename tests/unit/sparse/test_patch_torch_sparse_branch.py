@@ -1,5 +1,8 @@
-import importlib, sys, types
+import importlib
+import sys
+import types
 from importlib import reload
+
 
 def _make_dummy_torch_sparse():
     """
@@ -16,6 +19,7 @@ def _make_dummy_torch_sparse():
 
         def to_torch_sparse_coo_tensor(self):
             import torch
+
             return torch.sparse_coo_tensor([[0], [0]], [1.0], (1, 1))
 
     dummy_mod.SparseTensor = DummyTensor  # type: ignore[attr-defined]
@@ -27,10 +31,11 @@ def test_full_torch_sparse_branch(monkeypatch):
     monkeypatch.setitem(sys.modules, "torch_sparse", _make_dummy_torch_sparse())
 
     # Force the patch module to re-evaluate from scratch
-    import torchjd.sparse._patch as p  # noqa: E402
-
     # Remove earlier sentinel attributes so enable_seamless_sparse() re-patches
     import torch
+
+    import torchjd.sparse._patch as p  # noqa: E402
+
     for attr in ("_orig_mm",):
         if hasattr(torch.sparse, attr):
             delattr(torch.sparse, attr)  # type: ignore[attr-defined]

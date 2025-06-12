@@ -34,4 +34,4 @@ def to_coalesced_coo(x: Any) -> torch.Tensor:
     except ModuleNotFoundError:  # pragma: no cover
         pass
 
-    raise TypeError(f"Unsupported sparse type: {type(x)}") # pragma: no cover
+    raise TypeError(f"Unsupported sparse type: {type(x)}")  # pragma: no cover

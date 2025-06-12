@@ -14,6 +14,6 @@ from ._patch import enable_seamless_sparse
 
 __all__ = ["sparse_mm"]
 
-# feature flag 
+# feature flag
 if os.getenv("TORCHJD_DISABLE_SPARSE", "0") != "1":
     enable_seamless_sparse()

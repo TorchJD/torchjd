@@ -1,7 +1,9 @@
 import torch
+
 from torchjd._autojac import backward
 from torchjd.aggregation import UPGrad
 from torchjd.sparse import sparse_mm
+
 
 def test_sequential_backward():
     A = torch.sparse_coo_tensor([[0, 1], [1, 0]], [1.0, 1.0]).coalesce()

@@ -1,10 +1,13 @@
-import torch
 import pytest
+import torch
+
 from torchjd.sparse import sparse_mm
 from torchjd.sparse._utils import to_coalesced_coo
 
 try:
-    import importlib, types
+    import importlib
+    import types
+
     torch_sparse = importlib.import_module("torch_sparse")  # noqa: E402
     HAVE_TORCH_SPARSE = isinstance(torch_sparse, types.ModuleType)
 except (ModuleNotFoundError, OSError):
@@ -13,6 +16,7 @@ except (ModuleNotFoundError, OSError):
 
 try:
     import scipy.sparse as sp
+
     HAVE_SCIPY = True
 except ModuleNotFoundError:
     HAVE_SCIPY = False
@@ -32,7 +36,7 @@ def _batched_features(device):
 def test_vmap_branch(device):
     A = _dense_graph().to(device)
     X = _batched_features(device)
-    Y = sparse_mm(A, X)                # calls vmap-aware branch
+    Y = sparse_mm(A, X)  # calls vmap-aware branch
     assert Y.shape == X.shape
 
 

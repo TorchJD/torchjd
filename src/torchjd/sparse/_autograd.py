@@ -21,8 +21,8 @@ class _SparseMatMul(torch.autograd.Function):
         if X.dim() == 3:  # (B, N, d)
             B, N, d = X.shape
             X2d = X.reshape(B * N, d).view(N, B * d)
-            Y2d = _orig_sparse_mm(A, X2d)             # pragma: no cover
-            return Y2d.view(N, B, d).permute(1, 0, 2) # pragma: no cover
+            Y2d = _orig_sparse_mm(A, X2d)  # pragma: no cover
+            return Y2d.view(N, B, d).permute(1, 0, 2)  # pragma: no cover
 
         return _orig_sparse_mm(A, X)
 
@@ -47,14 +47,14 @@ class _SparseMatMul(torch.autograd.Function):
 
     @staticmethod
     def vmap(info, in_dims, A_unbatched, X_batched):  # noqa: D401
-        A = A_unbatched            # shared
-        X = X_batched              # (B, N, d)
+        A = A_unbatched  # shared
+        X = X_batched  # (B, N, d)
 
         B, N, d = X.shape
         X2d = X.reshape(B * N, d).view(N, B * d)
         Y2d = _orig_sparse_mm(A, X2d)
         Y = Y2d.view(N, B, d).permute(1, 0, 2)
-        return Y, 0                # output & out-dims
+        return Y, 0  # output & out-dims
 
 
 def sparse_mm(A_like: torch.Tensor, X: torch.Tensor) -> torch.Tensor:
