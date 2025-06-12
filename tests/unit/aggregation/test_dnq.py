@@ -14,24 +14,10 @@ from ._asserts import (
 )
 from ._inputs import dnq_matrices, non_strong_matrices, scaled_matrices, typical_matrices
 
-
-def is_ok(m):
-    # m is power of two and >= 2
-    return m > 1 and (m & (m - 1)) == 0
-
-
-scaled_pairs = [
-    (DNQWrapper(_UPGrad2()), matrix) for matrix in scaled_matrices if is_ok(matrix.shape[0])
-]
-typical_pairs = [
-    (DNQWrapper(_UPGrad2()), matrix)
-    for matrix in typical_matrices + dnq_matrices
-    if is_ok(matrix.shape[0])
-]
-non_strong_pairs = [
-    (DNQWrapper(_UPGrad2()), matrix) for matrix in non_strong_matrices if is_ok(matrix.shape[0])
-]
-requires_grad_pairs = [(DNQWrapper(_UPGrad2()), torch.ones(4, 5, requires_grad=True))]
+scaled_pairs = [(DNQWrapper(_UPGrad2()), matrix) for matrix in scaled_matrices]
+typical_pairs = [(DNQWrapper(_UPGrad2()), matrix) for matrix in typical_matrices + dnq_matrices]
+non_strong_pairs = [(DNQWrapper(_UPGrad2()), matrix) for matrix in non_strong_matrices]
+requires_grad_pairs = [(DNQWrapper(_UPGrad2()), torch.ones(3, 5, requires_grad=True))]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
