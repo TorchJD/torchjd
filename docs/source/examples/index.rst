@@ -28,6 +28,7 @@ This section contains some usage examples for TorchJD.
     basic_usage.rst
     iwrm.rst
     mtl.rst
+    sparse.rst
     rnn.rst
     monitoring.rst
     lightning_integration.rst

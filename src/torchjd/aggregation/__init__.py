@@ -19,6 +19,7 @@ from ._random import Random
 from ._sum import Sum
 from ._trimmed_mean import TrimmedMean
 from ._upgrad import UPGrad
+
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
