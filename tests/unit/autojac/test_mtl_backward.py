@@ -3,7 +3,7 @@ from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
 
-from torchjd import mtl_backward
+from torchjd._autojac import mtl_backward
 from torchjd._autojac._mtl_backward import _create_transform
 from torchjd._autojac._transform import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
