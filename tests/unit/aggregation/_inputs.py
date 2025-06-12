@@ -73,4 +73,4 @@ _dnq_upgrad_dims = [
     (1024, 100, 100),
     (2048, 100, 100),
 ]
-dnq_upgrad_matrices = [NormalSampler(m, n, r)(_rng) for m, n, r in _dnq_upgrad_dims]
+dnq_matrices = [NormalSampler(m, n, r)(_rng) for m, n, r in _dnq_upgrad_dims]

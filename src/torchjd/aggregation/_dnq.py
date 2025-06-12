@@ -2,20 +2,23 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._pcgrad import _PCGradWeighting
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._weighting_bases import PSDMatrix, Weighting
 
 
-class DNQUPGrad(GramianWeightedAggregator):
-    def __init__(self):
-        super().__init__(weighting=_DNQUPGradWeighting())
+class DNQWrapper(GramianWeightedAggregator):
+    def __init__(self, weighting: Weighting[PSDMatrix]):
+        super().__init__(weighting=_DNQWeightingWrapper(weighting=weighting))
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _DNQUPGradWeighting(Weighting[PSDMatrix]):
+class _DNQWeightingWrapper(Weighting[PSDMatrix]):
+    def __init__(self, weighting: Weighting[PSDMatrix]):
+        super().__init__()
+        self.weighting = weighting
+
     def forward(self, gramian: Tensor) -> Tensor:
         m = gramian.shape[0]
 
@@ -36,9 +39,7 @@ class _DNQUPGradWeighting(Weighting[PSDMatrix]):
 
             # Recombine into 2x2 gramian
             new_gramian = self.recombine_gramian_2_2(gramian, weights)
-
-            # TODO: reimplement this to not depend on PCGrad and to be much faster
-            new_weights = _PCGradWeighting()(new_gramian)
+            new_weights = self.weighting(new_gramian)
             return torch.concatenate([weights_1 * new_weights[0], weights_2 * new_weights[1]])
 
     @staticmethod

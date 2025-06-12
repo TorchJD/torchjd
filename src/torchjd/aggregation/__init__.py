@@ -8,7 +8,6 @@ from ._aggregator_bases import Aggregator
 from ._aligned_mtl import AlignedMTL
 from ._config import ConFIG
 from ._constant import Constant
-from ._dnq_upgrad import DNQUPGrad
 from ._dualproj import DualProj
 from ._graddrop import GradDrop
 from ._imtl_g import IMTLG
