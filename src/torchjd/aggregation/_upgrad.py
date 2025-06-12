@@ -104,3 +104,30 @@ class _UPGradWrapper(Weighting[PSDMatrix]):
         G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         W = project_weights(U, G, self.solver)
         return torch.sum(W, dim=0)
+
+
+class _UPGrad2(Weighting[PSDMatrix]):
+    """
+    Simpler version of UPGrad that only works with m=2 and that does not wrap another weighting.
+
+    It is purely torch-based and based on simple projection so it should be much faster.
+    """
+
+    def forward(self, gramian: Tensor) -> Tensor:
+        m = gramian.shape[0]
+        device = gramian.device
+        dtype = gramian.dtype
+
+        if m != 2:
+            raise ValueError("This weighting only works on 2x2 matrices.")
+
+        inner_product = gramian[0, 1]  # inner-product between the two gradients
+        sq_norm_0 = gramian[0, 0]  # Squared norm of the first gradient
+        sq_norm_1 = gramian[1, 1]  # Squared norm of the second gradient
+
+        if inner_product >= 0.0 or sq_norm_0 == 0.0 or sq_norm_1 == 0.0:
+            return torch.ones((m,), device=device, dtype=dtype) / m
+        else:
+            weight0 = torch.ones((1,), device=device, dtype=dtype) - inner_product / sq_norm_0
+            weight1 = torch.ones((1,), device=device, dtype=dtype) - inner_product / sq_norm_1
+            return torch.tensor([weight0, weight1], device=device, dtype=dtype) / m
