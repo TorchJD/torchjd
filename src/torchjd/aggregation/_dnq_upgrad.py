@@ -18,13 +18,12 @@ class DNQUPGrad(GramianWeightedAggregator):
 class _DNQUPGradWeighting(Weighting[PSDMatrix]):
     def forward(self, gramian: Tensor) -> Tensor:
         m = gramian.shape[0]
-        if m % 2 != 0:
-            raise ValueError("This only works when m is a power of 2 and >= 2")
 
-        if gramian.shape[0] == 2:
-            return _PCGradWeighting()(
-                gramian
-            )  # TODO: reimplement this to not depend on PCGrad and to be much faster
+        if m < 1:
+            raise ValueError("TODO")
+        elif m == 1:
+            # Base case: just return a single weight of 1.
+            return torch.ones((1,), device=gramian.device, dtype=gramian.dtype)
         else:
             # Divide
             sub_gramian_1 = gramian[: m // 2, : m // 2]
@@ -37,7 +36,9 @@ class _DNQUPGradWeighting(Weighting[PSDMatrix]):
 
             # Recombine into 2x2 gramian
             new_gramian = self.recombine_gramian_2_2(gramian, weights)
-            new_weights = self(new_gramian)
+
+            # TODO: reimplement this to not depend on PCGrad and to be much faster
+            new_weights = _PCGradWeighting()(new_gramian)
             return torch.concatenate([weights_1 * new_weights[0], weights_2 * new_weights[1]])
 
     @staticmethod
