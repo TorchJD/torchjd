@@ -26,7 +26,7 @@ class IWRMSequential(Module):
             weights = self.weighting(scaled_gramian)
             return weights
 
-        output.register_hook(hook)
+        self._handle = output.register_hook(hook)
 
         return output
 
@@ -38,6 +38,7 @@ class IWRMSequential(Module):
         return activations
 
     def _autogram(self, activations, batch_size):
+        self._handle.remove()  # Ensure that this hook is not called recursively
         grad = torch.ones_like(activations[-1])
         gramian = torch.zeros(batch_size, batch_size)
         for i, (input, output, layer) in list(
