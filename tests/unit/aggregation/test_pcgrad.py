@@ -1,7 +1,7 @@
-import torch
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import ones_, randn_
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation._pcgrad import _PCGradWeighting
@@ -14,7 +14,7 @@ from ._inputs import scaled_matrices, typical_matrices
 
 scaled_pairs = [(PCGrad(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(PCGrad(), matrix) for matrix in typical_matrices]
-requires_grad_pairs = [(PCGrad(), torch.ones(3, 5, requires_grad=True))]
+requires_grad_pairs = [(PCGrad(), ones_(3, 5, requires_grad=True))]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
@@ -48,7 +48,7 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     rows.
     """
 
-    matrix = torch.randn(shape)
+    matrix = randn_(shape)
     gramian = compute_gramian(matrix)
 
     pc_grad_weighting = _PCGradWeighting()

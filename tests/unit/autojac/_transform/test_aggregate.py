@@ -2,6 +2,7 @@ import math
 
 import torch
 from pytest import mark, raises
+from unit._utils import rand_, tensor_, zeros_
 from unit.conftest import DEVICE
 
 from torchjd._autojac._transform import OrderedSet, RequirementError
@@ -14,7 +15,7 @@ from ._dict_assertions import assert_tensor_dicts_are_close
 
 def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> TensorDict:
     jacobian_shapes = [[n_outputs, math.prod(shape)] for shape in _param_shapes]
-    jacobian_list = [torch.rand(shape, generator=rng) for shape in jacobian_shapes]
+    jacobian_list = [rand_(shape, generator=rng) for shape in jacobian_shapes]
     jacobian_matrices = {key: jac for key, jac in zip(_keys, jacobian_list)}
     return jacobian_matrices
 
@@ -34,7 +35,7 @@ _param_shapes = [
     [2, 3, 4, 5],
     [5, 5, 5, 5],
 ]
-_keys = [torch.zeros(shape) for shape in _param_shapes]
+_keys = [zeros_(shape) for shape in _param_shapes]
 
 _rng = torch.Generator(device=DEVICE)
 _rng.manual_seed(0)
@@ -69,21 +70,21 @@ def test_matrixify():
     """Tests that the Matrixify transform correctly creates matrices from the jacobians."""
 
     n_outputs = 5
-    key1 = torch.zeros([])
-    key2 = torch.zeros([1])
-    key3 = torch.zeros([2, 3])
-    value1 = torch.tensor([1.0] * n_outputs)
-    value2 = torch.tensor([[2.0]] * n_outputs)
-    value3 = torch.tensor([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
+    key1 = zeros_([])
+    key2 = zeros_([1])
+    key3 = zeros_([2, 3])
+    value1 = tensor_([1.0] * n_outputs)
+    value2 = tensor_([[2.0]] * n_outputs)
+    value3 = tensor_([[[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]] * n_outputs)
     input = {key1: value1, key2: value2, key3: value3}
 
     matrixify = _Matrixify()
 
     output = matrixify(input)
     expected_output = {
-        key1: torch.tensor([[1.0]] * n_outputs),
-        key2: torch.tensor([[2.0]] * n_outputs),
-        key3: torch.tensor([[3.0, 4.0, 5.0, 6.0, 7.0, 8.0]] * n_outputs),
+        key1: tensor_([[1.0]] * n_outputs),
+        key2: tensor_([[2.0]] * n_outputs),
+        key3: tensor_([[3.0, 4.0, 5.0, 6.0, 7.0, 8.0]] * n_outputs),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -92,21 +93,21 @@ def test_matrixify():
 def test_reshape():
     """Tests that the Reshape transform correctly creates gradients from gradient vectors."""
 
-    key1 = torch.zeros([])
-    key2 = torch.zeros([1])
-    key3 = torch.zeros([2, 3])
-    value1 = torch.tensor([1.0])
-    value2 = torch.tensor([2.0])
-    value3 = torch.tensor([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+    key1 = zeros_([])
+    key2 = zeros_([1])
+    key3 = zeros_([2, 3])
+    value1 = tensor_([1.0])
+    value2 = tensor_([2.0])
+    value3 = tensor_([3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
     input = {key1: value1, key2: value2, key3: value3}
 
     reshape = _Reshape()
 
     output = reshape(input)
     expected_output = {
-        key1: torch.tensor(1.0),
-        key2: torch.tensor([2.0]),
-        key3: torch.tensor([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]),
+        key1: tensor_(1.0),
+        key2: tensor_([2.0]),
+        key3: tensor_([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -118,9 +119,9 @@ def test_aggregate_matrices_check_keys():
     key_order.
     """
 
-    key1 = torch.tensor([1.0])
-    key2 = torch.tensor([2.0])
-    key3 = torch.tensor([2.0])
+    key1 = tensor_([1.0])
+    key2 = tensor_([2.0])
+    key3 = tensor_([2.0])
     aggregate = _AggregateMatrices(Random(), OrderedSet([key2, key1]))
 
     output_keys = aggregate.check_keys({key1, key2})
@@ -136,8 +137,8 @@ def test_aggregate_matrices_check_keys():
 def test_matrixify_check_keys():
     """Tests that the `check_keys` method works correctly."""
 
-    key1 = torch.tensor([1.0])
-    key2 = torch.tensor([2.0])
+    key1 = tensor_([1.0])
+    key2 = tensor_([2.0])
     matrixify = _Matrixify()
 
     output_keys = matrixify.check_keys({key1, key2})
@@ -147,8 +148,8 @@ def test_matrixify_check_keys():
 def test_reshape_check_keys():
     """Tests that the `check_keys` method works correctly."""
 
-    key1 = torch.tensor([1.0])
-    key2 = torch.tensor([2.0])
+    key1 = tensor_([1.0])
+    key2 = tensor_([2.0])
     reshape = _Reshape()
 
     output_keys = reshape.check_keys({key1, key2})

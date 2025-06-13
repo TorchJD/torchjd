@@ -1,7 +1,7 @@
-import torch
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import ones_, zeros_
 
 from torchjd.aggregation import IMTLG
 
@@ -14,7 +14,7 @@ from ._inputs import scaled_matrices, typical_matrices
 
 scaled_pairs = [(IMTLG(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(IMTLG(), matrix) for matrix in typical_matrices]
-requires_grad_pairs = [(IMTLG(), torch.ones(3, 5, requires_grad=True))]
+requires_grad_pairs = [(IMTLG(), ones_(3, 5, requires_grad=True))]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
@@ -39,8 +39,8 @@ def test_imtlg_zero():
     """
 
     A = IMTLG()
-    J = torch.zeros(2, 3)
-    assert_close(A(J), torch.zeros(3))
+    J = zeros_(2, 3)
+    assert_close(A(J), zeros_(3))
 
 
 def test_representations():

@@ -1,5 +1,6 @@
 import torch
 from pytest import mark, raises
+from unit._utils import eye_, ones_, tensor_, zeros_
 
 from torchjd._autojac._transform import Jac, OrderedSet, RequirementError
 
@@ -14,18 +15,18 @@ def test_single_input(chunk_size: int | None):
     respect to `a1` and `a2`.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y = torch.stack([a1 * x, a2 * x])
-    input = {y: torch.eye(2)}
+    input = {y: eye_(2)}
 
     jac = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]), chunk_size=chunk_size)
 
     jacobians = jac(input)
     expected_jacobians = {
-        a1: torch.stack([x, torch.zeros([])]),
-        a2: torch.stack([torch.zeros([]), x]),
+        a1: torch.stack([x, zeros_([])]),
+        a2: torch.stack([zeros_([]), x]),
     }
 
     assert_tensor_dicts_are_close(jacobians, expected_jacobians)
@@ -37,10 +38,10 @@ def test_empty_inputs_1(chunk_size: int | None):
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
 
-    y1 = torch.tensor(1.0, requires_grad=True)
-    y2 = torch.tensor(1.0, requires_grad=True)
+    y1 = tensor_(1.0, requires_grad=True)
+    y2 = tensor_(1.0, requires_grad=True)
     y = torch.stack([y1, y2])
-    input = {y: torch.eye(2)}
+    input = {y: eye_(2)}
 
     jac = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([]), chunk_size=chunk_size)
 
@@ -56,13 +57,13 @@ def test_empty_inputs_2(chunk_size: int | None):
     Tests that the Jac transform works correctly when the `inputs` parameter is an empty `Iterable`.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(1.0, requires_grad=True)
-    a2 = torch.tensor(1.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(1.0, requires_grad=True)
+    a2 = tensor_(1.0, requires_grad=True)
     y1 = a1 * x
     y2 = a2 * x
     y = torch.stack([y1, y2])
-    input = {y: torch.eye(2)}
+    input = {y: eye_(2)}
 
     jac = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([]), chunk_size=chunk_size)
 
@@ -79,8 +80,8 @@ def test_empty_outputs(chunk_size: int | None):
     `Iterable`.
     """
 
-    a1 = torch.tensor(1.0, requires_grad=True)
-    a2 = torch.tensor([1.0, 2.0], requires_grad=True)
+    a1 = tensor_(1.0, requires_grad=True)
+    a2 = tensor_([1.0, 2.0], requires_grad=True)
     input = {}
 
     jac = Jac(outputs=OrderedSet([]), inputs=OrderedSet([a1, a2]), chunk_size=chunk_size)
@@ -97,13 +98,13 @@ def test_empty_outputs(chunk_size: int | None):
 def test_retain_graph():
     """Tests that the `Jac` transform behaves as expected with the `retain_graph` flag."""
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = a1 * x
     y2 = a2 * x
     y = torch.stack([y1, y2])
-    input = {y: torch.eye(2)}
+    input = {y: eye_(2)}
 
     jac_retain_graph = Jac(
         outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]), chunk_size=None, retain_graph=True
@@ -129,15 +130,15 @@ def test_two_levels():
     using chain rule. This derivative should be equal to `x1 * x2`.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x1 = tensor_(5.0)
+    x2 = tensor_(6.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = a1 * x1
     y2 = a2 * x1
     y = torch.stack([y1, y2])
     z = y * x2
-    input = {z: torch.eye(2)}
+    input = {z: eye_(2)}
 
     outer_jac = Jac(
         outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]), chunk_size=None, retain_graph=True
@@ -162,15 +163,15 @@ def test_multiple_outputs_1(chunk_size: int | None):
     scaling is performed correctly.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = torch.stack([a1 * x, a2 * x])
     y2 = torch.stack([a2**2, a1**2])
     y3 = torch.stack([a2**3, a1**3])
 
-    identity_2x2 = torch.eye(2)
-    zeros_2x2 = torch.zeros(2, 2)
+    identity_2x2 = eye_(2)
+    zeros_2x2 = zeros_(2, 2)
     jac_output1 = torch.cat([identity_2x2 * 7, zeros_2x2, zeros_2x2])
     jac_output2 = torch.cat([zeros_2x2, identity_2x2, zeros_2x2])
     jac_output3 = torch.cat([zeros_2x2, zeros_2x2, identity_2x2])
@@ -179,7 +180,7 @@ def test_multiple_outputs_1(chunk_size: int | None):
     jac = Jac(outputs=OrderedSet([y1, y2, y3]), inputs=OrderedSet([a1, a2]), chunk_size=chunk_size)
 
     jacobians = jac(input)
-    zero_scalar = torch.tensor(0.0)
+    zero_scalar = tensor_(0.0)
     expected_jacobians = {
         a1: torch.stack([x * 7, zero_scalar, zero_scalar, 2 * a1, zero_scalar, 3 * a1**2]),
         a2: torch.stack([zero_scalar, x * 7, 2 * a2, zero_scalar, 3 * a2**2, zero_scalar]),
@@ -195,15 +196,15 @@ def test_multiple_outputs_2(chunk_size: int | None):
     different shapes.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = torch.stack([a1 * x, a2 * x])
     y2 = torch.stack([a2**2, a1**2])
     y3 = torch.stack([a2**3, a1**3])
 
-    ones_2 = torch.ones(2)
-    zeros_2 = torch.zeros(2)
+    ones_2 = ones_(2)
+    zeros_2 = zeros_(2)
     jac_output1 = torch.stack([ones_2 * 7, zeros_2, zeros_2])
     jac_output2 = torch.stack([zeros_2, ones_2, zeros_2])
     jac_output3 = torch.stack([zeros_2, zeros_2, ones_2])
@@ -226,14 +227,14 @@ def test_composition_of_jacs_is_jac():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a = torch.tensor(2.0, requires_grad=True)
+    x1 = tensor_(5.0)
+    x2 = tensor_(6.0)
+    a = tensor_(2.0, requires_grad=True)
     y1 = a * x1
     y2 = a * x2
     z1 = y1 + x2
     z2 = y2 + x1
-    input = {z1: torch.tensor([1.0, 0.0]), z2: torch.tensor([0.0, 1.0])}
+    input = {z1: tensor_([1.0, 0.0]), z2: tensor_([0.0, 1.0])}
 
     outer_jac = Jac(
         outputs=OrderedSet([y1, y2]), inputs=OrderedSet([a]), chunk_size=None, retain_graph=True
@@ -259,14 +260,14 @@ def test_conjunction_of_jacs_is_jac():
     a single transform.
     """
 
-    x1 = torch.tensor(5.0)
-    x2 = torch.tensor(6.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x1 = tensor_(5.0)
+    x2 = tensor_(6.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = a1 * x1
     y2 = a2 * x2
     y = torch.stack([y1, y2])
-    input = {y: torch.eye(len(y))}
+    input = {y: eye_(len(y))}
 
     jac1 = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([a1]), chunk_size=None, retain_graph=True)
     jac2 = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([a2]), chunk_size=None, retain_graph=True)
@@ -282,13 +283,13 @@ def test_conjunction_of_jacs_is_jac():
 def test_create_graph():
     """Tests that the Jac transform behaves correctly when `create_graph` is set to `True`."""
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = a1 * a2
     y2 = a2 * x
     y = torch.stack([y1, y2])
-    input = {y: torch.eye(2)}
+    input = {y: eye_(2)}
 
     jac = Jac(
         outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]), chunk_size=None, create_graph=True
@@ -306,9 +307,9 @@ def test_check_keys():
     outputs.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y = torch.stack([a1 * x, a2 * x])
 
     jac = Jac(outputs=OrderedSet([y]), inputs=OrderedSet([a1, a2]), chunk_size=None)

@@ -1,7 +1,7 @@
-import torch
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import ones_, randn_
 
 from torchjd.aggregation import MGDA
 from torchjd.aggregation._mgda import _MGDAWeighting
@@ -44,7 +44,7 @@ def test_permutation_invariant(aggregator: MGDA, matrix: Tensor):
     ],
 )
 def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
-    matrix = torch.randn(shape)
+    matrix = randn_(shape)
     gramian = compute_gramian(matrix)
 
     weighting = _MGDAWeighting(epsilon=1e-05, max_iters=1000)
@@ -59,7 +59,7 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     assert_close(positive_weights.norm(), weights.norm())
 
     weights_sum = weights.sum()
-    assert_close(weights_sum, torch.ones([]))
+    assert_close(weights_sum, ones_([]))
 
     # Dual feasibility
     positive_mu = mu[mu >= 0]

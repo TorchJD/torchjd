@@ -1,6 +1,7 @@
-import torch
 from pytest import mark, raises
 from torch.nn import Linear, MSELoss, ReLU, Sequential
+from unit._utils import randn_, tensor_
+from unit.conftest import DEVICE
 
 from torchjd._autojac._utils import get_leaf_tensors
 
@@ -8,10 +9,10 @@ from torchjd._autojac._utils import get_leaf_tensors
 def test_simple_get_leaf_tensors():
     """Tests that _get_leaf_tensors works correctly in a very simple setting."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = get_leaf_tensors(tensors=[y1, y2], excluded=set())
@@ -26,13 +27,13 @@ def test_get_leaf_tensors_excluded_1():
     is excluded from the graph traversal.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
     b1 = (a1**2).sum()
     b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + b2
+    y1 = tensor_([-1.0, 1.0]) @ a1 + b2
     y2 = b1
 
     leaves = get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
@@ -47,13 +48,13 @@ def test_get_leaf_tensors_excluded_2():
     `a1` and `a2` from another path, so these two tensors should be in the result.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
     b1 = (a1**2).sum()
     b2 = (a2**2).sum()
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = b1
 
     leaves = get_leaf_tensors(tensors=[y1, y2], excluded={b1, b2})
@@ -65,10 +66,10 @@ def test_get_leaf_tensors_leaf_not_requiring_grad():
     Tests that _get_leaf_tensors does not include tensors that do not require grad in its results.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=False)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=False)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     leaves = get_leaf_tensors(tensors=[y1, y2], excluded=set())
@@ -81,10 +82,10 @@ def test_get_leaf_tensors_model():
     sequential model.
     """
 
-    x = torch.randn(16, 10)
-    y = torch.randn(16, 1)
+    x = randn_(16, 10)
+    y = randn_(16, 1)
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1)).to(device=DEVICE)
     loss_fn = MSELoss(reduction="none")
 
     y_hat = model(x)
@@ -100,11 +101,11 @@ def test_get_leaf_tensors_model_excluded_2():
     sequential model, and some intermediate values are excluded.
     """
 
-    x = torch.randn(16, 10)
-    z = torch.randn(16, 1)
+    x = randn_(16, 10)
+    z = randn_(16, 1)
 
-    model1 = Sequential(Linear(10, 5), ReLU())
-    model2 = Linear(5, 1)
+    model1 = Sequential(Linear(10, 5), ReLU()).to(device=DEVICE)
+    model2 = Linear(5, 1).to(device=DEVICE)
     loss_fn = MSELoss(reduction="none")
 
     y = model1(x)
@@ -118,7 +119,7 @@ def test_get_leaf_tensors_model_excluded_2():
 def test_get_leaf_tensors_single_root():
     """Tests that _get_leaf_tensors returns no leaves when roots is the empty set."""
 
-    p = torch.tensor([1.0, 2.0], requires_grad=True)
+    p = tensor_([1.0, 2.0], requires_grad=True)
     y = p * 2
 
     leaves = get_leaf_tensors(tensors=[y], excluded=set())
@@ -135,10 +136,10 @@ def test_get_leaf_tensors_empty_roots():
 def test_get_leaf_tensors_excluded_root():
     """Tests that _get_leaf_tensors correctly excludes the root."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum()
 
     leaves = get_leaf_tensors(tensors=[y1, y2], excluded={y1})
@@ -149,8 +150,8 @@ def test_get_leaf_tensors_excluded_root():
 def test_get_leaf_tensors_deep(depth: int):
     """Tests that _get_leaf_tensors works when the graph is very deep."""
 
-    one = torch.tensor(1.0, requires_grad=True)
-    sum_ = torch.tensor(0.0, requires_grad=False)
+    one = tensor_(1.0, requires_grad=True)
+    sum_ = tensor_(0.0, requires_grad=False)
     for i in range(depth):
         sum_ = sum_ + one
 
@@ -161,7 +162,7 @@ def test_get_leaf_tensors_deep(depth: int):
 def test_get_leaf_tensors_leaf():
     """Tests that _get_leaf_tensors raises an error some of the provided tensors are leaves."""
 
-    a = torch.tensor(1.0, requires_grad=True)
+    a = tensor_(1.0, requires_grad=True)
     with raises(ValueError):
         _ = get_leaf_tensors(tensors=[a], excluded=set())
 
@@ -171,7 +172,7 @@ def test_get_leaf_tensors_tensor_not_requiring_grad():
     Tests that _get_leaf_tensors raises an error some of the provided tensors do not require grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=False) * 2
+    a = tensor_(1.0, requires_grad=False) * 2
     with raises(ValueError):
         _ = get_leaf_tensors(tensors=[a], excluded=set())
 
@@ -179,8 +180,8 @@ def test_get_leaf_tensors_tensor_not_requiring_grad():
 def test_get_leaf_tensors_excluded_leaf():
     """Tests that _get_leaf_tensors raises an error some of the excluded tensors are leaves."""
 
-    a = torch.tensor(1.0, requires_grad=True) * 2
-    b = torch.tensor(2.0, requires_grad=True)
+    a = tensor_(1.0, requires_grad=True) * 2
+    b = tensor_(2.0, requires_grad=True)
     with raises(ValueError):
         _ = get_leaf_tensors(tensors=[a], excluded={b})
 
@@ -190,7 +191,7 @@ def test_get_leaf_tensors_excluded_not_requiring_grad():
     Tests that _get_leaf_tensors raises an error some of the excluded tensors do not require grad.
     """
 
-    a = torch.tensor(1.0, requires_grad=True) * 2
-    b = torch.tensor(2.0, requires_grad=False) * 2
+    a = tensor_(1.0, requires_grad=True) * 2
+    b = tensor_(2.0, requires_grad=False) * 2
     with raises(ValueError):
         _ = get_leaf_tensors(tensors=[a], excluded={b})

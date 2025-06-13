@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from pytest import mark, raises
 from torch.testing import assert_close
+from unit._utils import rand_, randn_
 
 from torchjd.aggregation._utils.dual_cone import _project_weight_vector, project_weights
 
@@ -29,9 +30,9 @@ def test_solution_weights(shape: tuple[int, int]):
     [1] `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
     """
 
-    J = torch.randn(shape)
+    J = randn_(shape)
     G = J @ J.T
-    u = torch.rand(shape[0])
+    u = rand_(shape[0])
 
     w = project_weights(u, G, "quadprog")
     dual_gap = w - u
@@ -58,9 +59,9 @@ def test_scale_invariant(shape: tuple[int, int], scaling: float):
     Tests that `_project_weights` is invariant under scaling.
     """
 
-    J = torch.randn(shape)
+    J = randn_(shape)
     G = J @ J.T
-    u = torch.rand(shape[0])
+    u = rand_(shape[0])
 
     w = project_weights(u, G, "quadprog")
     w_scaled = project_weights(u, scaling * G, "quadprog")
@@ -75,8 +76,8 @@ def test_tensorization_shape(shape: tuple[int, ...]):
     reshaped as matrix and to reshape the result back to the original tensor's shape.
     """
 
-    matrix = torch.randn([shape[-1], shape[-1]])
-    U_tensor = torch.randn(shape)
+    matrix = randn_([shape[-1], shape[-1]])
+    U_tensor = randn_(shape)
     U_matrix = U_tensor.reshape([-1, shape[-1]])
 
     G = matrix @ matrix.T

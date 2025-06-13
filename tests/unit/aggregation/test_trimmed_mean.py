@@ -1,9 +1,8 @@
 from contextlib import nullcontext as does_not_raise
 
-import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, ones_
 
 from torchjd.aggregation import TrimmedMean
 
@@ -50,7 +49,7 @@ def test_trim_number_check(trim_number: int, expectation: ExceptionContext):
     ],
 )
 def test_matrix_shape_check(n_rows: int, trim_number: int, expectation: ExceptionContext):
-    matrix = torch.ones([n_rows, 5])
+    matrix = ones_([n_rows, 5])
     aggregator = TrimmedMean(trim_number=trim_number)
 
     with expectation:

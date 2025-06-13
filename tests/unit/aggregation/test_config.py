@@ -1,6 +1,7 @@
 import torch
 from pytest import mark
 from torch import Tensor
+from unit._utils import ones_
 
 from torchjd.aggregation import ConFIG
 
@@ -15,7 +16,7 @@ from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 scaled_pairs = [(ConFIG(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(ConFIG(), matrix) for matrix in typical_matrices]
 non_strong_pairs = [(ConFIG(), matrix) for matrix in non_strong_matrices]
-requires_grad_pairs = [(ConFIG(), torch.ones(3, 5, requires_grad=True))]
+requires_grad_pairs = [(ConFIG(), ones_(3, 5, requires_grad=True))]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)

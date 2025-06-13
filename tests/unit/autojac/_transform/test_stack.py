@@ -2,6 +2,7 @@ from collections.abc import Iterable
 
 import torch
 from torch import Tensor
+from unit._utils import ones_, tensor_, zeros_
 
 from torchjd._autojac._transform import Stack, Transform
 from torchjd._autojac._transform._base import TensorDict
@@ -28,14 +29,14 @@ def test_single_key():
     example with 2 transforms sharing the same key.
     """
 
-    key = torch.zeros([3, 4])
+    key = zeros_([3, 4])
     input = {}
 
     transform = FakeGradientsTransform([key])
     stack = Stack([transform, transform])
 
     output = stack(input)
-    expected_output = {key: torch.ones([2, 3, 4])}
+    expected_output = {key: ones_([2, 3, 4])}
 
     assert_tensor_dicts_are_close(output, expected_output)
 
@@ -47,8 +48,8 @@ def test_disjoint_key_sets():
     by zeros.
     """
 
-    key1 = torch.zeros([1, 2])
-    key2 = torch.zeros([3])
+    key1 = zeros_([1, 2])
+    key2 = zeros_([3])
     input = {}
 
     transform1 = FakeGradientsTransform([key1])
@@ -57,8 +58,8 @@ def test_disjoint_key_sets():
 
     output = stack(input)
     expected_output = {
-        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]]),
-        key2: torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
+        key1: tensor_([[[1.0, 1.0]], [[0.0, 0.0]]]),
+        key2: tensor_([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -71,9 +72,9 @@ def test_overlapping_key_sets():
     equal). The missing values should be replaced by zeros.
     """
 
-    key1 = torch.zeros([1, 2])
-    key2 = torch.zeros([3])
-    key3 = torch.zeros([4])
+    key1 = zeros_([1, 2])
+    key2 = zeros_([3])
+    key3 = zeros_([4])
     input = {}
 
     transform12 = FakeGradientsTransform([key1, key2])
@@ -82,9 +83,9 @@ def test_overlapping_key_sets():
 
     output = stack(input)
     expected_output = {
-        key1: torch.tensor([[[1.0, 1.0]], [[0.0, 0.0]]]),
-        key2: torch.tensor([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
-        key3: torch.tensor([[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]]),
+        key1: tensor_([[[1.0, 1.0]], [[0.0, 0.0]]]),
+        key2: tensor_([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
+        key3: tensor_([[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)

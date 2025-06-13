@@ -1,6 +1,6 @@
-import torch
 from pytest import raises
 from torch import Tensor
+from unit._utils import empty_, randn_
 
 from torchjd._autojac._transform._base import Conjunction, RequirementError, TensorDict, Transform
 
@@ -19,7 +19,7 @@ class FakeTransform(Transform):
 
     def __call__(self, input: TensorDict) -> TensorDict:
         # Ignore the input, create a dictionary with the right keys as an output.
-        output_dict = {key: torch.empty(0) for key in self._output_keys}
+        output_dict = {key: empty_(0) for key in self._output_keys}
         return output_dict
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
@@ -35,8 +35,8 @@ def test_composition_check_keys():
     `output_keys` has to satisfy the outer transform's requirements.
     """
 
-    a1 = torch.randn([2])
-    a2 = torch.randn([3])
+    a1 = randn_([2])
+    a2 = randn_([3])
     t1 = FakeTransform(required_keys={a1}, output_keys={a1, a2})
     t2 = FakeTransform(required_keys={a2}, output_keys={a1})
 
@@ -58,8 +58,8 @@ def test_conjunct_check_keys_1():
     successfully check their keys.
     """
 
-    a1 = torch.randn([2])
-    a2 = torch.randn([3])
+    a1 = randn_([2])
+    a2 = randn_([3])
 
     t1 = FakeTransform(required_keys={a1}, output_keys=set())
     t2 = FakeTransform(required_keys={a1}, output_keys=set())
@@ -81,8 +81,8 @@ def test_conjunct_check_keys_2():
     should be disjoint.
     """
 
-    a1 = torch.randn([2])
-    a2 = torch.randn([3])
+    a1 = randn_([2])
+    a2 = randn_([3])
 
     t1 = FakeTransform(required_keys=set(), output_keys={a1, a2})
     t2 = FakeTransform(required_keys=set(), output_keys={a1})

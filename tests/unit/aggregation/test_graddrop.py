@@ -4,7 +4,7 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, ones_
 
 from torchjd.aggregation import GradDrop
 
@@ -13,7 +13,7 @@ from ._inputs import scaled_matrices, typical_matrices
 
 scaled_pairs = [(GradDrop(), matrix) for matrix in scaled_matrices]
 typical_pairs = [(GradDrop(), matrix) for matrix in typical_matrices]
-requires_grad_pairs = [(GradDrop(), torch.ones(3, 5, requires_grad=True))]
+requires_grad_pairs = [(GradDrop(), ones_(3, 5, requires_grad=True))]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
@@ -42,7 +42,7 @@ def test_non_differentiable(aggregator: GradDrop, matrix: Tensor):
     ],
 )
 def test_leak_shape_check(leak_shape: list[int], expectation: ExceptionContext):
-    leak = torch.ones(leak_shape)
+    leak = ones_(leak_shape)
     with expectation:
         _ = GradDrop(leak=leak)
 
@@ -60,8 +60,8 @@ def test_leak_shape_check(leak_shape: list[int], expectation: ExceptionContext):
     ],
 )
 def test_matrix_shape_check(leak_shape: list[int], n_rows: int, expectation: ExceptionContext):
-    matrix = torch.ones([n_rows, 5])
-    leak = torch.ones(leak_shape)
+    matrix = ones_([n_rows, 5])
+    leak = ones_(leak_shape)
     aggregator = GradDrop(leak=leak)
 
     with expectation:

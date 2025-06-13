@@ -2,6 +2,7 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
+from unit._utils import rand_, randn_, tensor_
 
 from torchjd import mtl_backward
 from torchjd._autojac._mtl_backward import _create_transform
@@ -12,11 +13,11 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 def test_check_create_transform():
     """Tests that _create_transform creates a valid Transform."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -39,11 +40,11 @@ def test_check_create_transform():
 def test_various_aggregators(aggregator: Aggregator):
     """Tests that mtl_backward works for various aggregators."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -74,12 +75,12 @@ def test_value_is_correct(
     This test should work with or without manually specifying the parameters.
     """
 
-    p0 = torch.randn([shape[1]], requires_grad=True)
-    p1 = torch.randn(shape[0], requires_grad=True)
-    p2 = torch.randn(shape[0], requires_grad=True)
-    p3 = torch.randn(shape[0], requires_grad=True)
+    p0 = randn_([shape[1]], requires_grad=True)
+    p1 = randn_(shape[0], requires_grad=True)
+    p2 = randn_(shape[0], requires_grad=True)
+    p3 = randn_(shape[0], requires_grad=True)
 
-    J = torch.randn(shape)
+    J = randn_(shape)
     f = J @ p0
     y1 = p1 @ f
     y2 = p2 @ f
@@ -117,9 +118,9 @@ def test_value_is_correct(
 def test_empty_tasks_fails():
     """Tests that mtl_backward raises an error when called with an empty list of tasks."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
 
     with raises(ValueError):
@@ -129,10 +130,10 @@ def test_empty_tasks_fails():
 def test_single_task():
     """Tests that mtl_backward works correctly with a single task."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
 
@@ -148,11 +149,11 @@ def test_incoherent_task_number_fails():
     from the number of tasks parameters.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -178,11 +179,11 @@ def test_incoherent_task_number_fails():
 def test_empty_params():
     """Tests that mtl_backward does not fill the .grad values if no parameter is specified."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -202,14 +203,14 @@ def test_empty_params():
 def test_multiple_params_per_task():
     """Tests that mtl_backward works correctly when the tasks each have several parameters."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1_a = torch.tensor(1.0, requires_grad=True)
-    p1_b = torch.tensor([2.0, 3.0], requires_grad=True)
-    p1_c = torch.tensor([[4.0, 5.0], [6.0, 7.0]], requires_grad=True)
-    p2_a = torch.tensor(8.0, requires_grad=True)
-    p2_b = torch.tensor([9.0, 10.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1_a = tensor_(1.0, requires_grad=True)
+    p1_b = tensor_([2.0, 3.0], requires_grad=True)
+    p1_c = tensor_([[4.0, 5.0], [6.0, 7.0]], requires_grad=True)
+    p2_a = tensor_(8.0, requires_grad=True)
+    p2_b = tensor_([9.0, 10.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1_a + (f2 * p1_b).sum() + (f1 * p1_c).sum()
     y2 = f1 * p2_a * (f2 * p2_b).sum()
@@ -236,9 +237,9 @@ def test_multiple_params_per_task():
 def test_various_shared_params(shared_params_shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of shared_params."""
 
-    shared_params = [torch.rand(shape, requires_grad=True) for shape in shared_params_shapes]
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    shared_params = [rand_(shape, requires_grad=True) for shape in shared_params_shapes]
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
     features = [shared_param.sum(dim=-1) for shared_param in shared_params]
     y1 = torch.stack([f.sum() for f in features]).sum()
@@ -262,11 +263,11 @@ def test_partial_params():
     specified as inputs.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -287,11 +288,11 @@ def test_partial_params():
 def test_empty_features_fails():
     """Tests that mtl_backward expectedly raises an error when no there is no feature."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -312,11 +313,11 @@ def test_empty_features_fails():
 def test_various_single_features(shape: tuple[int, ...]):
     """Tests that mtl_backward works correctly with various kinds of feature tensors."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([3.0, 4.0], requires_grad=True)
-    p2 = torch.tensor([5.0, 6.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([3.0, 4.0], requires_grad=True)
+    p2 = tensor_([5.0, 6.0], requires_grad=True)
 
-    f = torch.rand(shape) @ p0
+    f = rand_(shape) @ p0
 
     y1 = (f * p1[0]).sum() + (f * p1[1]).sum()
     y2 = (f * p2[0]).sum() * (f * p2[1]).sum()
@@ -343,11 +344,11 @@ def test_various_single_features(shape: tuple[int, ...]):
 def test_various_feature_lists(shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
     p1 = torch.arange(len(shapes), dtype=torch.float32, requires_grad=True)
-    p2 = torch.tensor(5.0, requires_grad=True)
+    p2 = tensor_(5.0, requires_grad=True)
 
-    features = [torch.rand(shape) @ p0 for shape in shapes]
+    features = [rand_(shape) @ p0 for shape in shapes]
 
     y1 = sum([(f * p).sum() for f, p in zip(features, p1)])
     y2 = (features[0] * p2).sum()
@@ -361,11 +362,11 @@ def test_various_feature_lists(shapes: list[tuple[int]]):
 def test_non_scalar_loss_fails():
     """Tests that mtl_backward raises an error when used with a non-scalar loss."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = torch.stack([f1 * p1[0], f2 * p1[1]])  # Non-scalar
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -378,11 +379,11 @@ def test_non_scalar_loss_fails():
 def test_various_valid_chunk_sizes(chunk_size):
     """Tests that mtl_backward works for various valid values of parallel_chunk_size."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -402,11 +403,11 @@ def test_various_valid_chunk_sizes(chunk_size):
 def test_non_positive_chunk_size_fails(chunk_size: int):
     """Tests that mtl_backward raises an error when using invalid chunk sizes."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -426,9 +427,9 @@ def test_shared_param_retaining_grad_fails():
     ``features`` parameter retains grad and vmap has to be used.
     """
 
-    p0 = torch.tensor(1.0, requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
+    p0 = tensor_(1.0, requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
 
     a = 2 * p0
     a.retain_grad()
@@ -452,9 +453,9 @@ def test_shared_activation_retaining_grad_fails():
     of the ``features`` parameter retains grad and vmap has to be used.
     """
 
-    p0 = torch.tensor(1.0, requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
+    p0 = tensor_(1.0, requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
 
     a = 2 * p0
     a.retain_grad()
@@ -479,12 +480,12 @@ def test_shared_activation_retaining_grad_fails():
 def test_tasks_params_overlap():
     """Tests that mtl_backward works correctly when the tasks' parameters have some overlap."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
-    p12 = torch.tensor(4.0, requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
+    p12 = tensor_(4.0, requires_grad=True)
 
-    f = torch.tensor([-1.0, 1.0]) @ p0
+    f = tensor_([-1.0, 1.0]) @ p0
     y1 = f * p1 * p12
     y2 = f * p2 * p12
 
@@ -495,17 +496,17 @@ def test_tasks_params_overlap():
     assert_close(p1.grad, f * p12)
     assert_close(p12.grad, f * p1 + f * p2)
 
-    J = torch.tensor([[-p1 * p12, p1 * p12], [-p2 * p12, p2 * p12]])
+    J = tensor_([[-p1 * p12, p1 * p12], [-p2 * p12, p2 * p12]])
     assert_close(p0.grad, aggregator(J))
 
 
 def test_tasks_params_are_the_same():
     """Tests that mtl_backward works correctly when the tasks have the same params."""
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
 
-    f = torch.tensor([-1.0, 1.0]) @ p0
+    f = tensor_([-1.0, 1.0]) @ p0
     y1 = f * p1
     y2 = f + p1
 
@@ -514,7 +515,7 @@ def test_tasks_params_are_the_same():
 
     assert_close(p1.grad, f + 1)
 
-    J = torch.tensor([[-p1, p1], [-1.0, 1.0]])
+    J = tensor_([[-p1, p1], [-1.0, 1.0]])
     assert_close(p0.grad, aggregator(J))
 
 
@@ -524,11 +525,11 @@ def test_task_params_is_subset_of_other_task_params():
     params.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
 
-    f = torch.tensor([-1.0, 1.0]) @ p0
+    f = tensor_([-1.0, 1.0]) @ p0
     y1 = f * p1
     y2 = y1 * p2
 
@@ -538,7 +539,7 @@ def test_task_params_is_subset_of_other_task_params():
     assert_close(p2.grad, y1)
     assert_close(p1.grad, p2 * f + f)
 
-    J = torch.tensor([[-p1, p1], [-p1 * p2, p1 * p2]])
+    J = tensor_([[-p1, p1], [-p1 * p2, p1 * p2]])
     assert_close(p0.grad, aggregator(J))
 
 
@@ -548,11 +549,11 @@ def test_shared_params_overlapping_with_tasks_params_fails():
     task-specific params.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
 
-    f = torch.tensor([-1.0, 1.0]) @ p0
+    f = tensor_([-1.0, 1.0]) @ p0
     y1 = f * p1
     y2 = p0.sum() * f * p2
 
@@ -572,11 +573,11 @@ def test_default_shared_params_overlapping_with_default_tasks_params_fails():
     overlaps with the set of task-specific params obtained by default.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor(2.0, requires_grad=True)
-    p2 = torch.tensor(3.0, requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_(2.0, requires_grad=True)
+    p2 = tensor_(3.0, requires_grad=True)
 
-    f = torch.tensor([-1.0, 1.0]) @ p0
+    f = tensor_([-1.0, 1.0]) @ p0
     y1 = f * p1
     y2 = p0.sum() * f * p2
 
@@ -597,11 +598,11 @@ def test_repeated_losses():
     ways of producing Jacobians with repeated rows anyway.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -620,11 +621,11 @@ def test_repeated_features():
     repetition would be very confusing and should thus be forbidden).
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -641,11 +642,11 @@ def test_repeated_shared_params():
     repetition should not affect the result.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
@@ -669,11 +670,11 @@ def test_repeated_task_params():
     torch.autograd.backward, this repetition should not affect the result.
     """
 
-    p0 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    p2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    p0 = tensor_([1.0, 2.0], requires_grad=True)
+    p1 = tensor_([1.0, 2.0], requires_grad=True)
+    p2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    f1 = torch.tensor([-1.0, 1.0]) @ p0
+    f1 = tensor_([-1.0, 1.0]) @ p0
     f2 = (p0**2).sum() + p0.norm()
     y1 = f1 * p1[0] + f2 * p1[1]
     y2 = f1 * p2[0] + f2 * p2[1]
