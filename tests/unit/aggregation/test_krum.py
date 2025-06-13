@@ -1,9 +1,8 @@
 from contextlib import nullcontext as does_not_raise
 
-import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, ones_
 
 from torchjd.aggregation import Krum
 
@@ -65,7 +64,7 @@ def test_matrix_shape_check(
     n_byzantine: int, n_selected: int, n_rows: int, expectation: ExceptionContext
 ):
     aggregator = Krum(n_byzantine=n_byzantine, n_selected=n_selected)
-    matrix = torch.ones([n_rows, 5])
+    matrix = ones_([n_rows, 5])
 
     with expectation:
         _ = aggregator(matrix)

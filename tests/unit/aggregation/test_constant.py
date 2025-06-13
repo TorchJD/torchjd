@@ -3,7 +3,7 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, ones_, tensor_
 
 from torchjd.aggregation import Constant
 
@@ -17,7 +17,7 @@ from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    weights = torch.tensor([1.0 / n_rows] * n_rows, dtype=matrix.dtype)
+    weights = tensor_([1.0 / n_rows] * n_rows, dtype=matrix.dtype)
     return Constant(weights)
 
 
@@ -57,7 +57,7 @@ def test_strongly_stationary(aggregator: Constant, matrix: Tensor):
     ],
 )
 def test_weights_shape_check(weights_shape: list[int], expectation: ExceptionContext):
-    weights = torch.ones(weights_shape)
+    weights = ones_(weights_shape)
     with expectation:
         _ = Constant(weights=weights)
 
@@ -75,8 +75,8 @@ def test_weights_shape_check(weights_shape: list[int], expectation: ExceptionCon
     ],
 )
 def test_matrix_shape_check(weights_shape: list[int], n_rows: int, expectation: ExceptionContext):
-    matrix = torch.ones([n_rows, 5])
-    weights = torch.ones(weights_shape)
+    matrix = ones_([n_rows, 5])
+    weights = ones_(weights_shape)
     aggregator = Constant(weights)
 
     with expectation:

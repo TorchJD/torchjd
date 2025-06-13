@@ -1,9 +1,8 @@
 from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
 
-import torch
 from pytest import mark, raises
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, randn_
 
 from torchjd.aggregation import Aggregator
 
@@ -20,4 +19,4 @@ from torchjd.aggregation import Aggregator
 )
 def test_check_is_matrix(shape: Sequence[int], expectation: ExceptionContext):
     with expectation:
-        Aggregator._check_is_matrix(torch.randn(shape))
+        Aggregator._check_is_matrix(randn_(shape))

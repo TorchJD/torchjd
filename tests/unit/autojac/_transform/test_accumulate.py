@@ -1,5 +1,5 @@
-import torch
 from pytest import mark, raises
+from unit._utils import ones_, tensor_, zeros_
 
 from torchjd._autojac._transform import Accumulate
 
@@ -12,12 +12,12 @@ def test_single_accumulation():
     once.
     """
 
-    key1 = torch.zeros([], requires_grad=True)
-    key2 = torch.zeros([1], requires_grad=True)
-    key3 = torch.zeros([2, 3], requires_grad=True)
-    value1 = torch.ones([])
-    value2 = torch.ones([1])
-    value3 = torch.ones([2, 3])
+    key1 = zeros_([], requires_grad=True)
+    key2 = zeros_([1], requires_grad=True)
+    key3 = zeros_([2, 3], requires_grad=True)
+    value1 = ones_([])
+    value2 = ones_([1])
+    value3 = ones_([2, 3])
     input = {key1: value1, key2: value2, key3: value3}
 
     accumulate = Accumulate()
@@ -40,12 +40,12 @@ def test_multiple_accumulation(iterations: int):
     `iterations` times.
     """
 
-    key1 = torch.zeros([], requires_grad=True)
-    key2 = torch.zeros([1], requires_grad=True)
-    key3 = torch.zeros([2, 3], requires_grad=True)
-    value1 = torch.ones([])
-    value2 = torch.ones([1])
-    value3 = torch.ones([2, 3])
+    key1 = zeros_([], requires_grad=True)
+    key2 = zeros_([1], requires_grad=True)
+    key3 = zeros_([2, 3], requires_grad=True)
+    value1 = ones_([])
+    value2 = ones_([1])
+    value3 = ones_([2, 3])
     input = {key1: value1, key2: value2, key3: value3}
 
     accumulate = Accumulate()
@@ -69,8 +69,8 @@ def test_no_requires_grad_fails():
     tensor that does not require grad.
     """
 
-    key = torch.zeros([1], requires_grad=False)
-    value = torch.ones([1])
+    key = zeros_([1], requires_grad=False)
+    value = ones_([1])
     input = {key: value}
 
     accumulate = Accumulate()
@@ -85,8 +85,8 @@ def test_no_leaf_and_no_retains_grad_fails():
     tensor that is not a leaf and that does not retain grad.
     """
 
-    key = torch.tensor([1.0], requires_grad=True) * 2
-    value = torch.ones([1])
+    key = tensor_([1.0], requires_grad=True) * 2
+    value = ones_([1])
     input = {key: value}
 
     accumulate = Accumulate()
@@ -98,7 +98,7 @@ def test_no_leaf_and_no_retains_grad_fails():
 def test_check_keys():
     """Tests that the `check_keys` method works correctly."""
 
-    key = torch.tensor([1.0], requires_grad=True)
+    key = tensor_([1.0], requires_grad=True)
     accumulate = Accumulate()
 
     output_keys = accumulate.check_keys({key})

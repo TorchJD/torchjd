@@ -1,7 +1,7 @@
-import torch
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import ones_, randn_
 
 from torchjd.aggregation import NashMTL
 
@@ -14,7 +14,7 @@ def _make_aggregator(matrix: Tensor) -> NashMTL:
 
 
 standard_pairs = [(_make_aggregator(matrix), matrix) for matrix in nash_mtl_matrices]
-requires_grad_pairs = [(NashMTL(n_tasks=3), torch.ones(3, 5, requires_grad=True))]
+requires_grad_pairs = [(NashMTL(n_tasks=3), ones_(3, 5, requires_grad=True))]
 
 
 # Note that as opposed to most aggregators, the expected structure is only tested with non-scaled
@@ -43,7 +43,7 @@ def test_nash_mtl_reset():
     To ensure that the aggregations are not all the same, we create different matrices to aggregate.
     """
 
-    matrices = [torch.randn(3, 5) for _ in range(4)]
+    matrices = [randn_(3, 5) for _ in range(4)]
     aggregator = NashMTL(n_tasks=3, update_weights_every=3)
     expecteds = [aggregator(matrix) for matrix in matrices]
 

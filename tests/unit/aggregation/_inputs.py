@@ -1,4 +1,5 @@
 import torch
+from unit._utils import zeros_
 from unit.conftest import DEVICE
 
 from ._matrix_samplers import NonWeakSampler, NormalSampler, StrictlyWeakSampler, StrongSampler
@@ -31,7 +32,7 @@ _scales = [0.0, 1e-10, 1e3, 1e5, 1e10, 1e15]
 _rng = torch.Generator(device=DEVICE).manual_seed(0)
 
 matrices = [NormalSampler(m, n, r)(_rng) for m, n, r in _normal_dims]
-zero_matrices = [torch.zeros([m, n]) for m, n, _ in _zero_dims]
+zero_matrices = [zeros_([m, n]) for m, n, _ in _zero_dims]
 strong_matrices = [StrongSampler(m, n, r)(_rng) for m, n, r in _stationarity_dims]
 strictly_weak_matrices = [StrictlyWeakSampler(m, n, r)(_rng) for m, n, r in _stationarity_dims]
 non_weak_matrices = [NonWeakSampler(m, n, r)(_rng) for m, n, r in _stationarity_dims]
