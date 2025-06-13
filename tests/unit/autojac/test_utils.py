@@ -1,6 +1,7 @@
 from pytest import mark, raises
 from torch.nn import Linear, MSELoss, ReLU, Sequential
 from unit._utils import randn_, tensor_
+from unit.conftest import DEVICE
 
 from torchjd._autojac._utils import get_leaf_tensors
 
@@ -84,7 +85,7 @@ def test_get_leaf_tensors_model():
     x = randn_(16, 10)
     y = randn_(16, 1)
 
-    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1)).to(device=DEVICE)
     loss_fn = MSELoss(reduction="none")
 
     y_hat = model(x)
@@ -103,8 +104,8 @@ def test_get_leaf_tensors_model_excluded_2():
     x = randn_(16, 10)
     z = randn_(16, 1)
 
-    model1 = Sequential(Linear(10, 5), ReLU())
-    model2 = Linear(5, 1)
+    model1 = Sequential(Linear(10, 5), ReLU()).to(device=DEVICE)
+    model2 = Linear(5, 1).to(device=DEVICE)
     loss_fn = MSELoss(reduction="none")
 
     y = model1(x)
