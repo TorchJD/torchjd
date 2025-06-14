@@ -12,6 +12,20 @@ from torchjd._autojac._transform import Diagonalize, Init, Jac
 from torchjd._autojac._transform._aggregate import _Matrixify
 
 
+def cuda_sync():
+    if str(DEVICE).startswith("cuda"):
+        print("Cuda sync")
+        torch.cuda.synchronize()
+
+
+def post_call_sync(func):
+    def wrapper(*args, **kwargs):
+        func(*args, **kwargs)
+        cuda_sync()
+
+    return wrapper
+
+
 class Cifar10Model(nn.Sequential):
     def __init__(self):
         layers = [
@@ -32,7 +46,7 @@ class Cifar10Model(nn.Sequential):
 
 
 def test_algo_3():
-    batch_size = 128
+    batch_size = 64
     input_shape = (batch_size, 3, 32, 32)
     input = torch.randn(input_shape, device=DEVICE)
     target = torch.randint(0, 10, (batch_size,), device=DEVICE)
@@ -45,44 +59,43 @@ def test_algo_3():
     activations = compute_activations(criterion, input, model, target)
     _ = autogram_(activations, batch_size, criterion, model)
     activations = compute_activations(criterion, input, model, target)
-    with Timer(device=DEVICE):
+    with Timer():
         gramian = autogram_(activations, batch_size, criterion, model)
 
     activations = compute_activations(criterion, input, model, target)
     _ = compute_gramian_via_autojac(activations, model)
     activations = compute_activations(criterion, input, model, target)
-    with Timer(device=DEVICE):
+    with Timer():
         expected_gramian = compute_gramian_via_autojac(activations, model)
 
     assert_close(gramian, expected_gramian)
 
 
 class Timer:
-    def __init__(self, device=None):
-        self.device = device
+    def __init__(self):
         self.start_time = None
         self.end_time = None
 
     def __enter__(self):
-        if self.device == "cuda":
-            torch.cuda.synchronize()
+        cuda_sync()
         self.start_time = time.perf_counter()
         return self  # This allows you to access the timer object within the 'with' block
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.device == "cuda":
-            torch.cuda.synchronize()
+        cuda_sync()  # This is redundant, it is there just in case we stop decorating the function
+        # with post_call_sync
         self.end_time = time.perf_counter()
         self.elapsed_time = self.end_time - self.start_time
         print(f"Elapsed time: {self.elapsed_time:.4f} seconds")
 
 
+@post_call_sync
 def compute_gramian_via_autojac(activations, model: nn.Sequential):
     params = OrderedSet(model.parameters())
     output = OrderedSet([activations[-1]])
     init = Init(output)
     diag = Diagonalize(output)
-    jac = Jac(output, params, chunk_size=1)
+    jac = Jac(output, params, chunk_size=None)
     matrixify = _Matrixify()
     transform = matrixify << jac << diag << init
     jacobian_matrices = transform({})
@@ -101,6 +114,7 @@ def compute_activations(criterion, input, model: nn.Sequential, target) -> list[
     return activations
 
 
+@post_call_sync
 def autogram_(activations, batch_size, criterion, model: nn.Sequential):
     grad = torch.ones_like(activations[-1])
     gramian = torch.zeros(batch_size, batch_size, device=grad.device)
