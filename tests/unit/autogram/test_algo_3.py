@@ -136,3 +136,23 @@ def vjp_from_module(module: nn.Module, *inputs) -> Callable:
         return torch.func.functional_call(module, all_state, *inputs)
 
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
+
+
+def test_reused_tensor():
+    param = torch.tensor(5.0)
+    input = torch.tensor(2.0)
+
+    def g(x, param_):
+        return x * param_
+
+    def f(x, param_):
+        return x * param_**2
+
+    def h(x, param_):
+        return f(g(x, param_), param_)
+
+    output, vjp = torch.func.vjp(h, input, param)
+    assert_close(vjp(torch.ones_like(output))[1], input * 3 * param**2)
+
+    output, vjp = torch.func.vjp(f, g(input, param), param)
+    assert_close(vjp(torch.ones_like(output))[1], g(input, param) * 2 * param)
