@@ -32,8 +32,6 @@ class Cifar10Model(nn.Sequential):
 
 
 def test_algo_3():
-    torch.use_deterministic_algorithms(False)
-
     batch_size = 128
     input_shape = (batch_size, 3, 32, 32)
     input = torch.randn(input_shape, device=DEVICE)
