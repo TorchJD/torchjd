@@ -6,12 +6,10 @@ from torch import Tensor, nn
 from torch.nn import Parameter, ReLU
 from torch.testing import assert_close
 from torch.utils._ordered_set import OrderedSet
+from unit.conftest import DEVICE
 
 from torchjd._autojac._transform import Diagonalize, Init, Jac
 from torchjd._autojac._transform._aggregate import _Matrixify
-
-DEVICE = "cuda"
-torch.set_default_device(DEVICE)
 
 
 class Cifar10Model(nn.Sequential):
@@ -38,10 +36,10 @@ def test_algo_3():
 
     batch_size = 128
     input_shape = (batch_size, 3, 32, 32)
-    input = torch.randn(input_shape)
-    target = torch.randint(0, 10, (batch_size,))
+    input = torch.randn(input_shape, device=DEVICE)
+    target = torch.randint(0, 10, (batch_size,), device=DEVICE)
 
-    model = Cifar10Model()
+    model = Cifar10Model().to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     # Compute gramian to initialize everything correctly, prior to making the timed call
@@ -107,7 +105,7 @@ def compute_activations(criterion, input, model: nn.Sequential, target) -> list[
 
 def autogram_(activations, batch_size, criterion, model: nn.Sequential):
     grad = torch.ones_like(activations[-1])
-    gramian = torch.zeros(batch_size, batch_size)
+    gramian = torch.zeros(batch_size, batch_size, device=grad.device)
     for i, (input, output, layer) in list(
         enumerate(zip(activations[:-1], activations[1:], list(model) + [criterion]))
     )[::-1]:
