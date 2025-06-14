@@ -1,3 +1,4 @@
+import cProfile
 import time
 from collections.abc import Callable
 
@@ -187,3 +188,25 @@ def test_reused_tensor_autograd():
 
     grad_wrt_param_partial = torch.autograd.grad(x2, param)[0]
     assert_close(grad_wrt_param_partial, x1 * 2 * param)
+
+
+if __name__ == "__main__":
+    batch_size = 64
+    input_shape = (batch_size, 3, 32, 32)
+    input = torch.randn(input_shape, device=DEVICE)
+    target = torch.randint(0, 10, (batch_size,), device=DEVICE)
+
+    model = Cifar10Model().to(device=DEVICE)
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+    activations = compute_activations(criterion, input, model, target)
+    _ = compute_gramian_via_autojac(activations, model)
+    activations = compute_activations(criterion, input, model, target)
+    cuda_sync()
+    cProfile.run("expected_gramian = compute_gramian_via_autojac(activations, model)", sort="time")
+
+    activations = compute_activations(criterion, input, model, target)
+    _ = autogram_(activations, batch_size, criterion, model)
+    activations = compute_activations(criterion, input, model, target)
+    cuda_sync()
+    cProfile.run("gramian = autogram_(activations, batch_size, criterion, model)", sort="time")
