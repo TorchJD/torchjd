@@ -1,6 +1,7 @@
 import torch
 from pytest import raises
 from torch.testing import assert_close
+from unit._utils import tensor_, zeros_
 
 from torchjd._autojac._transform import (
     Accumulate,
@@ -24,9 +25,9 @@ def test_jac_is_stack_of_grads():
     Select transforms.
     """
 
-    x = torch.tensor(5.0)
-    a1 = torch.tensor(2.0, requires_grad=True)
-    a2 = torch.tensor(3.0, requires_grad=True)
+    x = tensor_(5.0)
+    a1 = tensor_(2.0, requires_grad=True)
+    a2 = tensor_(3.0, requires_grad=True)
     y1 = a1 * x
     y2 = a2 * x
     input = {y1: torch.ones_like(y1), y2: torch.ones_like(y2)}
@@ -58,7 +59,7 @@ def test_single_differentiation():
     Init transform.
     """
 
-    a = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+    a = tensor_([1.0, 2.0, 3.0], requires_grad=True)
     y = a * 2.0
     input = {}
 
@@ -67,7 +68,7 @@ def test_single_differentiation():
     transform = grad << init
 
     output = transform(input)
-    expected_output = {a: torch.tensor([2.0, 2.0, 2.0])}
+    expected_output = {a: tensor_([2.0, 2.0, 2.0])}
 
     assert_tensor_dicts_are_close(output, expected_output)
 
@@ -78,8 +79,8 @@ def test_multiple_differentiations():
     transforms, composed with an Init transform.
     """
 
-    a1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], requires_grad=True)
-    a2 = torch.tensor([1.0, 3.0, 5.0], requires_grad=True)
+    a1 = tensor_([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], requires_grad=True)
+    a2 = tensor_([1.0, 3.0, 5.0], requires_grad=True)
     y1 = a1 * 2.0
     y2 = a2 * 3.0
     input = {}
@@ -93,8 +94,8 @@ def test_multiple_differentiations():
 
     output = transform(input)
     expected_output = {
-        a1: torch.tensor([[2.0, 2.0, 2.0], [2.0, 2.0, 2.0]]),
-        a2: torch.tensor([3.0, 3.0, 3.0]),
+        a1: tensor_([[2.0, 2.0, 2.0], [2.0, 2.0, 2.0]]),
+        a2: tensor_([3.0, 3.0, 3.0]),
     }
 
     assert_tensor_dicts_are_close(output, expected_output)
@@ -117,9 +118,9 @@ def test_simple_conjunction():
     Because of this, the output is expected to be the same as the input.
     """
 
-    x1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    x2 = torch.tensor([1.0, 3.0, 5.0])
-    x3 = torch.tensor(4.0)
+    x1 = tensor_([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    x2 = tensor_([1.0, 3.0, 5.0])
+    x3 = tensor_(4.0)
     input = {x1: torch.ones_like(x1), x2: torch.ones_like(x2), x3: torch.ones_like(x3)}
 
     select1 = Select({x1})
@@ -139,8 +140,8 @@ def test_conjunction_is_commutative():
     transforms are given.
     """
 
-    x1 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    x2 = torch.tensor([1.0, 3.0, 5.0])
+    x1 = tensor_([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    x2 = tensor_([1.0, 3.0, 5.0])
     input = {x1: torch.ones_like(x1), x2: torch.ones_like(x2)}
 
     a = Select({x1})
@@ -159,10 +160,10 @@ def test_conjunction_is_associative():
     Tests that the Conjunction transform gives the same result no matter how it is parenthesized.
     """
 
-    x1 = torch.tensor([[3.0, 11.0], [2.0, 7.0]])
-    x2 = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    x3 = torch.tensor([1.0, 3.0, 5.0])
-    x4 = torch.tensor(4.0)
+    x1 = tensor_([[3.0, 11.0], [2.0, 7.0]])
+    x2 = tensor_([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    x3 = tensor_([1.0, 3.0, 5.0])
+    x4 = tensor_(4.0)
     input = {
         x1: torch.ones_like(x1),
         x2: torch.ones_like(x2),
@@ -192,7 +193,7 @@ def test_conjunction_accumulate_select():
     subclass of it.
     """
 
-    key = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+    key = tensor_([1.0, 2.0, 3.0], requires_grad=True)
     value = torch.ones_like(key)
     input = {key: value}
 
@@ -212,12 +213,12 @@ def test_equivalence_jac_grads():
     using several calls to `_grad` and stacking the resulting gradients.
     """
 
-    A = torch.tensor([[4.0, 5.0], [6.0, 7.0], [8.0, 9.0]], requires_grad=True)
-    b = torch.tensor([0.0, 2.0], requires_grad=True)
-    c = torch.tensor(1.0, requires_grad=True)
+    A = tensor_([[4.0, 5.0], [6.0, 7.0], [8.0, 9.0]], requires_grad=True)
+    b = tensor_([0.0, 2.0], requires_grad=True)
+    c = tensor_(1.0, requires_grad=True)
 
-    X1 = torch.tensor([[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]])
-    x2 = torch.tensor([5.0, 4.0, 3.0])
+    X1 = tensor_([[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]])
+    x2 = tensor_([5.0, 4.0, 3.0])
 
     y1 = X1 @ A @ b
     y2 = x2 @ A @ b + c
@@ -236,7 +237,7 @@ def test_equivalence_jac_grads():
 
     n_outputs = len(outputs)
     batched_grad_outputs = [
-        torch.zeros((n_outputs,) + grad_output.shape) for grad_output in grad_outputs
+        zeros_((n_outputs,) + grad_output.shape) for grad_output in grad_outputs
     ]
     for i, grad_output in enumerate(grad_outputs):
         batched_grad_outputs[i][i] = grad_output
@@ -256,8 +257,8 @@ def test_stack_check_keys():
     successfully check their keys.
     """
 
-    y1 = torch.tensor(1.0)
-    y2 = torch.tensor(1.0)
+    y1 = tensor_(1.0)
+    y2 = tensor_(1.0)
 
     select1 = Select({y1})
     select2 = Select({y1})

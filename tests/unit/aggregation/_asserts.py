@@ -2,6 +2,7 @@ import torch
 from pytest import raises
 from torch import Tensor
 from torch.testing import assert_close
+from unit._utils import rand_, randperm_
 
 from torchjd.aggregation import Aggregator
 from torchjd.aggregation._utils.non_differentiable import NonDifferentiableError
@@ -44,7 +45,7 @@ def assert_permutation_invariant(
     """
 
     def permute_randomly(matrix_: Tensor) -> Tensor:
-        row_permutation = torch.randperm(matrix_.size(dim=0))
+        row_permutation = randperm_(matrix_.size(dim=0))
         return matrix_[row_permutation]
 
     vector = aggregator(matrix)
@@ -66,10 +67,10 @@ def assert_linear_under_scaling(
     """Tests empirically that a given `Aggregator` satisfies the linear under scaling property."""
 
     for _ in range(n_runs):
-        c1 = torch.rand(matrix.shape[0], dtype=matrix.dtype)
-        c2 = torch.rand(matrix.shape[0], dtype=matrix.dtype)
-        alpha = torch.rand([], dtype=matrix.dtype)
-        beta = torch.rand([], dtype=matrix.dtype)
+        c1 = rand_(matrix.shape[0], dtype=matrix.dtype)
+        c2 = rand_(matrix.shape[0], dtype=matrix.dtype)
+        alpha = rand_([], dtype=matrix.dtype)
+        beta = rand_([], dtype=matrix.dtype)
 
         x1 = aggregator(torch.diag(c1) @ matrix)
         x2 = aggregator(torch.diag(c2) @ matrix)

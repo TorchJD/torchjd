@@ -2,6 +2,7 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
+from unit._utils import randn_, tensor_
 
 from torchjd import backward
 from torchjd._autojac._backward import _create_transform
@@ -12,10 +13,10 @@ from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 def test_check_create_transform():
     """Tests that _create_transform creates a valid Transform."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     transform = _create_transform(
@@ -34,10 +35,10 @@ def test_check_create_transform():
 def test_various_aggregators(aggregator: Aggregator):
     """Tests that backward works for various aggregators."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator)
@@ -61,8 +62,8 @@ def test_value_is_correct(
     product.
     """
 
-    J = torch.randn(shape)
-    input = torch.randn([shape[1]], requires_grad=True)
+    J = randn_(shape)
+    input = randn_([shape[1]], requires_grad=True)
     output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
     if manually_specify_inputs:
@@ -83,10 +84,10 @@ def test_value_is_correct(
 def test_empty_inputs():
     """Tests that backward does not fill the .grad values if no input is specified."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], Mean(), inputs=[])
@@ -101,10 +102,10 @@ def test_partial_inputs():
     specified as inputs.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], Mean(), inputs=[a1])
@@ -116,8 +117,8 @@ def test_partial_inputs():
 def test_empty_tensors_fails():
     """Tests that backward raises an error when called with an empty list of tensors."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
     with raises(ValueError):
         backward([], UPGrad(), inputs=[a1, a2])
@@ -131,11 +132,11 @@ def test_multiple_tensors():
 
     aggregator = UPGrad()
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
     inputs = [a1, a2]
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], aggregator, retain_graph=True)
@@ -154,10 +155,10 @@ def test_multiple_tensors():
 def test_various_valid_chunk_sizes(chunk_size):
     """Tests that backward works for various valid values of parallel_chunk_size."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
@@ -170,10 +171,10 @@ def test_various_valid_chunk_sizes(chunk_size):
 def test_non_positive_chunk_size_fails(chunk_size: int):
     """Tests that backward raises an error when using invalid chunk sizes."""
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
     with raises(ValueError):
@@ -186,7 +187,7 @@ def test_input_retaining_grad_fails():
     parameter retains grad and vmap has to be used.
     """
 
-    a = torch.tensor([1.0, 2.0], requires_grad=True)
+    a = tensor_([1.0, 2.0], requires_grad=True)
     b = 2 * a
     b.retain_grad()
     y = 3 * b
@@ -201,7 +202,7 @@ def test_non_input_retaining_grad_fails():
     the ``tensors`` parameter retains grad and vmap has to be used.
     """
 
-    a = torch.tensor([1.0, 2.0], requires_grad=True)
+    a = tensor_([1.0, 2.0], requires_grad=True)
     b = 2 * a
     b.retain_grad()
     y = 3 * b
@@ -221,7 +222,7 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
     setup, the autograd graph is still acyclic, but the graph of tensors used becomes cyclic.
     """
 
-    a = torch.tensor(3.0, requires_grad=True)
+    a = tensor_(3.0, requires_grad=True)
     b = 2.0 * a
     c = a * b
     d = a * c
@@ -230,7 +231,7 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
 
     backward([d, e], aggregator=aggregator, parallel_chunk_size=chunk_size)
 
-    expected_jacobian = torch.tensor(
+    expected_jacobian = tensor_(
         [
             [2.0 * 3.0 * a**2],
             [2.0 * 4.0 * a**3],
@@ -249,10 +250,10 @@ def test_repeated_tensors():
     alternative ways of producing Jacobians with repeated rows anyway.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + (a2**2).sum()
 
     with raises(ValueError):
@@ -266,10 +267,10 @@ def test_repeated_inputs():
     ignore that as well.
     """
 
-    a1 = torch.tensor([1.0, 2.0], requires_grad=True)
-    a2 = torch.tensor([3.0, 4.0], requires_grad=True)
+    a1 = tensor_([1.0, 2.0], requires_grad=True)
+    a2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    y1 = torch.tensor([-1.0, 1.0]) @ a1 + a2.sum()
+    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + (a2**2).sum()
 
     expected_grad_wrt_a1 = grad([y1, y2], a1, retain_graph=True)[0]

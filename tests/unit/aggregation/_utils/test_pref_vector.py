@@ -1,9 +1,8 @@
 from contextlib import nullcontext as does_not_raise
 
-import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext
+from unit._utils import ExceptionContext, ones_
 
 from torchjd.aggregation._mean import _MeanWeighting
 from torchjd.aggregation._utils.pref_vector import pref_vector_to_weighting
@@ -13,12 +12,12 @@ from torchjd.aggregation._utils.pref_vector import pref_vector_to_weighting
     ["pref_vector", "expectation"],
     [
         (None, does_not_raise()),
-        (torch.ones([]), raises(ValueError)),
-        (torch.ones([0]), does_not_raise()),
-        (torch.ones([1]), does_not_raise()),
-        (torch.ones([5]), does_not_raise()),
-        (torch.ones([1, 1]), raises(ValueError)),
-        (torch.ones([1, 1, 1]), raises(ValueError)),
+        (ones_([]), raises(ValueError)),
+        (ones_([0]), does_not_raise()),
+        (ones_([1]), does_not_raise()),
+        (ones_([5]), does_not_raise()),
+        (ones_([1, 1]), raises(ValueError)),
+        (ones_([1, 1, 1]), raises(ValueError)),
     ],
 )
 def test_pref_vector_to_weighting_check(pref_vector: Tensor | None, expectation: ExceptionContext):
