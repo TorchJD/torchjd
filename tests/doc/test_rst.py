@@ -27,7 +27,7 @@ def test_basic_usage():
     loss2 = loss_fn(output[:, 1], target2)
 
     optimizer.zero_grad()
-    torchjd.backward([loss1, loss2], aggregator)
+    torchjd._autojac.backward([loss1, loss2], aggregator)
     optimizer.step()
 
 
@@ -58,7 +58,7 @@ def test_iwrm():
         from torch.nn import Linear, MSELoss, ReLU, Sequential
         from torch.optim import SGD
 
-        from torchjd import backward
+        from torchjd._autojac import backward
         from torchjd.aggregation import UPGrad
 
         X = torch.randn(8, 16, 10)
@@ -87,7 +87,7 @@ def test_mtl():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd._autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
@@ -136,7 +136,7 @@ def test_lightning_integration():
     from torch.optim import Adam
     from torch.utils.data import DataLoader, TensorDataset
 
-    from torchjd import mtl_backward
+    from torchjd._autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     class Model(LightningModule):
@@ -190,7 +190,7 @@ def test_rnn():
     from torch.nn import RNN
     from torch.optim import SGD
 
-    from torchjd import backward
+    from torchjd._autojac import backward
     from torchjd.aggregation import UPGrad
 
     rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
@@ -215,7 +215,7 @@ def test_monitoring():
     from torch.nn.functional import cosine_similarity
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd._autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     def print_weights(_, __, weights: torch.Tensor) -> None:
@@ -267,7 +267,7 @@ def test_amp():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd._autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())

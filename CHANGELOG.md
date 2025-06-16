@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 changes that do not affect the user.
 
 ## [Unreleased]
+## [0.7.1] - 2025-06-12
+### Added
+- Seamless sparse-matrix support (SpMM and adjacency handling) for TorchJD, as SparseMatMul is currently not compatible with Jacobian Descent due to torch.vmap() dependencies.
+
 
 ## [0.7.0] - 2025-06-04
 
