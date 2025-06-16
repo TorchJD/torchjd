@@ -1,4 +1,3 @@
-import cProfile
 import time
 from collections.abc import Callable
 
@@ -149,25 +148,3 @@ def vjp_from_module(module: nn.Module, *inputs) -> Callable:
         return torch.func.functional_call(module, all_state, *inputs)
 
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
-
-
-if __name__ == "__main__":
-    batch_size = 64
-    input_shape = (batch_size, 3, 32, 32)
-    input = torch.randn(input_shape, device=DEVICE)
-    target = torch.randint(0, 10, (batch_size,), device=DEVICE)
-
-    model = Cifar10Model().to(device=DEVICE)
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
-
-    activations = compute_activations(criterion, input, model, target)
-    _ = compute_gramian_via_autojac(activations, model)
-    activations = compute_activations(criterion, input, model, target)
-    cuda_sync()
-    cProfile.run("expected_gramian = compute_gramian_via_autojac(activations, model)", sort="time")
-
-    activations = compute_activations(criterion, input, model, target)
-    _ = autogram_(activations, batch_size, criterion, model)
-    activations = compute_activations(criterion, input, model, target)
-    cuda_sync()
-    cProfile.run("gramian = autogram_(activations, batch_size, criterion, model)", sort="time")
