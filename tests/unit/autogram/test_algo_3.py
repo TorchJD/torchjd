@@ -3,6 +3,7 @@ import time
 import torch
 from torch import Tensor, nn
 from torch.nn import ReLU
+from unit._utils import randint_, randn_
 from unit.conftest import DEVICE
 
 from torchjd import backward
@@ -32,8 +33,8 @@ class Cifar10Model(nn.Sequential):
 def test_algo_3():
     batch_size = 64
     input_shape = (batch_size, 3, 32, 32)
-    input = torch.randn(input_shape, device=DEVICE)
-    target = torch.randint(0, 10, (batch_size,), device=DEVICE)
+    input = randn_(input_shape)
+    target = randint_(0, 10, (batch_size,))
 
     model = Cifar10Model().to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
