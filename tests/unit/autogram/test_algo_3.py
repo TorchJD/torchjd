@@ -1,29 +1,13 @@
 import time
-from collections.abc import Callable
 
 import torch
 from torch import Tensor, nn
-from torch.nn import Parameter, ReLU
-from torch.testing import assert_close
-from torch.utils._ordered_set import OrderedSet
+from torch.nn import ReLU
 from unit.conftest import DEVICE
 
-from torchjd._autojac._transform import Diagonalize, Init, Jac
-from torchjd._autojac._transform._aggregate import _Matrixify
-
-
-def cuda_sync():
-    if str(DEVICE).startswith("cuda"):
-        print("Cuda sync")
-        torch.cuda.synchronize()
-
-
-def post_call_sync(func):
-    def wrapper(*args, **kwargs):
-        func(*args, **kwargs)
-        cuda_sync()
-
-    return wrapper
+from torchjd import backward
+from torchjd._autogram._rev_gram_acc import autogram_forward_backward
+from torchjd.aggregation import Aggregator, Mean
 
 
 class Cifar10Model(nn.Sequential):
@@ -54,97 +38,74 @@ def test_algo_3():
     model = Cifar10Model().to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
-    # Compute gramian to initialize everything correctly, prior to making the timed call
-    # Re-compute the activations because autogram_ needs the non-freed graph
-    activations = compute_activations(criterion, input, model, target)
-    _ = autogram_(activations, batch_size, criterion, model)
-    activations = compute_activations(criterion, input, model, target)
-    with Timer():
-        gramian = autogram_(activations, batch_size, criterion, model)
+    A = Mean()
+    W = A.weighting
 
-    activations = compute_activations(criterion, input, model, target)
-    _ = compute_gramian_via_autojac(activations, model)
-    activations = compute_activations(criterion, input, model, target)
-    with Timer():
-        expected_gramian = compute_gramian_via_autojac(activations, model)
+    print(f"\nTimes for forward + backward with BS={batch_size}, A={A} on {DEVICE}.")
 
-    assert_close(gramian, expected_gramian)
+    torch.cuda.empty_cache()
+    autograd_forward_backward(model, criterion, input, target)
+    model.zero_grad()
+    with Timer("autograd"):
+        autograd_forward_backward(model, criterion, input, target)
+
+    torch.cuda.empty_cache()
+    autojac_forward_backward(model, criterion, input, target, A)
+    model.zero_grad()
+
+    with Timer("autojac"):
+        autojac_forward_backward(model, criterion, input, target, A)
+
+    torch.cuda.empty_cache()
+    autogram_forward_backward(model, criterion, input, target, W)
+    model.zero_grad()
+
+    with Timer("autogram"):
+        autogram_forward_backward(model, criterion, input, target, W)
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self, name: str):
+        self.name = name
         self.start_time = None
         self.end_time = None
 
     def __enter__(self):
-        cuda_sync()
+        self.cuda_sync()
         self.start_time = time.perf_counter()
         return self  # This allows you to access the timer object within the 'with' block
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        cuda_sync()  # This is redundant, it is there just in case we stop decorating the function
-        # with post_call_sync
+        self.cuda_sync()
         self.end_time = time.perf_counter()
         self.elapsed_time = self.end_time - self.start_time
-        print(f"Elapsed time: {self.elapsed_time:.4f} seconds")
+        print(f"{self.name}: {self.elapsed_time:.4f} seconds")
+
+    @staticmethod
+    def cuda_sync():
+        if str(DEVICE).startswith("cuda"):
+            torch.cuda.synchronize()
 
 
-@post_call_sync
-def compute_gramian_via_autojac(activations, model: nn.Sequential):
-    params = OrderedSet(model.parameters())
-    output = OrderedSet([activations[-1]])
-    init = Init(output)
-    diag = Diagonalize(output)
-    jac = Jac(output, params, chunk_size=None)
-    matrixify = _Matrixify()
-    transform = matrixify << jac << diag << init
-    jacobian_matrices = transform({})
-    expected_gramian = torch.stack([J @ J.T for J in jacobian_matrices.values()]).sum(dim=0)
-    return expected_gramian
+def autojac_forward_backward(
+    model: nn.Sequential,
+    criterion: nn.Module,
+    input: Tensor,
+    target: Tensor,
+    aggregator: Aggregator,
+) -> None:
+    output = model(input)
+    losses = criterion(output, target)
+    backward(losses, aggregator=aggregator)
 
 
-def compute_activations(criterion, input, model: nn.Sequential, target) -> list[Tensor]:
-    activations = [input]
-    for layer in model:
-        activation = layer(activations[-1])
-        activations.append(activation)
-
-    losses = criterion(activations[-1], target)
-    activations.append(losses)
-    return activations
-
-
-@post_call_sync
-def autogram_(activations, batch_size, criterion, model: nn.Sequential):
-    grad = torch.ones_like(activations[-1])
-    gramian = torch.zeros(batch_size, batch_size, device=grad.device)
-    for i, (input, output, layer) in list(
-        enumerate(zip(activations[:-1], activations[1:], list(model) + [criterion]))
-    )[::-1]:
-        params = list(layer.parameters())
-        if len(params) > 0:
-
-            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                return vjp_from_module(layer, input_j)(grad_output_j)
-
-            jacobians = torch.vmap(get_vjp)(input, grad)
-
-            assert len(jacobians) == 1
-
-            for jacobian in jacobians[0].values():
-                J = jacobian.reshape((batch_size, -1))
-                gramian += J @ J.T  # Accumulate the gramian
-
-        if i == 0:
-            break  # Don't try to differentiate with respect to the model's input
-        grad = torch.autograd.grad(output, input, grad, retain_graph=False)[0]
-
-    return gramian
-
-
-def vjp_from_module(module: nn.Module, *inputs) -> Callable:
-    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
-        all_state = {**primals, **dict(module.named_buffers())}
-        return torch.func.functional_call(module, all_state, *inputs)
-
-    return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
+def autograd_forward_backward(
+    model: nn.Sequential,
+    criterion: nn.Module,
+    input: Tensor,
+    target: Tensor,
+) -> None:
+    output = model(input)
+    losses = criterion(output, target)
+    loss = losses.mean()
+    loss.backward()
