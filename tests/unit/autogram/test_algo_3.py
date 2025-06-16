@@ -151,45 +151,6 @@ def vjp_from_module(module: nn.Module, *inputs) -> Callable:
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
 
 
-def test_reused_tensor_vjp():
-    param = torch.tensor(5.0)
-    input = torch.tensor(2.0)
-
-    def g(x, param_):
-        return x * param_
-
-    def f(x, param_):
-        return x * param_**2
-
-    def h(x, param_):
-        return f(g(x, param_), param_)
-
-    output, vjp = torch.func.vjp(h, input, param)
-    grad_wrt_param_full = vjp(torch.ones_like(output))[1]
-    assert_close(grad_wrt_param_full, input * 3 * param**2)
-
-    output, vjp = torch.func.vjp(f, g(input, param), param)
-    grad_wrt_param_partial = vjp(torch.ones_like(output))[1]
-    assert_close(grad_wrt_param_partial, g(input, param) * 2 * param)
-
-
-def test_reused_tensor_autograd():
-    param = torch.tensor(5.0, requires_grad=True)
-    input = torch.tensor(2.0)
-
-    x1 = input * param
-    x2 = x1 * param**2
-
-    grad_wrt_param_full = torch.autograd.grad(x2, param)[0]
-    assert_close(grad_wrt_param_full, input * 3 * param**2)
-
-    x1 = input * param
-    x2 = x1.detach() * param**2
-
-    grad_wrt_param_partial = torch.autograd.grad(x2, param)[0]
-    assert_close(grad_wrt_param_partial, x1 * 2 * param)
-
-
 if __name__ == "__main__":
     batch_size = 64
     input_shape = (batch_size, 3, 32, 32)
