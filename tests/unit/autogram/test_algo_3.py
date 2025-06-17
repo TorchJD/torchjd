@@ -3,6 +3,7 @@ import time
 import torch
 from torch import Tensor, nn
 from torch.nn import ReLU
+from torch.testing import assert_close
 from unit._utils import randint_, randn_
 from unit.conftest import DEVICE
 
@@ -107,3 +108,61 @@ def autograd_forward_backward(
     losses = criterion(output, target)
     loss = losses.mean()
     loss.backward()
+
+
+def test_sequential():
+    hidden_size = 1000
+    n_layers = 30
+    layers = [
+        nn.Sequential(nn.Linear(hidden_size, hidden_size), nn.ReLU()) for _ in range(n_layers)
+    ]
+    # layers = [nn.Linear(3, 4), nn.Linear(4, 5)]
+
+    model = nn.Sequential(*layers).to(DEVICE)
+
+    input = randn_((16, hidden_size))
+
+    output = model(input).mean()
+    torch.autograd.grad(output, list(model.parameters()))
+
+    output = model(input).mean()
+    with Timer("autograd all together"):
+        expected_result = torch.autograd.grad(output, list(model.parameters()))
+
+    outputs = _compute_outputs(input, model)
+    autograd_chained_manually(layers, outputs)
+
+    outputs = _compute_outputs(input, model)
+    with Timer("autograd chained manually"):
+        result = autograd_chained_manually(layers, outputs)
+
+    assert len(result) == len(expected_result)
+    for grad, expected_grad in zip(result, expected_result):
+        assert_close(grad, expected_grad)
+
+
+def autograd_chained_manually(layers, outputs):
+    result = []
+    grad_output = torch.ones_like(outputs[-1]) / outputs[-1].numel()
+    for i, (input, output, layer) in list(enumerate(zip(outputs[:-1], outputs[1:], layers)))[::-1]:
+        grad_wrt_param = torch.autograd.grad(
+            output, list(layer.parameters()), grad_outputs=grad_output, retain_graph=True
+        )
+        result.extend(reversed([*grad_wrt_param]))
+
+        if i == 0:
+            break
+        grad_output = torch.autograd.grad(
+            output, input, grad_outputs=grad_output, retain_graph=False
+        )[0]
+
+    return tuple(reversed(result))
+
+
+def _compute_outputs(input, model: nn.Sequential) -> list[Tensor]:
+    activations = [input]
+    for layer in model:
+        activation = layer(activations[-1])
+        activations.append(activation)
+
+    return activations
