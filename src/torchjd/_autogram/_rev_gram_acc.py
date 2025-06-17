@@ -41,7 +41,12 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
         if len(params) > 0:
 
             def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                return _vjp_from_module(layer, input_j)(grad_output_j)
+                # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
+                # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
+                # nn.Flatten) do not work equivalently if they're provided with a batch or with an
+                # element of a batch. We thus always provide them with batches, just of a different
+                # size.
+                return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
 
             jacobians = torch.vmap(get_vjp)(input, grad)
 
