@@ -73,7 +73,7 @@ def test_equivalence():
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     A = UPGrad()
-    W = A.weighting
+    W = A.weighting.weighting
 
     autojac_forward_backward(model, criterion, input, target, A)
     expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
