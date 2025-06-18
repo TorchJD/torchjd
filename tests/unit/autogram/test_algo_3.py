@@ -4,11 +4,12 @@ import torch
 from torch import Tensor, nn
 from torch.nn import ReLU
 from unit._utils import randint_, randn_
+from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
 
 from torchjd import backward
 from torchjd._autogram._rev_gram_acc import autogram_forward_backward
-from torchjd.aggregation import Aggregator, Mean
+from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
 class Cifar10Model(nn.Sequential):
@@ -27,7 +28,7 @@ class Cifar10Model(nn.Sequential):
         super().__init__(*layers)
 
 
-def test_algo_3():
+def test_speed():
     batch_size = 64
     input_shape = (batch_size, 3, 32, 32)
     input = randn_(input_shape)
@@ -60,6 +61,28 @@ def test_algo_3():
 
     with Timer("autogram"):
         autogram_forward_backward(model, criterion, input, target, W)
+
+
+def test_equivalence():
+    batch_size = 64
+    input_shape = (batch_size, 3, 32, 32)
+    input = randn_(input_shape)
+    target = randint_(0, 10, (batch_size,))
+
+    model = Cifar10Model().to(device=DEVICE)
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+    A = UPGrad()
+    W = A.weighting
+
+    autojac_forward_backward(model, criterion, input, target, A)
+    expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+    model.zero_grad()
+
+    autogram_forward_backward(model, criterion, input, target, W)
+    grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+
+    assert_tensor_dicts_are_close(grads, expected_grads)
 
 
 class Timer:
