@@ -1,6 +1,8 @@
 from collections.abc import Callable
 
 import torch
+from backpack import backpack, extend
+from backpack.extensions import BatchGrad
 from torch import Tensor, nn
 from torch.nn import Parameter
 
@@ -17,8 +19,10 @@ def autogram_forward_backward(
     """
     Currently only works for IWRM supervised training of sequential models.
     """
+    model_ = extend(model)
+    criterion_ = extend(criterion)
     model_output, losses, gramian = get_output_loss_and_gramian_supervised_iwrm_sequential(
-        model, criterion, input, target
+        model_, criterion_, input, target
     )
     weights = weighting(gramian)
     weighted_loss = losses @ weights
@@ -39,22 +43,9 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
     )[::-1]:
         params = list(layer.parameters())
         if len(params) > 0:
-
-            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
-                # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
-                # nn.Flatten) do not work equivalently if they're provided with a batch or with an
-                # element of a batch. We thus always provide them with batches, just of a different
-                # size.
-                return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
-
-            jacobians = torch.vmap(get_vjp)(input, grad)
-
-            assert len(jacobians) == 1
-
-            for jacobian in jacobians[0].values():
-                J = jacobian.reshape((bs, -1))
-                gramian += J @ J.T  # Accumulate the gramian
+            if i > 0:
+                with backpack(BatchGrad()):
+                    output.backward(gradient=grad, inputs=input, retain_graph=True)
 
         if i == 0:
             break  # Don't try to differentiate with respect to the model's input
