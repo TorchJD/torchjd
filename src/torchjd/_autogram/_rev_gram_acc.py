@@ -1,4 +1,3 @@
-import threading
 from collections.abc import Callable
 
 import torch
@@ -41,36 +40,21 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
         params = list(layer.parameters())
         if len(params) > 0:
 
-            result = {}
+            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
+                # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
+                # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
+                # nn.Flatten) do not work equivalently if they're provided with a batch or with an
+                # element of a batch. We thus always provide them with batches, just of a different
+                # size.
+                return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
 
-            def get_for_j(j: int):
-                result[j] = torch.autograd.grad(output[j], params, grad[j], retain_graph=True)
+            jacobians = torch.vmap(get_vjp)(input, grad)
 
-            # User write their own threading code to drive the train_fn
-            threads = []
-            for j in range(output.shape[0]):
-                p = threading.Thread(target=get_for_j, args=(j,))
-                p.start()
-                threads.append(p)
+            assert len(jacobians) == 1
 
-            for p in threads:
-                p.join()
-
-            # def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-            #     # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
-            #     # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
-            #     # nn.Flatten) do not work equivalently if they're provided with a batch or with an
-            #     # element of a batch. We thus always provide them with batches, just of a different
-            #     # size.
-            #     return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
-            #
-            # jacobians = torch.vmap(get_vjp)(input, grad)
-            #
-            # assert len(jacobians) == 1
-            #
-            # for jacobian in jacobians[0].values():
-            #     J = jacobian.reshape((bs, -1))
-            #     gramian += J @ J.T  # Accumulate the gramian
+            for jacobian in jacobians[0].values():
+                J = jacobian.reshape((bs, -1))
+                gramian += J @ J.T  # Accumulate the gramian
 
         if i == 0:
             break  # Don't try to differentiate with respect to the model's input
