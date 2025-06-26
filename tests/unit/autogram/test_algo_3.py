@@ -130,3 +130,45 @@ def autograd_forward_backward(
     losses = criterion(output, target)
     loss = losses.mean()
     loss.backward()
+
+
+def test_hook_autoremove():
+    m = nn.Linear(3, 5)
+
+    def hook(_, __):
+        print("Calling hook")
+
+    handle = m.register_full_backward_pre_hook(hook)
+
+    def remove_hook(_, __, ___):
+        handle.remove()
+
+    m.register_full_backward_hook(remove_hook)
+
+    for i in range(3):
+        input = torch.randn((16, 3))
+        output = m(input)
+        output.backward(torch.ones_like(output))
+
+
+def test_prevent_autograd():
+    m = nn.Linear(3, 5)
+
+    input = torch.randn((16, 3))
+    output = m(input)
+
+    m.weight.requires_grad_(False)
+    m.bias.requires_grad_(False)
+
+    output.backward(torch.ones_like(output), retain_graph=True)
+
+    print(m.weight.grad)
+    print(m.bias.grad)
+
+    m.weight.requires_grad_(True)
+    m.bias.requires_grad_(True)
+
+    output.backward(torch.ones_like(output))
+
+    print(m.weight.grad)
+    print(m.bias.grad)
