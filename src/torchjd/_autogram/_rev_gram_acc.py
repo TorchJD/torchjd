@@ -3,6 +3,7 @@ from collections.abc import Callable
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
+from torch.nn.utils._per_sample_grad import call_for_per_sample_grads
 
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -39,22 +40,15 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
     )[::-1]:
         params = list(layer.parameters())
         if len(params) > 0:
+            # This does not support specifying inputs in the backward call, so we have to detach
+            # the input to only compute the jacobian wrt to the params of the current layer.
+            output2 = call_for_per_sample_grads(layer)(input.detach().requires_grad_(True))
+            output2.backward(gradient=grad)
 
-            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
-                # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
-                # nn.Flatten) do not work equivalently if they're provided with a batch or with an
-                # element of a batch. We thus always provide them with batches, just of a different
-                # size.
-                return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
-
-            jacobians = torch.vmap(get_vjp)(input, grad)
-
-            assert len(jacobians) == 1
-
-            for jacobian in jacobians[0].values():
-                J = jacobian.reshape((bs, -1))
+            for p in params:
+                J = p.grad_sample.reshape((bs, -1))
                 gramian += J @ J.T  # Accumulate the gramian
+                p.grad_sample = None  # "free" memory
 
         if i == 0:
             break  # Don't try to differentiate with respect to the model's input
