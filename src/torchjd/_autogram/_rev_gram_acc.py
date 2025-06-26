@@ -42,7 +42,7 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
         if len(params) > 0:
             # This does not support specifying inputs in the backward call, so we have to detach
             # the input to only compute the jacobian wrt to the params of the current layer.
-            output2 = call_for_per_sample_grads(layer)(input.detach().requires_grad_(True))
+            output2 = call_for_per_sample_grads(layer)(input.detach())
             output2.backward(gradient=grad)
 
             for p in params:
