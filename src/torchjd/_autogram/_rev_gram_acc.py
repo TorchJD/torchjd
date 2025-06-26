@@ -3,11 +3,61 @@ from collections.abc import Callable
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
+from torch.nn.utils._per_sample_grad import call_for_per_sample_grads
 
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 def autogram_forward_backward(
+    model: nn.Sequential,
+    criterion: Callable,
+    input: Tensor,
+    target: Tensor,
+    weighting: Weighting[PSDMatrix],
+):
+    input.requires_grad_(
+        True
+    )  # Somehow we need to do this otherwise the hook of the first layer will trigger too early
+    bs = input.shape[0]
+    gramian = torch.zeros((bs, bs), device=input.device, dtype=input.dtype)
+
+    def hook(module, grad_input, grad_output) -> tuple[Tensor, ...] or None:
+        # print(f"Calling hook2 on {module}")
+        nonlocal gramian
+        for p in module.parameters():
+            if hasattr(p, "grad_sample") and p.grad_sample is not None:
+                # print(f"handling param of shape {p.shape}")
+                J = p.grad_sample.reshape((bs, -1))
+                p.grad_sample = None  # "free" memory
+                gramian += J @ J.T
+
+    handles = []
+    for layer in model:
+        if len(list(layer.parameters())) > 0:
+            handles.append(layer.register_full_backward_hook(hook))
+
+    # Add a hook that removes all other hooks, so that they are one-time only
+    def remove_hooks(module, grad_input, grad_output):
+        for handle in handles:
+            handle.remove()
+
+    handle = model.register_full_backward_hook(remove_hooks)
+
+    output = call_for_per_sample_grads(model)(input)
+    loss = criterion(output, target).mean()
+    loss.backward()
+
+    handle.remove()
+
+    weights = weighting(gramian)
+
+    output = model(input)
+    losses = criterion(output, target)
+    loss = losses @ weights
+    loss.backward()
+
+
+def autogram_forward_backward_old(
     model: nn.Sequential,
     criterion: Callable,
     input: Tensor,
