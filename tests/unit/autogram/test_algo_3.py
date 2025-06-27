@@ -13,14 +13,18 @@ from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
 class Cifar10Model(nn.Sequential):
-    def __init__(self):
+    def __init__(self, batched: bool = True):
+        self.batched = batched
+
+        flatten = nn.Flatten() if batched else nn.Flatten(start_dim=0)
+
         layers = [
             nn.Conv2d(3, 32, 3),
             ReLU(),
             nn.Conv2d(32, 64, 3, groups=32),
             nn.Sequential(nn.MaxPool2d(2), ReLU()),
             nn.Conv2d(64, 64, 3, groups=64),
-            nn.Sequential(nn.MaxPool2d(3), ReLU(), nn.Flatten()),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), flatten),
             nn.Linear(1024, 128),
             ReLU(),
             nn.Linear(128, 10),
@@ -83,6 +87,8 @@ def test_equivalence():
     expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
     model.zero_grad()
 
+    model = Cifar10Model(batched=True).to(device=DEVICE)
+
     autogram_forward_backward(model, criterion, input, target, W)
     grads = {p: p.grad for p in model.parameters() if p.grad is not None}
 
@@ -134,3 +140,46 @@ def autograd_forward_backward(
     losses = criterion(output, target)
     loss = losses.mean()
     loss.backward()
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.func import functional_call, vjp, vmap
+
+
+def test_global_function():
+
+    batch_size = 64
+
+    inputs = torch.randn((batch_size, 5))
+    targets = torch.randn((batch_size, 1))
+
+    model = nn.Linear(5, 1)
+
+    def compute_loss(params, x, t):
+        # Compute loss for a single sample
+        x = x.unsqueeze(0)
+        t = t.unsqueeze(0)
+        y = functional_call(model, params, x)
+        return F.mse_loss(y, t, reduction="none").squeeze()
+
+    # vmap does not support returning non-Tensor as outputs, so we need to
+    # smuggle the vjp function out of the vmap
+    vjpfunc = None
+
+    def vjp_(inputs, targets):
+        nonlocal vjpfunc
+        out, vjpfunc_ = vjp(
+            compute_loss, {k: v for k, v in model.named_parameters()}, inputs, targets
+        )
+        vjpfunc = vjpfunc_
+        return out
+
+    out = vmap(vjp_)(inputs, targets)
+
+    grad = vmap(vjpfunc)(torch.ones(batch_size))
+
+    print(grad)
+    for k, v in grad[0].items():
+        print(k, v.shape)
