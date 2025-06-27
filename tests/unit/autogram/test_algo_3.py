@@ -1,6 +1,5 @@
 import time
 
-import torch
 from torch import Tensor, nn
 from torch.nn import ReLU
 from unit._utils import randint_, randn_
@@ -12,19 +11,30 @@ from torchjd._autogram._rev_gram_acc import autogram_forward_backward
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
+class SmartFlatten(nn.Module):
+    """
+    Flatten reducing inputs of shape [N, H, W, C] into [N, H * W * C] or reducing inputs of shape
+    [H, W, C] into [H * W * C].
+    """
+
+    def forward(self, input):
+        if input.dim() == 4:
+            return torch.flatten(input, start_dim=1)
+        elif input.dim() == 3:
+            return torch.flatten(input)
+        else:
+            raise ValueError(f"Unsupported number of dimensions: {input.dim()}")
+
+
 class Cifar10Model(nn.Sequential):
-    def __init__(self, batched: bool = True):
-        self.batched = batched
-
-        flatten = nn.Flatten() if batched else nn.Flatten(start_dim=0)
-
+    def __init__(self):
         layers = [
             nn.Conv2d(3, 32, 3),
             ReLU(),
             nn.Conv2d(32, 64, 3, groups=32),
             nn.Sequential(nn.MaxPool2d(2), ReLU()),
             nn.Conv2d(64, 64, 3, groups=64),
-            nn.Sequential(nn.MaxPool2d(3), ReLU(), flatten),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), SmartFlatten()),
             nn.Linear(1024, 128),
             ReLU(),
             nn.Linear(128, 10),
@@ -86,8 +96,6 @@ def test_equivalence():
     autojac_forward_backward(model, criterion, input, target, A)
     expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
     model.zero_grad()
-
-    model = Cifar10Model(batched=True).to(device=DEVICE)
 
     autogram_forward_backward(model, criterion, input, target, W)
     grads = {p: p.grad for p in model.parameters() if p.grad is not None}
@@ -176,7 +184,7 @@ def test_global_function():
         vjpfunc = vjpfunc_
         return out
 
-    out = vmap(vjp_)(inputs, targets)
+    _ = vmap(vjp_)(inputs, targets)
 
     grad = vmap(vjpfunc)(torch.ones(batch_size))
 
