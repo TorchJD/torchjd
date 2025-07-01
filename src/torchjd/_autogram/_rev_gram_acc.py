@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from queue import LifoQueue
 from typing import Any, Tuple
 
 import torch
@@ -40,7 +41,7 @@ def autogram_forward_backward(
     """
     bs = input.shape[0]
 
-    vjpfuncs = []
+    vjpfuncs = LifoQueue()
 
     def make_vjp_call_from_module(module: nn.Module, diff_wrt_input: bool):
         def _vjp_from_module_v2(*inputs) -> Tuple[Tensor, Any]:
@@ -73,28 +74,27 @@ def autogram_forward_backward(
         diff_wrt_inputs = i > 0
         vjp_call = make_vjp_call_from_module(layer, diff_wrt_inputs)
         activation, vjp_func = torch.vmap(vjp_call, out_dims=(0, None))(activation)
-        vjpfuncs.append(vjp_func)
+        vjpfuncs.put(vjp_func)
 
     output = activation
     losses, vjp_func = torch.vmap(_vjp_from_criterion, out_dims=(0, None))(output, target)
-    vjpfuncs.append(vjp_func)
+    vjpfuncs.put(vjp_func)
     grad = torch.ones_like(losses)
     gramian = torch.zeros(bs, bs, device=grad.device)
 
-    vjpfuncs = [torch.vmap(vjpfunc) for vjpfunc in vjpfuncs]
-
-    for i, (layer, vjpfunction) in list(enumerate(zip(list(model) + [criterion], vjpfuncs)))[::-1]:
-        if i == len(vjpfuncs) - 1:
-            grad = vjpfunction(grad)[0]
+    for i, layer in list(enumerate(list(model) + [criterion]))[::-1]:
+        vjp_function = torch.vmap(vjpfuncs.get())
+        if i == len(model):
+            grad = vjp_function(grad)[0]
 
         elif i == 0:
-            jacobians = vjpfunction(grad)[0]
+            jacobians = vjp_function(grad)[0]
             for jacobian in jacobians.values():
                 J = jacobian.reshape((bs, -1))
                 gramian += J @ J.T  # Accumulate the gramian
 
         else:
-            jacobians, grad = vjpfunction(grad)
+            jacobians, grad = vjp_function(grad)
 
             for jacobian in jacobians.values():
                 J = jacobian.reshape((bs, -1))
