@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import Any, Tuple
 
 import torch
 from torch import Tensor, nn
@@ -42,7 +43,7 @@ def autogram_forward_backward(
     vjpfuncs = []
 
     def make_vjp_call_from_module(module: nn.Module, diff_wrt_input: bool):
-        def _vjp_from_module_v2(*inputs) -> Tensor:
+        def _vjp_from_module_v2(*inputs) -> Tuple[Tensor, Any]:
             def functional_model_call_wrt_inputs(primals: dict[str, Parameter], *inputs) -> Tensor:
                 all_state = {**primals, **dict(module.named_buffers())}
                 return torch.func.functional_call(module, all_state, *inputs)
@@ -52,37 +53,31 @@ def autogram_forward_backward(
                 return torch.func.functional_call(module, all_state, *inputs)
 
             if diff_wrt_input:
-                out, vjpfunc_ = torch.func.vjp(
+                return torch.func.vjp(
                     functional_model_call_wrt_inputs, dict(module.named_parameters()), *inputs
                 )
             else:
-                out, vjpfunc_ = torch.func.vjp(
-                    functional_model_call, dict(module.named_parameters())
-                )
-
-            vjpfuncs.append(vjpfunc_)
-            return out
+                return torch.func.vjp(functional_model_call, dict(module.named_parameters()))
 
         return _vjp_from_module_v2
 
-    def _vjp_from_criterion(output_, target_) -> Tensor:
+    def _vjp_from_criterion(output_, target_) -> Tuple[Tensor, Callable]:
         def functional_model_call_wrt_inputs(output_) -> Tensor:
             all_state = {**dict(criterion.named_parameters()), **dict(criterion.named_buffers())}
             return torch.func.functional_call(criterion, all_state, args=(output_, target_))
 
-        out, vjpfunc_ = torch.func.vjp(functional_model_call_wrt_inputs, output_)
-
-        vjpfuncs.append(vjpfunc_)
-        return out
+        return torch.func.vjp(functional_model_call_wrt_inputs, output_)
 
     activation = input
     for i, layer in enumerate(model):
         diff_wrt_inputs = i > 0
         vjp_call = make_vjp_call_from_module(layer, diff_wrt_inputs)
-        activation = torch.vmap(vjp_call)(activation)
+        activation, vjp_func = torch.vmap(vjp_call, out_dims=(0, None))(activation)
+        vjpfuncs.append(vjp_func)
 
     output = activation
-    losses = torch.vmap(_vjp_from_criterion)(output, target)
+    losses, vjp_func = torch.vmap(_vjp_from_criterion, out_dims=(0, None))(output, target)
+    vjpfuncs.append(vjp_func)
     grad = torch.ones_like(losses)
     gramian = torch.zeros(bs, bs, device=grad.device)
 
