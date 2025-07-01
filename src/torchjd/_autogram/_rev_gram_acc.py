@@ -54,7 +54,7 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
 
             for jacobian in jacobians[0].values():
                 J = jacobian.reshape((bs, -1))
-                gramian += J @ J.T  # Accumulate the gramian
+                gramian.addmm_(J, J.T)
 
         if i == 0:
             break  # Don't try to differentiate with respect to the model's input
