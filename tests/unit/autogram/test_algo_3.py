@@ -12,6 +12,21 @@ from torchjd._autogram._rev_gram_acc import autogram_forward_backward
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
+class SmartFlatten(nn.Module):
+    """
+    Flatten reducing inputs of shape [N, H, W, C] into [N, H * W * C] or reducing inputs of shape
+    [H, W, C] into [H * W * C].
+    """
+
+    def forward(self, input):
+        if input.dim() == 4:
+            return torch.flatten(input, start_dim=1)
+        elif input.dim() == 3:
+            return torch.flatten(input)
+        else:
+            raise ValueError(f"Unsupported number of dimensions: {input.dim()}")
+
+
 class Cifar10Model(nn.Sequential):
     def __init__(self):
         layers = [
@@ -20,7 +35,7 @@ class Cifar10Model(nn.Sequential):
             nn.Conv2d(32, 64, 3, groups=32),
             nn.Sequential(nn.MaxPool2d(2), ReLU()),
             nn.Conv2d(64, 64, 3, groups=64),
-            nn.Sequential(nn.MaxPool2d(3), ReLU(), nn.Flatten()),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), SmartFlatten()),
             nn.Linear(1024, 128),
             ReLU(),
             nn.Linear(128, 10),
