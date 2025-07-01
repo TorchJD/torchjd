@@ -91,14 +91,14 @@ def autogram_forward_backward(
             jacobians = vjp_function(grad)[0]
             for jacobian in jacobians.values():
                 J = jacobian.reshape((bs, -1))
-                gramian += J @ J.T  # Accumulate the gramian
+                gramian.addmm_(J, J.T)  # Accumulate the gramian
 
         else:
             jacobians, grad = vjp_function(grad)
 
             for jacobian in jacobians.values():
                 J = jacobian.reshape((bs, -1))
-                gramian += J @ J.T  # Accumulate the gramian
+                gramian.addmm_(J, J.T)  # Accumulate the gramian
 
     weights = weighting(gramian)
     losses.backward(weights)
