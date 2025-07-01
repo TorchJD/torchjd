@@ -101,23 +101,7 @@ def autogram_forward_backward(
                 gramian += J @ J.T  # Accumulate the gramian
 
     weights = weighting(gramian)
-    grad = weights
-
-    for i, (layer, vjpfunction) in list(enumerate(zip(list(model) + [criterion], vjpfuncs)))[::-1]:
-        if i == len(vjpfuncs) - 1:
-            grad = vjpfunction(grad)[0]
-
-        elif i == 0:
-            jacobians = vjpfunction(grad)[0]
-            params = dict(layer.named_parameters())
-            for key, value in jacobians.items():
-                params[key].grad = value.sum(0)
-
-        else:
-            jacobians, grad = vjpfunction(grad)
-            params = dict(layer.named_parameters())
-            for key, value in jacobians.items():
-                params[key].grad = value.sum(0)
+    losses.backward(weights)
 
     return output, losses, weights
 
