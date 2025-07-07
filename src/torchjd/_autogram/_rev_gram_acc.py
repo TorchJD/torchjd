@@ -82,8 +82,9 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential_v2(
     output = model(input)
     losses = criterion(output, target)
     disable_requires_grad(model)
-    losses.sum().backward(retain_graph=True)
     enable_requires_grad(model)
+    losses.sum().backward(retain_graph=True)
+
     # print("MODEL PARAM GRAD", next(model.parameters()).grad)
     #
     # print(gramian)
