@@ -56,6 +56,7 @@ def test_speed():
         autojac_forward_backward(model, criterion, input, target, A)
 
     torch.cuda.empty_cache()
+    model.zero_grad()
     autogram_forward_backward(model, criterion, input, target, W)
     model.zero_grad()
 
