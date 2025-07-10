@@ -42,6 +42,10 @@ def augment_model(
             forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
 
 
+def next_edges(edge: GradientEdge) -> list[GradientEdge]:
+    return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
+
+
 def autogram_forward_backward(
     model: nn.Sequential,
     criterion: Callable,
