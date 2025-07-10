@@ -2,12 +2,83 @@ from collections.abc import Callable
 
 import torch
 from torch import Tensor, nn
+from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
 
+from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
+def augment_model(
+    model: nn.Module,
+    gramian: Tensor,
+    target_edges_registry: list[GradientEdge],
+    forward_hook_handles: list,
+):
+    for module in model.modules():
+        params = list(module.parameters(recurse=False))
+        if len(params) > 0:
+
+            def forward_post_hook(module_, args, output):
+                def tensor_backward_hook(grad):
+                    def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
+                        return _vjp_from_module(module_, input_j.unsqueeze(0))(
+                            grad_output_j.unsqueeze(0)
+                        )
+
+                    input = args[0]  # TODO: Here we suppose a single input tensor. Relax this.
+                    jacobians = torch.vmap(get_vjp)(input, grad)
+
+                    assert len(jacobians) == 1
+
+                    for jacobian in jacobians[0].values():
+                        J = jacobian.reshape((gramian.shape[0], -1))
+                        gramian.addmm_(J, J.T)  # Accumulate the gramian
+
+                output.register_hook(tensor_backward_hook)
+                target_edges_registry.append(get_gradient_edge(output))
+                return output
+
+            forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
+
+
 def autogram_forward_backward(
+    model: nn.Sequential,
+    criterion: Callable,
+    input: Tensor,
+    target: Tensor,
+    weighting: Weighting[PSDMatrix],
+) -> tuple[Tensor, Tensor, Tensor]:
+    batch_size = input.shape[0]
+    gramian = torch.zeros((batch_size, batch_size), device=input.device)
+    target_edges_registry = []
+    forward_hook_handles = []
+    augment_model(model, gramian, target_edges_registry, forward_hook_handles)
+
+    output = model(input)
+    losses = criterion(output, target)
+
+    for handle in forward_hook_handles:
+        handle.remove()
+
+    # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
+    # grad_outputs and trigger the tensor hooks with them
+    _ = torch.autograd.grad(
+        outputs=losses,
+        inputs=target_edges_registry,
+        grad_outputs=torch.ones_like(losses),
+        retain_graph=True,
+    )
+
+    weights = weighting(gramian)
+
+    weighted_loss = losses @ weights
+    weighted_loss.backward()
+
+    return output, losses, weights
+
+
+def autogram_forward_backward_old(
     model: nn.Sequential,
     criterion: Callable,
     input: Tensor,
@@ -81,3 +152,51 @@ def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
         return torch.func.functional_call(module, all_state, *inputs)
 
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
+
+
+def main():
+    class SmartFlatten(nn.Module):
+        """
+        Flatten reducing inputs of shape [N, H, W, C] into [N, H * W * C] or reducing inputs of shape
+        [H, W, C] into [H * W * C].
+        """
+
+        def forward(self, input):
+            if input.dim() == 4:
+                return torch.flatten(input, start_dim=1)
+            elif input.dim() == 3:
+                return torch.flatten(input)
+            else:
+                raise ValueError(f"Unsupported number of dimensions: {input.dim()}")
+
+    class Cifar10Model(nn.Sequential):
+        def __init__(self):
+            layers = [
+                nn.Conv2d(3, 32, 3),
+                nn.ReLU(),
+                nn.Conv2d(32, 64, 3, groups=32),
+                nn.Sequential(nn.MaxPool2d(2), nn.ReLU()),
+                nn.Conv2d(64, 64, 3, groups=64),
+                nn.Sequential(nn.MaxPool2d(3), nn.ReLU(), SmartFlatten()),
+                nn.Linear(1024, 128),
+                nn.ReLU(),
+                nn.Linear(128, 10),
+            ]
+            super().__init__(*layers)
+
+    batch_size = 64
+    input_shape = (batch_size, 3, 32, 32)
+    input = torch.randn(input_shape)
+    target = torch.randint(0, 10, (batch_size,))
+
+    model = Cifar10Model().to(device="cpu")
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+    A = UPGrad()
+    W = A.weighting.weighting
+
+    autogram_forward_backward(model, criterion, input, target, W)
+
+
+if __name__ == "__main__":
+    main()
