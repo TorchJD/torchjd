@@ -1,3 +1,4 @@
+from collections import deque
 from collections.abc import Callable
 
 import torch
@@ -46,6 +47,26 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
+def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
+    targets = set(targets)
+    nodes_to_traverse = deque((child, target) for target in targets for child in next_edges(target))
+
+    visited = {child for child, _ in nodes_to_traverse}
+    targets_graph = dict()
+
+    while nodes_to_traverse:
+        node, target = nodes_to_traverse.popleft()
+        if node in targets:
+            targets_graph[target] = node
+
+        for child in next_edges(node):
+            if child not in visited:
+                nodes_to_traverse.append((child, target))
+                visited.add(child)
+
+    return list(targets - set(targets_graph.keys()))
+
+
 def autogram_forward_backward(
     model: nn.Sequential,
     criterion: Callable,
@@ -65,11 +86,13 @@ def autogram_forward_backward(
     for handle in forward_hook_handles:
         handle.remove()
 
+    leaf_targets = targets_to_leaf_targets(target_edges_registry)
+
     # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
     # grad_outputs and trigger the tensor hooks with them
     _ = torch.autograd.grad(
         outputs=losses,
-        inputs=target_edges_registry,
+        inputs=leaf_targets,
         grad_outputs=torch.ones_like(losses),
         retain_graph=True,
     )
