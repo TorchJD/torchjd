@@ -1,6 +1,7 @@
 import time
 
 import torch
+from pytest import mark
 from torch import Tensor, nn
 from torch.nn import ReLU
 from unit._utils import randint_, randn_
@@ -43,13 +44,33 @@ class Cifar10Model(nn.Sequential):
         super().__init__(*layers)
 
 
-def test_speed():
+class FlatNonSequentialNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.fc0 = nn.Linear(9, 1024)
+        self.fc1 = nn.Linear(1024, 1025)
+        self.fc2 = nn.Linear(1025, 1026)
+        self.fc3 = nn.Linear(1024, 1026)
+
+    def forward(self, input: Tensor) -> Tensor:
+        common_input = self.relu(self.fc0(input))
+        branch1 = self.fc2(self.relu(self.fc1(common_input)))
+        branch2 = self.fc3(common_input)
+        output = branch1 + branch2
+        return output
+
+
+@mark.parametrize(
+    ["model", "single_input_shape"], [(Cifar10Model(), (3, 32, 32)), (FlatNonSequentialNN(), (9,))]
+)
+def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
     batch_size = 64
-    input_shape = (batch_size, 3, 32, 32)
+    input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
     target = randint_(0, 10, (batch_size,))
 
-    model = Cifar10Model().to(device=DEVICE)
+    model = model.to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     A = Mean()
@@ -82,13 +103,16 @@ def test_speed():
             autogram_forward_backward(model, criterion, input, target, W)
 
 
-def test_equivalence():
+@mark.parametrize(
+    ["model", "single_input_shape"], [(Cifar10Model(), (3, 32, 32)), (FlatNonSequentialNN(), (9,))]
+)
+def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
     batch_size = 64
-    input_shape = (batch_size, 3, 32, 32)
+    input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
     target = randint_(0, 10, (batch_size,))
 
-    model = Cifar10Model().to(device=DEVICE)
+    model = model.to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     A = UPGrad()
@@ -128,7 +152,7 @@ class Timer:
 
 
 def autojac_forward_backward(
-    model: nn.Sequential,
+    model: nn.Module,
     criterion: nn.Module,
     input: Tensor,
     target: Tensor,
@@ -140,7 +164,7 @@ def autojac_forward_backward(
 
 
 def autograd_forward_backward(
-    model: nn.Sequential,
+    model: nn.Module,
     criterion: nn.Module,
     input: Tensor,
     target: Tensor,

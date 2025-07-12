@@ -68,7 +68,7 @@ def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
 
 
 def autogram_forward_backward(
-    model: nn.Sequential,
+    model: nn.Module,
     criterion: Callable,
     input: Tensor,
     target: Tensor,
