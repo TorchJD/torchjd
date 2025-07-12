@@ -51,20 +51,20 @@ def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
     targets = set(targets)
     nodes_to_traverse = deque((child, target) for target in targets for child in next_edges(target))
 
-    visited = {child for child, _ in nodes_to_traverse}
-    targets_graph = dict()
+    already_added = {child for child, _ in nodes_to_traverse}
+    traversed_targets = set()
 
     while nodes_to_traverse:
-        node, target = nodes_to_traverse.popleft()
+        node, origin = nodes_to_traverse.popleft()
         if node in targets:
-            targets_graph[target] = node
+            traversed_targets.add(origin)
 
         for child in next_edges(node):
-            if child not in visited:
-                nodes_to_traverse.append((child, target))
-                visited.add(child)
+            if child not in already_added:
+                nodes_to_traverse.append((child, origin))
+                already_added.add(child)
 
-    return list(targets - set(targets_graph.keys()))
+    return list(targets - traversed_targets)
 
 
 def autogram_forward_backward(
