@@ -78,29 +78,53 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
 
     print(f"\nTimes for forward + backward with BS={batch_size}, A={A} on {DEVICE}.")
 
-    torch.cuda.empty_cache()
-    autograd_forward_backward(model, criterion, input, target)
+    def fn_autograd():
+        autograd_forward_backward(model, criterion, input, target)
 
-    for i in range(10):
+    def init_fn_autograd():
+        torch.cuda.empty_cache()
+        fn_autograd()
+
+    def fn_autojac():
+        autojac_forward_backward(model, criterion, input, target, A)
+
+    def init_fn_autojac():
+        torch.cuda.empty_cache()
+        fn_autojac()
+
+    def fn_autogram():
+        autogram_forward_backward(model, criterion, input, target, W)
+
+    def init_fn_autogram():
+        torch.cuda.empty_cache()
+        fn_autogram()
+
+    def optionally_cuda_sync():
+        if str(DEVICE).startswith("cuda"):
+            torch.cuda.synchronize()
+
+    def pre_fn():
         model.zero_grad()
-        with Timer("autograd"):
-            autograd_forward_backward(model, criterion, input, target)
+        optionally_cuda_sync()
 
-    torch.cuda.empty_cache()
-    autojac_forward_backward(model, criterion, input, target, A)
+    def post_fn():
+        optionally_cuda_sync()
 
-    for i in range(10):
-        model.zero_grad()
-        with Timer("autojac"):
-            autojac_forward_backward(model, criterion, input, target, A)
+    n_runs = 10
+    autograd_times = torch.tensor(time_call(fn_autograd, init_fn_autograd, pre_fn, post_fn, n_runs))
+    print(f"autograd times (avg = {autograd_times.mean():.5f}, std = {autograd_times.std():.5f}")
+    print(autograd_times)
+    print()
 
-    torch.cuda.empty_cache()
-    autogram_forward_backward(model, criterion, input, target, W)
+    autojac_times = torch.tensor(time_call(fn_autojac, init_fn_autojac, pre_fn, post_fn, n_runs))
+    print(f"autojac times (avg = {autojac_times.mean():.5f}, std = {autojac_times.std():.5f}")
+    print(autojac_times)
+    print()
 
-    for i in range(10):
-        model.zero_grad()
-        with Timer("autogram"):
-            autogram_forward_backward(model, criterion, input, target, W)
+    autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
+    print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
+    print(autogram_times)
+    print()
 
 
 @mark.parametrize(
@@ -128,27 +152,23 @@ def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
     assert_tensor_dicts_are_close(grads, expected_grads)
 
 
-class Timer:
-    def __init__(self, name: str):
-        self.name = name
-        self.start_time = None
-        self.end_time = None
+def noop():
+    pass
 
-    def __enter__(self):
-        self.cuda_sync()
-        self.start_time = time.perf_counter()
-        return self  # This allows you to access the timer object within the 'with' block
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.cuda_sync()
-        self.end_time = time.perf_counter()
-        self.elapsed_time = self.end_time - self.start_time
-        print(f"{self.name}: {self.elapsed_time:.4f} seconds")
+def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> list[float]:
+    init_fn()
 
-    @staticmethod
-    def cuda_sync():
-        if str(DEVICE).startswith("cuda"):
-            torch.cuda.synchronize()
+    times = []
+    for _ in range(n_runs):
+        pre_fn()
+        start = time.perf_counter()
+        fn()
+        post_fn()
+        elapsed_time = time.perf_counter() - start
+        times.append(elapsed_time)
+
+    return times
 
 
 def autojac_forward_backward(
