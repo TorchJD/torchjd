@@ -22,19 +22,29 @@ def augment_model(
 
             def forward_post_hook(module_, args, output):
                 def tensor_backward_hook(grad):
-                    def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                        return _vjp_from_module(module_, input_j.unsqueeze(0))(
-                            grad_output_j.unsqueeze(0)
+                    # 64 * 1000
+                    sparse_jac_output = ...  # 64 * 64 * 1000
+
+                    def get_grad(grad_output) -> tuple[Tensor, ...]:
+                        return torch.autograd.grad(
+                            output, module_.parameters(), grad_outputs=grad_output
                         )
 
-                    input = args[0]  # TODO: Here we suppose a single input tensor. Relax this.
-                    jacobians = torch.vmap(get_vjp)(input, grad)
+                    jacobians = torch.vmap(get_grad)(sparse_jac_output)
 
-                    assert len(jacobians) == 1
-
-                    for jacobian in jacobians[0].values():
-                        J = jacobian.reshape((gramian.shape[0], -1))
-                        gramian.addmm_(J, J.T)  # Accumulate the gramian
+                    # def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
+                    #     return _vjp_from_module(module_, input_j.unsqueeze(0))(
+                    #         grad_output_j.unsqueeze(0)
+                    #     )
+                    #
+                    # input = args[0]  # TODO: Here we suppose a single input tensor. Relax this.
+                    # jacobians = torch.vmap(get_vjp)(input, grad)
+                    #
+                    # assert len(jacobians) == 1
+                    #
+                    # for jacobian in jacobians[0].values():
+                    #     J = jacobian.reshape((gramian.shape[0], -1))
+                    #     gramian.addmm_(J, J.T)  # Accumulate the gramian
 
                 output.register_hook(tensor_backward_hook)
                 target_edges_registry.append(get_gradient_edge(output))
