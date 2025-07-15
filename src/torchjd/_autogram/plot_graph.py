@@ -36,6 +36,35 @@ class FlatNonSequentialNN(nn.Module):
         return output
 
 
+class NonFlatNonSequentialNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.matrix = nn.Parameter(torch.randn(9, 10))
+
+        self.fc1 = nn.Linear(10, 12)
+        self.fc2 = nn.Linear(12, 15)
+        self.fc3 = nn.Linear(10, 15)
+
+    def forward(self, input: Tensor) -> Tensor:
+        common_input = self.relu(input @ self.matrix)
+        branch1 = self.fc2(self.relu(self.fc1(common_input)))
+        branch2 = self.fc3(common_input)
+        output = branch1 + branch2
+        return output
+
+
+class MultiInputMultiOutputNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 60))
+        self.matrix2 = nn.Parameter(torch.randn(50, 70))
+
+    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
+        input = sum(inputs)
+        return input @ self.matrix1, input @ self.matrix2
+
+
 def main():
     batch_size = 64
     input_shape = (batch_size, 3, 32, 32)
@@ -60,7 +89,9 @@ def main2():
     model = FlatNonSequentialNN()
     output = model(input)
 
-    graph = make_dot(output, params=dict(model.named_parameters()))
+    graph = make_dot(
+        output, params=dict(model.named_parameters()), show_saved=True, show_attrs=True
+    )
     graph.view()
 
 
