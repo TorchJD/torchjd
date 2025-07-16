@@ -9,6 +9,10 @@ from torch.nn import Parameter
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
+# TODO: test with multi-input and / or multi-output modules
+# TODO: test with parameter re-use (intra-module, inter-module, and module reuse)
+# TODO: document the cases where it doesn't work: non-batched operations, free nn.Parameter used before other nn.Modules (should work but slowly).
+
 
 class GramianAccumulator:
     def __init__(self):
@@ -48,21 +52,26 @@ def augment_model(
         if len(params) > 0:
 
             def forward_post_hook(module_, args, output):
+                # TODO: Increment the number of times that each param was used
+
                 def tensor_backward_hook(grad):
-                    def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                        return _vjp_from_module(module_, input_j.unsqueeze(0))(
-                            grad_output_j.unsqueeze(0)
-                        )
+                    def get_vjp(grad_output_j, *inputs_j) -> tuple[Tensor, ...]:
+                        return _vjp_from_module(
+                            module_, *[input_j.unsqueeze(0) for input_j in inputs_j]
+                        )(grad_output_j.unsqueeze(0))
 
-                    input = args[0]  # TODO: Here we suppose a single input tensor. Relax this.
-                    jacobians = torch.vmap(get_vjp)(input, grad)
-
+                    jacobians = torch.vmap(get_vjp)(grad, *args)
                     assert len(jacobians) == 1
 
                     for jacobian in jacobians[0].values():
                         J = jacobian.reshape((gramian.shape[0], -1))
+                        # TODO: sum J to the jacobians of the same parameter.
+                        #  Increment the number of times we have computed a jacobian for this param.
+                        #  If the required number of times is reached, accumulate into the gramian.
                         gramian.addmm_(J, J.T)  # Accumulate the gramian
 
+                # TODO: register a hook per output if output is an iterable of tensors, and make
+                #  sure that this hook differentiates only wrt the params that this output has used.
                 output.register_hook(tensor_backward_hook)
                 target_edges_registry.append(get_gradient_edge(output))
                 return output
