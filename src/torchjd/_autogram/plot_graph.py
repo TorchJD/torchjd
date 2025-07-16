@@ -60,9 +60,17 @@ class MultiInputMultiOutputNN(nn.Module):
         self.matrix1 = nn.Parameter(torch.randn(50, 60))
         self.matrix2 = nn.Parameter(torch.randn(50, 70))
 
-    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
-        input = sum(inputs)
-        return input @ self.matrix1, input @ self.matrix2
+    def forward(self, input1, input2) -> tuple[Tensor, Tensor]:
+        return input1 @ self.matrix1, input2 @ self.matrix2
+
+
+class SingleInputSingleOutputModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.mimo = MultiInputMultiOutputNN()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.concatenate(list(self.mimo(input, input)), dim=1)
 
 
 def main():
@@ -83,15 +91,13 @@ def main():
 
 def main2():
     batch_size = 64
-    input_shape = (batch_size, 9)
-    input = torch.randn(input_shape)
+    input_shape = (batch_size, 50)
+    input = torch.randn(input_shape, requires_grad=True)
 
-    model = FlatNonSequentialNN()
+    model = SingleInputSingleOutputModel()
     output = model(input)
 
-    graph = make_dot(
-        output, params=dict(model.named_parameters()), show_saved=True, show_attrs=True
-    )
+    graph = make_dot(output, params=dict(model.named_parameters()))
     graph.view()
 
 
