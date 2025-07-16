@@ -10,6 +10,22 @@ from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
+def to_sparse_csr_diag(values: Tensor) -> Tensor:
+    batch_size = values.shape[0]
+    crow_indices = torch.arange(batch_size + 1, device=values.device)
+    col_indices = torch.arange(batch_size, device=values.device)
+    sparse_diag_tensor = torch.sparse_csr_tensor(crow_indices, col_indices, values)
+    return sparse_diag_tensor
+
+
+def to_sparse_coo_diag(values: Tensor) -> Tensor:
+    batch_size = values.shape[0]
+    column_indices = torch.arange(batch_size, device=values.device)
+    indices = torch.stack([column_indices, column_indices])
+    sparse_diag_tensor = torch.sparse_coo_tensor(indices, values)
+    return sparse_diag_tensor
+
+
 def augment_model(
     model: nn.Module,
     gramian: Tensor,
@@ -21,9 +37,17 @@ def augment_model(
         if len(params) > 0:
 
             def forward_post_hook(module_, args, output):
+                print("Calling hook on module", module_)
+                module_._has_backward_hook_already_been_called = False
+
                 def tensor_backward_hook(grad):
+                    if module_._has_backward_hook_already_been_called:
+                        return
+
+                    module_._has_backward_hook_already_been_called = True
+                    print("Calling backward hook on grad of shape ", grad.shape, "module", module_)
                     # 64 * 1000
-                    sparse_jac_output = ...  # 64 * 64 * 1000
+                    sparse_jac_output = to_sparse_coo_diag(grad)
 
                     def get_grad(grad_output) -> tuple[Tensor, ...]:
                         return torch.autograd.grad(
@@ -31,6 +55,7 @@ def augment_model(
                         )
 
                     jacobians = torch.vmap(get_grad)(sparse_jac_output)
+                    print(jacobians)
 
                     # def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
                     #     return _vjp_from_module(module_, input_j.unsqueeze(0))(
