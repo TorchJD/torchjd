@@ -65,25 +65,22 @@ def augment_model(
                 else:
                     raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
-                # For simplicity, for now, pretend that each output depends on each param.
-                # This should result in some zeros in the computed jacobians whenever an output was
-                # actually independent of a param, so it's not as efficient as it could be. However,
-                # it should still be correct.
-                # TODO: make this more optimized by searching the actual params in the graph.
-                output_to_used_params: dict[Tensor, set[Parameter]] = {
-                    output_: set(params) for output_ in outputs
-                }
                 named_params = dict(module_.named_parameters())
-                for output_, used_params in output_to_used_params.items():
-                    for p in used_params:
+                for output_ in outputs:
+                    for p in params:
                         gramian_accumulator.track_parameter(p)
 
                     def tensor_backward_hook(grad):
+                        # TODO: store grad in an object
+                        #   if this object has received all its required grads, do the get_vjp call
+                        #   and accumulate the gramian. Also do the same with grad as we did for
+                        #   inputs_j: handle multiple grads
+
+                        # TODO: even better idea: call an autograd function to replace both the
+                        #  forward and backward hooks. It will be responsible to wait to get all
+                        #  grads before triggering the computation. It will always be added, after
+                        #  each module, and auto-deactivate after 1 call.
                         def get_vjp(grad_output_j, *inputs_j) -> tuple[Tensor, ...]:
-                            # TODO: make this a function of used_params only. Currently, since
-                            #  used_params contains all params, it works, but if we change
-                            #  used_params to only be the actual subset that we used, it will still
-                            #  differentiate wrt all params.
                             inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
                             return _vjp_from_module(module_, *inputs_j)(grad_output_j.unsqueeze(0))
 
