@@ -1,5 +1,5 @@
 from collections import Counter, deque
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import torch
 from torch import Tensor, nn
@@ -35,45 +35,70 @@ class GramianAccumulator:
             del self.jacobians[tensor]
 
     def _accumulate_jacobian(self, jacobian: Tensor) -> None:
-        if self.gramian:
+        if self.gramian is not None:
             self.gramian.addmm_(jacobian, jacobian.T)
         else:
-            self.gramian = torch.mm(jacobian, jacobian)
+            self.gramian = torch.mm(jacobian, jacobian.T)
 
 
 def augment_model(
     model: nn.Module,
-    gramian: Tensor,
+    gramian_accumulator: GramianAccumulator,
     target_edges_registry: list[GradientEdge],
     forward_hook_handles: list,
+    tensor_hook_handles: list,
 ):
     for module in model.modules():
         params = list(module.parameters(recurse=False))
         if len(params) > 0:
 
-            def forward_post_hook(module_, args, output):
-                # TODO: Increment the number of times that each param was used
+            def forward_post_hook(module_, args, output: Tensor | Sequence[Tensor]):
+                params = list(
+                    module_.parameters(recurse=False)
+                )  # Reassign params to avoid next iteration to override it
+                if isinstance(output, Tensor):
+                    outputs = [output]
+                elif isinstance(output, Sequence) and all(
+                    [isinstance(output_, Tensor) for output_ in output]
+                ):
+                    outputs = list(output)
+                else:
+                    raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
-                def tensor_backward_hook(grad):
-                    def get_vjp(grad_output_j, *inputs_j) -> tuple[Tensor, ...]:
-                        return _vjp_from_module(
-                            module_, *[input_j.unsqueeze(0) for input_j in inputs_j]
-                        )(grad_output_j.unsqueeze(0))
+                # For simplicity, for now, pretend that each output depends on each param.
+                # This should result in some zeros in the computed jacobians whenever an output was
+                # actually independent of a param, so it's not as efficient as it could be. However,
+                # it should still be correct.
+                # TODO: make this more optimized by searching the actual params in the graph.
+                output_to_used_params: dict[Tensor, set[Parameter]] = {
+                    output_: set(params) for output_ in outputs
+                }
+                named_params = dict(module_.named_parameters())
+                for output_, used_params in output_to_used_params.items():
+                    for p in used_params:
+                        gramian_accumulator.track_parameter(p)
 
-                    jacobians = torch.vmap(get_vjp)(grad, *args)
-                    assert len(jacobians) == 1
+                    def tensor_backward_hook(grad):
+                        def get_vjp(grad_output_j, *inputs_j) -> tuple[Tensor, ...]:
+                            # TODO: make this a function of used_params only. Currently, since
+                            #  used_params contains all params, it works, but if we change
+                            #  used_params to only be the actual subset that we used, it will still
+                            #  differentiate wrt all params.
+                            return _vjp_from_module(
+                                module_, *[input_j.unsqueeze(0) for input_j in inputs_j]
+                            )(grad_output_j.unsqueeze(0))
 
-                    for jacobian in jacobians[0].values():
-                        J = jacobian.reshape((gramian.shape[0], -1))
-                        # TODO: sum J to the jacobians of the same parameter.
-                        #  Increment the number of times we have computed a jacobian for this param.
-                        #  If the required number of times is reached, accumulate into the gramian.
-                        gramian.addmm_(J, J.T)  # Accumulate the gramian
+                        jacobians = torch.vmap(get_vjp)(grad, *args)
+                        assert len(jacobians) == 1
+                        batch_size = grad.shape[0]
+                        for param_name, jacobian in jacobians[0].items():
+                            J = jacobian.reshape((batch_size, -1))
+                            tensor = named_params[param_name]
+                            gramian_accumulator.add_jacobian(tensor, J)
 
-                # TODO: register a hook per output if output is an iterable of tensors, and make
-                #  sure that this hook differentiates only wrt the params that this output has used.
-                output.register_hook(tensor_backward_hook)
-                target_edges_registry.append(get_gradient_edge(output))
+                    tensor_hook_handles.append(output_.register_hook(tensor_backward_hook))
+                    target_edges_registry.append(get_gradient_edge(output_))
+
                 return output
 
             forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
@@ -110,11 +135,13 @@ def autogram_forward_backward(
     target: Tensor,
     weighting: Weighting[PSDMatrix],
 ) -> tuple[Tensor, Tensor, Tensor]:
-    batch_size = input.shape[0]
-    gramian = torch.zeros((batch_size, batch_size), device=input.device)
     target_edges_registry = []
     forward_hook_handles = []
-    augment_model(model, gramian, target_edges_registry, forward_hook_handles)
+    tensor_hook_handles = []
+    gramian_accumulator = GramianAccumulator()
+    augment_model(
+        model, gramian_accumulator, target_edges_registry, forward_hook_handles, tensor_hook_handles
+    )
 
     output = model(input)
     losses = criterion(output, target)
@@ -133,6 +160,10 @@ def autogram_forward_backward(
         retain_graph=True,
     )
 
+    for handle in tensor_hook_handles:
+        handle.remove()
+
+    gramian = gramian_accumulator.gramian
     weights = weighting(gramian)
 
     weighted_loss = losses @ weights
