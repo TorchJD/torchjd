@@ -1,4 +1,4 @@
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Callable
 
 import torch
@@ -8,6 +8,33 @@ from torch.nn import Parameter
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
+
+
+class GramianAccumulator:
+    def __init__(self):
+        self.gramian = None
+        self.jacobians = dict()
+        self.counter = Counter()
+
+    def track_parameter(self, tensor: Tensor) -> None:
+        self.counter.update([tensor])
+
+    def add_jacobian(self, tensor: Tensor, jacobian: Tensor) -> None:
+        if tensor in self.jacobians:
+            self.jacobians[tensor] += jacobian
+        else:
+            self.jacobians[tensor] = jacobian
+        self.counter.subtract([tensor])
+        if self.counter[tensor] == 0:
+            self._accumulate_jacobian(self.jacobians[tensor])
+            del self.counter[tensor]
+            del self.jacobians[tensor]
+
+    def _accumulate_jacobian(self, jacobian: Tensor) -> None:
+        if self.gramian:
+            self.gramian.addmm_(jacobian, jacobian.T)
+        else:
+            self.gramian = torch.mm(jacobian, jacobian)
 
 
 def augment_model(
