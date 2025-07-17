@@ -84,9 +84,8 @@ def augment_model(
                             #  used_params contains all params, it works, but if we change
                             #  used_params to only be the actual subset that we used, it will still
                             #  differentiate wrt all params.
-                            return _vjp_from_module(
-                                module_, *[input_j.unsqueeze(0) for input_j in inputs_j]
-                            )(grad_output_j.unsqueeze(0))
+                            inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
+                            return _vjp_from_module(module_, *inputs_j)(grad_output_j.unsqueeze(0))
 
                         jacobians = torch.vmap(get_vjp)(grad, *args)
                         assert len(jacobians) == 1
@@ -243,7 +242,7 @@ def _compute_outputs(criterion, input, model: nn.Sequential, target) -> list[Ten
 def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
     def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
         all_state = {**primals, **dict(module.named_buffers())}
-        return torch.func.functional_call(module, all_state, *inputs)
+        return torch.func.functional_call(module, all_state, tuple(inputs))
 
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
 

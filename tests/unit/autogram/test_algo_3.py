@@ -72,6 +72,16 @@ class MultiInputMultiOutputNN(nn.Module):
         return input @ self.matrix1, input @ self.matrix2
 
 
+class MultiInputNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 60))
+
+    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
+        input = sum(inputs)
+        return input @ self.matrix1
+
+
 class SingleInputSingleOutputModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -79,6 +89,15 @@ class SingleInputSingleOutputModel(nn.Module):
 
     def forward(self, input: Tensor) -> Tensor:
         return torch.concatenate(list(self.mimo(input, input)), dim=1)
+
+
+class SingleInputSingleOutputModel2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.miso = MultiInputNN()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.miso(input, input)
 
 
 @mark.parametrize(
@@ -153,6 +172,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (Cifar10Model(), (3, 32, 32)),
         (FlatNonSequentialNN(), (9,)),
         (SingleInputSingleOutputModel(), (50,)),
+        (SingleInputSingleOutputModel2(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
