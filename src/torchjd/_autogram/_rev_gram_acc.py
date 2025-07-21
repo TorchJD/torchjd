@@ -1,5 +1,6 @@
 from collections import Counter, deque
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 import torch
 from torch import Tensor, nn
@@ -20,8 +21,8 @@ class GramianAccumulator:
         self.jacobians = dict()
         self.counter = Counter()
 
-    def track_parameter(self, tensor: Tensor) -> None:
-        self.counter.update([tensor])
+    def track_parameters(self, tensors: Iterable[Tensor]) -> None:
+        self.counter.update(tensors)
 
     def add_jacobian(self, tensor: Tensor, jacobian: Tensor) -> None:
         if tensor in self.jacobians:
@@ -53,9 +54,6 @@ def augment_model(
         if len(params) > 0:
 
             def forward_post_hook(module_, args, output: Tensor | Sequence[Tensor]):
-                params = list(
-                    module_.parameters(recurse=False)
-                )  # Reassign params to avoid next iteration to override it
                 if isinstance(output, Tensor):
                     outputs = [output]
                 elif isinstance(output, Sequence) and all(
@@ -65,10 +63,54 @@ def augment_model(
                 else:
                     raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
+                activated = True
+
+                class TroKlass(torch.autograd.Function):
+                    # def __init__(self, module: nn.Module, gramian_accumulator : GramianAccumulator):
+                    #     gramian_accumulator.track_parameters(module.parameters(recurse=False))
+                    #     self.module = module
+
+                    @staticmethod
+                    def forward(xs: Any) -> None:
+                        return xs
+
+                    @staticmethod
+                    def backward(ctx, grad_outputs: tuple[Tensor, ...]):
+                        nonlocal activated
+                        if activated:
+                            activated = False
+
+                            def get_vjp(
+                                grad_outputs_j: tuple[Tensor, ...], *inputs_j
+                            ) -> tuple[Tensor, ...]:
+                                inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
+                                grad_outputs_j = [
+                                    grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
+                                ]
+                                return _vjp_from_module(module_, *inputs_j)(grad_outputs_j)
+
+                            jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
+                            assert len(jacobians) == 1
+                            batch_size = outputs[0].shape[0]
+                            for param_name, jacobian in jacobians[0].items():
+                                J = jacobian.reshape((batch_size, -1))
+                                tensor = named_params[param_name]
+                                gramian_accumulator.add_jacobian(tensor, J)
+                        return grad_outputs
+
+                # compute jacobian and give to Gramian accumulator
+                autograd_fn = TroKlass(module_)
+
+                return autograd_fn.apply(output)
+
+                params = list(
+                    module_.parameters(recurse=False)
+                )  # Reassign params to avoid next iteration to override it
+
                 named_params = dict(module_.named_parameters())
                 for output_ in outputs:
                     for p in params:
-                        gramian_accumulator.track_parameter(p)
+                        gramian_accumulator.track_parameters(p)
 
                     def tensor_backward_hook(grad):
                         # TODO: store grad in an object
