@@ -6,6 +6,7 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
+from torchviz import make_dot
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -47,7 +48,6 @@ def augment_model(
     gramian_accumulator: GramianAccumulator,
     target_edges_registry: list[GradientEdge],
     forward_hook_handles: list,
-    tensor_hook_handles: list,
 ):
     for module in model.modules():
         params = list(module.parameters(recurse=False))
@@ -66,16 +66,16 @@ def augment_model(
                 activated = True
 
                 class TroKlass(torch.autograd.Function):
-                    # def __init__(self, module: nn.Module, gramian_accumulator : GramianAccumulator):
-                    #     gramian_accumulator.track_parameters(module.parameters(recurse=False))
-                    #     self.module = module
-
                     @staticmethod
                     def forward(xs: Any) -> None:
                         return xs
 
                     @staticmethod
-                    def backward(ctx, grad_outputs: tuple[Tensor, ...]):
+                    def setup_context(*_):
+                        pass
+
+                    @staticmethod
+                    def backward(ctx, *grad_outputs: Tensor):
                         nonlocal activated
                         if activated:
                             activated = False
@@ -87,7 +87,7 @@ def augment_model(
                                 grad_outputs_j = [
                                     grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
                                 ]
-                                return _vjp_from_module(module_, *inputs_j)(grad_outputs_j)
+                                return _vjp_from_module(module_, *inputs_j)(*grad_outputs_j)
 
                             jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
                             assert len(jacobians) == 1
@@ -96,48 +96,21 @@ def augment_model(
                                 J = jacobian.reshape((batch_size, -1))
                                 tensor = named_params[param_name]
                                 gramian_accumulator.add_jacobian(tensor, J)
+
                         return grad_outputs
 
-                # compute jacobian and give to Gramian accumulator
-                autograd_fn = TroKlass(module_)
-
-                return autograd_fn.apply(output)
-
-                params = list(
-                    module_.parameters(recurse=False)
-                )  # Reassign params to avoid next iteration to override it
+                # Reassign params to avoid next iteration to override it
+                params = list(module_.parameters(recurse=False))
 
                 named_params = dict(module_.named_parameters())
+                gramian_accumulator.track_parameters(params)
+
                 for output_ in outputs:
-                    for p in params:
-                        gramian_accumulator.track_parameters(p)
-
-                    def tensor_backward_hook(grad):
-                        # TODO: store grad in an object
-                        #   if this object has received all its required grads, do the get_vjp call
-                        #   and accumulate the gramian. Also do the same with grad as we did for
-                        #   inputs_j: handle multiple grads
-
-                        # TODO: even better idea: call an autograd function to replace both the
-                        #  forward and backward hooks. It will be responsible to wait to get all
-                        #  grads before triggering the computation. It will always be added, after
-                        #  each module, and auto-deactivate after 1 call.
-                        def get_vjp(grad_output_j, *inputs_j) -> tuple[Tensor, ...]:
-                            inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
-                            return _vjp_from_module(module_, *inputs_j)(grad_output_j.unsqueeze(0))
-
-                        jacobians = torch.vmap(get_vjp)(grad, *args)
-                        assert len(jacobians) == 1
-                        batch_size = grad.shape[0]
-                        for param_name, jacobian in jacobians[0].items():
-                            J = jacobian.reshape((batch_size, -1))
-                            tensor = named_params[param_name]
-                            gramian_accumulator.add_jacobian(tensor, J)
-
-                    tensor_hook_handles.append(output_.register_hook(tensor_backward_hook))
+                    # TODO: we could technically only register one of those gradient edges
+                    #  And we could select the one with the lowest number of elements for that.
                     target_edges_registry.append(get_gradient_edge(output_))
 
-                return output
+                return TroKlass.apply(output)
 
             forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
 
@@ -175,13 +148,16 @@ def autogram_forward_backward(
 ) -> tuple[Tensor, Tensor, Tensor]:
     target_edges_registry = []
     forward_hook_handles = []
-    tensor_hook_handles = []
     gramian_accumulator = GramianAccumulator()
-    augment_model(
-        model, gramian_accumulator, target_edges_registry, forward_hook_handles, tensor_hook_handles
-    )
+    augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
 
     output = model(input)
+
+    graph = make_dot(
+        output, params=dict(model.named_parameters()), show_attrs=True, show_saved=True
+    )
+    graph.view()
+
     losses = criterion(output, target)
 
     for handle in forward_hook_handles:
@@ -197,9 +173,6 @@ def autogram_forward_backward(
         grad_outputs=torch.ones_like(losses),
         retain_graph=True,
     )
-
-    for handle in tensor_hook_handles:
-        handle.remove()
 
     gramian = gramian_accumulator.gramian
     weights = weighting(gramian)
