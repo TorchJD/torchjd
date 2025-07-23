@@ -101,7 +101,13 @@ class SingleInputSingleOutputModel2(nn.Module):
 
 
 @mark.parametrize(
-    ["model", "single_input_shape"], [(Cifar10Model(), (3, 32, 32)), (FlatNonSequentialNN(), (9,))]
+    ["model", "single_input_shape"],
+    [
+        (Cifar10Model(), (3, 32, 32)),
+        (FlatNonSequentialNN(), (9,)),
+        (SingleInputSingleOutputModel(), (50,)),
+        (SingleInputSingleOutputModel2(), (50,)),
+    ],
 )
 def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
     batch_size = 64
