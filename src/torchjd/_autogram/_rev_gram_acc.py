@@ -43,11 +43,56 @@ class GramianAccumulator:
             self.gramian = torch.mm(jacobian, jacobian.T)
 
 
+def make_autogram_function(
+    module: nn.Module,
+    gramian_accumulator: GramianAccumulator,
+    args: Any,
+    outputs: list[Tensor],
+    named_params: dict[str, Tensor],
+) -> type[torch.autograd.Function]:
+
+    activated = True
+
+    class Function(torch.autograd.Function):
+        @staticmethod
+        def forward(xs: Any) -> None:
+            return xs
+
+        @staticmethod
+        def setup_context(*_):
+            pass
+
+        @staticmethod
+        def backward(ctx, *grad_outputs: Tensor):
+            nonlocal activated
+            if activated:
+                activated = False
+
+                def get_vjp(grad_outputs_j: tuple[Tensor, ...], *inputs_j) -> tuple[Tensor, ...]:
+                    inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
+                    grad_outputs_j = [
+                        grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
+                    ]
+                    return _vjp_from_module(module, *inputs_j)(*grad_outputs_j)
+
+                jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
+                assert len(jacobians) == 1
+                batch_size = outputs[0].shape[0]
+                for param_name, jacobian in jacobians[0].items():
+                    J = jacobian.reshape((batch_size, -1))
+                    tensor = named_params[param_name]
+                    gramian_accumulator.add_jacobian(tensor, J)
+
+            return grad_outputs
+
+    return Function
+
+
 def get_model_hook(
     gramian_accumulator: GramianAccumulator,
     target_edges_registry: list[GradientEdge],
 ) -> Callable:
-    def forward_post_hook(module_, args, output: Tensor | Sequence[Tensor]):
+    def forward_post_hook(module, args, output: Tensor | Sequence[Tensor]):
         if isinstance(output, Tensor):
             outputs = [output]
         elif isinstance(output, Sequence) and all(
@@ -57,46 +102,12 @@ def get_model_hook(
         else:
             raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
-        activated = True
-
-        class TroKlass(torch.autograd.Function):
-            @staticmethod
-            def forward(xs: Any) -> None:
-                return xs
-
-            @staticmethod
-            def setup_context(*_):
-                pass
-
-            @staticmethod
-            def backward(ctx, *grad_outputs: Tensor):
-                nonlocal activated
-                if activated:
-                    activated = False
-
-                    def get_vjp(
-                        grad_outputs_j: tuple[Tensor, ...], *inputs_j
-                    ) -> tuple[Tensor, ...]:
-                        inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
-                        grad_outputs_j = [
-                            grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
-                        ]
-                        return _vjp_from_module(module_, *inputs_j)(*grad_outputs_j)
-
-                    jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
-                    assert len(jacobians) == 1
-                    batch_size = outputs[0].shape[0]
-                    for param_name, jacobian in jacobians[0].items():
-                        J = jacobian.reshape((batch_size, -1))
-                        tensor = named_params[param_name]
-                        gramian_accumulator.add_jacobian(tensor, J)
-
-                return grad_outputs
+        named_params = dict(module.named_parameters(recurse=False))
+        Function = make_autogram_function(module, gramian_accumulator, args, outputs, named_params)
 
         # Reassign params to avoid next iteration to override it
-        params = list(module_.parameters(recurse=False))
+        params = list(module.parameters(recurse=False))
 
-        named_params = dict(module_.named_parameters())
         gramian_accumulator.track_parameters(params)
 
         for output_ in outputs:
@@ -104,7 +115,7 @@ def get_model_hook(
             #  And we could select the one with the lowest number of elements for that.
             target_edges_registry.append(get_gradient_edge(output_))
 
-        return TroKlass.apply(output)
+        return Function.apply(output)
 
     return forward_post_hook
 
