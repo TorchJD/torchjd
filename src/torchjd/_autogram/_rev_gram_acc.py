@@ -6,7 +6,6 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
-from torchviz import make_dot
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -173,10 +172,6 @@ def autogram_forward_backward(
     augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
 
     output = model(input)
-    graph = make_dot(
-        output, params=dict(model.named_parameters()), show_attrs=True, show_saved=True
-    )
-    graph.view()
 
     losses = criterion(output, target)
 
