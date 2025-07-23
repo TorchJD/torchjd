@@ -53,13 +53,8 @@ def make_jacobian_accumulator(
 
     class JacobianAccumulator(torch.autograd.Function):
         @staticmethod
-        def forward(xs: tuple[Tensor, ...] | Tensor) -> tuple[Tensor, ...] | Tensor:
-            if isinstance(xs, tuple):
-                return tuple([x.detach() for x in xs])
-            elif isinstance(xs, Tensor):
-                return xs.detach()
-            else:
-                raise TypeError(f"The input should be a tuple or a Tensor, got {type(xs)}")
+        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+            return tuple([x.detach() for x in xs])
 
         @staticmethod
         def setup_context(*_):
@@ -97,11 +92,11 @@ def get_model_hook(
 ) -> Callable:
     def forward_post_hook(module, args, output: Tensor | Sequence[Tensor]):
         if isinstance(output, Tensor):
-            outputs = [output]
+            outputs = (output,)
         elif isinstance(output, Sequence) and all(
             [isinstance(output_, Tensor) for output_ in output]
         ):
-            outputs = list(output)
+            outputs = tuple(output)
         else:
             raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
@@ -114,7 +109,12 @@ def get_model_hook(
             #  And we could select the one with the lowest number of elements for that.
             target_edges_registry.append(get_gradient_edge(output_))
 
-        return jacobian_accumulator.apply(output)
+        # repack if needed (or unflatten?)
+        # tree_spec = torch.unflatten
+        if isinstance(output, Tensor):
+            return jacobian_accumulator.apply(output)[0]
+        else:
+            return jacobian_accumulator.apply(*output)
 
     return forward_post_hook
 
