@@ -6,7 +6,6 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
-from torchviz import make_dot
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -43,17 +42,16 @@ class GramianAccumulator:
             self.gramian = torch.mm(jacobian, jacobian.T)
 
 
-def make_autogram_function(
+def make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
     args: Any,
     outputs: list[Tensor],
-    named_params: dict[str, Tensor],
 ) -> type[torch.autograd.Function]:
 
     activated = True
 
-    class Function(torch.autograd.Function):
+    class JacobianAccumulator(torch.autograd.Function):
         @staticmethod
         def forward(xs: Any) -> None:
             return xs
@@ -78,14 +76,14 @@ def make_autogram_function(
                 jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
                 assert len(jacobians) == 1
                 batch_size = outputs[0].shape[0]
-                for param_name, jacobian in jacobians[0].items():
+                for param_name, param in module.named_parameters(recurse=False):
+                    jacobian = jacobians[0][param_name]
                     J = jacobian.reshape((batch_size, -1))
-                    tensor = named_params[param_name]
-                    gramian_accumulator.add_jacobian(tensor, J)
+                    gramian_accumulator.add_jacobian(param, J)
 
             return grad_outputs
 
-    return Function
+    return JacobianAccumulator
 
 
 def get_model_hook(
@@ -102,20 +100,16 @@ def get_model_hook(
         else:
             raise ValueError("output should be a Tensor or a Sequence of Tensors")
 
-        named_params = dict(module.named_parameters(recurse=False))
-        Function = make_autogram_function(module, gramian_accumulator, args, outputs, named_params)
+        jacobian_accumulator = make_jacobian_accumulator(module, gramian_accumulator, args, outputs)
 
-        # Reassign params to avoid next iteration to override it
-        params = list(module.parameters(recurse=False))
-
-        gramian_accumulator.track_parameters(params)
+        gramian_accumulator.track_parameters(module.parameters(recurse=False))
 
         for output_ in outputs:
             # TODO: we could technically only register one of those gradient edges
             #  And we could select the one with the lowest number of elements for that.
             target_edges_registry.append(get_gradient_edge(output_))
 
-        return Function.apply(output)
+        return jacobian_accumulator.apply(output)
 
     return forward_post_hook
 
@@ -170,11 +164,6 @@ def autogram_forward_backward(
     augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
 
     output = model(input)
-
-    graph = make_dot(
-        output, params=dict(model.named_parameters()), show_attrs=True, show_saved=True
-    )
-    graph.view()
 
     losses = criterion(output, target)
 
