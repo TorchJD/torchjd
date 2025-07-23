@@ -43,6 +43,72 @@ class GramianAccumulator:
             self.gramian = torch.mm(jacobian, jacobian.T)
 
 
+def get_model_hook(
+    gramian_accumulator: GramianAccumulator,
+    target_edges_registry: list[GradientEdge],
+) -> Callable:
+    def forward_post_hook(module_, args, output: Tensor | Sequence[Tensor]):
+        if isinstance(output, Tensor):
+            outputs = [output]
+        elif isinstance(output, Sequence) and all(
+            [isinstance(output_, Tensor) for output_ in output]
+        ):
+            outputs = list(output)
+        else:
+            raise ValueError("output should be a Tensor or a Sequence of Tensors")
+
+        activated = True
+
+        class TroKlass(torch.autograd.Function):
+            @staticmethod
+            def forward(xs: Any) -> None:
+                return xs
+
+            @staticmethod
+            def setup_context(*_):
+                pass
+
+            @staticmethod
+            def backward(ctx, *grad_outputs: Tensor):
+                nonlocal activated
+                if activated:
+                    activated = False
+
+                    def get_vjp(
+                        grad_outputs_j: tuple[Tensor, ...], *inputs_j
+                    ) -> tuple[Tensor, ...]:
+                        inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
+                        grad_outputs_j = [
+                            grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
+                        ]
+                        return _vjp_from_module(module_, *inputs_j)(*grad_outputs_j)
+
+                    jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
+                    assert len(jacobians) == 1
+                    batch_size = outputs[0].shape[0]
+                    for param_name, jacobian in jacobians[0].items():
+                        J = jacobian.reshape((batch_size, -1))
+                        tensor = named_params[param_name]
+                        gramian_accumulator.add_jacobian(tensor, J)
+
+                return grad_outputs
+
+        # Reassign params to avoid next iteration to override it
+        params = list(module_.parameters(recurse=False))
+
+        named_params = dict(module_.named_parameters())
+        gramian_accumulator.track_parameters(params)
+
+        for output_ in outputs:
+            # TODO: we could technically only register one of those gradient edges
+            #  And we could select the one with the lowest number of elements for that.
+            target_edges_registry.append(get_gradient_edge(output_))
+
+        return TroKlass.apply(output)
+
+    return forward_post_hook
+
+
 def augment_model(
     model: nn.Module,
     gramian_accumulator: GramianAccumulator,
@@ -52,66 +118,7 @@ def augment_model(
     for module in model.modules():
         params = list(module.parameters(recurse=False))
         if len(params) > 0:
-
-            def forward_post_hook(module_, args, output: Tensor | Sequence[Tensor]):
-                if isinstance(output, Tensor):
-                    outputs = [output]
-                elif isinstance(output, Sequence) and all(
-                    [isinstance(output_, Tensor) for output_ in output]
-                ):
-                    outputs = list(output)
-                else:
-                    raise ValueError("output should be a Tensor or a Sequence of Tensors")
-
-                activated = True
-
-                class TroKlass(torch.autograd.Function):
-                    @staticmethod
-                    def forward(xs: Any) -> None:
-                        return xs
-
-                    @staticmethod
-                    def setup_context(*_):
-                        pass
-
-                    @staticmethod
-                    def backward(ctx, *grad_outputs: Tensor):
-                        nonlocal activated
-                        if activated:
-                            activated = False
-
-                            def get_vjp(
-                                grad_outputs_j: tuple[Tensor, ...], *inputs_j
-                            ) -> tuple[Tensor, ...]:
-                                inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
-                                grad_outputs_j = [
-                                    grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
-                                ]
-                                return _vjp_from_module(module_, *inputs_j)(*grad_outputs_j)
-
-                            jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
-                            assert len(jacobians) == 1
-                            batch_size = outputs[0].shape[0]
-                            for param_name, jacobian in jacobians[0].items():
-                                J = jacobian.reshape((batch_size, -1))
-                                tensor = named_params[param_name]
-                                gramian_accumulator.add_jacobian(tensor, J)
-
-                        return grad_outputs
-
-                # Reassign params to avoid next iteration to override it
-                params = list(module_.parameters(recurse=False))
-
-                named_params = dict(module_.named_parameters())
-                gramian_accumulator.track_parameters(params)
-
-                for output_ in outputs:
-                    # TODO: we could technically only register one of those gradient edges
-                    #  And we could select the one with the lowest number of elements for that.
-                    target_edges_registry.append(get_gradient_edge(output_))
-
-                return TroKlass.apply(output)
-
+            forward_post_hook = get_model_hook(gramian_accumulator, target_edges_registry)
             forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
 
 
