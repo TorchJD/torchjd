@@ -6,6 +6,7 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
+from torchviz import make_dot
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -68,10 +69,13 @@ def make_jacobian_accumulator(
 
                 def get_vjp(grad_outputs_j: tuple[Tensor, ...], *inputs_j) -> tuple[Tensor, ...]:
                     inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
-                    grad_outputs_j = [
-                        grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
-                    ]
-                    return _vjp_from_module(module, *inputs_j)(*grad_outputs_j)
+                    if len(grad_outputs_j) == 1:
+                        grad_outputs_j = grad_outputs_j[0].unsqueeze(0)
+                    else:
+                        grad_outputs_j = tuple(
+                            grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
+                        )
+                    return _vjp_from_module(module, *inputs_j)(grad_outputs_j)
 
                 jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
                 assert len(jacobians) == 1
@@ -169,6 +173,10 @@ def autogram_forward_backward(
     augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
 
     output = model(input)
+    graph = make_dot(
+        output, params=dict(model.named_parameters()), show_attrs=True, show_saved=True
+    )
+    graph.view()
 
     losses = criterion(output, target)
 
