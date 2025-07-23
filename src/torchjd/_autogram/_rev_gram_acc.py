@@ -53,8 +53,13 @@ def make_jacobian_accumulator(
 
     class JacobianAccumulator(torch.autograd.Function):
         @staticmethod
-        def forward(xs: Any) -> None:
-            return xs
+        def forward(xs: tuple[Tensor, ...] | Tensor) -> tuple[Tensor, ...] | Tensor:
+            if isinstance(xs, tuple):
+                return tuple([x.detach() for x in xs])
+            elif isinstance(xs, Tensor):
+                return xs.detach()
+            else:
+                raise TypeError(f"The input should be a tuple or a Tensor, got {type(xs)}")
 
         @staticmethod
         def setup_context(*_):
