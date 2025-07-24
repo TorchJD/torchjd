@@ -1,11 +1,12 @@
 from collections import Counter, deque
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
+from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -46,10 +47,11 @@ def make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
     args: Any,
-    outputs: list[Tensor],
+    outputs: PyTree,
 ) -> type[torch.autograd.Function]:
 
     activated = True
+    flat_outputs, spec = tree_flatten(outputs)  # maybe something more efficient than this?
 
     class JacobianAccumulator(torch.autograd.Function):
         @staticmethod
@@ -66,19 +68,14 @@ def make_jacobian_accumulator(
             if activated:
                 activated = False
 
-                def get_vjp(grad_outputs_j: tuple[Tensor, ...], *inputs_j) -> tuple[Tensor, ...]:
+                def get_vjp(grad_outputs_j: PyTree, *inputs_j) -> tuple[Tensor, ...]:
                     inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
-                    if len(grad_outputs_j) == 1:
-                        grad_outputs_j = grad_outputs_j[0].unsqueeze(0)
-                    else:
-                        grad_outputs_j = tuple(
-                            grad_output_j.unsqueeze(0) for grad_output_j in grad_outputs_j
-                        )
+                    grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
                     return _vjp_from_module(module, *inputs_j)(grad_outputs_j)
 
-                jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
+                jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, spec), *args)
                 assert len(jacobians) == 1
-                batch_size = outputs[0].shape[0]
+                batch_size = flat_outputs[0].shape[0]
                 for param_name, param in module.named_parameters(recurse=False):
                     jacobian = jacobians[0][param_name]
                     J = jacobian.reshape((batch_size, -1))
@@ -93,31 +90,19 @@ def get_model_hook(
     gramian_accumulator: GramianAccumulator,
     target_edges_registry: list[GradientEdge],
 ) -> Callable:
-    def forward_post_hook(module, args, output: Tensor | Sequence[Tensor]):
-        if isinstance(output, Tensor):
-            outputs = (output,)
-        elif isinstance(output, Sequence) and all(
-            [isinstance(output_, Tensor) for output_ in output]
-        ):
-            outputs = tuple(output)
-        else:
-            raise ValueError("output should be a Tensor or a Sequence of Tensors")
+    def forward_post_hook(module, args, output: PyTree) -> PyTree:
+        flat_outputs, tree_spec = tree_flatten(output)
 
-        jacobian_accumulator = make_jacobian_accumulator(module, gramian_accumulator, args, outputs)
+        jacobian_accumulator = make_jacobian_accumulator(module, gramian_accumulator, args, output)
 
         gramian_accumulator.track_parameters(module.parameters(recurse=False))
 
-        for output_ in outputs:
+        for output_ in flat_outputs:
             # TODO: we could technically only register one of those gradient edges
             #  And we could select the one with the lowest number of elements for that.
             target_edges_registry.append(get_gradient_edge(output_))
 
-        # repack if needed (or unflatten?)
-        # tree_spec = torch.unflatten
-        if isinstance(output, Tensor):
-            return jacobian_accumulator.apply(output)[0]
-        else:
-            return jacobian_accumulator.apply(*output)
+        return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
 
     return forward_post_hook
 
