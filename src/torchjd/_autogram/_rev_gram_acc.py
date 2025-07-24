@@ -101,10 +101,12 @@ def get_model_hook(
 
         gramian_accumulator.track_parameters(module.parameters(recurse=False))
 
-        for output_ in flat_outputs:
-            # TODO: we could technically only register one of those gradient edges
-            #  And we could select the one with the lowest number of elements for that.
-            target_edges_registry.append(get_gradient_edge(output_))
+        # We only care about running the JacobianAccumulator node, so we need one of its child edges
+        # (the edges of the original ouputs of the model) as target. For memory efficiency, we
+        # select the smallest one.
+        numels = torch.tensor([t.numel() for t in flat_outputs])
+        index = numels.argmin().item()
+        target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
 
         return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
 
