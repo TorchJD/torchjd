@@ -70,12 +70,15 @@ def make_jacobian_accumulator(
                 def get_vjp(grad_outputs_j: PyTree, *inputs_j) -> tuple[Tensor, ...]:
                     inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
                     grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
-                    return _vjp_from_module(module, *inputs_j)(grad_outputs_j)
+                    # _vjp_from_module returns a function that computes the vjp w.r.t. to the
+                    # primals (tuple), here the functional has a single primal which is
+                    # dict(module.named_parameters()). We therefore take the 0'th element to obtain
+                    # the dict of gradients w.r.t. the module's named_parameters.
+                    return _vjp_from_module(module, *inputs_j)(grad_outputs_j)[0]
 
                 jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, tree_spec), *args)
-                assert len(jacobians) == 1
                 for param_name, param in module.named_parameters(recurse=False):
-                    jacobian = jacobians[0][param_name]
+                    jacobian = jacobians[param_name]
                     J = jacobian.reshape((grad_outputs[0].shape[0], -1))
                     gramian_accumulator.add_jacobian(param, J)
 
