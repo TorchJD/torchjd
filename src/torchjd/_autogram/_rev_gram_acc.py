@@ -90,9 +90,12 @@ def get_model_hook(
 ) -> Callable:
     def forward_post_hook(module, args, output: PyTree) -> PyTree:
 
-        # TODO: check that there is at least one output
-
         flat_outputs, tree_spec = tree_flatten(output)
+
+        if len(flat_outputs) == 0:
+            # This can happen only if a module returns no Tensor, for instance some niche usage such
+            # as a module that prints something.
+            return output
 
         jacobian_accumulator = make_jacobian_accumulator(
             module, gramian_accumulator, args, tree_spec
