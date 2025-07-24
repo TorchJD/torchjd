@@ -8,7 +8,6 @@ from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 
-from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # TODO: test with parameter re-use (intra-module, inter-module, and module reuse)
@@ -263,51 +262,3 @@ def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
         return torch.func.functional_call(module, all_state, tuple(inputs))
 
     return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
-
-
-def main():
-    class SmartFlatten(nn.Module):
-        """
-        Flatten reducing inputs of shape [N, H, W, C] into [N, H * W * C] or reducing inputs of shape
-        [H, W, C] into [H * W * C].
-        """
-
-        def forward(self, input):
-            if input.dim() == 4:
-                return torch.flatten(input, start_dim=1)
-            elif input.dim() == 3:
-                return torch.flatten(input)
-            else:
-                raise ValueError(f"Unsupported number of dimensions: {input.dim()}")
-
-    class Cifar10Model(nn.Sequential):
-        def __init__(self):
-            layers = [
-                nn.Conv2d(3, 32, 3),
-                nn.ReLU(),
-                nn.Conv2d(32, 64, 3, groups=32),
-                nn.Sequential(nn.MaxPool2d(2), nn.ReLU()),
-                nn.Conv2d(64, 64, 3, groups=64),
-                nn.Sequential(nn.MaxPool2d(3), nn.ReLU(), SmartFlatten()),
-                nn.Linear(1024, 128),
-                nn.ReLU(),
-                nn.Linear(128, 10),
-            ]
-            super().__init__(*layers)
-
-    batch_size = 64
-    input_shape = (batch_size, 3, 32, 32)
-    input = torch.randn(input_shape)
-    target = torch.randint(0, 10, (batch_size,))
-
-    model = Cifar10Model().to(device="cpu")
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
-
-    A = UPGrad()
-    W = A.weighting.weighting
-
-    autogram_forward_backward(model, criterion, input, target, W)
-
-
-if __name__ == "__main__":
-    main()
