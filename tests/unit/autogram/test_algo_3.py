@@ -4,6 +4,7 @@ import torch
 from pytest import mark
 from torch import Tensor, nn
 from torch.nn import ReLU
+from torch.utils._pytree import PyTree
 from unit._utils import randint_, randn_
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
@@ -100,6 +101,38 @@ class SingleInputSingleOutputModel2(nn.Module):
         return self.miso(input, input)
 
 
+class PyTreeModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 50))
+        self.matrix2 = nn.Parameter(torch.randn(50, 60))
+        self.matrix3 = nn.Parameter(torch.randn(50, 70))
+        self.matrix4 = nn.Parameter(torch.randn(50, 80))
+        self.matrix5 = nn.Parameter(torch.randn(50, 90))
+
+    def forward(self, input: Tensor) -> PyTree:
+        return {
+            "first": (input @ self.matrix1, [input @ self.matrix2, input @ self.matrix3]),
+            "second": input @ self.matrix4,
+            "third": ([(input @ self.matrix5,)],),
+        }
+
+
+class PyTreeModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.pytree_module = PyTreeModule()
+
+    def forward(self, input: Tensor):
+        first, second, third = self.pytree_module(input).values()
+        output1, output23 = first
+        output2, output3 = output23
+        output4 = second
+        output5 = third[0][0][0]
+
+        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -107,6 +140,7 @@ class SingleInputSingleOutputModel2(nn.Module):
         (FlatNonSequentialNN(), (9,)),
         (SingleInputSingleOutputModel(), (50,)),
         (SingleInputSingleOutputModel2(), (50,)),
+        (PyTreeModel(), (50,)),
     ],
 )
 def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
@@ -179,6 +213,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (FlatNonSequentialNN(), (9,)),
         (SingleInputSingleOutputModel(), (50,)),
         (SingleInputSingleOutputModel2(), (50,)),
+        (PyTreeModel(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
