@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
+from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 
 from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -47,11 +47,10 @@ def make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
     args: Any,
-    outputs: PyTree,
+    tree_spec: TreeSpec,
 ) -> type[torch.autograd.Function]:
 
     activated = True
-    flat_outputs, spec = tree_flatten(outputs)  # maybe something more efficient than this?
 
     class JacobianAccumulator(torch.autograd.Function):
         @staticmethod
@@ -73,12 +72,11 @@ def make_jacobian_accumulator(
                     grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
                     return _vjp_from_module(module, *inputs_j)(grad_outputs_j)
 
-                jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, spec), *args)
+                jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, tree_spec), *args)
                 assert len(jacobians) == 1
-                batch_size = flat_outputs[0].shape[0]
                 for param_name, param in module.named_parameters(recurse=False):
                     jacobian = jacobians[0][param_name]
-                    J = jacobian.reshape((batch_size, -1))
+                    J = jacobian.reshape((grad_outputs[0].shape[0], -1))
                     gramian_accumulator.add_jacobian(param, J)
 
             return grad_outputs
@@ -91,9 +89,14 @@ def get_model_hook(
     target_edges_registry: list[GradientEdge],
 ) -> Callable:
     def forward_post_hook(module, args, output: PyTree) -> PyTree:
+
+        # TODO: check that there is at least one output
+
         flat_outputs, tree_spec = tree_flatten(output)
 
-        jacobian_accumulator = make_jacobian_accumulator(module, gramian_accumulator, args, output)
+        jacobian_accumulator = make_jacobian_accumulator(
+            module, gramian_accumulator, args, tree_spec
+        )
 
         gramian_accumulator.track_parameters(module.parameters(recurse=False))
 
