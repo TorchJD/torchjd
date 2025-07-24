@@ -11,6 +11,7 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_u
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # TODO: test with parameter re-use (intra-module, inter-module, and module reuse)
+# TODO: Investigate the flattening problem (unsqueeze)
 # TODO: document the cases where it doesn't work: non-batched operations, free nn.Parameter used before other nn.Modules (should work but slowly).
 
 
