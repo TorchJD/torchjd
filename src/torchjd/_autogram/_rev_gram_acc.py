@@ -37,10 +37,11 @@ class GramianAccumulator:
             del self.jacobians[tensor]
 
     def _accumulate_jacobian(self, jacobian: Tensor) -> None:
+        jacobian_matrix = torch.flatten(jacobian, start_dim=1)
         if self.gramian is not None:
-            self.gramian.addmm_(jacobian, jacobian.T)
+            self.gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
         else:
-            self.gramian = torch.mm(jacobian, jacobian.T)
+            self.gramian = torch.mm(jacobian_matrix, jacobian_matrix.T)
 
 
 def make_jacobian_accumulator(
@@ -78,9 +79,7 @@ def make_jacobian_accumulator(
 
                 jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, tree_spec), *args)
                 for param_name, param in module.named_parameters(recurse=False):
-                    jacobian = jacobians[param_name]
-                    J = jacobian.reshape((grad_outputs[0].shape[0], -1))
-                    gramian_accumulator.add_jacobian(param, J)
+                    gramian_accumulator.add_jacobian(param, jacobians[param_name])
 
             return grad_outputs
 
