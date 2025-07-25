@@ -3,7 +3,7 @@ import time
 import torch
 from pytest import mark
 from torch import Tensor, nn
-from torch.nn import ReLU
+from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
 from unit._utils import randint_, randn_
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
@@ -14,21 +14,6 @@ from torchjd._autogram._rev_gram_acc import autogram_forward_backward
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
-class SmartFlatten(nn.Module):
-    """
-    Flatten reducing inputs of shape [N, H, W, C] into [N, H * W * C] or reducing inputs of shape
-    [H, W, C] into [H * W * C].
-    """
-
-    def forward(self, input):
-        if input.dim() == 4:
-            return torch.flatten(input, start_dim=1)
-        elif input.dim() == 3:
-            return torch.flatten(input)
-        else:
-            raise ValueError(f"Unsupported number of dimensions: {input.dim()}")
-
-
 class Cifar10Model(nn.Sequential):
     def __init__(self):
         layers = [
@@ -37,7 +22,7 @@ class Cifar10Model(nn.Sequential):
             nn.Conv2d(32, 64, 3, groups=32),
             nn.Sequential(nn.MaxPool2d(2), ReLU()),
             nn.Conv2d(64, 64, 3, groups=64),
-            nn.Sequential(nn.MaxPool2d(3), ReLU(), SmartFlatten()),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
             nn.Linear(1024, 128),
             ReLU(),
             nn.Linear(128, 10),
