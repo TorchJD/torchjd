@@ -169,6 +169,16 @@ class ModelWithInterModuleParameterReuse(nn.Module):
         return self.module1(input) + self.module2(input)
 
 
+class ModelWithModuleReuse(nn.Module):
+    def __init__(self):
+        super().__init__()
+        matrix = nn.Parameter(torch.randn(50, 10))
+        self.module = MatMulModule(matrix)
+
+    def forward(self, input: Tensor):
+        return self.module(input) + self.module(input)
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -252,6 +262,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (PyTreeModel(), (50,)),
         (ModuleWithParameterReuse(), (50,)),
         (ModelWithInterModuleParameterReuse(), (50,)),
+        (ModelWithModuleReuse(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
