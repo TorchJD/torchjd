@@ -10,8 +10,16 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_u
 
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
-# TODO: test with parameter re-use (intra-module, inter-module, and module reuse)
-# TODO: document the cases where it doesn't work: non-batched operations, free nn.Parameter used before other nn.Modules (should work but slowly).
+# TODO: test with parameter re-use (intra-module, inter-module, and module reuse), free nn.Parameter
+#  used before other nn.Modules
+# TODO: document the cases where it doesn't work: non-batched operations, operations batched on
+#  dim != 0 (rnns, transformers, ...), free nn.Parameter used before other nn.Modules (should work
+#  but slowly).
+
+# Second release: handle inputs that are not batched or that are batched on dim != 0
+# TODO: test with RNN, Transformer
+# TODO: add function mapping a module (and its args) to how to unbatch the args.
+#  The output type could be tuple[Optional[int], ...], with one element per arg of the module
 
 
 class GramianAccumulator:
