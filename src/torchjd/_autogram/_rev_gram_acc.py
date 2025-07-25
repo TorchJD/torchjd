@@ -14,6 +14,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # TODO: document the cases where it doesn't work: non-batched operations, operations batched on
 #  dim != 0 (rnns, transformers, ...), free nn.Parameter used before other nn.Modules (should work
 #  but slowly).
+# TODO: think about frozen nn.Parameters (nn.Parameters that have requires_grad=False).
 
 # Second release: handle inputs that are not batched or that are batched on dim != 0
 # TODO: test with RNN, Transformer
@@ -136,10 +137,12 @@ def augment_model(
     forward_hook_handles: list,
 ):
     for module in model.modules():
-        param_iterator = module.parameters(recurse=False)
-        if any(True for _ in param_iterator):  # if there is at least one parameter
-            forward_post_hook = get_model_hook(gramian_accumulator, target_edges_registry)
-            forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
+        if next(module.parameters(recurse=False), None) is None:
+            # Skip un-parameterized modules
+            continue
+
+        forward_post_hook = get_model_hook(gramian_accumulator, target_edges_registry)
+        forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
 
 
 def next_edges(edge: GradientEdge) -> list[GradientEdge]:
