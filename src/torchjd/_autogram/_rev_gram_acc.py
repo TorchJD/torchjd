@@ -10,8 +10,7 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_u
 
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
-# TODO: test with parameter re-use (intra-module, inter-module, and module reuse), free nn.Parameter
-#  used before other nn.Modules
+# TODO: add test with free nn.Parameter used before other nn.Modules
 # TODO: document the cases where it doesn't work: non-batched operations, operations batched on
 #  dim != 0 (rnns, transformers, ...), free nn.Parameter used before other nn.Modules (should work
 #  but slowly).
