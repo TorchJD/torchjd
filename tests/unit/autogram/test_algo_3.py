@@ -140,6 +140,15 @@ class PyTreeModel(nn.Module):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
+class ModuleWithParameterReuse(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix + input @ self.matrix
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -221,6 +230,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (SingleInputSingleOutputModel(), (50,)),
         (SingleInputSingleOutputModel2(), (50,)),
         (PyTreeModel(), (50,)),
+        (ModuleWithParameterReuse(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
