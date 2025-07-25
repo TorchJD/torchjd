@@ -62,25 +62,32 @@ def make_jacobian_accumulator(
             pass
 
         @staticmethod
-        def backward(ctx, *grad_outputs: Tensor):
+        def backward(ctx, *flat_grad_outputs: Tensor):
             nonlocal activated
             if activated:
                 activated = False
 
                 def get_vjp(grad_outputs_j: PyTree, *inputs_j) -> tuple[Tensor, ...]:
+                    # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
+                    # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
+                    # nn.Flatten) do not work equivalently if they're provided with a batch or with
+                    # an element of a batch. We thus always provide them with batches, just of a
+                    # different size.
                     inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
                     grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
+
                     # _vjp_from_module returns a function that computes the vjp w.r.t. to the
                     # primals (tuple), here the functional has a single primal which is
                     # dict(module.named_parameters()). We therefore take the 0'th element to obtain
                     # the dict of gradients w.r.t. the module's named_parameters.
                     return _vjp_from_module(module, *inputs_j)(grad_outputs_j)[0]
 
-                jacobians = torch.vmap(get_vjp)(tree_unflatten(grad_outputs, tree_spec), *args)
+                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+                jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
                 for param_name, param in module.named_parameters(recurse=False):
                     gramian_accumulator.add_jacobian(param, jacobians[param_name])
 
-            return grad_outputs
+            return flat_grad_outputs
 
     return JacobianAccumulator
 
