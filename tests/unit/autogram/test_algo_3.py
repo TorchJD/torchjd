@@ -47,6 +47,28 @@ class FlatNonSequentialNN(nn.Module):
         return output
 
 
+class ModuleThatTakesString(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 10))
+        self.matrix2 = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor, string: str):
+        if string == "test":
+            return input @ self.matrix1
+        else:
+            return input @ self.matrix2
+
+
+class ModelThatTakesString(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.module = ModuleThatTakesString()
+
+    def forward(self, input: Tensor):
+        return self.module(input, "test") + self.module(input, "definitely not a test")
+
+
 class MultiInputMultiOutputNN(nn.Module):
     def __init__(self):
         super().__init__()
