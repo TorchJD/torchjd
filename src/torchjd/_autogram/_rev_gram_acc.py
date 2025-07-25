@@ -123,8 +123,8 @@ def augment_model(
     forward_hook_handles: list,
 ):
     for module in model.modules():
-        params = list(module.parameters(recurse=False))
-        if len(params) > 0:
+        param_iterator = module.parameters(recurse=False)
+        if any(True for _ in param_iterator):  # if there is at least one parameter
             forward_post_hook = get_model_hook(gramian_accumulator, target_edges_registry)
             forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
 
