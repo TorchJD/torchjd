@@ -146,7 +146,7 @@ class ModuleWithParameterReuse(nn.Module):
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
     def forward(self, input: Tensor):
-        return input @ self.matrix + input @ self.matrix
+        return input @ self.matrix + (input**2) @ self.matrix
 
 
 class MatMulModule(nn.Module):
@@ -166,7 +166,7 @@ class ModelWithInterModuleParameterReuse(nn.Module):
         self.module2 = MatMulModule(matrix)
 
     def forward(self, input: Tensor):
-        return self.module1(input) + self.module2(input)
+        return self.module1(input) + self.module2(input**2)
 
 
 class ModelWithModuleReuse(nn.Module):
@@ -176,7 +176,7 @@ class ModelWithModuleReuse(nn.Module):
         self.module = MatMulModule(matrix)
 
     def forward(self, input: Tensor):
-        return self.module(input) + self.module(input)
+        return self.module(input) + self.module(input**2)
 
 
 class ModelWithFreeParameter(nn.Module):
