@@ -217,6 +217,16 @@ class ModelWithNoFreeParameter(nn.Module):
         return output
 
 
+class ModuleWithUnusedParam(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.unused_param = nn.Parameter(torch.randn(50, 10))
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -305,6 +315,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (ModelWithModuleReuse(), (50,)),
         (ModelWithFreeParameter(), (15,)),
         (ModelWithNoFreeParameter(), (15,)),
+        (ModuleWithUnusedParam(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
