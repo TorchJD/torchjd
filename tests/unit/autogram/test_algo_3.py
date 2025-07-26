@@ -227,6 +227,16 @@ class ModuleWithUnusedParam(nn.Module):
         return input @ self.matrix
 
 
+class ModuleWithFrozenParam(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix + (input**2) @ self.frozen_param
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -316,6 +326,7 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (ModelWithFreeParameter(), (15,)),
         (ModelWithNoFreeParameter(), (15,)),
         (ModuleWithUnusedParam(), (50,)),
+        (ModuleWithFrozenParam(), (50,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
