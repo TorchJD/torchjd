@@ -179,6 +179,44 @@ class ModelWithModuleReuse(nn.Module):
         return self.module(input) + self.module(input)
 
 
+class ModelWithFreeParameter(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(15, 16))  # Free parameter
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(input @ self.matrix)
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
+
+
+class ModelWithNoFreeParameter(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear0 = nn.Linear(15, 16, bias=False)
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(self.linear0(input))
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
+
+
 @mark.parametrize(
     ["model", "single_input_shape"],
     [
@@ -187,6 +225,8 @@ class ModelWithModuleReuse(nn.Module):
         (SingleInputSingleOutputModel(), (50,)),
         (SingleInputSingleOutputModel2(), (50,)),
         (PyTreeModel(), (50,)),
+        (ModelWithFreeParameter(), (15,)),
+        (ModelWithNoFreeParameter(), (15,)),
     ],
 )
 def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
@@ -263,6 +303,8 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         (ModuleWithParameterReuse(), (50,)),
         (ModelWithInterModuleParameterReuse(), (50,)),
         (ModelWithModuleReuse(), (50,)),
+        (ModelWithFreeParameter(), (15,)),
+        (ModelWithNoFreeParameter(), (15,)),
     ],
 )
 def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
