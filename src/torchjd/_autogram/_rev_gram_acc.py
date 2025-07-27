@@ -249,7 +249,7 @@ def get_output_loss_and_gramian_supervised_iwrm_sequential(
     for i, (input, output, layer) in list(
         enumerate(zip(outputs[:-1], outputs[1:], list(model) + [criterion]))
     )[::-1]:
-        params = list(layer.parameters())
+        params = list(layer.parameters(recurse=False))
         if len(params) > 0:
 
             def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
@@ -288,7 +288,7 @@ def _compute_outputs(criterion, input, model: nn.Sequential, target) -> list[Ten
 
 
 def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
-    named_params = dict(module.named_parameters())
+    named_params = dict(module.named_parameters(recurse=False))
     requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
     no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
 
