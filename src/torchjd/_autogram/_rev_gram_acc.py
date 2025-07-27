@@ -23,7 +23,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 class GramianAccumulator:
     def __init__(self):
-        self.gramian = None
+        self._gramian = None
         self.jacobians = dict()
         self.counter = Counter()
 
@@ -43,10 +43,20 @@ class GramianAccumulator:
 
     def _accumulate_jacobian(self, jacobian: Tensor) -> None:
         jacobian_matrix = torch.flatten(jacobian, start_dim=1)
-        if self.gramian is not None:
-            self.gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
+        if self._gramian is not None:
+            self._gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
         else:
-            self.gramian = torch.mm(jacobian_matrix, jacobian_matrix.T)
+            self._gramian = torch.mm(jacobian_matrix, jacobian_matrix.T)
+
+    @property
+    def gramian(self) -> Tensor:
+        if any([c != 0 for c in self.counter.values()]):
+            shape_to_count = [(k.shape, v) for k, v in self.counter.items()]
+            raise ValueError(
+                f"Some tracked parameters are still not at a count of 0, {shape_to_count}."
+            )
+
+        return self._gramian
 
 
 def make_jacobian_accumulator(
@@ -90,8 +100,9 @@ def make_jacobian_accumulator(
 
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
-                for param_name, param in module.named_parameters(recurse=False):
-                    gramian_accumulator.add_jacobian(param, jacobians[param_name])
+
+                for param_name, jacobian in jacobians.items():
+                    gramian_accumulator.add_jacobian(module.get_parameter(param_name), jacobian)
 
             return flat_grad_outputs
 
@@ -115,7 +126,8 @@ def get_model_hook(
             module, gramian_accumulator, args, tree_spec
         )
 
-        gramian_accumulator.track_parameters(module.parameters(recurse=False))
+        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
+        gramian_accumulator.track_parameters(requires_grad_params)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child edges
         # (the edges of the original ouputs of the model) as target. For memory efficiency, we
@@ -276,8 +288,12 @@ def _compute_outputs(criterion, input, model: nn.Sequential, target) -> list[Ten
 
 
 def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
+    named_params = dict(module.named_parameters())
+    requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
+    no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
+
     def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
-        all_state = {**primals, **dict(module.named_buffers())}
+        all_state = {**primals, **dict(module.named_buffers()), **no_requires_grad_named_params}
         return torch.func.functional_call(module, all_state, tuple(inputs))
 
-    return torch.func.vjp(functional_model_call, dict(module.named_parameters()))[1]
+    return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
