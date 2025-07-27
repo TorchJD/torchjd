@@ -13,7 +13,6 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # TODO: document the cases where it doesn't work: non-batched operations, operations batched on
 #  dim != 0 (rnns, transformers, ...), free nn.Parameter used before other nn.Modules (should work
 #  but slowly).
-# TODO: think about frozen nn.Parameters (nn.Parameters that have requires_grad=False).
 
 # Second release: handle inputs that are not batched or that are batched on dim != 0
 # TODO: test with RNN, Transformer
