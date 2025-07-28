@@ -14,6 +14,7 @@ from torchjd import backward
 from torchjd._autogram._rev_gram_acc import (
     GramianAccumulator,
     augment_model,
+    augment_model_with_iwrm_autogram,
     autogram_forward_backward,
     targets_to_leaf_targets,
 )
@@ -351,6 +352,50 @@ def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
     W = A.weighting.weighting
 
     autojac_forward_backward(model, criterion, input, target, A)
+    expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+    model.zero_grad()
+
+    autogram_forward_backward(model, criterion, input, target, W)
+    grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+
+    assert_tensor_dicts_are_close(grads, expected_grads)
+
+
+@mark.parametrize(
+    ["model", "single_input_shape"],
+    [
+        (Cifar10Model(), (3, 32, 32)),
+        (FlatNonSequentialNN(), (9,)),
+        (SingleInputSingleOutputModel(), (50,)),
+        (SingleInputSingleOutputModel2(), (50,)),
+        (PyTreeModel(), (50,)),
+        (ModuleWithParameterReuse(), (50,)),
+        (ModelWithInterModuleParameterReuse(), (50,)),
+        (ModelWithModuleReuse(), (50,)),
+        (ModelWithFreeParameter(), (15,)),
+        (ModelWithNoFreeParameter(), (15,)),
+        (ModuleWithUnusedParam(), (50,)),
+        (ModuleWithFrozenParam(), (50,)),
+    ],
+)
+def test_equivalence2(model: nn.Module, single_input_shape: tuple[int, ...]):
+    batch_size = 64
+    input_shape = (batch_size,) + single_input_shape
+    input = randn_(input_shape)
+    target = randint_(0, 10, (batch_size,))
+
+    model = model.to(device=DEVICE)
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+    A = UPGrad()
+    W = A.weighting.weighting
+
+    # autogram backward
+    augment_model_with_iwrm_autogram(model, W)
+    output = model(input)
+    losses = criterion(output, target)
+    losses.backward(torch.ones_like(losses))
+
     expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
     model.zero_grad()
 

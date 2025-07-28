@@ -179,6 +179,51 @@ def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
     return list(targets - traversed_targets)
 
 
+def augment_model_with_iwrm_autogram(
+    model: nn.Module,
+    weighting: Weighting[PSDMatrix],
+) -> None:
+    """
+    Usage:
+    ```
+    augment_model_with_iwrm_autogram(model, W)
+    output = model(input)
+    losses = criterion(output, target)
+    losses.backward(torch.ones_like(losses))
+    ```
+    """
+
+    target_edges_registry = []
+    forward_hook_handles = []
+    gramian_accumulator = GramianAccumulator()
+    augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
+
+    def forward_post_hook(_, __, output: PyTree) -> PyTree:
+        for handle in forward_hook_handles:
+            handle.remove()
+        leaf_targets = targets_to_leaf_targets(target_edges_registry)
+
+        def backward_hook(grad_output: Tensor) -> Tensor:
+            backward_hook_handle.remove()
+            forward_hook_handle.remove()
+
+            # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
+            # grad_outputs and trigger the tensor hooks with them
+            _ = torch.autograd.grad(
+                outputs=output,
+                inputs=leaf_targets,
+                grad_outputs=grad_output,
+                retain_graph=True,
+            )
+            gramian = gramian_accumulator.gramian
+            weights = weighting(gramian)
+            return weights[:, None] * grad_output
+
+        backward_hook_handle = output.register_hook(backward_hook)
+
+    forward_hook_handle = model.register_forward_hook(forward_post_hook, prepend=True)
+
+
 def autogram_forward_backward(
     model: nn.Module,
     criterion: Callable,
