@@ -221,7 +221,7 @@ def augment_model_with_iwrm_autogram(
 
         backward_hook_handle = output.register_hook(backward_hook)
 
-    forward_hook_handle = model.register_forward_hook(forward_post_hook, prepend=True)
+    forward_hook_handle = model.register_forward_hook(forward_post_hook)
 
 
 def autogram_forward_backward(
