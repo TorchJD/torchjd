@@ -15,7 +15,6 @@ from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd._autojac._utils import get_leaf_tensors
 from torchjd.aggregation import Aggregator, Mean, UPGrad
-from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 class Cifar10Model(nn.Sequential):
@@ -282,10 +281,11 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, criterion, input, target, W)
+        autogram_forward_backward(model, criterion, input, target)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
+        augment_model_with_iwrm_autogram(model, W)
         fn_autogram()
 
     def optionally_cuda_sync():
@@ -349,7 +349,8 @@ def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
     expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
     model.zero_grad()
 
-    autogram_forward_backward(model, criterion, input, target, W)
+    augment_model_with_iwrm_autogram(model, W)
+    autogram_forward_backward(model, criterion, input, target)
     grads = {p: p.grad for p in model.parameters() if p.grad is not None}
 
     assert_tensor_dicts_are_close(grads, expected_grads)
@@ -435,10 +436,7 @@ def autogram_forward_backward(
     criterion: nn.Module,
     input: Tensor,
     target: Tensor,
-    weighting: Weighting[PSDMatrix],
 ) -> None:
-    augment_model_with_iwrm_autogram(model, weighting)
-
     output = model(input)
     losses = criterion(output, target)
     losses.backward(torch.ones_like(losses))
