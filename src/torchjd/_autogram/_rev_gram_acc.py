@@ -217,7 +217,7 @@ def augment_model_with_iwrm_autogram(
             )
             gramian = gramian_accumulator.gramian
             weights = weighting(gramian)
-            return weights[:, None] * grad_output
+            return weights.unsqueeze(1) * grad_output
 
         backward_hook_handle = output.register_hook(backward_hook)
 

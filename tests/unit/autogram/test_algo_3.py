@@ -390,16 +390,16 @@ def test_equivalence2(model: nn.Module, single_input_shape: tuple[int, ...]):
     A = UPGrad()
     W = A.weighting.weighting
 
+    autojac_forward_backward(model, criterion, input, target, A)
+    expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+    model.zero_grad()
+
     # autogram backward
     augment_model_with_iwrm_autogram(model, W)
     output = model(input)
     losses = criterion(output, target)
     losses.backward(torch.ones_like(losses))
 
-    expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
-    model.zero_grad()
-
-    autogram_forward_backward(model, criterion, input, target, W)
     grads = {p: p.grad for p in model.parameters() if p.grad is not None}
 
     assert_tensor_dicts_are_close(grads, expected_grads)
