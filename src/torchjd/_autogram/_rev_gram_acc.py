@@ -108,51 +108,104 @@ def make_jacobian_accumulator(
     return JacobianAccumulator
 
 
-def get_model_hook(
-    gramian_accumulator: GramianAccumulator,
-    target_edges_registry: list[GradientEdge],
-) -> Callable:
-    def forward_post_hook(module, args, output: PyTree) -> PyTree:
+class _ModelAugmenter:
+    def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
+        self.model = model
+        self.weighting = weighting
+        self._handles = []
 
-        flat_outputs, tree_spec = tree_flatten(output)
+        self._gramian_accumulator = GramianAccumulator()
+        self._are_hooks_activated = True
+        self._target_edges_registry = []
 
-        if len(flat_outputs) == 0:
-            # This can happen only if a module returns no Tensor, for instance some niche usage such
-            # as a module that prints something.
+    def augment(self):
+        self._hook_submodules()
+        self._hook_model()
+
+    def unhook(self) -> None:
+        for handle in self._handles:
+            handle.remove()
+
+    def _hook_submodules(self) -> None:
+        for module in self.model.modules():
+            if next(module.parameters(recurse=False), None) is None:
+                # Skip un-parameterized modules
+                continue
+            self._hook_module(module)
+
+    def _hook_module(self, module: nn.Module) -> None:
+        def module_hook(_, args, output: PyTree) -> PyTree:
+            if not self._are_hooks_activated:
+                return output
+            flat_outputs, tree_spec = tree_flatten(output)
+
+            if len(flat_outputs) == 0:
+                # This can happen only if a module returns no Tensor, for instance some niche usage such
+                # as a module that prints something.
+                return output
+
+            jacobian_accumulator = make_jacobian_accumulator(
+                module, self._gramian_accumulator, args, tree_spec
+            )
+
+            requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
+            self._gramian_accumulator.track_parameters(requires_grad_params)
+
+            # We only care about running the JacobianAccumulator node, so we need one of its child edges
+            # (the edges of the original ouputs of the model) as target. For memory efficiency, we
+            # select the smallest one.
+            numels = torch.tensor([t.numel() for t in flat_outputs])
+            index = numels.argmin().item()
+            self._target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
+
+            return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
+
+        self._handles.append(module.register_forward_hook(module_hook))
+
+    def _hook_model(self) -> None:
+
+        def model_hook(_, __, output: PyTree) -> PyTree:
+            if not self._are_hooks_activated:
+                return output
+
+            leaf_targets = targets_to_leaf_targets(self._target_edges_registry)
+
+            def backward_hook(grad_output: Tensor) -> Tensor:
+                backward_hook_handle.remove()
+                # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
+                # grad_outputs and trigger the tensor hooks with them
+                _ = torch.autograd.grad(
+                    outputs=output,
+                    inputs=leaf_targets,
+                    grad_outputs=grad_output,
+                    retain_graph=True,
+                )
+                gramian = self._gramian_accumulator.gramian
+                self._reset()
+                weights = self.weighting(gramian)
+                return weights.unsqueeze(1) * grad_output
+
+            backward_hook_handle = output.register_hook(backward_hook)
+            self._deactivate_module_hooks()
             return output
 
-        jacobian_accumulator = make_jacobian_accumulator(
-            module, gramian_accumulator, args, tree_spec
-        )
+        self._handles.append(self.model.register_forward_hook(model_hook))
 
-        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-        gramian_accumulator.track_parameters(requires_grad_params)
+    def _reset(self):
+        self._gramian_accumulator = GramianAccumulator()
+        self._are_hooks_activated = True
+        self._target_edges_registry = []
 
-        # We only care about running the JacobianAccumulator node, so we need one of its child edges
-        # (the edges of the original ouputs of the model) as target. For memory efficiency, we
-        # select the smallest one.
-        numels = torch.tensor([t.numel() for t in flat_outputs])
-        index = numels.argmin().item()
-        target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
-
-        return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
-
-    return forward_post_hook
+    def _deactivate_module_hooks(self) -> None:
+        self._are_hooks_activated = False
 
 
-def augment_model(
-    model: nn.Module,
-    gramian_accumulator: GramianAccumulator,
-    target_edges_registry: list[GradientEdge],
-    forward_hook_handles: list,
-):
-    for module in model.modules():
-        if next(module.parameters(recurse=False), None) is None:
-            # Skip un-parameterized modules
-            continue
+class AutogramHandle:
+    def __init__(self, manager: _ModelAugmenter):
+        self._manager = manager
 
-        forward_post_hook = get_model_hook(gramian_accumulator, target_edges_registry)
-        forward_hook_handles.append(module.register_forward_hook(forward_post_hook))
+    def remove(self):
+        self._manager.unhook()
 
 
 def next_edges(edge: GradientEdge) -> list[GradientEdge]:
@@ -182,153 +235,21 @@ def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
 def augment_model_with_iwrm_autogram(
     model: nn.Module,
     weighting: Weighting[PSDMatrix],
-) -> None:
+) -> AutogramHandle:
     """
     Usage:
     ```
     augment_model_with_iwrm_autogram(model, W)
-    output = model(input)
-    losses = criterion(output, target)
-    losses.backward(torch.ones_like(losses))
+    for input, target in ...:
+        output = model(input)
+        losses = criterion(output, target)
+        losses.backward(torch.ones_like(losses))
     ```
     """
+    model_augmenter = _ModelAugmenter(model, weighting)
+    model_augmenter.augment()
 
-    target_edges_registry = []
-    forward_hook_handles = []
-    gramian_accumulator = GramianAccumulator()
-    augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
-
-    def forward_post_hook(_, __, output: PyTree) -> PyTree:
-        for handle in forward_hook_handles:
-            handle.remove()
-        leaf_targets = targets_to_leaf_targets(target_edges_registry)
-
-        def backward_hook(grad_output: Tensor) -> Tensor:
-            backward_hook_handle.remove()
-            forward_hook_handle.remove()
-
-            # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
-            # grad_outputs and trigger the tensor hooks with them
-            _ = torch.autograd.grad(
-                outputs=output,
-                inputs=leaf_targets,
-                grad_outputs=grad_output,
-                retain_graph=True,
-            )
-            gramian = gramian_accumulator.gramian
-            weights = weighting(gramian)
-            return weights.unsqueeze(1) * grad_output
-
-        backward_hook_handle = output.register_hook(backward_hook)
-
-    forward_hook_handle = model.register_forward_hook(forward_post_hook)
-
-
-def autogram_forward_backward(
-    model: nn.Module,
-    criterion: Callable,
-    input: Tensor,
-    target: Tensor,
-    weighting: Weighting[PSDMatrix],
-) -> tuple[Tensor, Tensor, Tensor]:
-    target_edges_registry = []
-    forward_hook_handles = []
-    gramian_accumulator = GramianAccumulator()
-    augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
-
-    output = model(input)
-
-    losses = criterion(output, target)
-
-    for handle in forward_hook_handles:
-        handle.remove()
-
-    leaf_targets = targets_to_leaf_targets(target_edges_registry)
-
-    # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
-    # grad_outputs and trigger the tensor hooks with them
-    _ = torch.autograd.grad(
-        outputs=losses,
-        inputs=leaf_targets,
-        grad_outputs=torch.ones_like(losses),
-        retain_graph=True,
-    )
-
-    gramian = gramian_accumulator.gramian
-    weights = weighting(gramian)
-
-    weighted_loss = losses @ weights
-    weighted_loss.backward()
-
-    return output, losses, weights
-
-
-def autogram_forward_backward_old(
-    model: nn.Sequential,
-    criterion: Callable,
-    input: Tensor,
-    target: Tensor,
-    weighting: Weighting[PSDMatrix],
-) -> tuple[Tensor, Tensor, Tensor]:
-    """
-    Currently only works for IWRM supervised training of sequential models.
-    """
-    model_output, losses, gramian = get_output_loss_and_gramian_supervised_iwrm_sequential(
-        model, criterion, input, target
-    )
-    weights = weighting(gramian)
-    weighted_loss = losses @ weights
-    weighted_loss.backward()
-
-    return model_output, losses, weights
-
-
-def get_output_loss_and_gramian_supervised_iwrm_sequential(
-    model: nn.Sequential, criterion: Callable, input: Tensor, target: Tensor
-) -> tuple[Tensor, Tensor, Tensor]:
-    bs = input.shape[0]
-    outputs = _compute_outputs(criterion, input, model, target)
-    grad = torch.ones_like(outputs[-1])
-    gramian = torch.zeros(bs, bs, device=grad.device)
-    for i, (input, output, layer) in list(
-        enumerate(zip(outputs[:-1], outputs[1:], list(model) + [criterion]))
-    )[::-1]:
-        params = list(layer.parameters(recurse=False))
-        if len(params) > 0:
-
-            def get_vjp(input_j, grad_output_j) -> tuple[Tensor, ...]:
-                # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
-                # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
-                # nn.Flatten) do not work equivalently if they're provided with a batch or with an
-                # element of a batch. We thus always provide them with batches, just of a different
-                # size.
-                return _vjp_from_module(layer, input_j.unsqueeze(0))(grad_output_j.unsqueeze(0))
-
-            jacobians = torch.vmap(get_vjp)(input, grad)
-
-            assert len(jacobians) == 1
-
-            for jacobian in jacobians[0].values():
-                J = jacobian.reshape((bs, -1))
-                gramian.addmm_(J, J.T)
-
-        if i == 0:
-            break  # Don't try to differentiate with respect to the model's input
-        grad = torch.autograd.grad(output, input, grad, retain_graph=True)[0]
-
-    model_output = outputs[-2]
-    losses = outputs[-1]
-    return model_output, losses, gramian
-
-
-def _compute_outputs(criterion, input, model: nn.Sequential, target) -> list[Tensor]:
-    activations = [input]
-    for layer in model:
-        activation = layer(activations[-1])
-        activations.append(activation)
-
-    losses = criterion(activations[-1], target)
-    return activations + [losses]
+    return AutogramHandle(model_augmenter)
 
 
 def _vjp_from_module(module: nn.Module, *inputs) -> Callable:

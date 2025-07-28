@@ -4,24 +4,18 @@ import torch
 from pytest import mark
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
-from torch.testing import assert_close
 from torch.utils._pytree import PyTree
 from unit._utils import randint_, randn_
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
 
 from torchjd import backward
-from torchjd._autogram._rev_gram_acc import (
-    GramianAccumulator,
-    augment_model,
-    augment_model_with_iwrm_autogram,
-    autogram_forward_backward,
-    targets_to_leaf_targets,
-)
+from torchjd._autogram._rev_gram_acc import augment_model_with_iwrm_autogram
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd._autojac._utils import get_leaf_tensors
 from torchjd.aggregation import Aggregator, Mean, UPGrad
+from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 class Cifar10Model(nn.Sequential):
@@ -405,38 +399,6 @@ def test_equivalence2(model: nn.Module, single_input_shape: tuple[int, ...]):
     assert_tensor_dicts_are_close(grads, expected_grads)
 
 
-@mark.parametrize(
-    ["model", "single_input_shape"],
-    [
-        (Cifar10Model(), (3, 32, 32)),
-        (FlatNonSequentialNN(), (9,)),
-        (SingleInputSingleOutputModel(), (50,)),
-        (SingleInputSingleOutputModel2(), (50,)),
-        (PyTreeModel(), (50,)),
-        (ModuleWithParameterReuse(), (50,)),
-        (ModelWithInterModuleParameterReuse(), (50,)),
-        (ModelWithModuleReuse(), (50,)),
-        (ModelWithFreeParameter(), (15,)),
-        (ModelWithNoFreeParameter(), (15,)),
-        (ModuleWithUnusedParam(), (50,)),
-        (ModuleWithFrozenParam(), (50,)),
-    ],
-)
-def test_equivalence_gramian(model: nn.Module, single_input_shape: tuple[int, ...]):
-    batch_size = 64
-    input_shape = (batch_size,) + single_input_shape
-    input = randn_(input_shape)
-    target = randint_(0, 10, (batch_size,))
-
-    model = model.to(device=DEVICE)
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
-
-    expected_gramian = autojac_get_gramian(model, criterion, input, target)
-    gramian = autogram_get_gramian(model, criterion, input, target)
-
-    assert_close(gramian, expected_gramian)
-
-
 def noop():
     pass
 
@@ -466,6 +428,20 @@ def autojac_forward_backward(
     output = model(input)
     losses = criterion(output, target)
     backward(losses, aggregator=aggregator)
+
+
+def autogram_forward_backward(
+    model: nn.Module,
+    criterion: nn.Module,
+    input: Tensor,
+    target: Tensor,
+    weighting: Weighting[PSDMatrix],
+) -> None:
+    augment_model_with_iwrm_autogram(model, weighting)
+
+    output = model(input)
+    losses = criterion(output, target)
+    losses.backward(torch.ones_like(losses))
 
 
 def autograd_forward_backward(
@@ -503,34 +479,4 @@ def autojac_get_gramian(
     jacobian_matrices = transform({})
 
     gramian = sum([J @ J.T for J in jacobian_matrices.values()])
-    return gramian
-
-
-def autogram_get_gramian(
-    model: nn.Module, criterion: nn.Module, input: Tensor, target: Tensor
-) -> Tensor:
-    target_edges_registry = []
-    forward_hook_handles = []
-    gramian_accumulator = GramianAccumulator()
-    augment_model(model, gramian_accumulator, target_edges_registry, forward_hook_handles)
-
-    output = model(input)
-
-    losses = criterion(output, target)
-
-    for handle in forward_hook_handles:
-        handle.remove()
-
-    leaf_targets = targets_to_leaf_targets(target_edges_registry)
-
-    # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
-    # grad_outputs and trigger the tensor hooks with them
-    _ = torch.autograd.grad(
-        outputs=losses,
-        inputs=leaf_targets,
-        grad_outputs=torch.ones_like(losses),
-        retain_graph=True,
-    )
-
-    gramian = gramian_accumulator.gramian
     return gramian
