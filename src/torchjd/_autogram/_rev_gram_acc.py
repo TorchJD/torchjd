@@ -172,8 +172,6 @@ class _ModelAugmenter:
 
             def backward_hook(grad_output: Tensor) -> Tensor:
                 backward_hook_handle.remove()
-                # Note: grad_outputs doesn't really matter here. The purpose of this is to compute the required
-                # grad_outputs and trigger the tensor hooks with them
                 _ = torch.autograd.grad(
                     outputs=output,
                     inputs=leaf_targets,
