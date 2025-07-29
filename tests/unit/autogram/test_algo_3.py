@@ -275,19 +275,18 @@ class ModuleWithFrozenParam(nn.Module):
 
 
 @mark.parametrize(
-    "model",
+    ["model", "batch_size"],
     [
-        Cifar10Model(),
-        FlatNonSequentialNN(),
-        SingleInputSingleOutputModel(),
-        SingleInputSingleOutputModel2(),
-        PyTreeModel(),
-        ModelWithFreeParameter(),
-        ModelWithNoFreeParameter(),
+        (Cifar10Model(), 64),
+        (FlatNonSequentialNN(), 64),
+        (SingleInputSingleOutputModel(), 64),
+        (SingleInputSingleOutputModel2(), 64),
+        (PyTreeModel(), 64),
+        (ModelWithFreeParameter(), 64),
+        (ModelWithNoFreeParameter(), 64),
     ],
 )
-def test_speed(model: nn.Module):
-    batch_size = 64
+def test_speed(model: nn.Module, batch_size: int):
     single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
     input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
@@ -352,24 +351,23 @@ def test_speed(model: nn.Module):
 
 
 @mark.parametrize(
-    "model",
+    ["model", "batch_size"],
     [
-        Cifar10Model(),
-        FlatNonSequentialNN(),
-        SingleInputSingleOutputModel(),
-        SingleInputSingleOutputModel2(),
-        PyTreeModel(),
-        ModuleWithParameterReuse(),
-        ModelWithInterModuleParameterReuse(),
-        ModelWithModuleReuse(),
-        ModelWithFreeParameter(),
-        ModelWithNoFreeParameter(),
-        ModuleWithUnusedParam(),
-        ModuleWithFrozenParam(),
+        (Cifar10Model(), 64),
+        (FlatNonSequentialNN(), 64),
+        (SingleInputSingleOutputModel(), 64),
+        (SingleInputSingleOutputModel2(), 64),
+        (PyTreeModel(), 64),
+        (ModuleWithParameterReuse(), 64),
+        (ModelWithInterModuleParameterReuse(), 64),
+        (ModelWithModuleReuse(), 64),
+        (ModelWithFreeParameter(), 64),
+        (ModelWithNoFreeParameter(), 64),
+        (ModuleWithUnusedParam(), 64),
+        (ModuleWithFrozenParam(), 64),
     ],
 )
-def test_equivalence(model: nn.Module):
-    batch_size = 64
+def test_equivalence(model: nn.Module, batch_size: int):
     single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
     input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
