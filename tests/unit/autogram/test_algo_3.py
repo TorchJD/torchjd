@@ -1,4 +1,5 @@
 import time
+from typing import cast
 
 import torch
 from pytest import mark
@@ -18,6 +19,8 @@ from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 
 class Cifar10Model(nn.Sequential):
+    INPUT_SIZE = (3, 32, 32)
+
     def __init__(self):
         layers = [
             nn.Conv2d(3, 32, 3),
@@ -34,6 +37,8 @@ class Cifar10Model(nn.Sequential):
 
 
 class FlatNonSequentialNN(nn.Module):
+    INPUT_SIZE = (9,)
+
     def __init__(self):
         super().__init__()
         self.relu = nn.ReLU()
@@ -51,6 +56,8 @@ class FlatNonSequentialNN(nn.Module):
 
 
 class ModuleThatTakesString(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.matrix1 = nn.Parameter(torch.randn(50, 10))
@@ -73,6 +80,8 @@ class ModelThatTakesString(nn.Module):
 
 
 class MultiInputMultiOutputNN(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.matrix1 = nn.Parameter(torch.randn(50, 60))
@@ -84,6 +93,8 @@ class MultiInputMultiOutputNN(nn.Module):
 
 
 class MultiInputNN(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.matrix1 = nn.Parameter(torch.randn(50, 60))
@@ -94,6 +105,8 @@ class MultiInputNN(nn.Module):
 
 
 class SingleInputSingleOutputModel(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.mimo = MultiInputMultiOutputNN()
@@ -103,6 +116,8 @@ class SingleInputSingleOutputModel(nn.Module):
 
 
 class SingleInputSingleOutputModel2(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.miso = MultiInputNN()
@@ -112,6 +127,8 @@ class SingleInputSingleOutputModel2(nn.Module):
 
 
 class PyTreeModule(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.matrix1 = nn.Parameter(torch.randn(50, 50))
@@ -129,6 +146,8 @@ class PyTreeModule(nn.Module):
 
 
 class PyTreeModel(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.pytree_module = PyTreeModule()
@@ -144,6 +163,8 @@ class PyTreeModel(nn.Module):
 
 
 class ModuleWithParameterReuse(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(50, 10))
@@ -156,12 +177,15 @@ class MatMulModule(nn.Module):
     def __init__(self, matrix: nn.Parameter):
         super().__init__()
         self.matrix = matrix
+        self.INPUT_SIZE = matrix.shape[0]
 
     def forward(self, input: Tensor):
         return input @ self.matrix
 
 
 class ModelWithInterModuleParameterReuse(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         matrix = nn.Parameter(torch.randn(50, 10))
@@ -173,6 +197,8 @@ class ModelWithInterModuleParameterReuse(nn.Module):
 
 
 class ModelWithModuleReuse(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         matrix = nn.Parameter(torch.randn(50, 10))
@@ -183,6 +209,8 @@ class ModelWithModuleReuse(nn.Module):
 
 
 class ModelWithFreeParameter(nn.Module):
+    INPUT_SIZE = (15,)
+
     def __init__(self):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(15, 16))  # Free parameter
@@ -202,6 +230,8 @@ class ModelWithFreeParameter(nn.Module):
 
 
 class ModelWithNoFreeParameter(nn.Module):
+    INPUT_SIZE = (15,)
+
     def __init__(self):
         super().__init__()
         self.linear0 = nn.Linear(15, 16, bias=False)
@@ -221,6 +251,8 @@ class ModelWithNoFreeParameter(nn.Module):
 
 
 class ModuleWithUnusedParam(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.unused_param = nn.Parameter(torch.randn(50, 10))
@@ -231,6 +263,8 @@ class ModuleWithUnusedParam(nn.Module):
 
 
 class ModuleWithFrozenParam(nn.Module):
+    INPUT_SIZE = (50,)
+
     def __init__(self):
         super().__init__()
         self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
@@ -241,19 +275,20 @@ class ModuleWithFrozenParam(nn.Module):
 
 
 @mark.parametrize(
-    ["model", "single_input_shape"],
+    "model",
     [
-        (Cifar10Model(), (3, 32, 32)),
-        (FlatNonSequentialNN(), (9,)),
-        (SingleInputSingleOutputModel(), (50,)),
-        (SingleInputSingleOutputModel2(), (50,)),
-        (PyTreeModel(), (50,)),
-        (ModelWithFreeParameter(), (15,)),
-        (ModelWithNoFreeParameter(), (15,)),
+        Cifar10Model(),
+        FlatNonSequentialNN(),
+        SingleInputSingleOutputModel(),
+        SingleInputSingleOutputModel2(),
+        PyTreeModel(),
+        ModelWithFreeParameter(),
+        ModelWithNoFreeParameter(),
     ],
 )
-def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
+def test_speed(model: nn.Module):
     batch_size = 64
+    single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
     input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
     target = randint_(0, 10, (batch_size,))
@@ -317,24 +352,25 @@ def test_speed(model: nn.Module, single_input_shape: tuple[int, ...]):
 
 
 @mark.parametrize(
-    ["model", "single_input_shape"],
+    "model",
     [
-        (Cifar10Model(), (3, 32, 32)),
-        (FlatNonSequentialNN(), (9,)),
-        (SingleInputSingleOutputModel(), (50,)),
-        (SingleInputSingleOutputModel2(), (50,)),
-        (PyTreeModel(), (50,)),
-        (ModuleWithParameterReuse(), (50,)),
-        (ModelWithInterModuleParameterReuse(), (50,)),
-        (ModelWithModuleReuse(), (50,)),
-        (ModelWithFreeParameter(), (15,)),
-        (ModelWithNoFreeParameter(), (15,)),
-        (ModuleWithUnusedParam(), (50,)),
-        (ModuleWithFrozenParam(), (50,)),
+        Cifar10Model(),
+        FlatNonSequentialNN(),
+        SingleInputSingleOutputModel(),
+        SingleInputSingleOutputModel2(),
+        PyTreeModel(),
+        ModuleWithParameterReuse(),
+        ModelWithInterModuleParameterReuse(),
+        ModelWithModuleReuse(),
+        ModelWithFreeParameter(),
+        ModelWithNoFreeParameter(),
+        ModuleWithUnusedParam(),
+        ModuleWithFrozenParam(),
     ],
 )
-def test_equivalence(model: nn.Module, single_input_shape: tuple[int, ...]):
+def test_equivalence(model: nn.Module):
     batch_size = 64
+    single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
     input_shape = (batch_size,) + single_input_shape
     input = randn_(input_shape)
     target = randint_(0, 10, (batch_size,))
