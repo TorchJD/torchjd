@@ -169,25 +169,48 @@ class _ModelAugmenter:
                 return output
 
             leaf_targets = targets_to_leaf_targets(self._target_edges_registry)
+            flat_outputs, tree_spec = tree_flatten(output)
+            autogram_activator = self._make_autogram_activator(flat_outputs, leaf_targets)
+            self._deactivate_module_hooks()
+            activator_flat_outputs = autogram_activator.apply(*flat_outputs)
+            return tree_unflatten(activator_flat_outputs, tree_spec)
 
-            def backward_hook(grad_output: Tensor) -> Tensor:
-                backward_hook_handle.remove()
+        self._handles.append(self.model.register_forward_hook(model_hook))
+
+    def _make_autogram_activator(
+        self, flat_outputs: PyTree, leaf_targets: list[GradientEdge]
+    ) -> type[torch.autograd.Function]:
+
+        activated = True
+
+        class AutogramActivator(torch.autograd.Function):
+            @staticmethod
+            def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+                return tuple([x.detach() for x in xs])
+
+            @staticmethod
+            def setup_context(*_):
+                pass
+
+            @staticmethod
+            def backward(ctx, *grad_outputs: Tensor):
+                nonlocal activated
+                if not activated:
+                    return grad_outputs
+                activated = False
                 _ = torch.autograd.grad(
-                    outputs=output,
+                    outputs=flat_outputs,
                     inputs=leaf_targets,
-                    grad_outputs=grad_output,
+                    grad_outputs=grad_outputs,
                     retain_graph=True,
                 )
                 gramian = self._gramian_accumulator.gramian
                 self._reset()
-                weights = self.weighting(gramian)
-                return weights.unsqueeze(1) * grad_output
+                weights = self.weighting(gramian).unsqueeze(1)
+                scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
+                return scaled_grad_outputs
 
-            backward_hook_handle = output.register_hook(backward_hook)
-            self._deactivate_module_hooks()
-            return output
-
-        self._handles.append(self.model.register_forward_hook(model_hook))
+        return AutogramActivator
 
     def _reset(self):
         self._gramian_accumulator = GramianAccumulator()
