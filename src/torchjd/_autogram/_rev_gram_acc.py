@@ -80,7 +80,6 @@ def make_jacobian_accumulator(
         def backward(ctx, *flat_grad_outputs: Tensor):
             nonlocal activated
             if activated:
-                activated = False
 
                 def get_vjp(grad_outputs_j: PyTree, *inputs_j) -> tuple[Tensor, ...]:
                     # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
@@ -103,6 +102,7 @@ def make_jacobian_accumulator(
                 for param_name, jacobian in jacobians.items():
                     gramian_accumulator.add_jacobian(module.get_parameter(param_name), jacobian)
 
+            activated = not activated
             return flat_grad_outputs
 
     return JacobianAccumulator
@@ -196,6 +196,7 @@ class _ModelAugmenter:
             def backward(ctx, *grad_outputs: Tensor):
                 nonlocal activated
                 if not activated:
+                    activated = True
                     return grad_outputs
                 activated = False
                 _ = torch.autograd.grad(
