@@ -1,7 +1,9 @@
 import time
+from functools import partial
 from typing import cast
 
 import torch
+import torchvision
 from pytest import mark
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
@@ -274,6 +276,12 @@ class ModuleWithFrozenParam(nn.Module):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
+resnet18 = torchvision.models.resnet18(
+    norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+)
+resnet18.INPUT_SIZE = (3, 224, 224)
+
+
 @mark.parametrize(
     ["model", "batch_size"],
     [
@@ -284,6 +292,7 @@ class ModuleWithFrozenParam(nn.Module):
         (PyTreeModel(), 64),
         (ModelWithFreeParameter(), 64),
         (ModelWithNoFreeParameter(), 64),
+        (resnet18, 16),
     ],
 )
 def test_speed(model: nn.Module, batch_size: int):
@@ -365,6 +374,7 @@ def test_speed(model: nn.Module, batch_size: int):
         (ModelWithNoFreeParameter(), 64),
         (ModuleWithUnusedParam(), 64),
         (ModuleWithFrozenParam(), 64),
+        (resnet18, 16),
     ],
 )
 def test_equivalence(model: nn.Module, batch_size: int):
