@@ -7,6 +7,7 @@ import torchvision
 from pytest import mark
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
+from torch.optim import SGD
 from torch.utils._pytree import PyTree
 from unit._utils import randint_, randn_
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
@@ -390,44 +391,62 @@ def test_speed(model: nn.Module, batch_size: int):
 
 
 @mark.parametrize(
-    ["model", "batch_size"],
+    ["architecture", "batch_size", "n_iter"],
     [
-        (Cifar10Model(), 64),
-        (FlatNonSequentialNN(), 64),
-        (SingleInputSingleOutputModel(), 64),
-        (SingleInputSingleOutputModel2(), 64),
-        (PyTreeModel(), 64),
-        (ModuleWithParameterReuse(), 64),
-        (ModelWithInterModuleParameterReuse(), 64),
-        (ModelWithModuleReuse(), 64),
-        (ModelWithFreeParameter(), 64),
-        (ModelWithNoFreeParameter(), 64),
-        (ModuleWithUnusedParam(), 64),
-        (ModuleWithFrozenParam(), 64),
-        (ResNet18(), 16),
+        (Cifar10Model, 64, 1),
+        (FlatNonSequentialNN, 64, 5),
+        (SingleInputSingleOutputModel, 64, 5),
+        (SingleInputSingleOutputModel2, 64, 5),
+        (PyTreeModel, 64, 5),
+        (ModuleWithParameterReuse, 64, 5),
+        (ModelWithInterModuleParameterReuse, 64, 5),
+        (ModelWithModuleReuse, 64, 5),
+        (ModelWithFreeParameter, 64, 5),
+        (ModelWithNoFreeParameter, 64, 5),
+        (ModuleWithUnusedParam, 64, 5),
+        (ModuleWithFrozenParam, 64, 5),
+        (ResNet18, 16, 1),
     ],
 )
-def test_equivalence(model: nn.Module, batch_size: int):
-    single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
+def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int):
+    single_input_shape = cast(tuple[int, ...], architecture.INPUT_SIZE)
     input_shape = (batch_size,) + single_input_shape
-    input = randn_(input_shape)
-    target = randint_(0, 10, (batch_size,))
 
-    model = model.to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
     A = UPGrad()
     W = A.weighting.weighting
 
-    autojac_forward_backward(model, criterion, input, target, A)
-    expected_grads = {p: p.grad for p in model.parameters() if p.grad is not None}
-    model.zero_grad()
+    torch.manual_seed(0)
+    model_autojac = architecture().to(device=DEVICE)
+    torch.manual_seed(0)
+    model_autogram = architecture().to(device=DEVICE)
 
-    augment_model_with_iwrm_autogram(model, W)
-    autogram_forward_backward(model, criterion, input, target)
-    grads = {p: p.grad for p in model.parameters() if p.grad is not None}
+    augment_model_with_iwrm_autogram(model_autogram, W)
+    optimizer_autojac = SGD(model_autojac.parameters())
+    optimizer_autogram = SGD(model_autogram.parameters())
 
-    assert_tensor_dicts_are_close(grads, expected_grads)
+    for i in range(n_iter):
+        input = randn_(input_shape)
+        target = randint_(0, 10, (batch_size,))
+
+        autojac_forward_backward(model_autojac, criterion, input, target, A)
+        expected_grads = {
+            name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
+        }
+
+        autogram_forward_backward(model_autogram, criterion, input, target)
+        grads = {
+            name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
+        }
+
+        assert_tensor_dicts_are_close(grads, expected_grads)
+
+        optimizer_autojac.step()
+        model_autojac.zero_grad()
+
+        optimizer_autogram.step()
+        model_autogram.zero_grad()
 
 
 def noop():
