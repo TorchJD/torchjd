@@ -1,4 +1,5 @@
 import time
+from collections.abc import Callable
 from functools import partial
 from typing import cast
 
@@ -335,27 +336,30 @@ def test_speed(model: nn.Module, batch_size: int):
     model = model.to(device=DEVICE)
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
 
+    def loss_fn(output: Tensor) -> Tensor:
+        return criterion(output, target)
+
     A = Mean()
     W = A.weighting
 
     print(f"\nTimes for forward + backward with BS={batch_size}, A={A} on {DEVICE}.")
 
     def fn_autograd():
-        autograd_forward_backward(model, criterion, input, target)
+        autograd_forward_backward(model, input, loss_fn)
 
     def init_fn_autograd():
         torch.cuda.empty_cache()
         fn_autograd()
 
     def fn_autojac():
-        autojac_forward_backward(model, criterion, input, target, A)
+        autojac_forward_backward(model, input, loss_fn, A)
 
     def init_fn_autojac():
         torch.cuda.empty_cache()
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, criterion, input, target)
+        autogram_forward_backward(model, input, loss_fn)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
@@ -430,12 +434,15 @@ def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int
         input = randn_(input_shape)
         target = randint_(0, 10, (batch_size,))
 
-        autojac_forward_backward(model_autojac, criterion, input, target, A)
+        def loss_fn(output: PyTree) -> Tensor:
+            return criterion(output, target)
+
+        autojac_forward_backward(model_autojac, input, loss_fn, A)
         expected_grads = {
             name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
         }
 
-        autogram_forward_backward(model_autogram, criterion, input, target)
+        autogram_forward_backward(model_autogram, input, loss_fn)
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
         }
@@ -478,16 +485,19 @@ def test_augment_deaugment_reaugment(architecture: type[nn.Module], batch_size: 
     input = randn_(input_shape)
     target = randint_(0, 10, (batch_size,))
 
+    def loss_fn(output: PyTree) -> Tensor:
+        return criterion(output, target)
+
     torch.manual_seed(0)
     model = architecture().to(device=DEVICE)
 
-    autojac_forward_backward(model, criterion, input, target, A)
+    autojac_forward_backward(model, input, loss_fn, A)
     autojac_grads = {
         name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
     }
     model.zero_grad()
 
-    autograd_forward_backward(model, criterion, input, target)
+    autograd_forward_backward(model, input, loss_fn)
     autograd_grads = {
         name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
     }
@@ -497,21 +507,21 @@ def test_augment_deaugment_reaugment(architecture: type[nn.Module], batch_size: 
 
     # Augment and verify that we're equivalent to autojac
     handle = augment_model_with_iwrm_autogram(model_autogram, W)
-    autogram_forward_backward(model_autogram, criterion, input, target)
+    autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
     # Deaugment and verify that we're equivalent to autograd
     handle.remove()  # De-augment model
-    autogram_forward_backward(model_autogram, criterion, input, target)
+    autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autograd_grads)
     model_autogram.zero_grad()
 
     # Re-augment and verify that we're equivalent to autojac
     augment_model_with_iwrm_autogram(model_autogram, W)
-    autogram_forward_backward(model_autogram, criterion, input, target)
+    autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
 
@@ -535,46 +545,40 @@ def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> 
     return times
 
 
+def autograd_forward_backward(
+    model: nn.Module,
+    input: Tensor,
+    loss_fn: Callable[[PyTree], Tensor],
+) -> None:
+    losses = forward_pass(model, input, loss_fn)
+    losses.sum().backward()
+
+
 def autojac_forward_backward(
     model: nn.Module,
-    criterion: nn.Module,
     input: Tensor,
-    target: Tensor,
+    loss_fn: Callable[[PyTree], Tensor],
     aggregator: Aggregator,
 ) -> None:
-    output = model(input)
-    losses = criterion(output, target)
+    losses = forward_pass(model, input, loss_fn)
     backward(losses, aggregator=aggregator)
 
 
 def autogram_forward_backward(
     model: nn.Module,
-    criterion: nn.Module,
     input: Tensor,
-    target: Tensor,
+    loss_fn: Callable[[PyTree], Tensor],
 ) -> None:
-    output = model(input)
-    losses = criterion(output, target)
+    losses = forward_pass(model, input, loss_fn)
     losses.backward(torch.ones_like(losses))
 
 
-def autograd_forward_backward(
-    model: nn.Module,
-    criterion: nn.Module,
-    input: Tensor,
-    target: Tensor,
-) -> None:
-    output = model(input)
-    losses = criterion(output, target)
-    loss = losses.sum()
-    loss.backward()
-
-
 def autojac_get_gramian(
-    model: nn.Module, criterion: nn.Module, input: Tensor, target: Tensor
+    model: nn.Module, input: Tensor, loss_fn: Callable[[PyTree], Tensor]
 ) -> Tensor:
     output = model(input)
-    losses = OrderedSet(criterion(output, target))
+    losses = loss_fn(output)
+    losses = OrderedSet(losses)
 
     # Transform that creates gradient outputs containing only ones.
     init = Init(losses)
@@ -594,3 +598,9 @@ def autojac_get_gramian(
 
     gramian = sum([J @ J.T for J in jacobian_matrices.values()])
     return gramian
+
+
+def forward_pass(model: nn.Module, input: Tensor, loss_fn: Callable[[PyTree], Tensor]) -> Tensor:
+    output = model(input)
+    losses = loss_fn(output)
+    return losses
