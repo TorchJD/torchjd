@@ -276,10 +276,17 @@ class ModuleWithFrozenParam(nn.Module):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
-resnet18 = torchvision.models.resnet18(
-    norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
-)
-resnet18.INPUT_SIZE = (3, 224, 224)
+class ResNet18(nn.Module):
+    INPUT_SIZE = (3, 224, 224)
+
+    def __init__(self):
+        super().__init__()
+        self.resnet18 = torchvision.models.resnet18(
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+        )
+
+    def forward(self, input: Tensor):
+        return self.resnet18(input)
 
 
 @mark.parametrize(
@@ -292,7 +299,7 @@ resnet18.INPUT_SIZE = (3, 224, 224)
         (PyTreeModel(), 64),
         (ModelWithFreeParameter(), 64),
         (ModelWithNoFreeParameter(), 64),
-        (resnet18, 16),
+        (ResNet18(), 16),
     ],
 )
 def test_speed(model: nn.Module, batch_size: int):
@@ -374,7 +381,7 @@ def test_speed(model: nn.Module, batch_size: int):
         (ModelWithNoFreeParameter(), 64),
         (ModuleWithUnusedParam(), 64),
         (ModuleWithFrozenParam(), 64),
-        (resnet18, 16),
+        (ResNet18(), 16),
     ],
 )
 def test_equivalence(model: nn.Module, batch_size: int):
