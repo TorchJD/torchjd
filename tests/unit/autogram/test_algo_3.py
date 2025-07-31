@@ -449,6 +449,73 @@ def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int
         model_autogram.zero_grad()
 
 
+@mark.parametrize(
+    ["architecture", "batch_size"],
+    [
+        (Cifar10Model, 64),
+        (FlatNonSequentialNN, 64),
+        (SingleInputSingleOutputModel, 64),
+        (SingleInputSingleOutputModel2, 64),
+        (PyTreeModel, 64),
+        (ModuleWithParameterReuse, 64),
+        (ModelWithInterModuleParameterReuse, 64),
+        (ModelWithModuleReuse, 64),
+        (ModelWithFreeParameter, 64),
+        (ModelWithNoFreeParameter, 64),
+        (ModuleWithUnusedParam, 64),
+        (ModuleWithFrozenParam, 64),
+        (ResNet18, 16),
+    ],
+)
+def test_augment_deaugment_reaugment(architecture: type[nn.Module], batch_size: int):
+    single_input_shape = cast(tuple[int, ...], architecture.INPUT_SIZE)
+    input_shape = (batch_size,) + single_input_shape
+
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+    A = UPGrad()
+    W = A.weighting.weighting
+    input = randn_(input_shape)
+    target = randint_(0, 10, (batch_size,))
+
+    torch.manual_seed(0)
+    model = architecture().to(device=DEVICE)
+
+    autojac_forward_backward(model, criterion, input, target, A)
+    autojac_grads = {
+        name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
+    }
+    model.zero_grad()
+
+    autograd_forward_backward(model, criterion, input, target)
+    autograd_grads = {
+        name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
+    }
+
+    torch.manual_seed(0)
+    model_autogram = architecture().to(device=DEVICE)
+
+    # Augment and verify that we're equivalent to autojac
+    handle = augment_model_with_iwrm_autogram(model_autogram, W)
+    autogram_forward_backward(model_autogram, criterion, input, target)
+    grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
+    assert_tensor_dicts_are_close(grads, autojac_grads)
+    model_autogram.zero_grad()
+
+    # Deaugment and verify that we're equivalent to autograd
+    handle.remove()  # De-augment model
+    autogram_forward_backward(model_autogram, criterion, input, target)
+    grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
+    assert_tensor_dicts_are_close(grads, autograd_grads)
+    model_autogram.zero_grad()
+
+    # Re-augment and verify that we're equivalent to autojac
+    augment_model_with_iwrm_autogram(model_autogram, W)
+    autogram_forward_backward(model_autogram, criterion, input, target)
+    grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
+    assert_tensor_dicts_are_close(grads, autojac_grads)
+
+
 def noop():
     pass
 
@@ -499,7 +566,7 @@ def autograd_forward_backward(
 ) -> None:
     output = model(input)
     losses = criterion(output, target)
-    loss = losses.mean()
+    loss = losses.sum()
     loss.backward()
 
 
