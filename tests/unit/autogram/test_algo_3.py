@@ -276,6 +276,29 @@ class ModuleWithFrozenParam(nn.Module):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
+class ModuleWithBuffer(nn.Module):
+    INPUT_SIZE = (27,)
+
+    def __init__(self):
+        super().__init__()
+        self.buffer = nn.Buffer(torch.tensor(10.0))
+
+    def forward(self, input: Tensor):
+        return input * self.buffer
+
+
+class ModelWithModuleWithBuffer(nn.Module):
+    INPUT_SIZE = (27,)
+
+    def __init__(self):
+        super().__init__()
+        self.module_with_buffer = ModuleWithBuffer()
+        self.linear = nn.Linear(27, 10)
+
+    def forward(self, input: Tensor):
+        return self.linear(self.module_with_buffer(input))
+
+
 class ResNet18(nn.Module):
     INPUT_SIZE = (3, 224, 224)
 
