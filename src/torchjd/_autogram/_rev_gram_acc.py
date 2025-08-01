@@ -254,11 +254,11 @@ def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
         node, origin = nodes_to_traverse.popleft()
         if node in targets:
             traversed_targets.add(origin)
-
-        for child in next_edges(node):
-            if child not in already_added:
-                nodes_to_traverse.append((child, origin))
-                already_added.add(child)
+        else:
+            for child in next_edges(node):
+                if child not in already_added:
+                    nodes_to_traverse.append((child, origin))
+                    already_added.add(child)
 
     return list(targets - traversed_targets)
 
