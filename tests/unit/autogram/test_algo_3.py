@@ -576,9 +576,7 @@ def autogram_forward_backward(
 def autojac_get_gramian(
     model: nn.Module, input: Tensor, loss_fn: Callable[[PyTree], Tensor]
 ) -> Tensor:
-    output = model(input)
-    losses = loss_fn(output)
-    losses = OrderedSet(losses)
+    losses = OrderedSet(forward_pass(model, input, loss_fn))
 
     # Transform that creates gradient outputs containing only ones.
     init = Init(losses)
