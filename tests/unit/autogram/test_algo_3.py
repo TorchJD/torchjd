@@ -1,16 +1,16 @@
 import time
 from collections.abc import Callable
 from functools import partial
-from typing import cast
 
 import torch
 import torchvision
 from pytest import mark
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
+from torch.nn.functional import mse_loss
 from torch.optim import SGD
-from torch.utils._pytree import PyTree
-from unit._utils import randint_, randn_
+from torch.utils._pytree import PyTree, tree_flatten, tree_map
+from unit._utils import randn_
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
 
@@ -24,6 +24,7 @@ from torchjd.aggregation import Aggregator, Mean, UPGrad
 
 class Cifar10Model(nn.Sequential):
     INPUT_SIZE = (3, 32, 32)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         layers = [
@@ -42,6 +43,7 @@ class Cifar10Model(nn.Sequential):
 
 class FlatNonSequentialNN(nn.Module):
     INPUT_SIZE = (9,)
+    OUTPUT_SIZE = (514,)
 
     def __init__(self):
         super().__init__()
@@ -61,6 +63,7 @@ class FlatNonSequentialNN(nn.Module):
 
 class ModuleThatTakesString(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -75,6 +78,9 @@ class ModuleThatTakesString(nn.Module):
 
 
 class ModelThatTakesString(nn.Module):
+    INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
+
     def __init__(self):
         super().__init__()
         self.module = ModuleThatTakesString()
@@ -85,6 +91,7 @@ class ModelThatTakesString(nn.Module):
 
 class MultiInputMultiOutputNN(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = ((60,), (70,))
 
     def __init__(self):
         super().__init__()
@@ -98,6 +105,7 @@ class MultiInputMultiOutputNN(nn.Module):
 
 class MultiInputNN(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (60,)
 
     def __init__(self):
         super().__init__()
@@ -110,6 +118,7 @@ class MultiInputNN(nn.Module):
 
 class SingleInputSingleOutputModel(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (130,)
 
     def __init__(self):
         super().__init__()
@@ -121,6 +130,7 @@ class SingleInputSingleOutputModel(nn.Module):
 
 class SingleInputSingleOutputModel2(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = MultiInputNN.OUTPUT_SIZE
 
     def __init__(self):
         super().__init__()
@@ -132,6 +142,11 @@ class SingleInputSingleOutputModel2(nn.Module):
 
 class PyTreeModule(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = {
+        "first": ((50,), [(60,), (70,)]),
+        "second": (80,),
+        "third": ([((90,),)],),
+    }
 
     def __init__(self):
         super().__init__()
@@ -151,6 +166,7 @@ class PyTreeModule(nn.Module):
 
 class PyTreeModel(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (350,)
 
     def __init__(self):
         super().__init__()
@@ -168,6 +184,7 @@ class PyTreeModel(nn.Module):
 
 class ModuleWithParameterReuse(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -189,6 +206,7 @@ class MatMulModule(nn.Module):
 
 class ModelWithInterModuleParameterReuse(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -202,6 +220,7 @@ class ModelWithInterModuleParameterReuse(nn.Module):
 
 class ModelWithModuleReuse(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -214,6 +233,7 @@ class ModelWithModuleReuse(nn.Module):
 
 class ModelWithFreeParameter(nn.Module):
     INPUT_SIZE = (15,)
+    OUTPUT_SIZE = (80,)
 
     def __init__(self):
         super().__init__()
@@ -235,6 +255,7 @@ class ModelWithFreeParameter(nn.Module):
 
 class ModelWithNoFreeParameter(nn.Module):
     INPUT_SIZE = (15,)
+    OUTPUT_SIZE = (80,)
 
     def __init__(self):
         super().__init__()
@@ -256,6 +277,7 @@ class ModelWithNoFreeParameter(nn.Module):
 
 class ModuleWithUnusedParam(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -268,6 +290,7 @@ class ModuleWithUnusedParam(nn.Module):
 
 class ModuleWithFrozenParam(nn.Module):
     INPUT_SIZE = (50,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -280,6 +303,7 @@ class ModuleWithFrozenParam(nn.Module):
 
 class ModuleWithBuffer(nn.Module):
     INPUT_SIZE = (27,)
+    OUTPUT_SIZE = (27,)
 
     def __init__(self):
         super().__init__()
@@ -291,6 +315,7 @@ class ModuleWithBuffer(nn.Module):
 
 class ModelWithModuleWithBuffer(nn.Module):
     INPUT_SIZE = (27,)
+    OUTPUT_SIZE = (10,)
 
     def __init__(self):
         super().__init__()
@@ -303,6 +328,7 @@ class ModelWithModuleWithBuffer(nn.Module):
 
 class ResNet18(nn.Module):
     INPUT_SIZE = (3, 224, 224)
+    OUTPUT_SIZE = (1000,)
 
     def __init__(self):
         super().__init__()
@@ -328,16 +354,13 @@ class ResNet18(nn.Module):
     ],
 )
 def test_speed(model: nn.Module, batch_size: int):
-    single_input_shape = cast(tuple[int, ...], model.INPUT_SIZE)
-    input_shape = (batch_size,) + single_input_shape
-    input = randn_(input_shape)
-    target = randint_(0, 10, (batch_size,))
+    input_shapes = model.INPUT_SIZE
+    output_shapes = model.OUTPUT_SIZE
+    inputs = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
 
     model = model.to(device=DEVICE)
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
-
-    def loss_fn(output: Tensor) -> Tensor:
-        return criterion(output, target)
 
     A = Mean()
     W = A.weighting
@@ -345,21 +368,21 @@ def test_speed(model: nn.Module, batch_size: int):
     print(f"\nTimes for forward + backward with BS={batch_size}, A={A} on {DEVICE}.")
 
     def fn_autograd():
-        autograd_forward_backward(model, input, loss_fn)
+        autograd_forward_backward(model, inputs, loss_fn)
 
     def init_fn_autograd():
         torch.cuda.empty_cache()
         fn_autograd()
 
     def fn_autojac():
-        autojac_forward_backward(model, input, loss_fn, A)
+        autojac_forward_backward(model, inputs, loss_fn, A)
 
     def init_fn_autojac():
         torch.cuda.empty_cache()
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, input, loss_fn)
+        autogram_forward_backward(model, inputs, loss_fn)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
@@ -410,13 +433,12 @@ def test_speed(model: nn.Module, batch_size: int):
         (ModuleWithUnusedParam, 64, 5),
         (ModuleWithFrozenParam, 64, 5),
         (ResNet18, 16, 1),
+        (PyTreeModule, 32, 5),
     ],
 )
 def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int):
-    single_input_shape = cast(tuple[int, ...], architecture.INPUT_SIZE)
-    input_shape = (batch_size,) + single_input_shape
-
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+    input_shapes: PyTree = architecture.INPUT_SIZE
+    output_shapes: PyTree = architecture.OUTPUT_SIZE
 
     A = UPGrad()
     W = A.weighting.weighting
@@ -431,18 +453,16 @@ def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int
     optimizer_autogram = SGD(model_autogram.parameters())
 
     for i in range(n_iter):
-        input = randn_(input_shape)
-        target = randint_(0, 10, (batch_size,))
+        inputs = make_tensors(batch_size, input_shapes)
+        targets = make_tensors(batch_size, output_shapes)
+        loss_fn = make_mse_loss_fn(targets)
 
-        def loss_fn(output: PyTree) -> Tensor:
-            return criterion(output, target)
-
-        autojac_forward_backward(model_autojac, input, loss_fn, A)
+        autojac_forward_backward(model_autojac, inputs, loss_fn, A)
         expected_grads = {
             name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
         }
 
-        autogram_forward_backward(model_autogram, input, loss_fn)
+        autogram_forward_backward(model_autogram, inputs, loss_fn)
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
         }
@@ -472,21 +492,18 @@ def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int
         (ModuleWithUnusedParam, 64),
         (ModuleWithFrozenParam, 64),
         (ResNet18, 16),
+        (PyTreeModule, 32),
     ],
 )
 def test_augment_deaugment_reaugment(architecture: type[nn.Module], batch_size: int):
-    single_input_shape = cast(tuple[int, ...], architecture.INPUT_SIZE)
-    input_shape = (batch_size,) + single_input_shape
-
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
+    input_shapes = architecture.INPUT_SIZE
+    output_shapes = architecture.OUTPUT_SIZE
 
     A = UPGrad()
     W = A.weighting.weighting
-    input = randn_(input_shape)
-    target = randint_(0, 10, (batch_size,))
-
-    def loss_fn(output: PyTree) -> Tensor:
-        return criterion(output, target)
+    input = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
 
     torch.manual_seed(0)
     model = architecture().to(device=DEVICE)
@@ -545,31 +562,38 @@ def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> 
     return times
 
 
+def make_tensors(batch_size: int, tensor_shapes: PyTree) -> PyTree:
+    def is_leaf(s):
+        return isinstance(s, tuple) and all([isinstance(e, int) for e in s])
+
+    return tree_map(lambda s: randn_((batch_size,) + s), tensor_shapes, is_leaf=is_leaf)
+
+
 def autograd_forward_backward(
     model: nn.Module,
-    input: Tensor,
+    inputs: PyTree,
     loss_fn: Callable[[PyTree], Tensor],
 ) -> None:
-    losses = forward_pass(model, input, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn)
     losses.sum().backward()
 
 
 def autojac_forward_backward(
     model: nn.Module,
-    input: Tensor,
+    inputs: PyTree,
     loss_fn: Callable[[PyTree], Tensor],
     aggregator: Aggregator,
 ) -> None:
-    losses = forward_pass(model, input, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn)
     backward(losses, aggregator=aggregator)
 
 
 def autogram_forward_backward(
     model: nn.Module,
-    input: Tensor,
+    inputs: PyTree,
     loss_fn: Callable[[PyTree], Tensor],
 ) -> None:
-    losses = forward_pass(model, input, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn)
     losses.backward(torch.ones_like(losses))
 
 
@@ -598,7 +622,33 @@ def autojac_get_gramian(
     return gramian
 
 
-def forward_pass(model: nn.Module, input: Tensor, loss_fn: Callable[[PyTree], Tensor]) -> Tensor:
-    output = model(input)
+def forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
+    output = model(inputs)
+
+    assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SIZE
+
     losses = loss_fn(output)
     return losses
+
+
+def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], Tensor]:
+    def mse_loss_fn(outputs: PyTree) -> Tensor:
+        flat_outputs, _ = tree_flatten(outputs)
+        flat_targets, _ = tree_flatten(targets)
+
+        # For each (output_i, target_i) pair, compute the MSE at each coordinate and store it in
+        # a matrix of shape [batch_size, dim_i], where dim_i is the number of elements of
+        # output_i and target_i. Concatenate them along dim=1 to obtain a matrix of MSEs of
+        # shape [batch_size, dim], where dim is the total number of elements of the outputs.
+        # Then, reduce this into a vector of losses of size [batch_size], by applying the mean
+        # along dim=1.
+        losses = torch.concatenate(
+            [
+                mse_loss(output, target, reduction="none").flatten(start_dim=1)
+                for output, target in zip(flat_outputs, flat_targets)
+            ],
+            dim=1,
+        ).mean(dim=1)
+        return losses
+
+    return mse_loss_fn
