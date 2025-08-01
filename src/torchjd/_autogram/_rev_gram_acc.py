@@ -177,7 +177,7 @@ class _ModelAugmenter:
             if not self._are_hooks_activated:
                 return output
 
-            leaf_targets = targets_to_leaf_targets(self._target_edges_registry)
+            leaf_targets = targets_to_leaf_targets(self._target_edges_registry, set())
             flat_outputs, tree_spec = tree_flatten(output)
             autogram_activator = self._make_autogram_activator(flat_outputs, leaf_targets)
             self._deactivate_module_hooks()
@@ -243,24 +243,25 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
-def targets_to_leaf_targets(targets: list[GradientEdge]) -> list[GradientEdge]:
+def targets_to_leaf_targets(
+    targets: list[GradientEdge], excluded: set[GradientEdge]
+) -> list[GradientEdge]:
     targets = set(targets)
     nodes_to_traverse = deque((child, target) for target in targets for child in next_edges(target))
 
     already_added = {child for child, _ in nodes_to_traverse}
-    traversed_targets = set()
 
     while nodes_to_traverse:
         node, origin = nodes_to_traverse.popleft()
         if node in targets:
-            traversed_targets.add(origin)
+            excluded.add(origin)
         else:
             for child in next_edges(node):
                 if child not in already_added:
                     nodes_to_traverse.append((child, origin))
                     already_added.add(child)
 
-    return list(targets - traversed_targets)
+    return list(targets - excluded)
 
 
 def augment_model_with_iwrm_autogram(
