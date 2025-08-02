@@ -386,7 +386,6 @@ def test_speed(architecture: type[nn.Module], batch_size: int):
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
-        augment_model_with_iwrm_autogram(model, W)
         fn_autogram()
 
     def optionally_cuda_sync():
@@ -411,7 +410,9 @@ def test_speed(architecture: type[nn.Module], batch_size: int):
     print(autojac_times)
     print()
 
+    handle = augment_model_with_iwrm_autogram(model, W)
     autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
+    handle.remove()
     print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
     print(autogram_times)
     print()
