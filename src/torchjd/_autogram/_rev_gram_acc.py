@@ -173,13 +173,12 @@ class _ModelAugmenter:
 
     def _hook_model(self) -> None:
 
-        def model_hook(_, args, output: PyTree) -> PyTree:
+        def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
             if not self._are_hooks_activated:
                 return output
 
-            excluded_edges = {
-                get_gradient_edge(arg) for arg in tree_flatten(args)[0] if isinstance(arg, Tensor)
-            }
+            input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
+            excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
             leaf_targets = targets_to_leaf_targets(self._target_edges_registry, excluded_edges)
             flat_outputs, tree_spec = tree_flatten(output)
             autogram_activator = self._make_autogram_activator(flat_outputs, leaf_targets)
