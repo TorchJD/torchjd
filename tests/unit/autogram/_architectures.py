@@ -7,9 +7,23 @@ from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
 
 
-class Cifar10Model(nn.Sequential):
-    INPUT_SIZE = (3, 32, 32)
-    OUTPUT_SIZE = (10,)
+class ShapedModule(nn.Module):
+    """Module class that guarantees subclasses to have INPUT_SHAPES and OUTPUT_SHAPES attributes."""
+
+    INPUT_SHAPES: PyTree  # meant to be overridden
+    OUTPUT_SHAPES: PyTree  # meant to be overridden
+
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        if getattr(cls, "INPUT_SHAPES", None) is None:
+            raise TypeError(f"{cls.__name__} must define INPUT_SHAPES")
+        if getattr(cls, "OUTPUT_SHAPES", None) is None:
+            raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
+
+
+class Cifar10Model(nn.Sequential, ShapedModule):
+    INPUT_SHAPES = (3, 32, 32)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         layers = [
@@ -26,9 +40,9 @@ class Cifar10Model(nn.Sequential):
         super().__init__(*layers)
 
 
-class FlatNonSequentialNN(nn.Module):
-    INPUT_SIZE = (9,)
-    OUTPUT_SIZE = (514,)
+class FlatNonSequentialNN(ShapedModule):
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (514,)
 
     def __init__(self):
         super().__init__()
@@ -46,9 +60,9 @@ class FlatNonSequentialNN(nn.Module):
         return output
 
 
-class ModuleThatTakesString(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModuleThatTakesString(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -62,9 +76,9 @@ class ModuleThatTakesString(nn.Module):
             return input @ self.matrix2
 
 
-class ModelThatTakesString(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModelThatTakesString(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -74,9 +88,9 @@ class ModelThatTakesString(nn.Module):
         return self.module(input, "test") + self.module(input, "definitely not a test")
 
 
-class MultiInputMultiOutputNN(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = ((60,), (70,))
+class MultiInputMultiOutputNN(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = ((60,), (70,))
 
     def __init__(self):
         super().__init__()
@@ -88,9 +102,9 @@ class MultiInputMultiOutputNN(nn.Module):
         return input @ self.matrix1, input @ self.matrix2
 
 
-class MultiInputNN(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (60,)
+class MultiInputNN(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (60,)
 
     def __init__(self):
         super().__init__()
@@ -101,9 +115,9 @@ class MultiInputNN(nn.Module):
         return input @ self.matrix1
 
 
-class SingleInputSingleOutputModel(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (130,)
+class SingleInputSingleOutputModel(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (130,)
 
     def __init__(self):
         super().__init__()
@@ -113,9 +127,9 @@ class SingleInputSingleOutputModel(nn.Module):
         return torch.concatenate(list(self.mimo(input, input)), dim=1)
 
 
-class SingleInputSingleOutputModel2(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = MultiInputNN.OUTPUT_SIZE
+class SingleInputSingleOutputModel2(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = MultiInputNN.OUTPUT_SHAPES
 
     def __init__(self):
         super().__init__()
@@ -125,9 +139,9 @@ class SingleInputSingleOutputModel2(nn.Module):
         return self.miso(input, input)
 
 
-class PyTreeModule(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = {
+class PyTreeModule(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
         "second": (80,),
         "third": ([((90,),)],),
@@ -149,9 +163,9 @@ class PyTreeModule(nn.Module):
         }
 
 
-class PyTreeModel(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (350,)
+class PyTreeModel(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (350,)
 
     def __init__(self):
         super().__init__()
@@ -167,9 +181,9 @@ class PyTreeModel(nn.Module):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class ModuleWithParameterReuse(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModuleWithParameterReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -183,15 +197,14 @@ class MatMulModule(nn.Module):
     def __init__(self, matrix: nn.Parameter):
         super().__init__()
         self.matrix = matrix
-        self.INPUT_SIZE = matrix.shape[0]
 
     def forward(self, input: Tensor):
         return input @ self.matrix
 
 
-class ModelWithInterModuleParameterReuse(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModelWithInterModuleParameterReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -203,9 +216,9 @@ class ModelWithInterModuleParameterReuse(nn.Module):
         return self.module1(input) + self.module2(input**2)
 
 
-class ModelWithModuleReuse(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModelWithModuleReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -216,9 +229,9 @@ class ModelWithModuleReuse(nn.Module):
         return self.module(input) + self.module(input**2)
 
 
-class ModelWithFreeParameter(nn.Module):
-    INPUT_SIZE = (15,)
-    OUTPUT_SIZE = (80,)
+class ModelWithFreeParameter(ShapedModule):
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
 
     def __init__(self):
         super().__init__()
@@ -238,9 +251,9 @@ class ModelWithFreeParameter(nn.Module):
         return output
 
 
-class ModelWithNoFreeParameter(nn.Module):
-    INPUT_SIZE = (15,)
-    OUTPUT_SIZE = (80,)
+class ModelWithNoFreeParameter(ShapedModule):
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
 
     def __init__(self):
         super().__init__()
@@ -260,9 +273,9 @@ class ModelWithNoFreeParameter(nn.Module):
         return output
 
 
-class ModuleWithUnusedParam(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModuleWithUnusedParam(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -273,9 +286,9 @@ class ModuleWithUnusedParam(nn.Module):
         return input @ self.matrix
 
 
-class ModuleWithFrozenParam(nn.Module):
-    INPUT_SIZE = (50,)
-    OUTPUT_SIZE = (10,)
+class ModuleWithFrozenParam(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -286,9 +299,9 @@ class ModuleWithFrozenParam(nn.Module):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
-class ModuleWithBuffer(nn.Module):
-    INPUT_SIZE = (27,)
-    OUTPUT_SIZE = (27,)
+class ModuleWithBuffer(ShapedModule):
+    INPUT_SHAPES = (27,)
+    OUTPUT_SHAPES = (27,)
 
     def __init__(self):
         super().__init__()
@@ -298,9 +311,9 @@ class ModuleWithBuffer(nn.Module):
         return input * self.buffer
 
 
-class ModelWithModuleWithBuffer(nn.Module):
-    INPUT_SIZE = (27,)
-    OUTPUT_SIZE = (10,)
+class ModelWithModuleWithBuffer(ShapedModule):
+    INPUT_SHAPES = (27,)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
@@ -311,9 +324,9 @@ class ModelWithModuleWithBuffer(nn.Module):
         return self.linear(self.module_with_buffer(input))
 
 
-class ResNet18(nn.Module):
-    INPUT_SIZE = (3, 224, 224)
-    OUTPUT_SIZE = (1000,)
+class ResNet18(ShapedModule):
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
 
     def __init__(self):
         super().__init__()

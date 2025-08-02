@@ -21,6 +21,7 @@ from unit.autogram._architectures import (
     PyTreeModel,
     PyTreeModule,
     ResNet18,
+    ShapedModule,
     SingleInputSingleOutputModel,
     SingleInputSingleOutputModel2,
 )
@@ -48,9 +49,9 @@ from torchjd.aggregation import Aggregator, Mean, UPGrad
         (ResNet18, 16),
     ],
 )
-def test_speed(architecture: type[nn.Module], batch_size: int):
-    input_shapes = architecture.INPUT_SIZE
-    output_shapes = architecture.OUTPUT_SIZE
+def test_speed(architecture: type[ShapedModule], batch_size: int):
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
@@ -132,9 +133,9 @@ def test_speed(architecture: type[nn.Module], batch_size: int):
         (PyTreeModule, 32, 5),
     ],
 )
-def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int):
-    input_shapes: PyTree = architecture.INPUT_SIZE
-    output_shapes: PyTree = architecture.OUTPUT_SIZE
+def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: int):
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
 
     A = UPGrad()
     W = A.weighting.weighting
@@ -191,9 +192,9 @@ def test_equivalence(architecture: type[nn.Module], batch_size: int, n_iter: int
         (PyTreeModule, 32),
     ],
 )
-def test_augment_deaugment_reaugment(architecture: type[nn.Module], batch_size: int):
-    input_shapes = architecture.INPUT_SIZE
-    output_shapes = architecture.OUTPUT_SIZE
+def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
 
     A = UPGrad()
     W = A.weighting.weighting
@@ -321,7 +322,7 @@ def autojac_get_gramian(
 def forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
     output = model(inputs)
 
-    assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SIZE
+    assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SHAPES
 
     losses = loss_fn(output)
     return losses
