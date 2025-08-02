@@ -1,11 +1,13 @@
 from collections import Counter, deque
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
+from torch.utils.hooks import RemovableHandle
 
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -110,11 +112,11 @@ class _ModelAugmenter:
     def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
         self.model = model
         self.weighting = weighting
-        self._handles = []
+        self._handles: list[RemovableHandle] = []
 
         self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
-        self._target_edges_registry = []
+        self._target_edges_registry: list[GradientEdge] = []
 
     def augment(self):
         self._hook_submodules()
@@ -153,7 +155,7 @@ class _ModelAugmenter:
             # edges (the edges of the original ouputs of the model) as target. For memory
             # efficiency, we select the smallest one.
             numels = torch.tensor([t.numel() for t in flat_outputs])
-            index = numels.argmin().item()
+            index = cast(int, numels.argmin().item())
             self._target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
 
             return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
@@ -237,14 +239,16 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
 def targets_to_leaf_targets(
     targets: list[GradientEdge], excluded: set[GradientEdge]
 ) -> list[GradientEdge]:
-    targets = set(targets)
-    nodes_to_traverse = deque((child, target) for target in targets for child in next_edges(target))
+    targets_ = set(targets)
+    nodes_to_traverse = deque(
+        (child, target) for target in targets_ for child in next_edges(target)
+    )
 
     already_added = {child for child, _ in nodes_to_traverse}
 
     while nodes_to_traverse:
         node, origin = nodes_to_traverse.popleft()
-        if node in targets:
+        if node in targets_:
             excluded.add(origin)
         else:
             for child in next_edges(node):
@@ -252,7 +256,7 @@ def targets_to_leaf_targets(
                     nodes_to_traverse.append((child, origin))
                     already_added.add(child)
 
-    return list(targets - excluded)
+    return list(targets_ - excluded)
 
 
 def augment_model_with_iwrm_autogram(
