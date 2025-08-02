@@ -21,11 +21,12 @@ class ShapedModule(nn.Module):
             raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
 
 
-class Cifar10Model(nn.Sequential, ShapedModule):
+class Cifar10Model(ShapedModule):
     INPUT_SHAPES = (3, 32, 32)
     OUTPUT_SHAPES = (10,)
 
     def __init__(self):
+        super().__init__()
         layers = [
             nn.Conv2d(3, 32, 3),
             ReLU(),
@@ -37,7 +38,10 @@ class Cifar10Model(nn.Sequential, ShapedModule):
             ReLU(),
             nn.Linear(128, 10),
         ]
-        super().__init__(*layers)
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
 
 
 class FlatNonSequentialNN(ShapedModule):
