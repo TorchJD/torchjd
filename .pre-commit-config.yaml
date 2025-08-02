@@ -10,7 +10,7 @@ repos:
     -   id: check-merge-conflict  # Check for files that contain merge conflict strings.
 
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
     -   id: flake8  # Check style and syntax. Does not modify code, issues have to be solved manually.
         args: [
