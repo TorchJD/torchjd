@@ -341,26 +341,26 @@ class ResNet18(nn.Module):
 
 
 @mark.parametrize(
-    ["model", "batch_size"],
+    ["architecture", "batch_size"],
     [
-        (Cifar10Model(), 64),
-        (FlatNonSequentialNN(), 64),
-        (SingleInputSingleOutputModel(), 64),
-        (SingleInputSingleOutputModel2(), 64),
-        (PyTreeModel(), 64),
-        (ModelWithFreeParameter(), 64),
-        (ModelWithNoFreeParameter(), 64),
-        (ResNet18(), 16),
+        (Cifar10Model, 64),
+        (FlatNonSequentialNN, 64),
+        (SingleInputSingleOutputModel, 64),
+        (SingleInputSingleOutputModel2, 64),
+        (PyTreeModel, 64),
+        (ModelWithFreeParameter, 64),
+        (ModelWithNoFreeParameter, 64),
+        (ResNet18, 16),
     ],
 )
-def test_speed(model: nn.Module, batch_size: int):
-    input_shapes = model.INPUT_SIZE
-    output_shapes = model.OUTPUT_SIZE
+def test_speed(architecture: type[nn.Module], batch_size: int):
+    input_shapes = architecture.INPUT_SIZE
+    output_shapes = architecture.OUTPUT_SIZE
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    model = model.to(device=DEVICE)
+    model = architecture().to(device=DEVICE)
 
     A = Mean()
     W = A.weighting
