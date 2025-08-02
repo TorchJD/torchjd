@@ -1,5 +1,6 @@
 import time
 from collections.abc import Callable
+from typing import cast
 
 import torch
 from pytest import mark
@@ -34,6 +35,7 @@ from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd._autojac._utils import get_leaf_tensors
 from torchjd.aggregation import Aggregator, Mean, UPGrad
+from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 @mark.parametrize(
@@ -138,7 +140,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
     output_shapes = architecture.OUTPUT_SHAPES
 
     A = UPGrad()
-    W = A.weighting.weighting
+    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
 
     torch.manual_seed(0)
     model_autojac = architecture().to(device=DEVICE)
@@ -197,7 +199,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     output_shapes = architecture.OUTPUT_SHAPES
 
     A = UPGrad()
-    W = A.weighting.weighting
+    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
