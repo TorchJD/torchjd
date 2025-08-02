@@ -1,6 +1,5 @@
 from collections import Counter, deque
 from collections.abc import Callable, Iterable
-from typing import Any
 
 import torch
 from torch import Tensor, nn
@@ -60,7 +59,7 @@ class GramianAccumulator:
 def make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
-    args: Any,
+    args: PyTree,
     tree_spec: TreeSpec,
 ) -> type[torch.autograd.Function]:
 
@@ -80,13 +79,13 @@ def make_jacobian_accumulator(
             nonlocal activated
             if activated:
 
-                def get_vjp(grad_outputs_j: PyTree, *inputs_j) -> tuple[Tensor, ...]:
+                def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> tuple[Tensor, ...]:
                     # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
                     # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
                     # nn.Flatten) do not work equivalently if they're provided with a batch or with
                     # an element of a batch. We thus always provide them with batches, just of a
                     # different size.
-                    inputs_j = [input_j.unsqueeze(0) for input_j in inputs_j]
+                    inputs_j = tree_map(lambda x: x.unsqueeze(0), inputs_j)
                     grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
 
                     # _vjp_from_module returns a function that computes the vjp w.r.t. to the
@@ -96,7 +95,7 @@ def make_jacobian_accumulator(
                     return _vjp_from_module(module, *inputs_j)(grad_outputs_j)[0]
 
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-                jacobians = torch.vmap(get_vjp)(grad_outputs, *args)
+                jacobians = torch.vmap(get_vjp)(grad_outputs, args)
 
                 for param_name, jacobian in jacobians.items():
                     gramian_accumulator.add_jacobian(module.get_parameter(param_name), jacobian)
@@ -133,7 +132,7 @@ class _ModelAugmenter:
             self._hook_module(module)
 
     def _hook_module(self, module: nn.Module) -> None:
-        def module_hook(_, args, output: PyTree) -> PyTree:
+        def module_hook(_, args: PyTree, output: PyTree) -> PyTree:
             if not self._are_hooks_activated:
                 return output
             flat_outputs, tree_spec = tree_flatten(output)
