@@ -11,6 +11,8 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from unit._utils import randn_
 from unit.autogram._architectures import (
     Cifar10Model,
+    Cifar10ModelPart1,
+    Cifar10ModelPart2,
     FlatNonSequentialNN,
     ModelWithFreeParameter,
     ModelWithInterModuleParameterReuse,
@@ -33,6 +35,8 @@ from unit.conftest import DEVICE
 
 from torchjd import backward
 from torchjd._autogram._rev_gram_acc import augment_model_with_iwrm_autogram
+from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
+from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -243,6 +247,62 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
+
+
+def test_partial_autogram():
+    architecture1 = Cifar10ModelPart1
+    architecture2 = Cifar10ModelPart2
+    batch_size = 64
+
+    input_shapes = architecture1.INPUT_SHAPES
+    output_shapes = architecture2.OUTPUT_SHAPES
+
+    A = UPGrad()
+    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
+    input = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.manual_seed(0)
+    model1 = architecture1().to(device=DEVICE)
+    model2 = architecture2().to(device=DEVICE)
+
+    output1 = model1(input)
+    output2 = model2(output1)
+    losses = loss_fn(output2)
+    losses_ = OrderedSet(losses)
+
+    init = Init(losses_)
+    diag = Diagonalize(losses_)
+    jac = Jac(losses_, OrderedSet(model2.parameters()), None, True)
+    mat = _Matrixify()
+    transform = mat << jac << diag << init
+
+    jacobian_matrices = transform({})
+    jacobian_matrix = torch.cat(list(jacobian_matrices.values()), dim=1)
+    gramian = jacobian_matrix @ jacobian_matrix.T
+    weights = W(gramian)
+
+    loss = losses @ weights
+    loss.backward()
+
+    expected_grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
+    expected_grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
+    model1.zero_grad()
+    model2.zero_grad()
+
+    augment_model_with_iwrm_autogram(model2, W)
+
+    output = model1(input)
+    output = model2(output)
+    losses = loss_fn(output)
+    losses.backward(torch.ones_like(losses))
+
+    grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
+    grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
+
+    assert_tensor_dicts_are_close(grads1, expected_grads1)
+    assert_tensor_dicts_are_close(grads2, expected_grads2)
 
 
 def noop():

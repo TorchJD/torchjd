@@ -410,3 +410,40 @@ class ResNet18(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.resnet18(input)
+
+
+class Cifar10ModelPart1(ShapedModule):
+    INPUT_SHAPES = (3, 32, 32)
+    OUTPUT_SHAPES = (1024,)
+
+    def __init__(self):
+        super().__init__()
+        layers = [
+            nn.Conv2d(3, 32, 3),
+            ReLU(),
+            nn.Conv2d(32, 64, 3, groups=32),
+            nn.Sequential(nn.MaxPool2d(2), ReLU()),
+            nn.Conv2d(64, 64, 3, groups=64),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
+        ]
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
+
+
+class Cifar10ModelPart2(ShapedModule):
+    INPUT_SHAPES = (1024,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        layers = [
+            nn.Linear(1024, 128),
+            ReLU(),
+            nn.Linear(128, 10),
+        ]
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
