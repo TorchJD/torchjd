@@ -1,0 +1,449 @@
+from functools import partial
+
+import torch
+import torchvision
+from torch import Tensor, nn
+from torch.nn import Flatten, ReLU
+from torch.utils._pytree import PyTree
+
+
+class ShapedModule(nn.Module):
+    """Module class that guarantees subclasses to have INPUT_SHAPES and OUTPUT_SHAPES attributes."""
+
+    INPUT_SHAPES: PyTree  # meant to be overridden
+    OUTPUT_SHAPES: PyTree  # meant to be overridden
+
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        if getattr(cls, "INPUT_SHAPES", None) is None:
+            raise TypeError(f"{cls.__name__} must define INPUT_SHAPES")
+        if getattr(cls, "OUTPUT_SHAPES", None) is None:
+            raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
+
+
+class Cifar10Model(ShapedModule):
+    INPUT_SHAPES = (3, 32, 32)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        layers = [
+            nn.Conv2d(3, 32, 3),
+            ReLU(),
+            nn.Conv2d(32, 64, 3, groups=32),
+            nn.Sequential(nn.MaxPool2d(2), ReLU()),
+            nn.Conv2d(64, 64, 3, groups=64),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
+            nn.Linear(1024, 128),
+            ReLU(),
+            nn.Linear(128, 10),
+        ]
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
+
+
+class FlatNonSequentialNN(ShapedModule):
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (514,)
+
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.fc0 = nn.Linear(9, 512)
+        self.fc1 = nn.Linear(512, 513)
+        self.fc2 = nn.Linear(513, 514)
+        self.fc3 = nn.Linear(512, 514)
+
+    def forward(self, input: Tensor) -> Tensor:
+        common_input = self.relu(self.fc0(input))
+        branch1 = self.fc2(self.relu(self.fc1(common_input)))
+        branch2 = self.fc3(common_input)
+        output = branch1 + branch2
+        return output
+
+
+class ModuleThatTakesString(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 10))
+        self.matrix2 = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor, string: str):
+        if string == "test":
+            return input @ self.matrix1
+        else:
+            return input @ self.matrix2
+
+
+class ModelThatTakesString(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.module = ModuleThatTakesString()
+
+    def forward(self, input: Tensor):
+        return self.module(input, "test") + self.module(input, "definitely not a test")
+
+
+class MultiInputMultiOutputNN(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = ((60,), (70,))
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 60))
+        self.matrix2 = nn.Parameter(torch.randn(50, 70))
+
+    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
+        input = sum(inputs)
+        return input @ self.matrix1, input @ self.matrix2
+
+
+class MultiInputNN(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (60,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 60))
+
+    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
+        input = sum(inputs)
+        return input @ self.matrix1
+
+
+class SingleInputSingleOutputModel(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (130,)
+
+    def __init__(self):
+        super().__init__()
+        self.mimo = MultiInputMultiOutputNN()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.concatenate(list(self.mimo(input, input)), dim=1)
+
+
+class SingleInputSingleOutputModel2(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = MultiInputNN.OUTPUT_SHAPES
+
+    def __init__(self):
+        super().__init__()
+        self.miso = MultiInputNN()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.miso(input, input)
+
+
+class PyTreeModule(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = {
+        "first": ((50,), [(60,), (70,)]),
+        "second": (80,),
+        "third": ([((90,),)],),
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(50, 50))
+        self.matrix2 = nn.Parameter(torch.randn(50, 60))
+        self.matrix3 = nn.Parameter(torch.randn(50, 70))
+        self.matrix4 = nn.Parameter(torch.randn(50, 80))
+        self.matrix5 = nn.Parameter(torch.randn(50, 90))
+
+    def forward(self, input: Tensor) -> PyTree:
+        return {
+            "first": (input @ self.matrix1, [input @ self.matrix2, input @ self.matrix3]),
+            "second": input @ self.matrix4,
+            "third": ([(input @ self.matrix5,)],),
+        }
+
+
+class PyTreeInputPyTreeOutputModule(ShapedModule):
+    INPUT_SHAPES = [
+        {
+            "one": ((10,), [(20,), (30,)]),
+            "two": (12,),
+        },
+        (14,),
+    ]
+    OUTPUT_SHAPES = {
+        "first": ((50,), [(60,), (70,)]),
+        "second": (80,),
+        "third": ([((90,),)],),
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(10, 50))
+        self.matrix2 = nn.Parameter(torch.randn(20, 60))
+        self.matrix3 = nn.Parameter(torch.randn(30, 70))
+        self.matrix4 = nn.Parameter(torch.randn(12, 80))
+        self.matrix5 = nn.Parameter(torch.randn(14, 90))
+
+    def forward(self, inputs: PyTree) -> PyTree:
+        input1 = inputs[0]["one"][0]
+        input2 = inputs[0]["one"][1][0]
+        input3 = inputs[0]["one"][1][1]
+        input4 = inputs[0]["two"]
+        input5 = inputs[1]
+
+        return {
+            "first": (input1 @ self.matrix1, [input2 @ self.matrix2, input3 @ self.matrix3]),
+            "second": input4 @ self.matrix4,
+            "third": ([(input5 @ self.matrix5,)],),
+        }
+
+
+class PyTreeInputPyTreeOutputModel(ShapedModule):
+    INPUT_SHAPES = (86,)
+    OUTPUT_SHAPES = (350,)
+
+    def __init__(self):
+        super().__init__()
+        self.pytree_input_pytree_output_module = PyTreeInputPyTreeOutputModule()
+
+    def forward(self, input: Tensor) -> Tensor:
+        input1 = input[:, 0:10]
+        input2 = input[:, 10:30]
+        input3 = input[:, 30:60]
+        input4 = input[:, 60:72]
+        input5 = input[:, 72:86]
+
+        pytree_input = [
+            {
+                "one": (input1, [input2, input3]),
+                "two": input4,
+            },
+            input5,
+        ]
+
+        pytree_output = self.pytree_input_pytree_output_module(pytree_input)
+
+        first, second, third = pytree_output.values()
+        output1, output23 = first
+        output2, output3 = output23
+        output4 = second
+        output5 = third[0][0][0]
+
+        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
+
+
+class PyTreeModel(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (350,)
+
+    def __init__(self):
+        super().__init__()
+        self.pytree_module = PyTreeModule()
+
+    def forward(self, input: Tensor):
+        first, second, third = self.pytree_module(input).values()
+        output1, output23 = first
+        output2, output3 = output23
+        output4 = second
+        output5 = third[0][0][0]
+
+        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
+
+
+class ModuleWithParameterReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix + (input**2) @ self.matrix
+
+
+class MatMulModule(nn.Module):
+    def __init__(self, matrix: nn.Parameter):
+        super().__init__()
+        self.matrix = matrix
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix
+
+
+class ModelWithInterModuleParameterReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        matrix = nn.Parameter(torch.randn(50, 10))
+        self.module1 = MatMulModule(matrix)
+        self.module2 = MatMulModule(matrix)
+
+    def forward(self, input: Tensor):
+        return self.module1(input) + self.module2(input**2)
+
+
+class ModelWithModuleReuse(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        matrix = nn.Parameter(torch.randn(50, 10))
+        self.module = MatMulModule(matrix)
+
+    def forward(self, input: Tensor):
+        return self.module(input) + self.module(input**2)
+
+
+class ModelWithFreeParameter(ShapedModule):
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(15, 16))  # Free parameter
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(input @ self.matrix)
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
+
+
+class ModelWithNoFreeParameter(ShapedModule):
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear0 = nn.Linear(15, 16, bias=False)
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(self.linear0(input))
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
+
+
+class ModuleWithUnusedParam(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.unused_param = nn.Parameter(torch.randn(50, 10))
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix
+
+
+class ModuleWithFrozenParam(ShapedModule):
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return input @ self.matrix + (input**2) @ self.frozen_param
+
+
+class ModuleWithBuffer(ShapedModule):
+    INPUT_SHAPES = (27,)
+    OUTPUT_SHAPES = (27,)
+
+    def __init__(self):
+        super().__init__()
+        self.buffer = nn.Buffer(torch.tensor(10.0))
+
+    def forward(self, input: Tensor):
+        return input * self.buffer
+
+
+class ModelWithModuleWithBuffer(ShapedModule):
+    INPUT_SHAPES = (27,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.module_with_buffer = ModuleWithBuffer()
+        self.linear = nn.Linear(27, 10)
+
+    def forward(self, input: Tensor):
+        return self.linear(self.module_with_buffer(input))
+
+
+class ResNet18(ShapedModule):
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.resnet18 = torchvision.models.resnet18(
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+        )
+
+    def forward(self, input: Tensor):
+        return self.resnet18(input)
+
+
+class Cifar10ModelPart1(ShapedModule):
+    INPUT_SHAPES = (3, 32, 32)
+    OUTPUT_SHAPES = (1024,)
+
+    def __init__(self):
+        super().__init__()
+        layers = [
+            nn.Conv2d(3, 32, 3),
+            ReLU(),
+            nn.Conv2d(32, 64, 3, groups=32),
+            nn.Sequential(nn.MaxPool2d(2), ReLU()),
+            nn.Conv2d(64, 64, 3, groups=64),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
+        ]
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
+
+
+class Cifar10ModelPart2(ShapedModule):
+    INPUT_SHAPES = (1024,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        layers = [
+            nn.Linear(1024, 128),
+            ReLU(),
+            nn.Linear(128, 10),
+        ]
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
