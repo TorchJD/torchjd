@@ -31,9 +31,6 @@ from unit.conftest import DEVICE
 
 from torchjd import backward
 from torchjd._autogram._rev_gram_acc import augment_model_with_iwrm_autogram
-from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
-from torchjd._autojac._transform._aggregate import _Matrixify
-from torchjd._autojac._utils import get_leaf_tensors
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -294,31 +291,6 @@ def autogram_forward_backward(
 ) -> None:
     losses = forward_pass(model, inputs, loss_fn)
     losses.backward(torch.ones_like(losses))
-
-
-def autojac_get_gramian(
-    model: nn.Module, input: Tensor, loss_fn: Callable[[PyTree], Tensor]
-) -> Tensor:
-    losses = OrderedSet(forward_pass(model, input, loss_fn))
-
-    # Transform that creates gradient outputs containing only ones.
-    init = Init(losses)
-
-    # Transform that turns the gradients into Jacobians.
-    diag = Diagonalize(losses)
-
-    # Transform that computes the required Jacobians.
-    inputs = get_leaf_tensors(tensors=losses, excluded=set())
-    jac = Jac(losses, inputs, None, False)
-
-    mat = _Matrixify()
-
-    transform = mat << jac << diag << init
-
-    jacobian_matrices = transform({})
-
-    gramian = sum([J @ J.T for J in jacobian_matrices.values()])
-    return gramian
 
 
 def forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
