@@ -110,8 +110,8 @@ def make_jacobian_accumulator(
 
 class _ModelAugmenter:
     def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
-        self.model = model
-        self.weighting = weighting
+        self._model = model
+        self._weighting = weighting
         self._handles: list[RemovableHandle] = []
 
         self._gramian_accumulator = GramianAccumulator()
@@ -127,7 +127,7 @@ class _ModelAugmenter:
             handle.remove()
 
     def _hook_submodules(self) -> None:
-        for module in self.model.modules():
+        for module in self._model.modules():
             if next(module.parameters(recurse=False), None) is None:
                 # Skip un-parameterized modules
                 continue
@@ -177,7 +177,7 @@ class _ModelAugmenter:
             activator_flat_outputs = autogram_activator.apply(*flat_outputs)
             return tree_unflatten(activator_flat_outputs, tree_spec)
 
-        self._handles.append(self.model.register_forward_hook(model_hook))
+        self._handles.append(self._model.register_forward_hook(model_hook))
 
     def _make_autogram_activator(
         self, flat_outputs: PyTree, leaf_targets: list[GradientEdge]
@@ -209,7 +209,7 @@ class _ModelAugmenter:
                 )
                 gramian = self._gramian_accumulator.gramian
                 self._reset()
-                weights = self.weighting(gramian).unsqueeze(1)
+                weights = self._weighting(gramian).unsqueeze(1)
                 scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
                 return scaled_grad_outputs
 
