@@ -94,7 +94,7 @@ def make_jacobian_accumulator(
                     # primals (tuple), here the functional has a single primal which is
                     # dict(module.named_parameters()). We therefore take the 0'th element to obtain
                     # the dict of gradients w.r.t. the module's named_parameters.
-                    return _vjp_from_module(module, *inputs_j)(grad_outputs_j)[0]
+                    return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
 
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_vjp)(grad_outputs, args)
@@ -279,13 +279,13 @@ def augment_model_with_iwrm_autogram(
     return AutogramHandle(model_augmenter)
 
 
-def _vjp_from_module(module: nn.Module, *inputs) -> Callable:
+def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
     named_params = dict(module.named_parameters(recurse=False))
     requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
     no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
 
     def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
         all_state = {**primals, **dict(module.named_buffers()), **no_requires_grad_named_params}
-        return torch.func.functional_call(module, all_state, tuple(inputs))
+        return torch.func.functional_call(module, all_state, inputs)
 
     return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
