@@ -139,8 +139,8 @@ class _ModelAugmenter:
             flat_outputs, tree_spec = tree_flatten(output)
 
             if len(flat_outputs) == 0:
-                # This can happen only if a module returns no Tensor, for instance some niche usage such
-                # as a module that prints something.
+                # This can happen only if a module returns no Tensor, for instance some niche usage
+                # such as a module that prints something.
                 return output
 
             jacobian_accumulator = make_jacobian_accumulator(
@@ -150,9 +150,9 @@ class _ModelAugmenter:
             requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
             self._gramian_accumulator.track_parameters(requires_grad_params)
 
-            # We only care about running the JacobianAccumulator node, so we need one of its child edges
-            # (the edges of the original ouputs of the model) as target. For memory efficiency, we
-            # select the smallest one.
+            # We only care about running the JacobianAccumulator node, so we need one of its child
+            # edges (the edges of the original ouputs of the model) as target. For memory
+            # efficiency, we select the smallest one.
             numels = torch.tensor([t.numel() for t in flat_outputs])
             index = numels.argmin().item()
             self._target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
