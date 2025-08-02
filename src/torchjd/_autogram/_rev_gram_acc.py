@@ -19,16 +19,6 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # still support older versions of PyTorch where pytree is protected).
 
 
-# TODO: document the cases where it doesn't work: non-batched operations, operations batched on
-#  dim != 0 (rnns, transformers, ...), free nn.Parameter used before other nn.Modules (should work
-#  but slowly).
-
-# Second release: handle inputs that are not batched or that are batched on dim != 0
-# TODO: test with RNN, Transformer
-# TODO: add function mapping a module (and its args) to how to unbatch the args.
-#  The output type could be tuple[Optional[int], ...], with one element per arg of the module
-
-
 class GramianAccumulator:
     def __init__(self):
         self._gramian = None
