@@ -4,5 +4,4 @@ are meant to replace the call to `torch.backward` or `loss.backward` in gradient
 the information of the Jacobian, an aggregator from the `aggregation` package has to be used.
 """
 
-from ._autogram import get_output_and_gramian
 from ._autojac import backward, mtl_backward
