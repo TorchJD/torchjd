@@ -19,6 +19,8 @@ from unit.autogram._architectures import (
     ModuleWithFrozenParam,
     ModuleWithParameterReuse,
     ModuleWithUnusedParam,
+    PyTreeInputPyTreeOutputModel,
+    PyTreeInputPyTreeOutputModule,
     PyTreeModel,
     PyTreeModule,
     ResNet18,
@@ -130,6 +132,8 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
         (ModuleWithFrozenParam, 64, 5),
         (ResNet18, 16, 1),
         (PyTreeModule, 32, 5),
+        (PyTreeInputPyTreeOutputModule, 32, 5),
+        (PyTreeInputPyTreeOutputModel, 32, 5),
     ],
 )
 def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: int):
@@ -189,6 +193,8 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
         (ModuleWithFrozenParam, 64),
         (ResNet18, 16),
         (PyTreeModule, 32),
+        (PyTreeInputPyTreeOutputModule, 32),
+        (PyTreeInputPyTreeOutputModel, 32),
     ],
 )
 def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
