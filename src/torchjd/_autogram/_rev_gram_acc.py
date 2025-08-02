@@ -23,22 +23,22 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 class GramianAccumulator:
     def __init__(self):
         self._gramian = None
-        self.jacobians = dict()
-        self.counter = Counter()
+        self._jacobians = dict()
+        self._counter = Counter()
 
     def track_parameters(self, tensors: Iterable[Tensor]) -> None:
-        self.counter.update(tensors)
+        self._counter.update(tensors)
 
     def add_jacobian(self, tensor: Tensor, jacobian: Tensor) -> None:
-        if tensor in self.jacobians:
-            self.jacobians[tensor] += jacobian
+        if tensor in self._jacobians:
+            self._jacobians[tensor] += jacobian
         else:
-            self.jacobians[tensor] = jacobian
-        self.counter.subtract([tensor])
-        if self.counter[tensor] == 0:
-            self._accumulate_jacobian(self.jacobians[tensor])
-            del self.counter[tensor]
-            del self.jacobians[tensor]
+            self._jacobians[tensor] = jacobian
+        self._counter.subtract([tensor])
+        if self._counter[tensor] == 0:
+            self._accumulate_jacobian(self._jacobians[tensor])
+            del self._counter[tensor]
+            del self._jacobians[tensor]
 
     def _accumulate_jacobian(self, jacobian: Tensor) -> None:
         jacobian_matrix = torch.flatten(jacobian, start_dim=1)
@@ -49,8 +49,8 @@ class GramianAccumulator:
 
     @property
     def gramian(self) -> Tensor:
-        if len(self.counter) != 0 or len(self.jacobians) != 0:
-            shape_to_count = [(k.shape, v) for k, v in self.counter.items()]
+        if len(self._counter) != 0 or len(self._jacobians) != 0:
+            shape_to_count = [(k.shape, v) for k, v in self._counter.items()]
             raise ValueError(
                 f"Some tracked parameters are still not at a count of 0, {shape_to_count}."
             )
