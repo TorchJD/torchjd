@@ -49,12 +49,7 @@ class GramianAccumulator:
 
     @property
     def gramian(self) -> Tensor:
-        if len(self._counter) != 0 or len(self._jacobians) != 0:
-            shape_to_count = [(k.shape, v) for k, v in self._counter.items()]
-            raise ValueError(
-                f"Some tracked parameters are still not at a count of 0, {shape_to_count}."
-            )
-
+        assert len(self._counter) != 0 or len(self._jacobians) != 0
         return self._gramian
 
 
