@@ -418,7 +418,7 @@ class ModelWithModuleWithoutOutput(ShapedModule):
         self.module2 = MatMulModule(matrix)
 
     def forward(self, input: Tensor):
-        # Note that no parameter counts in the Gramian, so it should be zero.
+        self.module1(input)
         return self.module2(input)
 
 
