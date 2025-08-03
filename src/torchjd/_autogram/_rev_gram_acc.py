@@ -183,8 +183,6 @@ class _ModelAugmenter:
         self, flat_outputs: PyTree, leaf_targets: list[GradientEdge]
     ) -> type[torch.autograd.Function]:
 
-        activated = True
-
         class AutogramActivator(torch.autograd.Function):
             @staticmethod
             def forward(*xs: Tensor) -> tuple[Tensor, ...]:
@@ -196,11 +194,6 @@ class _ModelAugmenter:
 
             @staticmethod
             def backward(ctx, *grad_outputs: Tensor):
-                nonlocal activated
-                if not activated:
-                    activated = True
-                    return grad_outputs
-                activated = False
                 _ = torch.autograd.grad(
                     outputs=flat_outputs,
                     inputs=leaf_targets,
