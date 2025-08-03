@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import torch
 from torch import Tensor, nn
 from torchviz import make_dot
