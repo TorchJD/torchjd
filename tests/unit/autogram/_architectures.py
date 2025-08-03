@@ -203,6 +203,15 @@ class PyTreeInputPyTreeOutputModule(ShapedModule):
         }
 
 
+class EmptyOutputModule(nn.Module):
+    def __init__(self, shape: tuple[int, ...]):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(shape))
+
+    def forward(self, _: PyTree) -> None:
+        return None
+
+
 class PyTreeInputPyTreeOutputModel(ShapedModule):
     INPUT_SHAPES = (86,)
     OUTPUT_SHAPES = (350,)
@@ -396,6 +405,21 @@ class ModelWithModuleWithBuffer(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.linear(self.module_with_buffer(input))
+
+
+class ModelWithModuleWithoutOutput(ShapedModule):
+    INPUT_SHAPES = (27,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.module1 = EmptyOutputModule(self.INPUT_SHAPES + self.OUTPUT_SHAPES)
+        matrix = nn.Parameter(torch.randn(self.INPUT_SHAPES + self.OUTPUT_SHAPES))
+        self.module2 = MatMulModule(matrix)
+
+    def forward(self, input: Tensor):
+        # Note that no parameter counts in the Gramian, so it should be zero.
+        return self.module2(input)
 
 
 class ResNet18(ShapedModule):
