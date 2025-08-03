@@ -49,7 +49,7 @@ class GramianAccumulator:
 
     @property
     def gramian(self) -> Tensor:
-        assert len(self._counter) != 0 or len(self._jacobians) != 0
+        assert len(self._counter) == 0 and len(self._jacobians) == 0
         return self._gramian
 
 
