@@ -7,7 +7,8 @@ class HandleManager(ABC):
     @abstractmethod
     def remove(self):
         """
-        Remove handles from a model. This can be used to de-augment a model.
+        Remove from a model the module hooks added by torchjd for autogram. This can be used to
+        de-augment a model.
         """
 
 
