@@ -20,46 +20,24 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # still support older versions of PyTorch where pytree is protected).
 
 
-def make_jacobian_accumulator(
-    module: nn.Module,
-    gramian_accumulator: GramianAccumulator,
-    args: PyTree,
-    tree_spec: TreeSpec,
-) -> type[torch.autograd.Function]:
+def augment_model_with_iwrm_autogram(
+    model: nn.Module,
+    weighting: Weighting[PSDMatrix],
+) -> HandleManager:
+    """
+    Usage:
+    ```
+    augment_model_with_iwrm_autogram(model, W)
+    for input, target in ...:
+        output = model(input)
+        losses = criterion(output, target)
+        losses.backward(torch.ones_like(losses))
+    ```
+    """
+    model_augmenter = _ModelAugmenter(model, weighting)
+    model_augmenter.augment()
 
-    class JacobianAccumulator(torch.autograd.Function):
-
-        activated = True
-
-        @staticmethod
-        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-            return tuple([x.detach() for x in xs])
-
-        @staticmethod
-        def setup_context(*_):
-            pass
-
-        @staticmethod
-        def backward(ctx, *flat_grad_outputs: Tensor):
-            if not JacobianAccumulator.activated:
-                JacobianAccumulator.activated = True
-                return flat_grad_outputs
-
-            JacobianAccumulator.activated = False
-
-            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
-
-            gramian_accumulator.accumulate_path_jacobians(
-                {
-                    module.get_parameter(param_name): jacobian
-                    for param_name, jacobian in jacobians.items()
-                }
-            )
-
-            return flat_grad_outputs
-
-    return JacobianAccumulator
+    return model_augmenter.handle_manager
 
 
 class _ModelAugmenter:
@@ -174,21 +152,43 @@ class _ModelAugmenter:
         self._are_hooks_activated = False
 
 
-def augment_model_with_iwrm_autogram(
-    model: nn.Module,
-    weighting: Weighting[PSDMatrix],
-) -> HandleManager:
-    """
-    Usage:
-    ```
-    augment_model_with_iwrm_autogram(model, W)
-    for input, target in ...:
-        output = model(input)
-        losses = criterion(output, target)
-        losses.backward(torch.ones_like(losses))
-    ```
-    """
-    model_augmenter = _ModelAugmenter(model, weighting)
-    model_augmenter.augment()
+def make_jacobian_accumulator(
+    module: nn.Module,
+    gramian_accumulator: GramianAccumulator,
+    args: PyTree,
+    tree_spec: TreeSpec,
+) -> type[torch.autograd.Function]:
 
-    return model_augmenter.handle_manager
+    class JacobianAccumulator(torch.autograd.Function):
+
+        activated = True
+
+        @staticmethod
+        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+            return tuple([x.detach() for x in xs])
+
+        @staticmethod
+        def setup_context(*_):
+            pass
+
+        @staticmethod
+        def backward(ctx, *flat_grad_outputs: Tensor):
+            if not JacobianAccumulator.activated:
+                JacobianAccumulator.activated = True
+                return flat_grad_outputs
+
+            JacobianAccumulator.activated = False
+
+            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
+
+            gramian_accumulator.accumulate_path_jacobians(
+                {
+                    module.get_parameter(param_name): jacobian
+                    for param_name, jacobian in jacobians.items()
+                }
+            )
+
+            return flat_grad_outputs
+
+    return JacobianAccumulator
