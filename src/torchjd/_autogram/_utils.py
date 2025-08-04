@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections import Counter, deque
 from typing import Callable, Iterable
 
@@ -193,7 +194,19 @@ def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[
     return get_vjp
 
 
-class HandleManager:
+class HandleManager(ABC):
+    @abstractmethod
+    def remove(self):
+        """
+        Remove handles from a model. This can be used to de-augment a model.
+        """
+
+
+class AutogramHandleManager(HandleManager):
+    """
+    Private `HandleManager` that is used to track Module hooks' handles to de-augment a model that
+    was augmented for autogram.
+    """
 
     def __init__(self):
         self._handles: list[RemovableHandle] = []

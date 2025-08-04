@@ -6,6 +6,7 @@ from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd._autogram._utils import (
+    AutogramHandleManager,
     GramianAccumulator,
     HandleManager,
     TargetRegistry,
@@ -68,7 +69,7 @@ class _ModelAugmenter:
     def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
         self._model = model
         self._weighting = weighting
-        self.handle_manager = HandleManager()
+        self.handle_manager = AutogramHandleManager()
 
         self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
