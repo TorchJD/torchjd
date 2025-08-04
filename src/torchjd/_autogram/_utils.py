@@ -163,6 +163,17 @@ def _vjp_from_module(
 
 
 def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+    """
+    Create a VJP function for a module's forward pass with respect to its parameters. The returned
+    function takes both the input and the cotangents that can be vmaped jointly in both terms to
+    avoid providing to block diagonal jacobians.
+
+    :params module: The module to differentiate.
+    :returns: VJP function that takes cotangents and inputs and returns dictionary of names of
+        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
+        for the given cotangents at the given inputs.
+    """
+
     def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
