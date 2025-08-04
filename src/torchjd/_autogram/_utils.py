@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, deque
 from typing import Iterable
 
 import torch
@@ -82,3 +82,26 @@ class _GramianAccumulator:
 
 def next_edges(edge: GradientEdge) -> list[GradientEdge]:
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
+
+
+def targets_to_leaf_targets(
+    targets: list[GradientEdge], excluded: set[GradientEdge]
+) -> list[GradientEdge]:
+    targets_ = set(targets)
+    nodes_to_traverse = deque(
+        (child, target) for target in targets_ for child in next_edges(target)
+    )
+
+    already_added = {child for child, _ in nodes_to_traverse}
+
+    while nodes_to_traverse:
+        node, origin = nodes_to_traverse.popleft()
+        if node in targets_:
+            excluded.add(origin)
+        else:
+            for child in next_edges(node):
+                if child not in already_added:
+                    nodes_to_traverse.append((child, origin))
+                    already_added.add(child)
+
+    return list(targets_ - excluded)

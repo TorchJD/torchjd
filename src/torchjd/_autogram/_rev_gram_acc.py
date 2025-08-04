@@ -1,4 +1,3 @@
-from collections import deque
 from collections.abc import Callable
 from typing import cast
 
@@ -9,7 +8,7 @@ from torch.nn import Parameter
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import _GramianAccumulator, next_edges
+from torchjd._autogram._utils import _GramianAccumulator, targets_to_leaf_targets
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -190,29 +189,6 @@ class AutogramHandle:
 
     def remove(self):
         self._manager.unhook()
-
-
-def targets_to_leaf_targets(
-    targets: list[GradientEdge], excluded: set[GradientEdge]
-) -> list[GradientEdge]:
-    targets_ = set(targets)
-    nodes_to_traverse = deque(
-        (child, target) for target in targets_ for child in next_edges(target)
-    )
-
-    already_added = {child for child, _ in nodes_to_traverse}
-
-    while nodes_to_traverse:
-        node, origin = nodes_to_traverse.popleft()
-        if node in targets_:
-            excluded.add(origin)
-        else:
-            for child in next_edges(node):
-                if child not in already_added:
-                    nodes_to_traverse.append((child, origin))
-                    already_added.add(child)
-
-    return list(targets_ - excluded)
 
 
 def augment_model_with_iwrm_autogram(
