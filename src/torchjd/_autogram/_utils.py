@@ -162,8 +162,8 @@ def _vjp_from_module(
     return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
 
 
-def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], tuple[Tensor, ...]]:
-    def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> tuple[Tensor, ...]:
+def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+    def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
