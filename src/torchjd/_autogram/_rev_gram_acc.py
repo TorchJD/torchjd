@@ -6,7 +6,7 @@ from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import GramianAccumulator, _vjp_from_module, targets_to_leaf_targets
+from torchjd._autogram._utils import GramianAccumulator, targets_to_leaf_targets, vjp_from_module
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -54,7 +54,7 @@ def make_jacobian_accumulator(
                     # primals (tuple), here the functional has a single primal which is
                     # dict(module.named_parameters()). We therefore take the 0'th element to obtain
                     # the dict of gradients w.r.t. the module's named_parameters.
-                    return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+                    return vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
 
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_vjp)(grad_outputs, args)

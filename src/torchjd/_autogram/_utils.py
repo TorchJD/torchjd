@@ -109,7 +109,7 @@ def targets_to_leaf_targets(
     return list(targets_ - excluded)
 
 
-def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
+def vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
     named_params = dict(module.named_parameters(recurse=False))
     requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
     no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
