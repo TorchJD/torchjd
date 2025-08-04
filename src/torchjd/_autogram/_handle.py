@@ -4,6 +4,8 @@ from torch.utils.hooks import RemovableHandle
 
 
 class HandleManager(ABC):
+    """TODO: add docstring (user-facing)"""
+
     @abstractmethod
     def remove(self):
         """

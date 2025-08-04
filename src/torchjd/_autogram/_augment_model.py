@@ -25,14 +25,71 @@ def augment_model_with_iwrm_autogram(
     weighting: Weighting[PSDMatrix],
 ) -> HandleManager:
     """
-    Usage:
-    ```
-    augment_model_with_iwrm_autogram(model, W)
-    for input, target in ...:
-        output = model(input)
-        losses = criterion(output, target)
-        losses.backward(torch.ones_like(losses))
-    ```
+    Adds module hooks to a model and its child modules so that the backward pass is replaced by a
+    step of Gramian-based Jacobian descent automatically.
+
+    After the model has been augmented, the output obtained from it will have an extended
+    computation graph that is able to:
+
+    - Compute efficiently the Gramian of the Jacobian of the per-sample losses with respect to the
+      model parameters.
+    - Extract weights from this Gramian using the provided ``weighting``.
+    - Backpropagate these weights for a normal backward pass.
+
+    :param model: The model to augment.
+    :param weighting: The object responsible for extracting weights from the Gramian.
+
+    .. admonition::
+        Example
+
+        Train a model using Gramian-based Jacobian descent.
+
+            >>> import torch
+            >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
+            >>> from torch.optim import SGD
+            >>>
+            >>> from torchjd import augment_model_with_iwrm_autogram
+            >>> from torchjd.aggregation import UPGrad
+            >>>
+            >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
+            >>> inputs = torch.randn(8, 16, 5)
+            >>> targets = torch.randn(8, 16)
+            >>>
+            >>> model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
+            >>> optimizer = SGD(model.parameters())
+            >>>
+            >>> criterion = MSELoss(reduction="none")
+            >>> # TODO: improve this by making weightings public
+            >>> weighting = UPGrad().weighting.weighting
+            >>> augment_model_with_iwrm_autogram(model, weighting)
+            >>>
+            >>> for input, target in zip(inputs, targets):
+            >>>     output = model(input)
+            >>>     losses = criterion(output, target)
+            >>>
+            >>>     optimizer.zero_grad()
+            >>>     losses.backward(torch.ones_like(losses))
+            >>>     optimizer.step()
+
+        Each call to ``losses.backward(torch.ones_like(losses))`` has computed the Gramian of the
+        Jacobian of the losses with respect to the model's parameters, has extracted weights from it
+        and has backpropagated these weights to obtain the gradients to use to update the model
+        parameters, stored in their ``.grad`` fields. The ``optimizer.step()`` call then updates the
+        model parameters based on those ``.grad`` fields.
+
+    .. note::
+        If you want to remove the hooks added by ``augment_model_with_iwrm_autogram``, you can call
+        ``remove()`` on the :class:`~torchjd._autogram._handle.HandleManager` that it returns.
+
+            >>> # Augment the model
+            >>> handle = augment_model_with_iwrm_autogram(model, weighting)
+            >>>
+            >>>  # Use it
+            >>>  # ...
+            >>>
+            >>> # De-augment the model
+            >>> handle.remove()
+            >>> # All hooks added by augment_model_with_iwrm_autogram should have been removed
     """
     model_augmenter = _ModelAugmenter(model, weighting)
     model_augmenter.augment()
