@@ -35,7 +35,7 @@ from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_clo
 from unit.conftest import DEVICE
 
 from torchjd import backward
-from torchjd._autogram._rev_gram_acc import augment_model_with_iwrm_autogram
+from torchjd._autogram._augment_model import augment_model_with_iwrm_autogram
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd.aggregation import Aggregator, Mean, UPGrad
