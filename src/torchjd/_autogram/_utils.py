@@ -89,7 +89,7 @@ class TargetRegistry:
     minimally sufficient subset of leaf targets.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._target_edges: set[GradientEdge] = set()
 
     def register(self, target: Tensor) -> None:
@@ -207,7 +207,7 @@ class AutogramHandleManager(HandleManager):
     was augmented for autogram.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._handles: list[RemovableHandle] = []
 
     def add_handle(self, handle: RemovableHandle) -> None:
