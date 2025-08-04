@@ -19,10 +19,10 @@ class GramianAccumulator:
     the total Gramian matrix. Intermediate matrices are discarded immediately to save memory.
     """
 
-    def __init__(self):
-        self._gramian = None
-        self._summed_jacobians = dict()
-        self._path_counter = Counter()
+    def __init__(self) -> None:
+        self._gramian: Tensor | None = None
+        self._summed_jacobians = dict[Tensor, Tensor]()
+        self._path_counter = Counter[Tensor]()
 
     def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
         """
@@ -79,8 +79,10 @@ class GramianAccumulator:
         :returns: Accumulated Gramian matrix of shape (batch_size, batch_size).
         """
 
-        # Should never happen, this assert is temporary for development safety reason.
+        # Should never happen, these asserts are temporary for development safety reason.
         assert len(self._path_counter) == 0 and len(self._summed_jacobians) == 0
+        assert self._gramian is not None
+
         return self._gramian
 
 
