@@ -1,14 +1,12 @@
-from collections.abc import Callable
 from typing import cast
 
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
-from torch.nn import Parameter
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import _GramianAccumulator, targets_to_leaf_targets
+from torchjd._autogram._utils import _GramianAccumulator, _vjp_from_module, targets_to_leaf_targets
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -209,15 +207,3 @@ def augment_model_with_iwrm_autogram(
     model_augmenter.augment()
 
     return AutogramHandle(model_augmenter)
-
-
-def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
-    named_params = dict(module.named_parameters(recurse=False))
-    requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
-    no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
-
-    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
-        all_state = {**primals, **dict(module.named_buffers()), **no_requires_grad_named_params}
-        return torch.func.functional_call(module, all_state, inputs)
-
-    return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]

@@ -1,9 +1,11 @@
 from collections import Counter, deque
-from typing import Iterable
+from typing import Callable, Iterable
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge
+from torch.nn import Parameter
+from torch.utils._pytree import PyTree
 
 
 class _GramianAccumulator:
@@ -105,3 +107,15 @@ def targets_to_leaf_targets(
                     already_added.add(child)
 
     return list(targets_ - excluded)
+
+
+def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
+    named_params = dict(module.named_parameters(recurse=False))
+    requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
+    no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
+
+    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
+        all_state = {**primals, **dict(module.named_buffers()), **no_requires_grad_named_params}
+        return torch.func.functional_call(module, all_state, inputs)
+
+    return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
