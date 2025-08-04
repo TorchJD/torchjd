@@ -1,2 +1,2 @@
-from ._augment_model import augment_model_with_iwrm_autogram
+from ._augment_model import augment_model_for_gramian_based_iwrm
 from ._handle import HandleManager

@@ -20,7 +20,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # still support older versions of PyTorch where pytree is protected).
 
 
-def augment_model_with_iwrm_autogram(
+def augment_model_for_gramian_based_iwrm(
     model: nn.Module,
     weighting: Weighting[PSDMatrix],
 ) -> HandleManager:
@@ -48,7 +48,7 @@ def augment_model_with_iwrm_autogram(
             >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
             >>> from torch.optim import SGD
             >>>
-            >>> from torchjd import augment_model_with_iwrm_autogram
+            >>> from torchjd import augment_model_for_gramian_based_iwrm
             >>> from torchjd.aggregation import UPGrad
             >>>
             >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
@@ -61,7 +61,7 @@ def augment_model_with_iwrm_autogram(
             >>> criterion = MSELoss(reduction="none")
             >>> # TODO: improve this by making weightings public
             >>> weighting = UPGrad().weighting.weighting
-            >>> augment_model_with_iwrm_autogram(model, weighting)
+            >>> augment_model_for_gramian_based_iwrm(model, weighting)
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input)
@@ -78,18 +78,18 @@ def augment_model_with_iwrm_autogram(
         model parameters based on those ``.grad`` fields.
 
     .. note::
-        If you want to remove the hooks added by ``augment_model_with_iwrm_autogram``, you can call
-        ``remove()`` on the :class:`~torchjd._autogram._handle.HandleManager` that it returns.
+        If you want to remove the hooks added by ``augment_model_for_gramian_based_iwrm``, you can
+        call ``remove()`` on the :class:`~torchjd._autogram._handle.HandleManager` that it returns.
 
             >>> # Augment the model
-            >>> handle = augment_model_with_iwrm_autogram(model, weighting)
+            >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
             >>>
             >>>  # Use it
             >>>  # ...
             >>>
             >>> # De-augment the model
             >>> handle.remove()
-            >>> # All hooks added by augment_model_with_iwrm_autogram should have been removed
+            >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
     """
     model_augmenter = _ModelAugmenter(model, weighting)
     model_augmenter.augment()

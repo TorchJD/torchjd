@@ -35,7 +35,7 @@ from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_clo
 from unit.conftest import DEVICE
 
 from torchjd import backward
-from torchjd._autogram._augment_model import augment_model_with_iwrm_autogram
+from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd.aggregation import Aggregator, Mean, UPGrad
@@ -112,7 +112,7 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
     print(autojac_times)
     print()
 
-    handle = augment_model_with_iwrm_autogram(model, W)
+    handle = augment_model_for_gramian_based_iwrm(model, W)
     autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
     handle.remove()
     print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
@@ -154,7 +154,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    augment_model_with_iwrm_autogram(model_autogram, W)
+    augment_model_for_gramian_based_iwrm(model_autogram, W)
     optimizer_autojac = SGD(model_autojac.parameters())
     optimizer_autogram = SGD(model_autogram.parameters())
 
@@ -231,7 +231,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram = architecture().to(device=DEVICE)
 
     # Augment and verify that we're equivalent to autojac
-    handle = augment_model_with_iwrm_autogram(model_autogram, W)
+    handle = augment_model_for_gramian_based_iwrm(model_autogram, W)
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
@@ -245,7 +245,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram.zero_grad()
 
     # Re-augment and verify that we're equivalent to autojac
-    augment_model_with_iwrm_autogram(model_autogram, W)
+    augment_model_for_gramian_based_iwrm(model_autogram, W)
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
@@ -293,7 +293,7 @@ def test_partial_autogram():
     model1.zero_grad()
     model2.zero_grad()
 
-    augment_model_with_iwrm_autogram(model2, W)
+    augment_model_for_gramian_based_iwrm(model2, W)
 
     output = model1(input)
     output = model2(output)

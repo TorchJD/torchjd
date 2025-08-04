@@ -1,12 +1,12 @@
 """This file contains tests for the usage examples related to autogram."""
 
 
-def test_augment_model_with_iwrm_backward():
+def test_augment_model_for_gramian_based_iwrm():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import augment_model_with_iwrm_autogram
+    from torchjd import augment_model_for_gramian_based_iwrm
     from torchjd.aggregation import UPGrad
 
     # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
@@ -19,7 +19,7 @@ def test_augment_model_with_iwrm_backward():
     criterion = MSELoss(reduction="none")
     # TODO: improve this by making weightings public
     weighting = UPGrad().weighting.weighting
-    augment_model_with_iwrm_autogram(model, weighting)
+    augment_model_for_gramian_based_iwrm(model, weighting)
 
     for input, target in zip(inputs, targets):
         output = model(input)
