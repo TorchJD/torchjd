@@ -3,10 +3,10 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
-from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
+from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import GramianAccumulator, TargetRegistry, vjp_from_module
+from torchjd._autogram._utils import GramianAccumulator, TargetRegistry, get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -41,23 +41,8 @@ def make_jacobian_accumulator(
             nonlocal activated
             if activated:
 
-                def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> tuple[Tensor, ...]:
-                    # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
-                    # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
-                    # nn.Flatten) do not work equivalently if they're provided with a batch or with
-                    # an element of a batch. We thus always provide them with batches, just of a
-                    # different size.
-                    inputs_j = tree_map(lambda x: x.unsqueeze(0), inputs_j)
-                    grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
-
-                    # _vjp_from_module returns a function that computes the vjp w.r.t. to the
-                    # primals (tuple), here the functional has a single primal which is
-                    # dict(module.named_parameters()). We therefore take the 0'th element to obtain
-                    # the dict of gradients w.r.t. the module's named_parameters.
-                    return vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
-
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-                jacobians = torch.vmap(get_vjp)(grad_outputs, args)
+                jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
 
                 gramian_accumulator.accumulate_path_jacobians(
                     {

@@ -5,7 +5,7 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree
+from torch.utils._pytree import PyTree, tree_map
 
 
 class GramianAccumulator:
@@ -138,7 +138,7 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
-def vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
+def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
     """
     Create a VJP function for a module's forward pass with respect to its parameters.
 
@@ -158,3 +158,22 @@ def vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
         return torch.func.functional_call(module, all_state, inputs)
 
     return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
+
+
+def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], tuple[Tensor, ...]]:
+    def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> tuple[Tensor, ...]:
+        # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
+        # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
+        # nn.Flatten) do not work equivalently if they're provided with a batch or with
+        # an element of a batch. We thus always provide them with batches, just of a
+        # different size.
+        inputs_j = tree_map(lambda x: x.unsqueeze(0), inputs_j)
+        grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
+
+        # _vjp_from_module returns a function that computes the vjp w.r.t. to the
+        # primals (tuple), here the functional has a single primal which is
+        # dict(module.named_parameters()). We therefore take the 0'th element to obtain
+        # the dict of gradients w.r.t. the module's named_parameters.
+        return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+
+    return get_vjp
