@@ -72,7 +72,7 @@ class _ModelAugmenter:
                 # such as a module that prints something.
                 return output
 
-            jacobian_accumulator = make_jacobian_accumulator(
+            jacobian_accumulator = _make_jacobian_accumulator(
                 module, self._gramian_accumulator, args, tree_spec
             )
 
@@ -152,7 +152,7 @@ class _ModelAugmenter:
         self._are_hooks_activated = False
 
 
-def make_jacobian_accumulator(
+def _make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
     args: PyTree,
