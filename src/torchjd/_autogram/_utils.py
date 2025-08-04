@@ -20,7 +20,7 @@ class GramianAccumulator:
     """
 
     def __init__(self):
-        self._total_gramian = None
+        self._gramian = None
         self._full_jacobians = dict()
         self._path_counter = Counter()
 
@@ -66,10 +66,10 @@ class GramianAccumulator:
         :param parameter: Parameter whose full Jacobian is available.
         """
         full_jacobian_matrix = torch.flatten(self._full_jacobians[parameter], start_dim=1)
-        if self._total_gramian is not None:
-            self._total_gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
+        if self._gramian is not None:
+            self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
         else:
-            self._total_gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
+            self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
     def gramian(self) -> Tensor:
@@ -81,7 +81,7 @@ class GramianAccumulator:
 
         # Should never happen, this assert is temporary for development safety reason.
         assert len(self._path_counter) == 0 and len(self._full_jacobians) == 0
-        return self._total_gramian
+        return self._gramian
 
 
 class TargetRegistry:
