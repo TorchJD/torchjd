@@ -4,9 +4,13 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
-from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import GramianAccumulator, TargetRegistry, get_instance_wise_vjp
+from torchjd._autogram._utils import (
+    GramianAccumulator,
+    HandleManager,
+    TargetRegistry,
+    get_instance_wise_vjp,
+)
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -64,7 +68,7 @@ class _ModelAugmenter:
     def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
         self._model = model
         self._weighting = weighting
-        self._handles: list[RemovableHandle] = []
+        self.handle_manager = HandleManager()
 
         self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
@@ -73,10 +77,6 @@ class _ModelAugmenter:
     def augment(self):
         self._hook_submodules()
         self._hook_model()
-
-    def unhook(self) -> None:
-        for handle in self._handles:
-            handle.remove()
 
     def _hook_submodules(self) -> None:
         for module in self._model.modules():
@@ -112,7 +112,7 @@ class _ModelAugmenter:
 
             return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
 
-        self._handles.append(module.register_forward_hook(module_hook))
+        self.handle_manager.add_handle(module.register_forward_hook(module_hook))
 
     def _hook_model(self) -> None:
 
@@ -129,7 +129,7 @@ class _ModelAugmenter:
             activator_flat_outputs = autogram_activator.apply(*flat_outputs)
             return tree_unflatten(activator_flat_outputs, tree_spec)
 
-        self._handles.append(self._model.register_forward_hook(model_hook))
+        self.handle_manager.add_handle(self._model.register_forward_hook(model_hook))
 
     def _make_autogram_activator(
         self, flat_outputs: PyTree, leaf_targets: list[GradientEdge]
@@ -169,18 +169,10 @@ class _ModelAugmenter:
         self._are_hooks_activated = False
 
 
-class AutogramHandle:
-    def __init__(self, manager: _ModelAugmenter):
-        self._manager = manager
-
-    def remove(self):
-        self._manager.unhook()
-
-
 def augment_model_with_iwrm_autogram(
     model: nn.Module,
     weighting: Weighting[PSDMatrix],
-) -> AutogramHandle:
+) -> HandleManager:
     """
     Usage:
     ```
@@ -194,4 +186,4 @@ def augment_model_with_iwrm_autogram(
     model_augmenter = _ModelAugmenter(model, weighting)
     model_augmenter.augment()
 
-    return AutogramHandle(model_augmenter)
+    return model_augmenter.handle_manager

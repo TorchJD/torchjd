@@ -6,6 +6,7 @@ from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_map
+from torch.utils.hooks import RemovableHandle
 
 
 class GramianAccumulator:
@@ -190,3 +191,16 @@ def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[
         return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
 
     return get_vjp
+
+
+class HandleManager:
+
+    def __init__(self):
+        self._handles: list[RemovableHandle] = []
+
+    def add_handle(self, handle: RemovableHandle) -> None:
+        self._handles.append(handle)
+
+    def remove(self):
+        for handle in self._handles:
+            handle.remove()
