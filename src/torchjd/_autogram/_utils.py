@@ -111,7 +111,7 @@ class TargetRegistry:
         :returns: Minimal subset of leaf targets.
         """
         nodes_to_traverse = deque(
-            (child, target) for target in self._target_edges for child in next_edges(target)
+            (child, target) for target in self._target_edges for child in _next_edges(target)
         )
 
         already_added = {child for child, _ in nodes_to_traverse}
@@ -121,7 +121,7 @@ class TargetRegistry:
             if node in self._target_edges:
                 excluded.add(origin)
             else:
-                for child in next_edges(node):
+                for child in _next_edges(node):
                     if child not in already_added:
                         nodes_to_traverse.append((child, origin))
                         already_added.add(child)
@@ -129,7 +129,7 @@ class TargetRegistry:
         return list(self._target_edges - excluded)
 
 
-def next_edges(edge: GradientEdge) -> list[GradientEdge]:
+def _next_edges(edge: GradientEdge) -> list[GradientEdge]:
     """
     Get the next gradient edges in the differentiation graph from the given edge.
 
