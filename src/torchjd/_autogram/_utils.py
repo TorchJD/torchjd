@@ -3,6 +3,7 @@ from typing import Iterable
 
 import torch
 from torch import Tensor
+from torch.autograd.graph import GradientEdge
 
 
 class _GramianAccumulator:
@@ -77,3 +78,7 @@ class _GramianAccumulator:
         # Should never happen, this assert is temporary for development safety reason.
         assert len(self._path_counter) == 0 and len(self._full_jacobians) == 0
         return self._total_gramian
+
+
+def next_edges(edge: GradientEdge) -> list[GradientEdge]:
+    return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]

@@ -9,7 +9,7 @@ from torch.nn import Parameter
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import _GramianAccumulator
+from torchjd._autogram._utils import _GramianAccumulator, next_edges
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -190,10 +190,6 @@ class AutogramHandle:
 
     def remove(self):
         self._manager.unhook()
-
-
-def next_edges(edge: GradientEdge) -> list[GradientEdge]:
-    return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
 def targets_to_leaf_targets(
