@@ -25,9 +25,10 @@ def make_jacobian_accumulator(
     tree_spec: TreeSpec,
 ) -> type[torch.autograd.Function]:
 
-    activated = True
-
     class JacobianAccumulator(torch.autograd.Function):
+
+        activated = True
+
         @staticmethod
         def forward(*xs: Tensor) -> tuple[Tensor, ...]:
             return tuple([x.detach() for x in xs])
@@ -38,8 +39,7 @@ def make_jacobian_accumulator(
 
         @staticmethod
         def backward(ctx, *flat_grad_outputs: Tensor):
-            nonlocal activated
-            if activated:
+            if JacobianAccumulator.activated:
 
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
@@ -51,7 +51,7 @@ def make_jacobian_accumulator(
                     }
                 )
 
-            activated = not activated
+            JacobianAccumulator.activated = not JacobianAccumulator.activated
             return flat_grad_outputs
 
     return JacobianAccumulator
