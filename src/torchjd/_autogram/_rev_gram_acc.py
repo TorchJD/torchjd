@@ -153,7 +153,14 @@ class _ModelAugmenter:
                     grad_outputs=grad_outputs,
                     retain_graph=True,
                 )
+
                 gramian = self._gramian_accumulator.gramian
+
+                # Should never happen, these asserts are temporary for development safety reason.
+                assert len(self._gramian_accumulator._path_counter) == 0
+                assert len(self._gramian_accumulator._summed_jacobians) == 0
+                assert gramian is not None
+
                 self._reset()
                 weights = self._weighting(gramian).unsqueeze(1)
                 scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])

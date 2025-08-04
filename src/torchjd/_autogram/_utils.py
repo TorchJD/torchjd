@@ -72,16 +72,13 @@ class GramianAccumulator:
             self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
-    def gramian(self) -> Tensor:
+    def gramian(self) -> Tensor | None:
         """
-        Get the final accumulated Gramian matrix.
+        Get the Gramian matrix accumulated so far.
 
-        :returns: Accumulated Gramian matrix of shape (batch_size, batch_size).
+        :returns: Accumulated Gramian matrix of shape (batch_size, batch_size) or None if nothing
+            was accumulated yet.
         """
-
-        # Should never happen, these asserts are temporary for development safety reason.
-        assert len(self._path_counter) == 0 and len(self._summed_jacobians) == 0
-        assert self._gramian is not None
 
         return self._gramian
 
