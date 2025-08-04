@@ -138,7 +138,9 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
-def _vjp_from_module(module: nn.Module, inputs: PyTree) -> Callable:
+def _vjp_from_module(
+    module: nn.Module, inputs: PyTree
+) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
     """
     Create a VJP function for a module's forward pass with respect to its parameters.
 
