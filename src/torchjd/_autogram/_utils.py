@@ -102,12 +102,11 @@ class TargetRegistry:
 
     def get_leaf_target_edges(self, excluded: set[GradientEdge]) -> list[GradientEdge]:
         """
-        Compute a minimal subset of targets that yields the same differentiation graph traversal: the
-        leaf targets. Specifically, this removes targets that are reachable from other targets in the
-        differentiation graph, avoiding the need to keep gradients for all targets in memory
+        Compute a minimal subset of targets that yields the same differentiation graph traversal:
+        the leaf targets. Specifically, this removes targets that are reachable from other targets
+        in the differentiation graph, avoiding the need to keep gradients for all targets in memory
         simultaneously.
 
-        :param targets: The target gradient edges for differentiation.
         :param excluded: Gradient edges that stop graph traversal. Modified in-place.
         :returns: Minimal subset of leaf targets.
         """
