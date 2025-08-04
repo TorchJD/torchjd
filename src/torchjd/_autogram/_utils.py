@@ -94,6 +94,17 @@ def next_edges(edge: GradientEdge) -> list[GradientEdge]:
 def targets_to_leaf_targets(
     targets: list[GradientEdge], excluded: set[GradientEdge]
 ) -> list[GradientEdge]:
+    """
+    Compute a minimal subset of targets that yields the same differentiation graph traversal: the
+    leaf targets. Specifically, this removes targets that are reachable from other targets in the
+    differentiation graph, avoiding the need to keep gradients for all targets in memory
+    simultaneously.
+
+    :param targets: The target gradient edges for differentiation.
+    :param excluded: Gradient edges that stop graph traversal. Modified in-place.
+    :returns: Minimal subset of leaf targets.
+    """
+
     targets_ = set(targets)
     nodes_to_traverse = deque(
         (child, target) for target in targets_ for child in next_edges(target)
