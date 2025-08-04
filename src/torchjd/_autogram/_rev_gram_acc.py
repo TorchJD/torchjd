@@ -6,7 +6,7 @@ from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import _GramianAccumulator, _vjp_from_module, targets_to_leaf_targets
+from torchjd._autogram._utils import GramianAccumulator, _vjp_from_module, targets_to_leaf_targets
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -20,7 +20,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 def make_jacobian_accumulator(
     module: nn.Module,
-    gramian_accumulator: _GramianAccumulator,
+    gramian_accumulator: GramianAccumulator,
     args: PyTree,
     tree_spec: TreeSpec,
 ) -> type[torch.autograd.Function]:
@@ -78,7 +78,7 @@ class _ModelAugmenter:
         self._weighting = weighting
         self._handles: list[RemovableHandle] = []
 
-        self._gramian_accumulator = _GramianAccumulator()
+        self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
         self._target_edges_registry: list[GradientEdge] = []
 
@@ -173,7 +173,7 @@ class _ModelAugmenter:
         return AutogramActivator
 
     def _reset(self):
-        self._gramian_accumulator = _GramianAccumulator()
+        self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
         self._target_edges_registry = []
 

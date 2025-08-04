@@ -8,7 +8,7 @@ from torch.nn import Parameter
 from torch.utils._pytree import PyTree
 
 
-class _GramianAccumulator:
+class GramianAccumulator:
     """
     Efficiently accumulates the Gramian of the Jacobian during reverse-mode differentiation.
 
