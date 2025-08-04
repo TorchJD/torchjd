@@ -21,7 +21,7 @@ class GramianAccumulator:
 
     def __init__(self):
         self._gramian = None
-        self._full_jacobians = dict()
+        self._summed_jacobians = dict()
         self._path_counter = Counter()
 
     def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
@@ -49,15 +49,15 @@ class GramianAccumulator:
         :param parameter: The parameter.
         :param jacobian: path Jacobian with respect to the parameter.
         """
-        if parameter in self._full_jacobians:
-            self._full_jacobians[parameter] += jacobian
+        if parameter in self._summed_jacobians:
+            self._summed_jacobians[parameter] += jacobian
         else:
-            self._full_jacobians[parameter] = jacobian
+            self._summed_jacobians[parameter] = jacobian
         self._path_counter.subtract([parameter])
         if self._path_counter[parameter] == 0:
             self._accumulate_gramian(parameter)
             del self._path_counter[parameter]
-            del self._full_jacobians[parameter]
+            del self._summed_jacobians[parameter]
 
     def _accumulate_gramian(self, parameter: Tensor) -> None:
         """
@@ -65,7 +65,7 @@ class GramianAccumulator:
 
         :param parameter: Parameter whose full Jacobian is available.
         """
-        full_jacobian_matrix = torch.flatten(self._full_jacobians[parameter], start_dim=1)
+        full_jacobian_matrix = torch.flatten(self._summed_jacobians[parameter], start_dim=1)
         if self._gramian is not None:
             self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
         else:
@@ -80,7 +80,7 @@ class GramianAccumulator:
         """
 
         # Should never happen, this assert is temporary for development safety reason.
-        assert len(self._path_counter) == 0 and len(self._full_jacobians) == 0
+        assert len(self._path_counter) == 0 and len(self._summed_jacobians) == 0
         return self._gramian
 
 
