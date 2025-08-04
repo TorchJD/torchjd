@@ -39,19 +39,22 @@ def make_jacobian_accumulator(
 
         @staticmethod
         def backward(ctx, *flat_grad_outputs: Tensor):
-            if JacobianAccumulator.activated:
+            if not JacobianAccumulator.activated:
+                JacobianAccumulator.activated = True
+                return flat_grad_outputs
 
-                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-                jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
+            JacobianAccumulator.activated = False
 
-                gramian_accumulator.accumulate_path_jacobians(
-                    {
-                        module.get_parameter(param_name): jacobian
-                        for param_name, jacobian in jacobians.items()
-                    }
-                )
+            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
 
-            JacobianAccumulator.activated = not JacobianAccumulator.activated
+            gramian_accumulator.accumulate_path_jacobians(
+                {
+                    module.get_parameter(param_name): jacobian
+                    for param_name, jacobian in jacobians.items()
+                }
+            )
+
             return flat_grad_outputs
 
     return JacobianAccumulator
