@@ -5,13 +5,10 @@ from torch import Tensor, nn
 from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
-from torchjd._autogram._utils import (
-    AutogramHandleManager,
-    GramianAccumulator,
-    HandleManager,
-    TargetRegistry,
-    get_instance_wise_vjp,
-)
+from torchjd._autogram._gramian_accumulator import GramianAccumulator
+from torchjd._autogram._handle import AutogramHandleManager, HandleManager
+from torchjd._autogram._target_registry import TargetRegistry
+from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
