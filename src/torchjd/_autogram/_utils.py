@@ -83,6 +83,11 @@ class GramianAccumulator:
 
 
 def next_edges(edge: GradientEdge) -> list[GradientEdge]:
+    """
+    Get the next gradient edges in the differentiation graph from the given edge.
+
+    :param edge: The current gradient edge.
+    """
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
 
 
