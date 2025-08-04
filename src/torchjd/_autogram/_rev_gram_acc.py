@@ -6,7 +6,7 @@ from torch.autograd.graph import GradientEdge, get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle
 
-from torchjd._autogram._utils import GramianAccumulator, targets_to_leaf_targets, vjp_from_module
+from torchjd._autogram._utils import GramianAccumulator, TargetRegistry, vjp_from_module
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -80,7 +80,7 @@ class _ModelAugmenter:
 
         self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
-        self._target_edges_registry: list[GradientEdge] = []
+        self._target_edges_registry = TargetRegistry()
 
     def augment(self):
         self._hook_submodules()
@@ -120,7 +120,7 @@ class _ModelAugmenter:
             # efficiency, we select the smallest one.
             numels = torch.tensor([t.numel() for t in flat_outputs])
             index = cast(int, numels.argmin().item())
-            self._target_edges_registry.append(get_gradient_edge(flat_outputs[index]))
+            self._target_edges_registry.register(flat_outputs[index])
 
             return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
 
@@ -134,7 +134,7 @@ class _ModelAugmenter:
 
             input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
             excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
-            leaf_targets = targets_to_leaf_targets(self._target_edges_registry, excluded_edges)
+            leaf_targets = self._target_edges_registry.get_leaf_target_edges(excluded_edges)
             flat_outputs, tree_spec = tree_flatten(output)
             autogram_activator = self._make_autogram_activator(flat_outputs, leaf_targets)
             self._deactivate_module_hooks()
@@ -175,7 +175,7 @@ class _ModelAugmenter:
     def _reset(self):
         self._gramian_accumulator = GramianAccumulator()
         self._are_hooks_activated = True
-        self._target_edges_registry = []
+        self._target_edges_registry = TargetRegistry()
 
     def _deactivate_module_hooks(self) -> None:
         self._are_hooks_activated = False
