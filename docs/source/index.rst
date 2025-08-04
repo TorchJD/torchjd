@@ -37,6 +37,19 @@ A straightforward application of Jacobian descent is multi-task learning, in whi
 per-task losses has to be minimized. To start using TorchJD for multi-task learning, follow our
 :doc:`MTL example <examples/mtl>`.
 
+Another more interesting application is to consider separately the loss of each element in the
+batch. This is what we define as :doc:`Instance-Wise Risk Minimization <examples/iwrm>` (IWRM).
+
+For IWRM, in many cases, there exists an algorithm that is both equivalent to Jacobian descent, and
+much more efficient. This algorithm, called Gramian-based Jacobian descent, consists in computing
+the Gramian of the Jacobian iteratively during the backward pass (without ever storing the full
+Jacobian in memory), weighting the losses using the information of the Gramian, and then computing
+the gradient of the obtained weighted loss. The iterative computation of the Gramian corresponds to
+Algorithm 3 of
+`Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_. The
+documentation and usage example of this algorithm is provided in :doc:`Gramian-based Jacobian
+descent for IWRM <docs/autogram/augment_model>`.
+
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
 
