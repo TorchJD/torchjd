@@ -20,42 +20,83 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 # still support older versions of PyTorch where pytree is protected).
 
 
-class GramianAccumulator:
+class _GramianAccumulator:
+    """
+    Efficiently accumulates the Gramian of the Jacobian during reverse-mode differentiation.
+
+    Jacobians from multiple graph paths to the same parameter are first summed to obtain the full
+    Jacobian w.r.t. a parameter, then its Gramian is computed and accumulated, over parameters, into
+    the total Gramian matrix. Intermediate matrices are discarded immediately to save memory.
+    """
+
     def __init__(self):
-        self._gramian = None
-        self._jacobians = dict()
-        self._counter = Counter()
+        self._total_gramian = None
+        self._full_jacobians = dict()
+        self._path_counter = Counter()
 
-    def track_parameters(self, tensors: Iterable[Tensor]) -> None:
-        self._counter.update(tensors)
+    def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
+        """
+        Register parameters and count their paths in the computational graph.
 
-    def add_jacobian(self, tensor: Tensor, jacobian: Tensor) -> None:
-        if tensor in self._jacobians:
-            self._jacobians[tensor] += jacobian
+        :param parameters: Parameter tensors to track. Duplicates increase path count.
+        """
+        self._path_counter.update(parameters)
+
+    def accumulate_path_jacobians(self, path_jacobians: dict[Tensor, Tensor]) -> None:
+        """
+        Add path Jacobians for multiple parameters.
+
+        :param path_jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
+        """
+        for parameter, jacobian in path_jacobians.items():
+            self._accumulate_path_jacobian(parameter, jacobian)
+
+    def _accumulate_path_jacobian(self, parameter: Tensor, jacobian: Tensor) -> None:
+        """
+        Add path Jacobian for a parameter. In case the full Jacobian is computed, accumulate its
+        Gramian.
+
+        :param parameter: The parameter.
+        :param jacobian: path Jacobian with respect to the parameter.
+        """
+        if parameter in self._full_jacobians:
+            self._full_jacobians[parameter] += jacobian
         else:
-            self._jacobians[tensor] = jacobian
-        self._counter.subtract([tensor])
-        if self._counter[tensor] == 0:
-            self._accumulate_jacobian(self._jacobians[tensor])
-            del self._counter[tensor]
-            del self._jacobians[tensor]
+            self._full_jacobians[parameter] = jacobian
+        self._path_counter.subtract([parameter])
+        if self._path_counter[parameter] == 0:
+            self._accumulate_gramian(parameter)
+            del self._path_counter[parameter]
+            del self._full_jacobians[parameter]
 
-    def _accumulate_jacobian(self, jacobian: Tensor) -> None:
-        jacobian_matrix = torch.flatten(jacobian, start_dim=1)
-        if self._gramian is not None:
-            self._gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
+    def _accumulate_gramian(self, parameter: Tensor) -> None:
+        """
+        Compute the Gramian of full Jacobian and accumulate it.
+
+        :param parameter: Parameter whose full Jacobian is available.
+        """
+        full_jacobian_matrix = torch.flatten(self._full_jacobians[parameter], start_dim=1)
+        if self._total_gramian is not None:
+            self._total_gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
         else:
-            self._gramian = torch.mm(jacobian_matrix, jacobian_matrix.T)
+            self._total_gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
     def gramian(self) -> Tensor:
-        assert len(self._counter) == 0 and len(self._jacobians) == 0
-        return self._gramian
+        """
+        Get the final accumulated Gramian matrix.
+
+        :returns: Accumulated Gramian matrix of shape (batch_size, batch_size).
+        """
+
+        # Should never happen, this assert is temporary for development safety reason.
+        assert len(self._path_counter) == 0 and len(self._full_jacobians) == 0
+        return self._total_gramian
 
 
 def make_jacobian_accumulator(
     module: nn.Module,
-    gramian_accumulator: GramianAccumulator,
+    gramian_accumulator: _GramianAccumulator,
     args: PyTree,
     tree_spec: TreeSpec,
 ) -> type[torch.autograd.Function]:
@@ -94,8 +135,12 @@ def make_jacobian_accumulator(
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_vjp)(grad_outputs, args)
 
-                for param_name, jacobian in jacobians.items():
-                    gramian_accumulator.add_jacobian(module.get_parameter(param_name), jacobian)
+                gramian_accumulator.accumulate_path_jacobians(
+                    {
+                        module.get_parameter(param_name): jacobian
+                        for param_name, jacobian in jacobians.items()
+                    }
+                )
 
             activated = not activated
             return flat_grad_outputs
@@ -109,7 +154,7 @@ class _ModelAugmenter:
         self._weighting = weighting
         self._handles: list[RemovableHandle] = []
 
-        self._gramian_accumulator = GramianAccumulator()
+        self._gramian_accumulator = _GramianAccumulator()
         self._are_hooks_activated = True
         self._target_edges_registry: list[GradientEdge] = []
 
@@ -144,7 +189,7 @@ class _ModelAugmenter:
             )
 
             requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-            self._gramian_accumulator.track_parameters(requires_grad_params)
+            self._gramian_accumulator.track_parameter_paths(requires_grad_params)
 
             # We only care about running the JacobianAccumulator node, so we need one of its child
             # edges (the edges of the original ouputs of the model) as target. For memory
@@ -204,7 +249,7 @@ class _ModelAugmenter:
         return AutogramActivator
 
     def _reset(self):
-        self._gramian_accumulator = GramianAccumulator()
+        self._gramian_accumulator = _GramianAccumulator()
         self._are_hooks_activated = True
         self._target_edges_registry = []
 
