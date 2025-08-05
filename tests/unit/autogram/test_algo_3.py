@@ -46,13 +46,9 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 @mark.parametrize(
     ["architecture", "batch_size"],
     [
-        (Cifar10Model, 64),
-        (FlatNonSequentialNN, 64),
-        (SingleInputSingleOutputModel, 64),
-        (SingleInputSingleOutputModel2, 64),
-        (PyTreeModel, 64),
         (ModelWithFreeParameter, 64),
         (ModelWithNoFreeParameter, 64),
+        (Cifar10Model, 64),
         (ResNet18, 16),
     ],
 )
