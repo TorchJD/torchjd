@@ -22,9 +22,9 @@ def _get_module_hook(
     def module_hook(module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
         if not hook_activator.state:
             return output
-        flat_outputs, tree_spec = tree_flatten(output, lambda x: isinstance(x, Tensor))
+        flat_outputs, tree_spec = tree_flatten(output)
 
-        if len(flat_outputs) == 0:
+        if output is None:
             # This can happen only if a module returns no Tensor, for instance some niche usage
             # such as a module that prints something.
             return output
