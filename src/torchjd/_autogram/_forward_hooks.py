@@ -4,20 +4,20 @@ import torch
 from torch import Tensor, nn
 from torch.utils._pytree import PyTree, tree_flatten, tree_unflatten
 
+from torchjd._autogram._activator import Activator
 from torchjd._autogram._autograd_functions import _make_autogram_scaler, _make_jacobian_accumulator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
-from torchjd._autogram._hook_activator import HookActivator
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 def _make_module_hook(
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: HookActivator,
+    hook_activator: Activator,
 ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
     def module_hook(module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
-        if not hook_activator.state:
+        if not hook_activator.is_active:
             return output
         flat_outputs, tree_spec = tree_flatten(output)
 
@@ -49,11 +49,11 @@ def _make_model_hook(
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: HookActivator,
+    hook_activator: Activator,
 ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
 
     def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
-        if not hook_activator.state:
+        if not hook_activator.is_active:
             return output
 
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]

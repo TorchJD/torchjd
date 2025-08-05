@@ -3,9 +3,9 @@ from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_unflatten
 
+from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
-from torchjd._autogram._hook_activator import HookActivator
 from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -58,7 +58,7 @@ def _make_autogram_scaler(
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: HookActivator,
+    hook_activator: Activator,
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}

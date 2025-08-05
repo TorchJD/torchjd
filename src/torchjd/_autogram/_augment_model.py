@@ -1,10 +1,10 @@
 from torch import nn
 
+from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._forward_hooks import _make_model_hook, _make_module_hook
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._handle import AutogramHandleManager, HandleManager
-from torchjd._autogram._hook_activator import HookActivator
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -90,7 +90,7 @@ def augment_model_for_gramian_based_iwrm(
 
     handle_manager = AutogramHandleManager()
     gramian_accumulator = GramianAccumulator()
-    hook_activator = HookActivator()
+    hook_activator = Activator()
     target_edges = EdgeRegistry()
 
     # Add module forward hooks to compute jacobians
