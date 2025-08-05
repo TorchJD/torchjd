@@ -10,6 +10,48 @@ from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
+def _make_jacobian_accumulator(
+    module: nn.Module,
+    gramian_accumulator: GramianAccumulator,
+    args: PyTree,
+    tree_spec: TreeSpec,
+) -> type[torch.autograd.Function]:
+
+    class JacobianAccumulator(torch.autograd.Function):
+
+        activated = True
+
+        @staticmethod
+        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+            return tuple([x.detach() for x in xs])
+
+        @staticmethod
+        def setup_context(*_):
+            pass
+
+        @staticmethod
+        def backward(ctx, *flat_grad_outputs: Tensor):
+            if not JacobianAccumulator.activated:
+                JacobianAccumulator.activated = True
+                return flat_grad_outputs
+
+            JacobianAccumulator.activated = False
+
+            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
+
+            gramian_accumulator.accumulate_path_jacobians(
+                {
+                    module.get_parameter(param_name): jacobian
+                    for param_name, jacobian in jacobians.items()
+                }
+            )
+
+            return flat_grad_outputs
+
+    return JacobianAccumulator
+
+
 def _make_autogram_activator(
     flat_outputs: PyTree,
     input_tensors: list[Tensor],
@@ -57,45 +99,3 @@ def _make_autogram_activator(
             return scaled_grad_outputs
 
     return AutogramActivator
-
-
-def _make_jacobian_accumulator(
-    module: nn.Module,
-    gramian_accumulator: GramianAccumulator,
-    args: PyTree,
-    tree_spec: TreeSpec,
-) -> type[torch.autograd.Function]:
-
-    class JacobianAccumulator(torch.autograd.Function):
-
-        activated = True
-
-        @staticmethod
-        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-            return tuple([x.detach() for x in xs])
-
-        @staticmethod
-        def setup_context(*_):
-            pass
-
-        @staticmethod
-        def backward(ctx, *flat_grad_outputs: Tensor):
-            if not JacobianAccumulator.activated:
-                JacobianAccumulator.activated = True
-                return flat_grad_outputs
-
-            JacobianAccumulator.activated = False
-
-            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
-
-            gramian_accumulator.accumulate_path_jacobians(
-                {
-                    module.get_parameter(param_name): jacobian
-                    for param_name, jacobian in jacobians.items()
-                }
-            )
-
-            return flat_grad_outputs
-
-    return JacobianAccumulator
