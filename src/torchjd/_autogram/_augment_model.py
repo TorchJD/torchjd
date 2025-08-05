@@ -97,6 +97,17 @@ def augment_model_for_gramian_based_iwrm(
     return model_augmenter.handle_manager
 
 
+class HookActivator:
+    def __init__(self):
+        self.state = True
+
+    def activate(self) -> None:
+        self.state = True
+
+    def deactivate(self) -> None:
+        self.state = False
+
+
 class _ModelAugmenter:
     def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
         self._model = model
@@ -104,7 +115,7 @@ class _ModelAugmenter:
         self.handle_manager = AutogramHandleManager()
 
         self._gramian_accumulator = GramianAccumulator()
-        self._are_hooks_activated = True
+        self._hook_activator = HookActivator()
         self._target_edges_registry = TargetRegistry()
 
     def augment(self):
@@ -120,7 +131,7 @@ class _ModelAugmenter:
 
     def _hook_module(self, module: nn.Module) -> None:
         def module_hook(_, args: PyTree, output: PyTree) -> PyTree:
-            if not self._are_hooks_activated:
+            if not self._hook_activator.state:
                 return output
             flat_outputs, tree_spec = tree_flatten(output)
 
@@ -150,7 +161,7 @@ class _ModelAugmenter:
     def _hook_model(self) -> None:
 
         def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
-            if not self._are_hooks_activated:
+            if not self._hook_activator.state:
                 return output
 
             input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
@@ -193,20 +204,19 @@ class _ModelAugmenter:
                 assert len(self._gramian_accumulator._summed_jacobians) == 0
                 assert gramian is not None
 
-                self._reset()
+                # Reset everything that has a state
+                self._gramian_accumulator.reset()
+                self._hook_activator.activate()
+                self._target_edges_registry.reset()
+
                 weights = self._weighting(gramian).unsqueeze(1)
                 scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
                 return scaled_grad_outputs
 
         return AutogramActivator
 
-    def _reset(self):
-        self._gramian_accumulator = GramianAccumulator()
-        self._are_hooks_activated = True
-        self._target_edges_registry = TargetRegistry()
-
     def _deactivate_module_hooks(self) -> None:
-        self._are_hooks_activated = False
+        self._hook_activator.deactivate()
 
 
 def _make_jacobian_accumulator(

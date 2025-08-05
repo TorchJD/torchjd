@@ -13,6 +13,9 @@ class TargetRegistry:
     def __init__(self) -> None:
         self._target_edges: set[GradientEdge] = set()
 
+    def reset(self) -> None:
+        self._target_edges: set[GradientEdge] = set()
+
     def register(self, target: Tensor) -> None:
         """
         Track the GradientEdge of the provided target.

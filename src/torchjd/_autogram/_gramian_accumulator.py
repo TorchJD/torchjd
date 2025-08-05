@@ -19,6 +19,11 @@ class GramianAccumulator:
         self._summed_jacobians = dict[Tensor, Tensor]()
         self._path_counter = Counter[Tensor]()
 
+    def reset(self) -> None:
+        self._gramian: Tensor | None = None
+        self._summed_jacobians = dict[Tensor, Tensor]()
+        self._path_counter = Counter[Tensor]()
+
     def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
         """
         Register parameters and count their paths in the computational graph.
