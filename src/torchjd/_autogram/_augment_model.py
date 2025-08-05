@@ -1,13 +1,6 @@
-from typing import cast
+from torch import nn
 
-import torch
-from torch import Tensor, nn
-from torch.utils._pytree import PyTree, tree_flatten, tree_unflatten
-
-from torchjd._autogram._autograd_functions import (
-    _make_autogram_activator,
-    _make_jacobian_accumulator,
-)
+from torchjd._autogram._forward_hooks import _get_model_hook, _get_module_hook
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._handle import AutogramHandleManager, HandleManager
 from torchjd._autogram._hook_activator import HookActivator
@@ -112,66 +105,26 @@ class _ModelAugmenter:
 
     def augment(self):
         self._hook_submodules()
-        self._hook_model()
+        self.handle_manager.add_handle(
+            self._model.register_forward_hook(
+                _get_model_hook(
+                    self._weighting,
+                    self._target_edges_registry,
+                    self._gramian_accumulator,
+                    self._hook_activator,
+                )
+            )
+        )
 
     def _hook_submodules(self) -> None:
         for module in self._model.modules():
             if next(module.parameters(recurse=False), None) is None:
                 # Skip un-parameterized modules
                 continue
-            self._hook_module(module)
-
-    def _hook_module(self, module: nn.Module) -> None:
-        def module_hook(_, args: PyTree, output: PyTree) -> PyTree:
-            if not self._hook_activator.state:
-                return output
-            flat_outputs, tree_spec = tree_flatten(output)
-
-            if output is None:
-                # This can happen only if a module returns no Tensor, for instance some niche usage
-                # such as a module that prints something.
-                return output
-
-            jacobian_accumulator = _make_jacobian_accumulator(
-                module, self._gramian_accumulator, args, tree_spec
+            self.handle_manager.add_handle(
+                module.register_forward_hook(
+                    _get_module_hook(
+                        self._target_edges_registry, self._gramian_accumulator, self._hook_activator
+                    )
+                )
             )
-
-            requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-            self._gramian_accumulator.track_parameter_paths(requires_grad_params)
-
-            # We only care about running the JacobianAccumulator node, so we need one of its child
-            # edges (the edges of the original ouputs of the model) as target. For memory
-            # efficiency, we select the smallest one.
-            numels = torch.tensor([t.numel() for t in flat_outputs])
-            index = cast(int, numels.argmin().item())
-            self._target_edges_registry.register(flat_outputs[index])
-
-            return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
-
-        self.handle_manager.add_handle(module.register_forward_hook(module_hook))
-
-    def _hook_model(self) -> None:
-
-        def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
-            if not self._hook_activator.state:
-                return output
-
-            input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
-
-            flat_outputs, tree_spec = tree_flatten(output)
-            autogram_activator = _make_autogram_activator(
-                flat_outputs,
-                input_tensors,
-                self._weighting,
-                self._target_edges_registry,
-                self._gramian_accumulator,
-                self._hook_activator,
-            )
-            self._deactivate_module_hooks()
-            activator_flat_outputs = autogram_activator.apply(*flat_outputs)
-            return tree_unflatten(activator_flat_outputs, tree_spec)
-
-        self.handle_manager.add_handle(self._model.register_forward_hook(model_hook))
-
-    def _deactivate_module_hooks(self) -> None:
-        self._hook_activator.deactivate()
