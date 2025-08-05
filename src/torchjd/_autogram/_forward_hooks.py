@@ -26,7 +26,7 @@ def _make_module_hook(
             # such as a module that prints something.
             return output
 
-        jacobian_accumulator = _make_jacobian_accumulator(
+        JacobianAccumulator = _make_jacobian_accumulator(
             module, gramian_accumulator, args, tree_spec
         )
 
@@ -40,7 +40,7 @@ def _make_module_hook(
         index = cast(int, numels.argmin().item())
         target_edges.register(flat_outputs[index])
 
-        return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
+        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
 
     return module_hook
 
@@ -59,7 +59,7 @@ def _make_model_hook(
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
 
         flat_outputs, tree_spec = tree_flatten(output)
-        autogram_scaler = _make_autogram_scaler(
+        AutogramScaler = _make_autogram_scaler(
             flat_outputs,
             input_tensors,
             weighting,
@@ -68,7 +68,7 @@ def _make_model_hook(
             hook_activator,
         )
         hook_activator.deactivate()
-        activator_flat_outputs = autogram_scaler.apply(*flat_outputs)
+        activator_flat_outputs = AutogramScaler.apply(*flat_outputs)
         return tree_unflatten(activator_flat_outputs, tree_spec)
 
     return model_hook
