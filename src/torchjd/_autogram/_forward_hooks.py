@@ -14,7 +14,7 @@ from torchjd._autogram._target_registry import TargetRegistry
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
-def _get_module_hook(
+def _make_module_hook(
     target_edges_registry: TargetRegistry,
     gramian_accumulator: GramianAccumulator,
     hook_activator: HookActivator,
@@ -48,7 +48,7 @@ def _get_module_hook(
     return module_hook
 
 
-def _get_model_hook(
+def _make_model_hook(
     weighting: Weighting[PSDMatrix],
     target_edges_registry: TargetRegistry,
     gramian_accumulator: GramianAccumulator,

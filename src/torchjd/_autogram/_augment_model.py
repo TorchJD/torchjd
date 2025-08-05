@@ -1,6 +1,6 @@
 from torch import nn
 
-from torchjd._autogram._forward_hooks import _get_model_hook, _get_module_hook
+from torchjd._autogram._forward_hooks import _make_model_hook, _make_module_hook
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._handle import AutogramHandleManager, HandleManager
 from torchjd._autogram._hook_activator import HookActivator
@@ -107,7 +107,7 @@ class _ModelAugmenter:
         self._hook_submodules()
         self.handle_manager.add_handle(
             self._model.register_forward_hook(
-                _get_model_hook(
+                _make_model_hook(
                     self._weighting,
                     self._target_edges_registry,
                     self._gramian_accumulator,
@@ -123,7 +123,7 @@ class _ModelAugmenter:
                 continue
             self.handle_manager.add_handle(
                 module.register_forward_hook(
-                    _get_module_hook(
+                    _make_module_hook(
                         self._target_edges_registry, self._gramian_accumulator, self._hook_activator
                     )
                 )
