@@ -14,7 +14,7 @@ class TargetRegistry:
         self._target_edges: set[GradientEdge] = set()
 
     def reset(self) -> None:
-        self._target_edges: set[GradientEdge] = set()
+        self._target_edges = set()
 
     def register(self, target: Tensor) -> None:
         """
