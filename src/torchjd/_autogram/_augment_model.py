@@ -2,7 +2,7 @@ from typing import cast
 
 import torch
 from torch import Tensor, nn
-from torch.autograd.graph import GradientEdge, get_gradient_edge
+from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
@@ -155,58 +155,73 @@ class _ModelAugmenter:
                 return output
 
             input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
-            excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
-            leaf_targets = self._target_edges_registry.get_leaf_target_edges(excluded_edges)
+
             flat_outputs, tree_spec = tree_flatten(output)
-            autogram_activator = self._make_autogram_activator(flat_outputs, leaf_targets)
+            autogram_activator = _make_autogram_activator(
+                flat_outputs,
+                input_tensors,
+                self._weighting,
+                self._target_edges_registry,
+                self._gramian_accumulator,
+                self._hook_activator,
+            )
             self._deactivate_module_hooks()
             activator_flat_outputs = autogram_activator.apply(*flat_outputs)
             return tree_unflatten(activator_flat_outputs, tree_spec)
 
         self.handle_manager.add_handle(self._model.register_forward_hook(model_hook))
 
-    def _make_autogram_activator(
-        self, flat_outputs: PyTree, leaf_targets: list[GradientEdge]
-    ) -> type[torch.autograd.Function]:
-
-        class AutogramActivator(torch.autograd.Function):
-            @staticmethod
-            def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-                return tuple([x.detach() for x in xs])
-
-            @staticmethod
-            def setup_context(*_):
-                pass
-
-            @staticmethod
-            def backward(ctx, *grad_outputs: Tensor):
-                _ = torch.autograd.grad(
-                    outputs=flat_outputs,
-                    inputs=leaf_targets,
-                    grad_outputs=grad_outputs,
-                    retain_graph=True,
-                )
-
-                gramian = self._gramian_accumulator.gramian
-
-                # Should never happen, these asserts are temporary for development safety reason.
-                assert len(self._gramian_accumulator._path_counter) == 0
-                assert len(self._gramian_accumulator._summed_jacobians) == 0
-                assert gramian is not None
-
-                # Reset everything that has a state
-                self._gramian_accumulator.reset()
-                self._hook_activator.activate()
-                self._target_edges_registry.reset()
-
-                weights = self._weighting(gramian).unsqueeze(1)
-                scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
-                return scaled_grad_outputs
-
-        return AutogramActivator
-
     def _deactivate_module_hooks(self) -> None:
         self._hook_activator.deactivate()
+
+
+def _make_autogram_activator(
+    flat_outputs: PyTree,
+    input_tensors: list[Tensor],
+    weighting: Weighting[PSDMatrix],
+    target_edges_registry: TargetRegistry,
+    gramian_accumulator: GramianAccumulator,
+    hook_activator: HookActivator,
+) -> type[torch.autograd.Function]:
+
+    excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
+    leaf_targets = target_edges_registry.get_leaf_target_edges(excluded_edges)
+
+    class AutogramActivator(torch.autograd.Function):
+        @staticmethod
+        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+            return tuple([x.detach() for x in xs])
+
+        @staticmethod
+        def setup_context(*_):
+            pass
+
+        @staticmethod
+        def backward(ctx, *grad_outputs: Tensor):
+            _ = torch.autograd.grad(
+                outputs=flat_outputs,
+                inputs=leaf_targets,
+                grad_outputs=grad_outputs,
+                retain_graph=True,
+            )
+
+            gramian = gramian_accumulator.gramian
+
+            # Should never happen, these asserts are temporary for development safety reason.
+            assert len(gramian_accumulator._path_counter) == 0
+            assert len(gramian_accumulator._summed_jacobians) == 0
+            assert gramian is not None
+
+            # Reset everything that has a state
+            gramian_accumulator.reset()
+            hook_activator.activate()
+            target_edges_registry.reset()
+
+            weights = weighting(gramian).unsqueeze(1)
+            scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
+            return scaled_grad_outputs
+
+    return AutogramActivator
 
 
 def _make_jacobian_accumulator(
