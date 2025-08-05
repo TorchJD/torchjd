@@ -7,6 +7,7 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._handle import AutogramHandleManager, HandleManager
+from torchjd._autogram._hook_activator import HookActivator
 from torchjd._autogram._target_registry import TargetRegistry
 from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -95,17 +96,6 @@ def augment_model_for_gramian_based_iwrm(
     model_augmenter.augment()
 
     return model_augmenter.handle_manager
-
-
-class HookActivator:
-    def __init__(self):
-        self.state = True
-
-    def activate(self) -> None:
-        self.state = True
-
-    def deactivate(self) -> None:
-        self.state = False
 
 
 class _ModelAugmenter:
