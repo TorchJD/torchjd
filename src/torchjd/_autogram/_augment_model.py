@@ -105,26 +105,23 @@ class _ModelAugmenter:
 
     def augment(self):
         self._hook_submodules()
-        self.handle_manager.add_handle(
-            self._model.register_forward_hook(
-                _make_model_hook(
-                    self._weighting,
-                    self._target_edges_registry,
-                    self._gramian_accumulator,
-                    self._hook_activator,
-                )
-            )
+        model_hook = _make_model_hook(
+            self._weighting,
+            self._target_edges_registry,
+            self._gramian_accumulator,
+            self._hook_activator,
         )
+        handle = self._model.register_forward_hook(model_hook)
+        self.handle_manager.add_handle(handle)
 
     def _hook_submodules(self) -> None:
         for module in self._model.modules():
             if next(module.parameters(recurse=False), None) is None:
                 # Skip un-parameterized modules
                 continue
-            self.handle_manager.add_handle(
-                module.register_forward_hook(
-                    _make_module_hook(
-                        self._target_edges_registry, self._gramian_accumulator, self._hook_activator
-                    )
-                )
+
+            module_hook = _make_module_hook(
+                self._target_edges_registry, self._gramian_accumulator, self._hook_activator
             )
+            handle = module.register_forward_hook(module_hook)
+            self.handle_manager.add_handle(handle)
