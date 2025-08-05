@@ -68,7 +68,6 @@ def _make_model_hook(
             hook_activator,
         )
         hook_activator.deactivate()
-        activator_flat_outputs = AutogramScaler.apply(*flat_outputs)
-        return tree_unflatten(activator_flat_outputs, tree_spec)
+        return tree_unflatten(AutogramScaler.apply(*flat_outputs), tree_spec)
 
     return model_hook
