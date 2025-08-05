@@ -3,7 +3,7 @@ from collections.abc import Callable
 from typing import cast
 
 import torch
-from pytest import mark
+from pytest import mark, param
 from torch import Tensor, nn
 from torch.nn.functional import mse_loss
 from torch.optim import SGD
@@ -42,6 +42,7 @@ from torchjd.aggregation import Aggregator, Mean, UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
+@mark.slow
 @mark.parametrize(
     ["architecture", "batch_size"],
     [
@@ -123,7 +124,6 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
 @mark.parametrize(
     ["architecture", "batch_size", "n_iter"],
     [
-        (Cifar10Model, 64, 1),
         (FlatNonSequentialNN, 64, 5),
         (SingleInputSingleOutputModel, 64, 5),
         (SingleInputSingleOutputModel2, 64, 5),
@@ -135,11 +135,12 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
         (ModelWithNoFreeParameter, 64, 5),
         (ModuleWithUnusedParam, 64, 5),
         (ModuleWithFrozenParam, 64, 5),
-        (ResNet18, 16, 1),
         (PyTreeModule, 32, 5),
         (PyTreeInputPyTreeOutputModule, 32, 5),
         (PyTreeInputPyTreeOutputModel, 32, 5),
         (ModelWithModuleWithoutOutput, 32, 5),
+        param(Cifar10Model, 64, 1, marks=mark.slow),
+        param(ResNet18, 16, 1, marks=mark.slow),
     ],
 )
 def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: int):
@@ -185,7 +186,6 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
 @mark.parametrize(
     ["architecture", "batch_size"],
     [
-        (Cifar10Model, 64),
         (FlatNonSequentialNN, 64),
         (SingleInputSingleOutputModel, 64),
         (SingleInputSingleOutputModel2, 64),
@@ -197,10 +197,11 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
         (ModelWithNoFreeParameter, 64),
         (ModuleWithUnusedParam, 64),
         (ModuleWithFrozenParam, 64),
-        (ResNet18, 16),
         (PyTreeModule, 32),
         (PyTreeInputPyTreeOutputModule, 32),
         (PyTreeInputPyTreeOutputModel, 32),
+        param(Cifar10Model, 64, marks=mark.slow),
+        param(ResNet18, 16, marks=mark.slow),
     ],
 )
 def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
