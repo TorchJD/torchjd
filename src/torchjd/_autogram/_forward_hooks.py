@@ -8,14 +8,14 @@ from torchjd._autogram._autograd_functions import (
     _make_autogram_activator,
     _make_jacobian_accumulator,
 )
+from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._hook_activator import HookActivator
-from torchjd._autogram._target_registry import TargetRegistry
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
 def _make_module_hook(
-    target_edges_registry: TargetRegistry,
+    target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
     hook_activator: HookActivator,
 ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
@@ -41,7 +41,7 @@ def _make_module_hook(
         # efficiency, we select the smallest one.
         numels = torch.tensor([t.numel() for t in flat_outputs])
         index = cast(int, numels.argmin().item())
-        target_edges_registry.register(flat_outputs[index])
+        target_edges.register(flat_outputs[index])
 
         return tree_unflatten(jacobian_accumulator.apply(*flat_outputs), tree_spec)
 
@@ -50,7 +50,7 @@ def _make_module_hook(
 
 def _make_model_hook(
     weighting: Weighting[PSDMatrix],
-    target_edges_registry: TargetRegistry,
+    target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
     hook_activator: HookActivator,
 ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
@@ -66,7 +66,7 @@ def _make_model_hook(
             flat_outputs,
             input_tensors,
             weighting,
-            target_edges_registry,
+            target_edges,
             gramian_accumulator,
             hook_activator,
         )

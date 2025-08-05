@@ -3,9 +3,9 @@ from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_unflatten
 
+from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._hook_activator import HookActivator
-from torchjd._autogram._target_registry import TargetRegistry
 from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
@@ -56,13 +56,13 @@ def _make_autogram_activator(
     flat_outputs: PyTree,
     input_tensors: list[Tensor],
     weighting: Weighting[PSDMatrix],
-    target_edges_registry: TargetRegistry,
+    target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
     hook_activator: HookActivator,
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
-    leaf_targets = target_edges_registry.get_leaf_target_edges(excluded_edges)
+    leaf_targets = target_edges.get_leaf_edges(excluded_edges)
 
     class AutogramActivator(torch.autograd.Function):
         @staticmethod
@@ -92,7 +92,7 @@ def _make_autogram_activator(
             # Reset everything that has a state
             gramian_accumulator.reset()
             hook_activator.activate()
-            target_edges_registry.reset()
+            target_edges.reset()
 
             weights = weighting(gramian).unsqueeze(1)
             scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
