@@ -46,15 +46,15 @@ class Cifar10Model(ShapedModule):
 
 class FlatNonSequentialNN(ShapedModule):
     INPUT_SHAPES = (9,)
-    OUTPUT_SHAPES = (514,)
+    OUTPUT_SHAPES = (15,)
 
     def __init__(self):
         super().__init__()
         self.relu = nn.ReLU()
-        self.fc0 = nn.Linear(9, 512)
-        self.fc1 = nn.Linear(512, 513)
-        self.fc2 = nn.Linear(513, 514)
-        self.fc3 = nn.Linear(512, 514)
+        self.fc0 = nn.Linear(9, 13)
+        self.fc1 = nn.Linear(13, 14)
+        self.fc2 = nn.Linear(14, 15)
+        self.fc3 = nn.Linear(13, 15)
 
     def forward(self, input: Tensor) -> Tensor:
         common_input = self.relu(self.fc0(input))
