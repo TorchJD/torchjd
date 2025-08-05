@@ -87,41 +87,25 @@ def augment_model_for_gramian_based_iwrm(
             >>> handle.remove()
             >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
     """
-    model_augmenter = _ModelAugmenter(model, weighting)
-    model_augmenter.augment()
 
-    return model_augmenter.handle_manager
+    handle_manager = AutogramHandleManager()
+    gramian_accumulator = GramianAccumulator()
+    hook_activator = HookActivator()
+    target_edges_registry = TargetRegistry()
 
+    for module in model.modules():
+        if next(module.parameters(recurse=False), None) is None:
+            # Skip un-parameterized modules
+            continue
 
-class _ModelAugmenter:
-    def __init__(self, model: nn.Module, weighting: Weighting[PSDMatrix]):
-        self._model = model
-        self._weighting = weighting
-        self.handle_manager = AutogramHandleManager()
+        module_hook = _make_module_hook(target_edges_registry, gramian_accumulator, hook_activator)
+        handle = module.register_forward_hook(module_hook)
+        handle_manager.add_handle(handle)
 
-        self._gramian_accumulator = GramianAccumulator()
-        self._hook_activator = HookActivator()
-        self._target_edges_registry = TargetRegistry()
+    model_hook = _make_model_hook(
+        weighting, target_edges_registry, gramian_accumulator, hook_activator
+    )
+    handle = model.register_forward_hook(model_hook)
+    handle_manager.add_handle(handle)
 
-    def augment(self):
-        self._hook_submodules()
-        model_hook = _make_model_hook(
-            self._weighting,
-            self._target_edges_registry,
-            self._gramian_accumulator,
-            self._hook_activator,
-        )
-        handle = self._model.register_forward_hook(model_hook)
-        self.handle_manager.add_handle(handle)
-
-    def _hook_submodules(self) -> None:
-        for module in self._model.modules():
-            if next(module.parameters(recurse=False), None) is None:
-                # Skip un-parameterized modules
-                continue
-
-            module_hook = _make_module_hook(
-                self._target_edges_registry, self._gramian_accumulator, self._hook_activator
-            )
-            handle = module.register_forward_hook(module_hook)
-            self.handle_manager.add_handle(handle)
+    return handle_manager
