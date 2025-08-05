@@ -93,6 +93,7 @@ def augment_model_for_gramian_based_iwrm(
     hook_activator = HookActivator()
     target_edges_registry = TargetRegistry()
 
+    # Add module forward hooks to compute jacobians
     for module in model.modules():
         if next(module.parameters(recurse=False), None) is None:
             # Skip un-parameterized modules
@@ -102,6 +103,7 @@ def augment_model_for_gramian_based_iwrm(
         handle = module.register_forward_hook(module_hook)
         handle_manager.add_handle(handle)
 
+    # Add model forward hook to trigger autogram
     model_hook = _make_model_hook(
         weighting, target_edges_registry, gramian_accumulator, hook_activator
     )
