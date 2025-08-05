@@ -4,10 +4,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils._pytree import PyTree, tree_flatten, tree_unflatten
 
-from torchjd._autogram._autograd_functions import (
-    _make_autogram_activator,
-    _make_jacobian_accumulator,
-)
+from torchjd._autogram._autograd_functions import _make_autogram_scaler, _make_jacobian_accumulator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._hook_activator import HookActivator
@@ -62,7 +59,7 @@ def _make_model_hook(
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
 
         flat_outputs, tree_spec = tree_flatten(output)
-        autogram_activator = _make_autogram_activator(
+        autogram_scaler = _make_autogram_scaler(
             flat_outputs,
             input_tensors,
             weighting,
@@ -71,7 +68,7 @@ def _make_model_hook(
             hook_activator,
         )
         hook_activator.deactivate()
-        activator_flat_outputs = autogram_activator.apply(*flat_outputs)
+        activator_flat_outputs = autogram_scaler.apply(*flat_outputs)
         return tree_unflatten(activator_flat_outputs, tree_spec)
 
     return model_hook

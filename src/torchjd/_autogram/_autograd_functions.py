@@ -52,7 +52,7 @@ def _make_jacobian_accumulator(
     return JacobianAccumulator
 
 
-def _make_autogram_activator(
+def _make_autogram_scaler(
     flat_outputs: PyTree,
     input_tensors: list[Tensor],
     weighting: Weighting[PSDMatrix],
@@ -64,7 +64,7 @@ def _make_autogram_activator(
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
     leaf_targets = target_edges.get_leaf_edges(excluded_edges)
 
-    class AutogramActivator(torch.autograd.Function):
+    class AutogramScaler(torch.autograd.Function):
         @staticmethod
         def forward(*xs: Tensor) -> tuple[Tensor, ...]:
             return tuple([x.detach() for x in xs])
@@ -98,4 +98,4 @@ def _make_autogram_activator(
             scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
             return scaled_grad_outputs
 
-    return AutogramActivator
+    return AutogramScaler
