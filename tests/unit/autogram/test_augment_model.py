@@ -10,7 +10,6 @@ from torch.optim import SGD
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from unit._utils import randn_
 from unit.autogram._architectures import (
-    BranchedModel,
     Cifar10Model,
     Cifar10ModelPart1,
     Cifar10ModelPart2,
@@ -33,6 +32,7 @@ from unit.autogram._architectures import (
     PyTreeModule,
     ResNet18,
     ShapedModule,
+    SimpleBranchedModel,
 )
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
@@ -123,10 +123,10 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
 @mark.parametrize(
     ["architecture", "batch_size", "n_iter"],
     [
-        (BranchedModel, 64, 3),
         (OverlyNestedModel, 64, 3),
         (MultiInputSingleOutputModule, 64, 3),
         (MultiInputMultiOutputModule, 64, 3),
+        (SimpleBranchedModel, 64, 3),
         (MIMOBranchedModel, 64, 3),
         (MISOBranchedModel, 64, 3),
         (PyTreeModel, 64, 3),
@@ -188,10 +188,10 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
 @mark.parametrize(
     ["architecture", "batch_size"],
     [
-        (BranchedModel, 64),
         (OverlyNestedModel, 64),
         (MultiInputSingleOutputModule, 64),
         (MultiInputMultiOutputModule, 64),
+        (SimpleBranchedModel, 64),
         (MIMOBranchedModel, 64),
         (MISOBranchedModel, 64),
         (PyTreeModel, 64),

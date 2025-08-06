@@ -49,28 +49,6 @@ class Cifar10Model(ShapedModule):
         return self.seq(input)
 
 
-class BranchedModel(ShapedModule):
-    """Model with one input and two branches that rejoin into one output."""
-
-    INPUT_SHAPES = (9,)
-    OUTPUT_SHAPES = (15,)
-
-    def __init__(self):
-        super().__init__()
-        self.relu = nn.ReLU()
-        self.fc0 = nn.Linear(9, 13)
-        self.fc1 = nn.Linear(13, 14)
-        self.fc2 = nn.Linear(14, 15)
-        self.fc3 = nn.Linear(13, 15)
-
-    def forward(self, input: Tensor) -> Tensor:
-        common_input = self.relu(self.fc0(input))
-        branch1 = self.fc2(self.relu(self.fc1(common_input)))
-        branch2 = self.fc3(common_input)
-        output = branch1 + branch2
-        return output
-
-
 class OverlyNestedModel(ShapedModule):
     """Model that contains many unnecessary levels of nested modules."""
 
@@ -138,6 +116,28 @@ class MultiInputMultiOutputModule(ShapedModule):
         output1 = input1 @ self.matrix1_1 + input2 @ self.matrix2_1
         output2 = input1 @ self.matrix1_2 + input2 @ self.matrix2_2
         return output1, output2
+
+
+class SimpleBranchedModel(ShapedModule):
+    """Model with one input and two branches that rejoin into one output."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (15,)
+
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.fc0 = nn.Linear(9, 13)
+        self.fc1 = nn.Linear(13, 14)
+        self.fc2 = nn.Linear(14, 15)
+        self.fc3 = nn.Linear(13, 15)
+
+    def forward(self, input: Tensor) -> Tensor:
+        common_input = self.relu(self.fc0(input))
+        branch1 = self.fc2(self.relu(self.fc1(common_input)))
+        branch2 = self.fc3(common_input)
+        output = branch1 + branch2
+        return output
 
 
 class MISOBranchedModel(ShapedModule):
