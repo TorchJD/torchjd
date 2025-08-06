@@ -68,8 +68,8 @@ def _make_model_hook(
     """
     Create a forward hook that inserts the autogram scaling node into the backward graph.
 
-    The hook injects an AutogramScaler function at the model's output that coordinate autogram's
-    two backward pass.
+    The hook injects an AutogramScaler function at the model's output to coordinate autogram's
+    two backward passes.
     """
 
     def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
