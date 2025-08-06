@@ -427,60 +427,6 @@ class ModuleReuse(ShapedModule):
         return self.module(input) + self.module(input**2)
 
 
-class FreeParam(ShapedModule):
-    """
-    Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
-    beginning of the forward pass.
-    """
-
-    INPUT_SHAPES = (15,)
-    OUTPUT_SHAPES = (80,)
-
-    def __init__(self):
-        super().__init__()
-        self.matrix = nn.Parameter(torch.randn(15, 16))  # Free parameter
-        self.relu = nn.ReLU()
-        self.linear1 = nn.Linear(16, 50)
-        self.linear2 = nn.Linear(50, 60)
-        self.linear3 = nn.Linear(60, 70)
-        self.linear4 = nn.Linear(70, 80)
-
-    def forward(self, input: Tensor):
-        output = self.relu(input @ self.matrix)
-        output = self.relu(self.linear1(output))
-        output = self.relu(self.linear2(output))
-        output = self.relu(self.linear3(output))
-        output = self.linear4(output)
-        return output
-
-
-class NoFreeParam(ShapedModule):
-    """
-    Same model as FreeParam but with the free parameter contained inside a submodule. Useful for
-    speed comparison with FreeParam.
-    """
-
-    INPUT_SHAPES = (15,)
-    OUTPUT_SHAPES = (80,)
-
-    def __init__(self):
-        super().__init__()
-        self.linear0 = nn.Linear(15, 16, bias=False)
-        self.relu = nn.ReLU()
-        self.linear1 = nn.Linear(16, 50)
-        self.linear2 = nn.Linear(50, 60)
-        self.linear3 = nn.Linear(60, 70)
-        self.linear4 = nn.Linear(70, 80)
-
-    def forward(self, input: Tensor):
-        output = self.relu(self.linear0(input))
-        output = self.relu(self.linear1(output))
-        output = self.relu(self.linear2(output))
-        output = self.relu(self.linear3(output))
-        output = self.linear4(output)
-        return output
-
-
 class SomeUnusedParam(ShapedModule):
     """Module that has an unused param and a used param."""
 
@@ -535,6 +481,60 @@ class WithBuffered(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.linear(self.module_with_buffer(input))
+
+
+class FreeParam(ShapedModule):
+    """
+    Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
+    beginning of the forward pass.
+    """
+
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(15, 16))  # Free parameter
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(input @ self.matrix)
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
+
+
+class NoFreeParam(ShapedModule):
+    """
+    Same model as FreeParam but with the free parameter contained inside a submodule. Useful for
+    speed comparison with FreeParam.
+    """
+
+    INPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (80,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear0 = nn.Linear(15, 16, bias=False)
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(16, 50)
+        self.linear2 = nn.Linear(50, 60)
+        self.linear3 = nn.Linear(60, 70)
+        self.linear4 = nn.Linear(70, 80)
+
+    def forward(self, input: Tensor):
+        output = self.relu(self.linear0(input))
+        output = self.relu(self.linear1(output))
+        output = self.relu(self.linear2(output))
+        output = self.relu(self.linear3(output))
+        output = self.linear4(output)
+        return output
 
 
 class Cifar10Model(ShapedModule):
