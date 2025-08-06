@@ -71,6 +71,38 @@ class BranchedModel(ShapedModule):
         return output
 
 
+class OverlyNestedModel(ShapedModule):
+    """Model that contains many unnecessary levels of nested modules."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (14,)
+
+    def __init__(self):
+        super().__init__()
+        self.seq = nn.Sequential(
+            nn.Sequential(
+                nn.Sequential(
+                    nn.Sequential(
+                        nn.Sequential(
+                            nn.Linear(9, 10),
+                            ReLU(),
+                        ),
+                        nn.Linear(10, 11),
+                    ),
+                    ReLU(),
+                    nn.Linear(11, 12),
+                ),
+                ReLU(),
+                nn.Linear(12, 13),
+                ReLU(),
+            ),
+            nn.Linear(13, 14),
+        )
+
+    def forward(self, input: Tensor):
+        return self.seq(input)
+
+
 class ModuleThatTakesString(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)

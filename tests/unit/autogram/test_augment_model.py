@@ -22,6 +22,7 @@ from unit.autogram._architectures import (
     ModuleWithFrozenParam,
     ModuleWithParameterReuse,
     ModuleWithUnusedParam,
+    OverlyNestedModel,
     PyTreeInputPyTreeOutputModel,
     PyTreeInputPyTreeOutputModule,
     PyTreeModel,
@@ -121,6 +122,7 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
     ["architecture", "batch_size", "n_iter"],
     [
         (BranchedModel, 64, 3),
+        (OverlyNestedModel, 64, 3),
         (SingleInputSingleOutputModel, 64, 3),
         (SingleInputSingleOutputModel2, 64, 3),
         (PyTreeModel, 64, 3),
@@ -183,6 +185,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
     ["architecture", "batch_size"],
     [
         (BranchedModel, 64),
+        (OverlyNestedModel, 64),
         (SingleInputSingleOutputModel, 64),
         (SingleInputSingleOutputModel2, 64),
         (PyTreeModel, 64),
