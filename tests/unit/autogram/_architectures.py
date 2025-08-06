@@ -285,6 +285,11 @@ class PIPOBranchedModel(ShapedModule):
 
 
 class SIPOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a SingleInputPyTreeOutput, and returning the
+    concatenation of its outputs.
+    """
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (350,)
 
