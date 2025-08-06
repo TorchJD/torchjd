@@ -49,7 +49,7 @@ class Cifar10Model(ShapedModule):
         return self.seq(input)
 
 
-class FlatNonSequentialNN(ShapedModule):
+class BranchedModel(ShapedModule):
     """Model with one input and two branches that rejoin into one output."""
 
     INPUT_SHAPES = (9,)
