@@ -305,6 +305,34 @@ class SIPOBranchedModel(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
+class PISOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, splitting it, branching it using a PyTreeInputSingleOutput, and
+    returning its output.
+    """
+
+    INPUT_SHAPES = (86,)
+    OUTPUT_SHAPES = (350,)
+
+    def __init__(self):
+        super().__init__()
+        self.piso = PyTreeInputSingleOutputModule()
+
+    def forward(self, input: Tensor):
+        input1 = input[:, 0:10]
+        input2 = input[:, 10:30]
+        input3 = input[:, 30:60]
+        input4 = input[:, 60:72]
+        input5 = input[:, 72:86]
+
+        pytree_input = {
+            "one": [(input1, [input2, input3]), input4],
+            "two": input5,
+        }
+
+        return self.piso(pytree_input)
+
+
 class PIPOBranchedModel(ShapedModule):
     """
     Model taking a single input, splitting it, branching it using a PyTreeInputPyTreeOutput, and
