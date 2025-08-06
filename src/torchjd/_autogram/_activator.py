@@ -1,4 +1,8 @@
 class Activator:
+    """
+    This class represents a pointer to a boolean.
+    """
+
     def __init__(self):
         self.is_active = True
 
