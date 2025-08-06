@@ -384,8 +384,7 @@ class ModuleReuseModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        matrix = nn.Parameter(torch.randn(50, 10))
-        self.module = _MatMulModule(matrix)
+        self.module = nn.Linear(50, 10)
 
     def forward(self, input: Tensor):
         return self.module(input) + self.module(input**2)
@@ -502,8 +501,7 @@ class ModelWithModuleWithoutOutput(ShapedModule):
     def __init__(self):
         super().__init__()
         self.module1 = EmptyOutputModule(self.INPUT_SHAPES + self.OUTPUT_SHAPES)
-        matrix = nn.Parameter(torch.randn(self.INPUT_SHAPES + self.OUTPUT_SHAPES))
-        self.module2 = _MatMulModule(matrix)
+        self.module2 = nn.Linear(27, 10)
 
     def forward(self, input: Tensor):
         self.module1(input)
