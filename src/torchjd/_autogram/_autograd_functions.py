@@ -18,6 +18,14 @@ def _make_jacobian_accumulator(
 ) -> type[torch.autograd.Function]:
 
     class JacobianAccumulator(torch.autograd.Function):
+        """
+        Autograd function that accumulates Jacobian Gramians during backward passes.
+
+        Acts as identity on forward pass. On the first backward pass of the autogram algorithm,
+        computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
+        accumulator. Uses a toggle mechanism to activate only on first backward passes of the
+        autogram algorithm.
+        """
 
         activated = True
 
@@ -65,6 +73,14 @@ def _make_autogram_scaler(
     leaf_targets = target_edges.get_leaf_edges(excluded_edges)
 
     class AutogramScaler(torch.autograd.Function):
+        """
+        Autograd function that coordinate the autogram algorithm's two-phase backward pass.
+
+        Triggers the first backward pass to accumulate the Gramian of the Jacobian, computes weights
+        from the Gramian using the provided weighting, then scales gradients for the second backward
+        pass.
+        """
+
         @staticmethod
         def forward(*xs: Tensor) -> tuple[Tensor, ...]:
             return tuple([x.detach() for x in xs])
