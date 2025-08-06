@@ -21,7 +21,7 @@ def _make_module_hook(
             return output
         flat_outputs, tree_spec = tree_flatten(output)
 
-        if output is None:
+        if not any(isinstance(t, Tensor) for t in flat_outputs):
             # This can happen only if a module returns no Tensor, for instance some niche usage
             # such as a module that prints something.
             return output
