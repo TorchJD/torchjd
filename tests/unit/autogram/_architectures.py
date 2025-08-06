@@ -104,7 +104,7 @@ class OverlyNestedModel(ShapedModule):
 
 
 class MultiInputMultiOutputNN(ShapedModule):
-    INPUT_SHAPES = (50,)
+    INPUT_SHAPES = ((50,), (50,))
     OUTPUT_SHAPES = ((60,), (70,))
 
     def __init__(self):
@@ -118,7 +118,7 @@ class MultiInputMultiOutputNN(ShapedModule):
 
 
 class MultiInputNN(ShapedModule):
-    INPUT_SHAPES = (50,)
+    INPUT_SHAPES = ((50,), (50,))
     OUTPUT_SHAPES = (60,)
 
     def __init__(self):
