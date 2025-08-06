@@ -564,7 +564,12 @@ class Cifar10ModelPart2(ShapedModule):
         return self.seq(input)
 
 
-class ResNet18(ShapedModule):
+class InstanceNormResNet18(ShapedModule):
+    """
+    ResNet18 with BatchNorm2d layers replaced by InstanceNorm2d without tracking of running
+    stats.
+    """
+
     INPUT_SHAPES = (3, 224, 224)
     OUTPUT_SHAPES = (1000,)
 

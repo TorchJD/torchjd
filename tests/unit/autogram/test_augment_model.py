@@ -13,6 +13,7 @@ from unit.autogram._architectures import (
     Cifar10Model,
     Cifar10ModelPart1,
     Cifar10ModelPart2,
+    InstanceNormResNet18,
     MIMOBranchedModel,
     MISOBranchedModel,
     ModelWithFreeParameter,
@@ -30,7 +31,6 @@ from unit.autogram._architectures import (
     PISOBranchedModel,
     PyTreeInputPyTreeOutputModule,
     PyTreeInputSingleOutputModule,
-    ResNet18,
     ShapedModule,
     SimpleBranchedModel,
     SingleInputPyTreeOutputModule,
@@ -54,7 +54,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
         (ModelWithFreeParameter, 64),
         (ModelWithNoFreeParameter, 64),
         (Cifar10Model, 64),
-        (ResNet18, 16),
+        (InstanceNormResNet18, 16),
     ],
 )
 def test_speed(architecture: type[ShapedModule], batch_size: int):
@@ -146,7 +146,7 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
         (PISOBranchedModel, 32, 3),
         (ModelWithModuleWithoutOutput, 32, 3),
         param(Cifar10Model, 64, 1, marks=mark.slow),
-        param(ResNet18, 16, 1, marks=mark.slow),
+        param(InstanceNormResNet18, 16, 1, marks=mark.slow),
     ],
 )
 def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: int):
@@ -212,7 +212,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
         (PIPOBranchedModel, 32),
         (PISOBranchedModel, 32),
         param(Cifar10Model, 64, marks=mark.slow),
-        param(ResNet18, 16, marks=mark.slow),
+        param(InstanceNormResNet18, 16, marks=mark.slow),
     ],
 )
 def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
