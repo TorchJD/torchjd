@@ -45,17 +45,42 @@ from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd.aggregation import Aggregator, Mean, UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
+STANDARD_PARAMETRIZATIONS = [
+    (OverlyNested, 64),
+    (MultiInputSingleOutput, 64),
+    (MultiInputMultiOutput, 64),
+    (SimpleBranched, 64),
+    (MIMOBranched, 64),
+    (MISOBranched, 64),
+    (SIPOBranched, 64),
+    (SimpleParamReuse, 64),
+    (InterModuleParamReuse, 64),
+    (ModuleReuse, 64),
+    (FreeParam, 64),
+    (NoFreeParam, 64),
+    (SomeUnusedParam, 64),
+    (SomeFrozenParam, 64),
+    (SingleInputPyTreeOutput, 32),
+    (PyTreeInputPyTreeOutput, 32),
+    (PyTreeInputSingleOutput, 32),
+    (PIPOBranched, 32),
+    (PISOBranched, 32),
+    (WithEmptyOutput, 32),
+    (WithBuffered, 32),
+    param(Cifar10Model, 64, marks=mark.slow),
+    param(InstanceNormResNet18, 16, marks=mark.slow),
+]
+
+BENCHMARKING_PARAMETRIZATIONS = [
+    (FreeParam, 64),
+    (NoFreeParam, 64),
+    (Cifar10Model, 64),
+    (InstanceNormResNet18, 16),
+]
+
 
 @mark.slow
-@mark.parametrize(
-    ["architecture", "batch_size"],
-    [
-        (FreeParam, 64),
-        (NoFreeParam, 64),
-        (Cifar10Model, 64),
-        (InstanceNormResNet18, 16),
-    ],
-)
+@mark.parametrize(["architecture", "batch_size"], BENCHMARKING_PARAMETRIZATIONS)
 def test_speed(architecture: type[ShapedModule], batch_size: int):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
@@ -121,34 +146,7 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
     print()
 
 
-@mark.parametrize(
-    ["architecture", "batch_size"],
-    [
-        (OverlyNested, 64),
-        (MultiInputSingleOutput, 64),
-        (MultiInputMultiOutput, 64),
-        (SimpleBranched, 64),
-        (MIMOBranched, 64),
-        (MISOBranched, 64),
-        (SIPOBranched, 64),
-        (SimpleParamReuse, 64),
-        (InterModuleParamReuse, 64),
-        (ModuleReuse, 64),
-        (FreeParam, 64),
-        (NoFreeParam, 64),
-        (SomeUnusedParam, 64),
-        (SomeFrozenParam, 64),
-        (SingleInputPyTreeOutput, 32),
-        (PyTreeInputPyTreeOutput, 32),
-        (PyTreeInputSingleOutput, 32),
-        (PIPOBranched, 32),
-        (PISOBranched, 32),
-        (WithEmptyOutput, 32),
-        (WithBuffered, 32),
-        param(Cifar10Model, 64, marks=mark.slow),
-        param(InstanceNormResNet18, 16, marks=mark.slow),
-    ],
-)
+@mark.parametrize(["architecture", "batch_size"], STANDARD_PARAMETRIZATIONS)
 def test_equivalence(architecture: type[ShapedModule], batch_size: int):
     n_iter = 3
 
@@ -191,34 +189,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int):
         model_autogram.zero_grad()
 
 
-@mark.parametrize(
-    ["architecture", "batch_size"],
-    [
-        (OverlyNested, 64),
-        (MultiInputSingleOutput, 64),
-        (MultiInputMultiOutput, 64),
-        (SimpleBranched, 64),
-        (MIMOBranched, 64),
-        (MISOBranched, 64),
-        (SIPOBranched, 64),
-        (SimpleParamReuse, 64),
-        (InterModuleParamReuse, 64),
-        (ModuleReuse, 64),
-        (FreeParam, 64),
-        (NoFreeParam, 64),
-        (SomeUnusedParam, 64),
-        (SomeFrozenParam, 64),
-        (SingleInputPyTreeOutput, 32),
-        (PyTreeInputPyTreeOutput, 32),
-        (PyTreeInputSingleOutput, 32),
-        (PIPOBranched, 32),
-        (PISOBranched, 32),
-        (WithEmptyOutput, 32),
-        (WithBuffered, 32),
-        param(Cifar10Model, 64, marks=mark.slow),
-        param(InstanceNormResNet18, 16, marks=mark.slow),
-    ],
-)
+@mark.parametrize(["architecture", "batch_size"], STANDARD_PARAMETRIZATIONS)
 def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
