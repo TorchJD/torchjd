@@ -332,20 +332,6 @@ class PIPOBranchedModel(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class _MatMulModule(nn.Module):
-    """
-    Simple module for matrix multiplication, that takes the parameter in its __init__ method so that
-    this parameter can be used in other modules too.
-    """
-
-    def __init__(self, matrix: nn.Parameter):
-        super().__init__()
-        self.matrix = matrix
-
-    def forward(self, input: Tensor):
-        return input @ self.matrix
-
-
 class ParamReuseModule(ShapedModule):
     """Module that reuses the same nn.Parameter for two computations directly inside of it."""
 
@@ -366,11 +352,24 @@ class InterModuleParamReuseModel(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
+    class _MatMulModule(nn.Module):
+        """
+        Simple module for matrix multiplication, that takes the parameter in its __init__ method so
+        that this parameter can be used in other modules too.
+        """
+
+        def __init__(self, matrix: nn.Parameter):
+            super().__init__()
+            self.matrix = matrix
+
+        def forward(self, input: Tensor):
+            return input @ self.matrix
+
     def __init__(self):
         super().__init__()
         matrix = nn.Parameter(torch.randn(50, 10))
-        self.module1 = _MatMulModule(matrix)
-        self.module2 = _MatMulModule(matrix)
+        self.module1 = self._MatMulModule(matrix)
+        self.module2 = self._MatMulModule(matrix)
 
     def forward(self, input: Tensor):
         return self.module1(input) + self.module2(input**2)
