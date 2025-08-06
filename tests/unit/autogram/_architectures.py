@@ -201,13 +201,11 @@ class PyTreeOutputModule(ShapedModule):
 
 
 class PyTreeInputPyTreeOutputModule(ShapedModule):
-    INPUT_SHAPES = [
-        {
-            "one": ((10,), [(20,), (30,)]),
-            "two": (12,),
-        },
-        (14,),
-    ]
+    INPUT_SHAPES = {
+        "one": [((10,), [(20,), (30,)]), (12,)],
+        "two": (14,),
+    }
+
     OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
         "second": (80,),
@@ -223,11 +221,11 @@ class PyTreeInputPyTreeOutputModule(ShapedModule):
         self.matrix5 = nn.Parameter(torch.randn(14, 90))
 
     def forward(self, inputs: PyTree) -> PyTree:
-        input1 = inputs[0]["one"][0]
-        input2 = inputs[0]["one"][1][0]
-        input3 = inputs[0]["one"][1][1]
-        input4 = inputs[0]["two"]
-        input5 = inputs[1]
+        input1 = inputs["one"][0][0]
+        input2 = inputs["one"][0][1][0]
+        input3 = inputs["one"][0][1][1]
+        input4 = inputs["one"][1]
+        input5 = inputs["two"]
 
         return {
             "first": (input1 @ self.matrix1, [input2 @ self.matrix2, input3 @ self.matrix3]),
@@ -260,13 +258,10 @@ class PyTreeInputPyTreeOutputModel(ShapedModule):
         input4 = input[:, 60:72]
         input5 = input[:, 72:86]
 
-        pytree_input = [
-            {
-                "one": (input1, [input2, input3]),
-                "two": input4,
-            },
-            input5,
-        ]
+        pytree_input = {
+            "one": [(input1, [input2, input3]), input4],
+            "two": input5,
+        }
 
         pytree_output = self.pytree_input_pytree_output_module(pytree_input)
 
