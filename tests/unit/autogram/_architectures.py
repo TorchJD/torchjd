@@ -455,6 +455,11 @@ class FreeParam(ShapedModule):
 
 
 class NoFreeParam(ShapedModule):
+    """
+    Same model as FreeParam but with the free parameter contained inside a submodule. Useful for
+    speed comparison with FreeParam.
+    """
+
     INPUT_SHAPES = (15,)
     OUTPUT_SHAPES = (80,)
 
