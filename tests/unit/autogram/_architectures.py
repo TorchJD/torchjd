@@ -50,6 +50,8 @@ class Cifar10Model(ShapedModule):
 
 
 class FlatNonSequentialNN(ShapedModule):
+    """Model with one input and two branches that rejoin into one output."""
+
     INPUT_SHAPES = (9,)
     OUTPUT_SHAPES = (15,)
 
