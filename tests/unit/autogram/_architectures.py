@@ -346,7 +346,7 @@ class MatMulModule(nn.Module):
         return input @ self.matrix
 
 
-class ModuleWithParameterReuse(ShapedModule):
+class ParamReuseModule(ShapedModule):
     """Module that reuses the same nn.Parameter for two computations directly inside of it."""
 
     INPUT_SHAPES = (50,)
