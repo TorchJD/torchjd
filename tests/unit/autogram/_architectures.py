@@ -217,15 +217,6 @@ class PyTreeInputPyTreeOutputModule(ShapedModule):
         }
 
 
-class EmptyOutputModule(nn.Module):
-    def __init__(self, shape: tuple[int, ...]):
-        super().__init__()
-        self.matrix = nn.Parameter(torch.randn(shape))
-
-    def forward(self, _: PyTree) -> None:
-        return None
-
-
 class SimpleBranchedModel(ShapedModule):
     """Model with one input and two branches that rejoin into one output."""
 
@@ -510,6 +501,15 @@ class ModelWithModuleWithBuffer(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.linear(self.module_with_buffer(input))
+
+
+class EmptyOutputModule(nn.Module):
+    def __init__(self, shape: tuple[int, ...]):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(shape))
+
+    def forward(self, _: PyTree) -> None:
+        return None
 
 
 class ModelWithModuleWithoutOutput(ShapedModule):
