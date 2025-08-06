@@ -103,34 +103,6 @@ class OverlyNestedModel(ShapedModule):
         return self.seq(input)
 
 
-class ModuleThatTakesString(ShapedModule):
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = (10,)
-
-    def __init__(self):
-        super().__init__()
-        self.matrix1 = nn.Parameter(torch.randn(50, 10))
-        self.matrix2 = nn.Parameter(torch.randn(50, 10))
-
-    def forward(self, input: Tensor, string: str):
-        if string == "test":
-            return input @ self.matrix1
-        else:
-            return input @ self.matrix2
-
-
-class ModelThatTakesString(ShapedModule):
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = (10,)
-
-    def __init__(self):
-        super().__init__()
-        self.module = ModuleThatTakesString()
-
-    def forward(self, input: Tensor):
-        return self.module(input, "test") + self.module(input, "definitely not a test")
-
-
 class MultiInputMultiOutputNN(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = ((60,), (70,))
