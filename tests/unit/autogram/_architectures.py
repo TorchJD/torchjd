@@ -144,6 +144,40 @@ class SingleInputPyTreeOutputModule(ShapedModule):
         }
 
 
+class PyTreeInputSingleOutputModule(ShapedModule):
+    """Module taking a complex PyTree of tensors as input and returning a single output."""
+
+    INPUT_SHAPES = {
+        "one": [((10,), [(20,), (30,)]), (12,)],
+        "two": (14,),
+    }
+    OUTPUT_SHAPES = (350,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1 = nn.Parameter(torch.randn(10, 50))
+        self.matrix2 = nn.Parameter(torch.randn(20, 60))
+        self.matrix3 = nn.Parameter(torch.randn(30, 70))
+        self.matrix4 = nn.Parameter(torch.randn(12, 80))
+        self.matrix5 = nn.Parameter(torch.randn(14, 90))
+
+    def forward(self, inputs: PyTree) -> PyTree:
+        input1 = inputs["one"][0][0]
+        input2 = inputs["one"][0][1][0]
+        input3 = inputs["one"][0][1][1]
+        input4 = inputs["one"][1]
+        input5 = inputs["two"]
+
+        output1 = input1 @ self.matrix1
+        output2 = input2 @ self.matrix2
+        output3 = input3 @ self.matrix3
+        output4 = input4 @ self.matrix4
+        output5 = input5 @ self.matrix5
+        output = torch.concatenate([output1, output2, output3, output4, output5], dim=1)
+
+        return output
+
+
 class PyTreeInputPyTreeOutputModule(ShapedModule):
     """
     Module taking a complex PyTree of tensors as input and returning a complex PyTree of tensors as
