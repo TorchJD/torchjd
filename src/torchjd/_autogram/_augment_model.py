@@ -70,8 +70,8 @@ def augment_model_for_gramian_based_iwrm(
         Each call to ``losses.backward(torch.ones_like(losses))`` has computed the Gramian of the
         Jacobian of the losses with respect to the model's parameters, has extracted weights from it
         and has backpropagated these weights to obtain the gradients to use to update the model
-        parameters, stored in their ``.grad`` fields. The ``optimizer.step()`` call then updates the
-        model parameters based on those ``.grad`` fields.
+        parameters, stored in their ``.grad`` fields. The call to ``optimizer.step()`` then updates
+        the model parameters based on those ``.grad`` fields.
 
     .. note::
         If you want to remove the hooks added by ``augment_model_for_gramian_based_iwrm``, you can
