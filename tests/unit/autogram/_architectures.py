@@ -175,6 +175,8 @@ class MIMOBranchedModel(ShapedModule):
 
 
 class PyTreeOutputModule(ShapedModule):
+    """Module taking a single input and returning a complex PyTree of tensors as output."""
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
