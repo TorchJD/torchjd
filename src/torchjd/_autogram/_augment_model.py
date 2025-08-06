@@ -2,7 +2,7 @@ from torch import nn
 
 from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
-from torchjd._autogram._forward_hooks import _make_model_hook, _make_module_hook
+from torchjd._autogram._forward_hooks import make_model_hook, make_module_hook
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._handle import AutogramHandleManager, HandleManager
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
@@ -99,12 +99,12 @@ def augment_model_for_gramian_based_iwrm(
             # Skip un-parameterized modules
             continue
 
-        module_hook = _make_module_hook(target_edges, gramian_accumulator, hook_activator)
+        module_hook = make_module_hook(target_edges, gramian_accumulator, hook_activator)
         handle = module.register_forward_hook(module_hook)
         handle_manager.add_handle(handle)
 
     # Add model forward hook to trigger autogram
-    model_hook = _make_model_hook(weighting, target_edges, gramian_accumulator, hook_activator)
+    model_hook = make_model_hook(weighting, target_edges, gramian_accumulator, hook_activator)
     handle = model.register_forward_hook(model_hook)
     handle_manager.add_handle(handle)
 
