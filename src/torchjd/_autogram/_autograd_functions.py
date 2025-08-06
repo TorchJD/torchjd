@@ -19,11 +19,11 @@ def _make_jacobian_accumulator(
 
     class JacobianAccumulator(torch.autograd.Function):
         """
-        Autograd function that accumulates Jacobian Gramians during backward passes.
+        Autograd function that accumulates Jacobian Gramians during the first backward pass.
 
         Acts as identity on forward pass. On the first backward pass of the autogram algorithm,
         computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
-        accumulator. Uses a toggle mechanism to activate only on first backward passes of the
+        accumulator. Uses a toggle mechanism to activate only during the first backward pass of the
         autogram algorithm.
         """
 
