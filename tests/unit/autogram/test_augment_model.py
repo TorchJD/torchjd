@@ -14,6 +14,8 @@ from unit.autogram._architectures import (
     Cifar10Model,
     Cifar10ModelPart1,
     Cifar10ModelPart2,
+    MIMOBranchedModel,
+    MISOBranchedModel,
     ModelWithFreeParameter,
     ModelWithInterModuleParameterReuse,
     ModelWithModuleReuse,
@@ -22,6 +24,8 @@ from unit.autogram._architectures import (
     ModuleWithFrozenParam,
     ModuleWithParameterReuse,
     ModuleWithUnusedParam,
+    MultiInputMultiOutputModule,
+    MultiInputSingleOutputModule,
     OverlyNestedModel,
     PyTreeInputPyTreeOutputModel,
     PyTreeInputPyTreeOutputModule,
@@ -29,8 +33,6 @@ from unit.autogram._architectures import (
     PyTreeModule,
     ResNet18,
     ShapedModule,
-    SingleInputSingleOutputModel,
-    SingleInputSingleOutputModel2,
 )
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
@@ -123,8 +125,10 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
     [
         (BranchedModel, 64, 3),
         (OverlyNestedModel, 64, 3),
-        (SingleInputSingleOutputModel, 64, 3),
-        (SingleInputSingleOutputModel2, 64, 3),
+        (MultiInputSingleOutputModule, 64, 3),
+        (MultiInputMultiOutputModule, 64, 3),
+        (MIMOBranchedModel, 64, 3),
+        (MISOBranchedModel, 64, 3),
         (PyTreeModel, 64, 3),
         (ModuleWithParameterReuse, 64, 3),
         (ModelWithInterModuleParameterReuse, 64, 3),
@@ -186,8 +190,10 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
     [
         (BranchedModel, 64),
         (OverlyNestedModel, 64),
-        (SingleInputSingleOutputModel, 64),
-        (SingleInputSingleOutputModel2, 64),
+        (MultiInputSingleOutputModule, 64),
+        (MultiInputMultiOutputModule, 64),
+        (MIMOBranchedModel, 64),
+        (MISOBranchedModel, 64),
         (PyTreeModel, 64),
         (ModuleWithParameterReuse, 64),
         (ModelWithInterModuleParameterReuse, 64),

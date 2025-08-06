@@ -103,55 +103,75 @@ class OverlyNestedModel(ShapedModule):
         return self.seq(input)
 
 
-class MultiInputMultiOutputNN(ShapedModule):
-    INPUT_SHAPES = ((50,), (50,))
-    OUTPUT_SHAPES = ((60,), (70,))
+class MultiInputSingleOutputModule(ShapedModule):
+    """Module that takes two inputs and returns one output."""
 
-    def __init__(self):
-        super().__init__()
-        self.matrix1 = nn.Parameter(torch.randn(50, 60))
-        self.matrix2 = nn.Parameter(torch.randn(50, 70))
-
-    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
-        input = sum(inputs)
-        return input @ self.matrix1, input @ self.matrix2
-
-
-class MultiInputNN(ShapedModule):
     INPUT_SHAPES = ((50,), (50,))
     OUTPUT_SHAPES = (60,)
 
     def __init__(self):
         super().__init__()
         self.matrix1 = nn.Parameter(torch.randn(50, 60))
+        self.matrix2 = nn.Parameter(torch.randn(50, 60))
 
-    def forward(self, *inputs: Tensor) -> tuple[Tensor, Tensor]:
-        input = sum(inputs)
-        return input @ self.matrix1
+    def forward(self, inputs: tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
+        input1, input2 = inputs
+        output = input1 @ self.matrix1 + input2 @ self.matrix2
+        return output
 
 
-class SingleInputSingleOutputModel(ShapedModule):
+class MultiInputMultiOutputModule(ShapedModule):
+    """Module that takes two inputs and returns two outputs that each depend on both inputs."""
+
+    INPUT_SHAPES = ((50,), (50,))
+    OUTPUT_SHAPES = ((60,), (70,))
+
+    def __init__(self):
+        super().__init__()
+        self.matrix1_1 = nn.Parameter(torch.randn(50, 60))
+        self.matrix2_1 = nn.Parameter(torch.randn(50, 60))
+        self.matrix1_2 = nn.Parameter(torch.randn(50, 70))
+        self.matrix2_2 = nn.Parameter(torch.randn(50, 70))
+
+    def forward(self, inputs: tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
+        input1, input2 = inputs
+        output1 = input1 @ self.matrix1_1 + input2 @ self.matrix2_1
+        output2 = input1 @ self.matrix1_2 + input2 @ self.matrix2_2
+        return output1, output2
+
+
+class MISOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a MultiInputSingleOutputModule, and returning
+    its output.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = MultiInputSingleOutputModule.OUTPUT_SHAPES
+
+    def __init__(self):
+        super().__init__()
+        self.miso = MultiInputSingleOutputModule()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.miso((input, input))
+
+
+class MIMOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a MultiInputMultiOutputModule, and returning
+    the concatenation of its outputs.
+    """
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (130,)
 
     def __init__(self):
         super().__init__()
-        self.mimo = MultiInputMultiOutputNN()
+        self.mimo = MultiInputMultiOutputModule()
 
     def forward(self, input: Tensor) -> Tensor:
-        return torch.concatenate(list(self.mimo(input, input)), dim=1)
-
-
-class SingleInputSingleOutputModel2(ShapedModule):
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = MultiInputNN.OUTPUT_SHAPES
-
-    def __init__(self):
-        super().__init__()
-        self.miso = MultiInputNN()
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.miso(input, input)
+        return torch.concatenate(list(self.mimo((input, input))), dim=1)
 
 
 class PyTreeModule(ShapedModule):
