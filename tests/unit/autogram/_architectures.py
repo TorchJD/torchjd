@@ -497,6 +497,11 @@ class SomeUnusedParam(ShapedModule):
 
 
 class SomeFrozenParam(ShapedModule):
+    """
+    Module that has a frozen param (requires_grad=False) and a non-frozen param
+    (requires_grad=True).
+    """
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
