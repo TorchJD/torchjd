@@ -21,7 +21,7 @@ class ShapedModule(nn.Module):
             raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
 
 
-class OverlyNestedModel(ShapedModule):
+class OverlyNested(ShapedModule):
     """Model that contains many unnecessary levels of nested modules."""
 
     INPUT_SHAPES = (9,)
@@ -53,7 +53,7 @@ class OverlyNestedModel(ShapedModule):
         return self.seq(input)
 
 
-class MultiInputSingleOutputModule(ShapedModule):
+class MultiInputSingleOutput(ShapedModule):
     """Module that takes two inputs and returns one output."""
 
     INPUT_SHAPES = ((50,), (50,))
@@ -70,7 +70,7 @@ class MultiInputSingleOutputModule(ShapedModule):
         return output
 
 
-class MultiInputMultiOutputModule(ShapedModule):
+class MultiInputMultiOutput(ShapedModule):
     """Module that takes two inputs and returns two outputs that each depend on both inputs."""
 
     INPUT_SHAPES = ((50,), (50,))
@@ -90,7 +90,7 @@ class MultiInputMultiOutputModule(ShapedModule):
         return output1, output2
 
 
-class SingleInputPyTreeOutputModule(ShapedModule):
+class SingleInputPyTreeOutput(ShapedModule):
     """Module taking a single input and returning a complex PyTree of tensors as output."""
 
     INPUT_SHAPES = (50,)
@@ -116,7 +116,7 @@ class SingleInputPyTreeOutputModule(ShapedModule):
         }
 
 
-class PyTreeInputSingleOutputModule(ShapedModule):
+class PyTreeInputSingleOutput(ShapedModule):
     """Module taking a complex PyTree of tensors as input and returning a single output."""
 
     INPUT_SHAPES = {
@@ -150,7 +150,7 @@ class PyTreeInputSingleOutputModule(ShapedModule):
         return output
 
 
-class PyTreeInputPyTreeOutputModule(ShapedModule):
+class PyTreeInputPyTreeOutput(ShapedModule):
     """
     Module taking a complex PyTree of tensors as input and returning a complex PyTree of tensors as
     output.
@@ -189,7 +189,7 @@ class PyTreeInputPyTreeOutputModule(ShapedModule):
         }
 
 
-class SimpleBranchedModel(ShapedModule):
+class SimpleBranched(ShapedModule):
     """Model with one input and two branches that rejoin into one output."""
 
     INPUT_SHAPES = (9,)
@@ -211,24 +211,24 @@ class SimpleBranchedModel(ShapedModule):
         return output
 
 
-class MISOBranchedModel(ShapedModule):
+class MISOBranched(ShapedModule):
     """
     Model taking a single input, branching it using a MultiInputSingleOutputModule, and returning
     its output.
     """
 
     INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = MultiInputSingleOutputModule.OUTPUT_SHAPES
+    OUTPUT_SHAPES = MultiInputSingleOutput.OUTPUT_SHAPES
 
     def __init__(self):
         super().__init__()
-        self.miso = MultiInputSingleOutputModule()
+        self.miso = MultiInputSingleOutput()
 
     def forward(self, input: Tensor) -> Tensor:
         return self.miso((input, input))
 
 
-class MIMOBranchedModel(ShapedModule):
+class MIMOBranched(ShapedModule):
     """
     Model taking a single input, branching it using a MultiInputMultiOutputModule, and returning
     the concatenation of its outputs.
@@ -239,13 +239,13 @@ class MIMOBranchedModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        self.mimo = MultiInputMultiOutputModule()
+        self.mimo = MultiInputMultiOutput()
 
     def forward(self, input: Tensor) -> Tensor:
         return torch.concatenate(list(self.mimo((input, input))), dim=1)
 
 
-class SIPOBranchedModel(ShapedModule):
+class SIPOBranched(ShapedModule):
     """
     Model taking a single input, branching it using a SingleInputPyTreeOutput, and returning the
     concatenation of its outputs.
@@ -256,7 +256,7 @@ class SIPOBranchedModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        self.sipo = SingleInputPyTreeOutputModule()
+        self.sipo = SingleInputPyTreeOutput()
 
     def forward(self, input: Tensor):
         first, second, third = self.sipo(input).values()
@@ -268,7 +268,7 @@ class SIPOBranchedModel(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class PISOBranchedModel(ShapedModule):
+class PISOBranched(ShapedModule):
     """
     Model taking a single input, splitting it, branching it using a PyTreeInputSingleOutput, and
     returning its output.
@@ -279,7 +279,7 @@ class PISOBranchedModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        self.piso = PyTreeInputSingleOutputModule()
+        self.piso = PyTreeInputSingleOutput()
 
     def forward(self, input: Tensor):
         input1 = input[:, 0:10]
@@ -296,7 +296,7 @@ class PISOBranchedModel(ShapedModule):
         return self.piso(pytree_input)
 
 
-class PIPOBranchedModel(ShapedModule):
+class PIPOBranched(ShapedModule):
     """
     Model taking a single input, splitting it, branching it using a PyTreeInputPyTreeOutput, and
     returning the concatenation of its outputs.
@@ -307,7 +307,7 @@ class PIPOBranchedModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        self.pipo = PyTreeInputPyTreeOutputModule()
+        self.pipo = PyTreeInputPyTreeOutput()
 
     def forward(self, input: Tensor) -> Tensor:
         input1 = input[:, 0:10]
@@ -332,7 +332,7 @@ class PIPOBranchedModel(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class ParamReuseModule(ShapedModule):
+class SimpleParamReuse(ShapedModule):
     """Module that reuses the same nn.Parameter for two computations directly inside of it."""
 
     INPUT_SHAPES = (50,)
@@ -346,7 +346,7 @@ class ParamReuseModule(ShapedModule):
         return input @ self.matrix + (input**2) @ self.matrix
 
 
-class InterModuleParamReuseModel(ShapedModule):
+class InterModuleParamReuse(ShapedModule):
     """Model that has two modules that both use the same nn.Parameter."""
 
     INPUT_SHAPES = (50,)
@@ -375,7 +375,7 @@ class InterModuleParamReuseModel(ShapedModule):
         return self.module1(input) + self.module2(input**2)
 
 
-class ModuleReuseModel(ShapedModule):
+class ModuleReuse(ShapedModule):
     """Model that uses the same module for two computations."""
 
     INPUT_SHAPES = (50,)
@@ -389,7 +389,7 @@ class ModuleReuseModel(ShapedModule):
         return self.module(input) + self.module(input**2)
 
 
-class ModelWithFreeParameter(ShapedModule):
+class FreeParam(ShapedModule):
     INPUT_SHAPES = (15,)
     OUTPUT_SHAPES = (80,)
 
@@ -411,7 +411,7 @@ class ModelWithFreeParameter(ShapedModule):
         return output
 
 
-class ModelWithNoFreeParameter(ShapedModule):
+class NoFreeParam(ShapedModule):
     INPUT_SHAPES = (15,)
     OUTPUT_SHAPES = (80,)
 
@@ -433,7 +433,7 @@ class ModelWithNoFreeParameter(ShapedModule):
         return output
 
 
-class ModuleWithUnusedParam(ShapedModule):
+class UnusedParam(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
@@ -446,7 +446,7 @@ class ModuleWithUnusedParam(ShapedModule):
         return input @ self.matrix
 
 
-class ModuleWithFrozenParam(ShapedModule):
+class SomeFrozenParam(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
@@ -459,7 +459,7 @@ class ModuleWithFrozenParam(ShapedModule):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
-class ModuleWithBuffer(ShapedModule):
+class Buffered(ShapedModule):
     INPUT_SHAPES = (27,)
     OUTPUT_SHAPES = (27,)
 
@@ -471,20 +471,20 @@ class ModuleWithBuffer(ShapedModule):
         return input * self.buffer
 
 
-class ModelWithModuleWithBuffer(ShapedModule):
+class WithBuffered(ShapedModule):
     INPUT_SHAPES = (27,)
     OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
-        self.module_with_buffer = ModuleWithBuffer()
+        self.module_with_buffer = Buffered()
         self.linear = nn.Linear(27, 10)
 
     def forward(self, input: Tensor):
         return self.linear(self.module_with_buffer(input))
 
 
-class EmptyOutputModule(nn.Module):
+class EmptyOutput(nn.Module):
     def __init__(self, shape: tuple[int, ...]):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(shape))
@@ -493,13 +493,13 @@ class EmptyOutputModule(nn.Module):
         return None
 
 
-class ModelWithModuleWithoutOutput(ShapedModule):
+class WithEmptyOutput(ShapedModule):
     INPUT_SHAPES = (27,)
     OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
-        self.module1 = EmptyOutputModule(self.INPUT_SHAPES + self.OUTPUT_SHAPES)
+        self.module1 = EmptyOutput(self.INPUT_SHAPES + self.OUTPUT_SHAPES)
         self.module2 = nn.Linear(27, 10)
 
     def forward(self, input: Tensor):
