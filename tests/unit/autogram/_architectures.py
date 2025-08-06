@@ -361,6 +361,8 @@ class ParamReuseModule(ShapedModule):
 
 
 class InterModuleParamReuseModel(ShapedModule):
+    """Model that has two modules that both use the same nn.Parameter."""
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
