@@ -32,6 +32,7 @@ from unit.autogram._architectures import (
     SIPOBranched,
     SomeFrozenParam,
     SomeUnusedParam,
+    WithBuffered,
     WithEmptyOutput,
 )
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
@@ -143,6 +144,7 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
         (PIPOBranched, 32, 3),
         (PISOBranched, 32, 3),
         (WithEmptyOutput, 32, 3),
+        (WithBuffered, 32, 3),
         param(Cifar10Model, 64, 1, marks=mark.slow),
         param(InstanceNormResNet18, 16, 1, marks=mark.slow),
     ],
@@ -209,6 +211,8 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: 
         (PyTreeInputSingleOutput, 32),
         (PIPOBranched, 32),
         (PISOBranched, 32),
+        (WithEmptyOutput, 32),
+        (WithBuffered, 32),
         param(Cifar10Model, 64, marks=mark.slow),
         param(InstanceNormResNet18, 16, marks=mark.slow),
     ],
