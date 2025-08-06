@@ -74,7 +74,7 @@ def _make_autogram_scaler(
 
     class AutogramScaler(torch.autograd.Function):
         """
-        Autograd function that coordinate the autogram algorithm's two-phase backward pass.
+        Autograd function that coordinates the autogram algorithm's two-phase backward pass.
 
         Triggers the first backward pass to accumulate the Gramian of the Jacobian, computes weights
         from the Gramian using the provided weighting, then scales gradients for the second backward
