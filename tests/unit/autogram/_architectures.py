@@ -376,7 +376,9 @@ class InterModuleParamReuseModel(ShapedModule):
         return self.module1(input) + self.module2(input**2)
 
 
-class ModelWithModuleReuse(ShapedModule):
+class ModuleReuseModel(ShapedModule):
+    """Model that uses the same module for two computations."""
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
