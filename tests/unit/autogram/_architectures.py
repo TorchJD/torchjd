@@ -22,6 +22,11 @@ class ShapedModule(nn.Module):
 
 
 class Cifar10Model(ShapedModule):
+    """
+    Architecture for image classification on the CIFAR-10 dataset, similar to what we used in
+    https://arxiv.org/pdf/2406.16232.
+    """
+
     INPUT_SHAPES = (3, 32, 32)
     OUTPUT_SHAPES = (10,)
 
