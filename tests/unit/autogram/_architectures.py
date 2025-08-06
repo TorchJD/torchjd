@@ -174,7 +174,7 @@ class MIMOBranchedModel(ShapedModule):
         return torch.concatenate(list(self.mimo((input, input))), dim=1)
 
 
-class PyTreeOutputModule(ShapedModule):
+class SingleInputPyTreeOutputModule(ShapedModule):
     """Module taking a single input and returning a complex PyTree of tensors as output."""
 
     INPUT_SHAPES = (50,)
@@ -248,13 +248,13 @@ class EmptyOutputModule(nn.Module):
         return None
 
 
-class PyTreeInputPyTreeOutputModel(ShapedModule):
+class PIPOBranchedModel(ShapedModule):
     INPUT_SHAPES = (86,)
     OUTPUT_SHAPES = (350,)
 
     def __init__(self):
         super().__init__()
-        self.pytree_input_pytree_output_module = PyTreeInputPyTreeOutputModule()
+        self.pipo = PyTreeInputPyTreeOutputModule()
 
     def forward(self, input: Tensor) -> Tensor:
         input1 = input[:, 0:10]
@@ -268,7 +268,7 @@ class PyTreeInputPyTreeOutputModel(ShapedModule):
             "two": input5,
         }
 
-        pytree_output = self.pytree_input_pytree_output_module(pytree_input)
+        pytree_output = self.pipo(pytree_input)
 
         first, second, third = pytree_output.values()
         output1, output23 = first
@@ -279,16 +279,16 @@ class PyTreeInputPyTreeOutputModel(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class PyTreeModel(ShapedModule):
+class SIPOBranchedModel(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (350,)
 
     def __init__(self):
         super().__init__()
-        self.pytree_module = PyTreeOutputModule()
+        self.sipo = SingleInputPyTreeOutputModule()
 
     def forward(self, input: Tensor):
-        first, second, third = self.pytree_module(input).values()
+        first, second, third = self.sipo(input).values()
         output1, output23 = first
         output2, output3 = output23
         output4 = second
