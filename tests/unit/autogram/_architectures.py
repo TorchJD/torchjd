@@ -249,6 +249,11 @@ class EmptyOutputModule(nn.Module):
 
 
 class PIPOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, splitting it, branching it using a PyTreeInputPyTreeOutput, and
+    returning the concatenation of its outputs.
+    """
+
     INPUT_SHAPES = (86,)
     OUTPUT_SHAPES = (350,)
 
