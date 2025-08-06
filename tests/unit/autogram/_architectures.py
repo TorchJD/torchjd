@@ -201,6 +201,11 @@ class PyTreeOutputModule(ShapedModule):
 
 
 class PyTreeInputPyTreeOutputModule(ShapedModule):
+    """
+    Module taking a complex PyTree of tensors as input and returning a complex PyTree of tensors as
+    output.
+    """
+
     INPUT_SHAPES = {
         "one": [((10,), [(20,), (30,)]), (12,)],
         "two": (14,),
