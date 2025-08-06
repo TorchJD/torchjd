@@ -360,7 +360,7 @@ class ParamReuseModule(ShapedModule):
         return input @ self.matrix + (input**2) @ self.matrix
 
 
-class ModelWithInterModuleParameterReuse(ShapedModule):
+class InterModuleParamReuseModel(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
