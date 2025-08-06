@@ -11,8 +11,6 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from unit._utils import randn_
 from unit.autogram._architectures import (
     Cifar10Model,
-    Cifar10ModelPart1,
-    Cifar10ModelPart2,
     FreeParam,
     InstanceNormResNet18,
     InterModuleParamReuse,
@@ -264,8 +262,8 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
 
 
 def test_partial_autogram():
-    architecture1 = Cifar10ModelPart1
-    architecture2 = Cifar10ModelPart2
+    architecture1 = Cifar10Model.Body
+    architecture2 = Cifar10Model.Head
     batch_size = 64
 
     input_shapes = architecture1.INPUT_SHAPES
