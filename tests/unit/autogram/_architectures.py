@@ -497,25 +497,23 @@ class SomeFrozenParam(ShapedModule):
         return input @ self.matrix + (input**2) @ self.frozen_param
 
 
-class Buffered(ShapedModule):
-    INPUT_SHAPES = (27,)
-    OUTPUT_SHAPES = (27,)
-
-    def __init__(self):
-        super().__init__()
-        self.buffer = nn.Buffer(torch.tensor(10.0))
-
-    def forward(self, input: Tensor):
-        return input * self.buffer
-
-
 class WithBuffered(ShapedModule):
+    """Model using a module that has a buffer."""
+
     INPUT_SHAPES = (27,)
     OUTPUT_SHAPES = (10,)
 
+    class _Buffered(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.buffer = nn.Buffer(torch.tensor(10.0))
+
+        def forward(self, input: Tensor):
+            return input * self.buffer
+
     def __init__(self):
         super().__init__()
-        self.module_with_buffer = Buffered()
+        self.module_with_buffer = self._Buffered()
         self.linear = nn.Linear(27, 10)
 
     def forward(self, input: Tensor):
