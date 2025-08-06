@@ -481,7 +481,9 @@ class NoFreeParam(ShapedModule):
         return output
 
 
-class UnusedParam(ShapedModule):
+class SomeUnusedParam(ShapedModule):
+    """Module that has an unused param and a used param."""
+
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = (10,)
 
