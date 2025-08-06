@@ -118,62 +118,6 @@ class MultiInputMultiOutputModule(ShapedModule):
         return output1, output2
 
 
-class SimpleBranchedModel(ShapedModule):
-    """Model with one input and two branches that rejoin into one output."""
-
-    INPUT_SHAPES = (9,)
-    OUTPUT_SHAPES = (15,)
-
-    def __init__(self):
-        super().__init__()
-        self.relu = nn.ReLU()
-        self.fc0 = nn.Linear(9, 13)
-        self.fc1 = nn.Linear(13, 14)
-        self.fc2 = nn.Linear(14, 15)
-        self.fc3 = nn.Linear(13, 15)
-
-    def forward(self, input: Tensor) -> Tensor:
-        common_input = self.relu(self.fc0(input))
-        branch1 = self.fc2(self.relu(self.fc1(common_input)))
-        branch2 = self.fc3(common_input)
-        output = branch1 + branch2
-        return output
-
-
-class MISOBranchedModel(ShapedModule):
-    """
-    Model taking a single input, branching it using a MultiInputSingleOutputModule, and returning
-    its output.
-    """
-
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = MultiInputSingleOutputModule.OUTPUT_SHAPES
-
-    def __init__(self):
-        super().__init__()
-        self.miso = MultiInputSingleOutputModule()
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.miso((input, input))
-
-
-class MIMOBranchedModel(ShapedModule):
-    """
-    Model taking a single input, branching it using a MultiInputMultiOutputModule, and returning
-    the concatenation of its outputs.
-    """
-
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = (130,)
-
-    def __init__(self):
-        super().__init__()
-        self.mimo = MultiInputMultiOutputModule()
-
-    def forward(self, input: Tensor) -> Tensor:
-        return torch.concatenate(list(self.mimo((input, input))), dim=1)
-
-
 class SingleInputPyTreeOutputModule(ShapedModule):
     """Module taking a single input and returning a complex PyTree of tensors as output."""
 
@@ -248,6 +192,85 @@ class EmptyOutputModule(nn.Module):
         return None
 
 
+class SimpleBranchedModel(ShapedModule):
+    """Model with one input and two branches that rejoin into one output."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (15,)
+
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+        self.fc0 = nn.Linear(9, 13)
+        self.fc1 = nn.Linear(13, 14)
+        self.fc2 = nn.Linear(14, 15)
+        self.fc3 = nn.Linear(13, 15)
+
+    def forward(self, input: Tensor) -> Tensor:
+        common_input = self.relu(self.fc0(input))
+        branch1 = self.fc2(self.relu(self.fc1(common_input)))
+        branch2 = self.fc3(common_input)
+        output = branch1 + branch2
+        return output
+
+
+class MISOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a MultiInputSingleOutputModule, and returning
+    its output.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = MultiInputSingleOutputModule.OUTPUT_SHAPES
+
+    def __init__(self):
+        super().__init__()
+        self.miso = MultiInputSingleOutputModule()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.miso((input, input))
+
+
+class MIMOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a MultiInputMultiOutputModule, and returning
+    the concatenation of its outputs.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (130,)
+
+    def __init__(self):
+        super().__init__()
+        self.mimo = MultiInputMultiOutputModule()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.concatenate(list(self.mimo((input, input))), dim=1)
+
+
+class SIPOBranchedModel(ShapedModule):
+    """
+    Model taking a single input, branching it using a SingleInputPyTreeOutput, and returning the
+    concatenation of its outputs.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (350,)
+
+    def __init__(self):
+        super().__init__()
+        self.sipo = SingleInputPyTreeOutputModule()
+
+    def forward(self, input: Tensor):
+        first, second, third = self.sipo(input).values()
+        output1, output23 = first
+        output2, output3 = output23
+        output4 = second
+        output5 = third[0][0][0]
+
+        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
+
+
 class PIPOBranchedModel(ShapedModule):
     """
     Model taking a single input, splitting it, branching it using a PyTreeInputPyTreeOutput, and
@@ -276,29 +299,6 @@ class PIPOBranchedModel(ShapedModule):
         pytree_output = self.pipo(pytree_input)
 
         first, second, third = pytree_output.values()
-        output1, output23 = first
-        output2, output3 = output23
-        output4 = second
-        output5 = third[0][0][0]
-
-        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
-
-
-class SIPOBranchedModel(ShapedModule):
-    """
-    Model taking a single input, branching it using a SingleInputPyTreeOutput, and returning the
-    concatenation of its outputs.
-    """
-
-    INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = (350,)
-
-    def __init__(self):
-        super().__init__()
-        self.sipo = SingleInputPyTreeOutputModule()
-
-    def forward(self, input: Tensor):
-        first, second, third = self.sipo(input).values()
         output1, output23 = first
         output2, output3 = output23
         output4 = second
