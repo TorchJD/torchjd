@@ -428,6 +428,11 @@ class ModuleReuse(ShapedModule):
 
 
 class FreeParam(ShapedModule):
+    """
+    Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
+    beginning of the forward pass.
+    """
+
     INPUT_SHAPES = (15,)
     OUTPUT_SHAPES = (80,)
 
