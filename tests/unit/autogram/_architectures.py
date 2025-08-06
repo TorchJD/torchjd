@@ -21,34 +21,6 @@ class ShapedModule(nn.Module):
             raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
 
 
-class Cifar10Model(ShapedModule):
-    """
-    Architecture for image classification on the CIFAR-10 dataset, similar to what we used in
-    https://arxiv.org/pdf/2406.16232.
-    """
-
-    INPUT_SHAPES = (3, 32, 32)
-    OUTPUT_SHAPES = (10,)
-
-    def __init__(self):
-        super().__init__()
-        layers = [
-            nn.Conv2d(3, 32, 3),
-            ReLU(),
-            nn.Conv2d(32, 64, 3, groups=32),
-            nn.Sequential(nn.MaxPool2d(2), ReLU()),
-            nn.Conv2d(64, 64, 3, groups=64),
-            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
-            nn.Linear(1024, 128),
-            ReLU(),
-            nn.Linear(128, 10),
-        ]
-        self.seq = nn.Sequential(*layers)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.seq(input)
-
-
 class OverlyNestedModel(ShapedModule):
     """Model that contains many unnecessary levels of nested modules."""
 
@@ -527,18 +499,32 @@ class ModelWithModuleWithoutOutput(ShapedModule):
         return self.module2(input)
 
 
-class ResNet18(ShapedModule):
-    INPUT_SHAPES = (3, 224, 224)
-    OUTPUT_SHAPES = (1000,)
+class Cifar10Model(ShapedModule):
+    """
+    Architecture for image classification on the CIFAR-10 dataset, similar to what we used in
+    https://arxiv.org/pdf/2406.16232.
+    """
+
+    INPUT_SHAPES = (3, 32, 32)
+    OUTPUT_SHAPES = (10,)
 
     def __init__(self):
         super().__init__()
-        self.resnet18 = torchvision.models.resnet18(
-            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
-        )
+        layers = [
+            nn.Conv2d(3, 32, 3),
+            ReLU(),
+            nn.Conv2d(32, 64, 3, groups=32),
+            nn.Sequential(nn.MaxPool2d(2), ReLU()),
+            nn.Conv2d(64, 64, 3, groups=64),
+            nn.Sequential(nn.MaxPool2d(3), ReLU(), Flatten()),
+            nn.Linear(1024, 128),
+            ReLU(),
+            nn.Linear(128, 10),
+        ]
+        self.seq = nn.Sequential(*layers)
 
-    def forward(self, input: Tensor):
-        return self.resnet18(input)
+    def forward(self, input: Tensor) -> Tensor:
+        return self.seq(input)
 
 
 class Cifar10ModelPart1(ShapedModule):
@@ -576,3 +562,17 @@ class Cifar10ModelPart2(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         return self.seq(input)
+
+
+class ResNet18(ShapedModule):
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.resnet18 = torchvision.models.resnet18(
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+        )
+
+    def forward(self, input: Tensor):
+        return self.resnet18(input)
