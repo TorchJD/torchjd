@@ -174,7 +174,7 @@ class MIMOBranchedModel(ShapedModule):
         return torch.concatenate(list(self.mimo((input, input))), dim=1)
 
 
-class PyTreeModule(ShapedModule):
+class PyTreeOutputModule(ShapedModule):
     INPUT_SHAPES = (50,)
     OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
@@ -283,7 +283,7 @@ class PyTreeModel(ShapedModule):
 
     def __init__(self):
         super().__init__()
-        self.pytree_module = PyTreeModule()
+        self.pytree_module = PyTreeOutputModule()
 
     def forward(self, input: Tensor):
         first, second, third = self.pytree_module(input).values()
