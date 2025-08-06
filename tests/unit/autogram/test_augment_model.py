@@ -122,34 +122,36 @@ def test_speed(architecture: type[ShapedModule], batch_size: int):
 
 
 @mark.parametrize(
-    ["architecture", "batch_size", "n_iter"],
+    ["architecture", "batch_size"],
     [
-        (OverlyNested, 64, 3),
-        (MultiInputSingleOutput, 64, 3),
-        (MultiInputMultiOutput, 64, 3),
-        (SimpleBranched, 64, 3),
-        (MIMOBranched, 64, 3),
-        (MISOBranched, 64, 3),
-        (SIPOBranched, 64, 3),
-        (SimpleParamReuse, 64, 3),
-        (InterModuleParamReuse, 64, 3),
-        (ModuleReuse, 64, 3),
-        (FreeParam, 64, 3),
-        (NoFreeParam, 64, 3),
-        (SomeUnusedParam, 64, 3),
-        (SomeFrozenParam, 64, 3),
-        (SingleInputPyTreeOutput, 32, 3),
-        (PyTreeInputPyTreeOutput, 32, 3),
-        (PyTreeInputSingleOutput, 32, 3),
-        (PIPOBranched, 32, 3),
-        (PISOBranched, 32, 3),
-        (WithEmptyOutput, 32, 3),
-        (WithBuffered, 32, 3),
-        param(Cifar10Model, 64, 1, marks=mark.slow),
-        param(InstanceNormResNet18, 16, 1, marks=mark.slow),
+        (OverlyNested, 64),
+        (MultiInputSingleOutput, 64),
+        (MultiInputMultiOutput, 64),
+        (SimpleBranched, 64),
+        (MIMOBranched, 64),
+        (MISOBranched, 64),
+        (SIPOBranched, 64),
+        (SimpleParamReuse, 64),
+        (InterModuleParamReuse, 64),
+        (ModuleReuse, 64),
+        (FreeParam, 64),
+        (NoFreeParam, 64),
+        (SomeUnusedParam, 64),
+        (SomeFrozenParam, 64),
+        (SingleInputPyTreeOutput, 32),
+        (PyTreeInputPyTreeOutput, 32),
+        (PyTreeInputSingleOutput, 32),
+        (PIPOBranched, 32),
+        (PISOBranched, 32),
+        (WithEmptyOutput, 32),
+        (WithBuffered, 32),
+        param(Cifar10Model, 64, marks=mark.slow),
+        param(InstanceNormResNet18, 16, marks=mark.slow),
     ],
 )
-def test_equivalence(architecture: type[ShapedModule], batch_size: int, n_iter: int):
+def test_equivalence(architecture: type[ShapedModule], batch_size: int):
+    n_iter = 3
+
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
