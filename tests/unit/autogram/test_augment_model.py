@@ -1,5 +1,3 @@
-from typing import cast
-
 import torch
 from pytest import mark, param
 from torch.optim import SGD
@@ -42,8 +40,7 @@ from utils.tensors import make_tensors
 from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
-from torchjd.aggregation import UPGrad
-from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
+from torchjd.aggregation import UPGrad, UPGradWrapper
 
 PARAMETRIZATIONS = [
     (OverlyNested, 32),
@@ -82,8 +79,8 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
+    W = UPGradWrapper()
     A = UPGrad()
-    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
 
     torch.manual_seed(0)
     model_autojac = architecture().to(device=DEVICE)
@@ -123,8 +120,8 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
+    W = UPGradWrapper()
     A = UPGrad()
-    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
@@ -175,8 +172,7 @@ def test_partial_autogram():
     input_shapes = architecture1.INPUT_SHAPES
     output_shapes = architecture2.OUTPUT_SHAPES
 
-    A = UPGrad()
-    W = cast(Weighting[PSDMatrix], A.weighting.weighting)
+    W = UPGradWrapper()
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
