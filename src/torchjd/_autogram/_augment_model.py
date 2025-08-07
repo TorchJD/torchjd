@@ -1,4 +1,5 @@
 from torch import nn
+from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
@@ -91,7 +92,7 @@ def augment_model_for_gramian_based_iwrm(
             >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
     """
 
-    handles: list[RemovableHandle] = []
+    handles: list[TorchRemovableHandle] = []
     gramian_accumulator = GramianAccumulator()
     hook_activator = Activator()
     target_edges = EdgeRegistry()
