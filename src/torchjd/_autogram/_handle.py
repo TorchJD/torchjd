@@ -5,7 +5,8 @@ class RemovableHandle:
     """
     A handle which provides the capability to remove all hooks added by torchjd for autogram.
 
-    Typical usage is
+    Typical usage is:
+
     >>> # Augment the model
     >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
     >>>
