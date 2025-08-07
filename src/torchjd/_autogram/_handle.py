@@ -2,11 +2,28 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 
 class RemovableHandle:
-    """TODO: add docstring (user-facing)"""
+    """
+    A handle which provides the capability to remove all hooks added by torchjd for autogram.
+
+    Typical usage is
+    >>> # Augment the model
+    >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
+    >>>
+    >>>  # Use it
+    >>>  # ...
+    >>>
+    >>> # De-augment the model
+    >>> handle.remove()
+    >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
+    """
 
     def __init__(self, handles: list[TorchRemovableHandle]) -> None:
         self._handles = handles
 
     def remove(self):
+        """
+        Remove from a model and its submodules the module hooks added by torchjd for autogram. This
+        can be used to de-augment a model.
+        """
         for handle in self._handles:
             handle.remove()
