@@ -71,7 +71,7 @@ STANDARD_PARAMETRIZATIONS = [
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Cifar10Model, 32, marks=mark.slow),
-    param(InstanceNormResNet18, 16, marks=mark.slow),
+    param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
 
 BENCHMARKING_PARAMETRIZATIONS = [
