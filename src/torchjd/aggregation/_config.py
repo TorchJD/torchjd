@@ -29,7 +29,7 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import Aggregator
-from ._sum import _SumWeighting
+from ._sum import SumWeighting
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 
@@ -64,7 +64,7 @@ class ConFIG(Aggregator):
 
     def __init__(self, pref_vector: Tensor | None = None):
         super().__init__()
-        self.weighting = pref_vector_to_weighting(pref_vector, default=_SumWeighting())
+        self.weighting = pref_vector_to_weighting(pref_vector, default=SumWeighting())
         self._pref_vector = pref_vector
 
         # This prevents computing gradients that can be very wrong.

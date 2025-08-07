@@ -26,10 +26,10 @@ class Sum(WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(weighting=_SumWeighting())
+        super().__init__(weighting=SumWeighting())
 
 
-class _SumWeighting(Weighting[Matrix]):
+class SumWeighting(Weighting[Matrix]):
     r"""
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that gives the weights
     :math:`\begin{bmatrix} 1 & \dots & 1 \end{bmatrix}^T \in \mathbb{R}^m`.

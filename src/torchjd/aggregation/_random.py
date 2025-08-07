@@ -32,10 +32,10 @@ class Random(WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(_RandomWeighting())
+        super().__init__(RandomWeighting())
 
 
-class _RandomWeighting(Weighting[Matrix]):
+class RandomWeighting(Weighting[Matrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that generates positive random weights
     at each call, as defined in algorithm 2 of `Reasonable Effectiveness of Random Weighting: A

@@ -29,7 +29,7 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._mean import _MeanWeighting
+from ._mean import MeanWeighting
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
 
@@ -62,7 +62,7 @@ class AlignedMTL(GramianWeightedAggregator):
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
-        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self._pref_vector = pref_vector
 
         super().__init__(AlignedMTLWrapper(weighting))
@@ -85,7 +85,7 @@ class AlignedMTLWrapper(Weighting[PSDMatrix]):
         responsible for extracting weight vectors from the input matrices.
     """
 
-    def __init__(self, weighting: Weighting[PSDMatrix] = _MeanWeighting()):
+    def __init__(self, weighting: Weighting[PSDMatrix] = MeanWeighting()):
         super().__init__()
         self.weighting = weighting
 

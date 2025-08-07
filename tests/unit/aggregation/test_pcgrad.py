@@ -5,7 +5,7 @@ from utils.tensors import ones_, randn_
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation._pcgrad import PCGradWeighting
-from torchjd.aggregation._sum import _SumWeighting
+from torchjd.aggregation._sum import SumWeighting
 from torchjd.aggregation._upgrad import UPGradWrapper
 from torchjd.aggregation._utils.gramian import compute_gramian
 
@@ -53,7 +53,7 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
 
     pc_grad_weighting = PCGradWeighting()
     upgrad_sum_weighting = UPGradWrapper(
-        _SumWeighting(), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
+        SumWeighting(), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
     )
 
     result = pc_grad_weighting(gramian)

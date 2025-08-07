@@ -7,16 +7,16 @@ vector, generally to be used like a gradient.
 from ._aggregator_bases import Aggregator
 from ._aligned_mtl import AlignedMTL, AlignedMTLWrapper
 from ._config import ConFIG
-from ._constant import Constant
+from ._constant import Constant, ConstantWeighting
 from ._dualproj import DualProj, DualProjWrapper
 from ._graddrop import GradDrop
 from ._imtl_g import IMTLG, IMTLGWeighting
 from ._krum import Krum, KrumWeighting
-from ._mean import Mean
+from ._mean import Mean, MeanWeighting
 from ._mgda import MGDA, MGDAWeighting
 from ._pcgrad import PCGrad, PCGradWeighting
-from ._random import Random
-from ._sum import Sum
+from ._random import Random, RandomWeighting
+from ._sum import Sum, SumWeighting
 from ._trimmed_mean import TrimmedMean
 from ._upgrad import UPGrad, UPGradWrapper
 from ._utils.check_dependencies import (

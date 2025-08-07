@@ -26,10 +26,10 @@ class Mean(WeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(weighting=_MeanWeighting())
+        super().__init__(weighting=MeanWeighting())
 
 
-class _MeanWeighting(Weighting[Matrix]):
+class MeanWeighting(Weighting[Matrix]):
     r"""
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that gives the weights
     :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in

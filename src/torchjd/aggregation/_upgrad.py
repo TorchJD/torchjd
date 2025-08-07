@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._mean import _MeanWeighting
+from ._mean import MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
@@ -49,7 +49,7 @@ class UPGrad(GramianWeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
+        weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
@@ -88,7 +88,7 @@ class UPGradWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix] = _MeanWeighting(),
+        weighting: Weighting[PSDMatrix] = MeanWeighting(),
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",

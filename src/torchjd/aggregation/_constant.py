@@ -28,7 +28,7 @@ class Constant(WeightedAggregator):
     """
 
     def __init__(self, weights: Tensor):
-        super().__init__(weighting=_ConstantWeighting(weights=weights))
+        super().__init__(weighting=ConstantWeighting(weights=weights))
         self._weights = weights
 
     def __repr__(self) -> str:
@@ -39,7 +39,7 @@ class Constant(WeightedAggregator):
         return f"{self.__class__.__name__}([{weights_str}])"
 
 
-class _ConstantWeighting(Weighting[Matrix]):
+class ConstantWeighting(Weighting[Matrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that returns constant, pre-determined
     weights.
