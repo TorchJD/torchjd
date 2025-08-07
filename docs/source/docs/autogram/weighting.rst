@@ -3,7 +3,7 @@
 Weighting
 =========
 
-.. autoclass:: torchjd.aggregation._weighting_bases.Weighting
+.. autoclass:: torchjd.aggregation.Weighting
     :members:
     :undoc-members:
     :exclude-members: forward
