@@ -3,6 +3,6 @@
 Handle
 ======
 
-.. autoclass:: torchjd.HandleManager
+.. autoclass:: torchjd.RemovableHandle
     :members:
     :undoc-members:

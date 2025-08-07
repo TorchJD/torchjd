@@ -1,30 +1,11 @@
-from abc import ABC, abstractmethod
-
 from torch.utils.hooks import RemovableHandle
 
 
-class HandleManager(ABC):
+class RemovableHandle:
     """TODO: add docstring (user-facing)"""
 
-    @abstractmethod
-    def remove(self):
-        """
-        Remove from a model the module hooks added by torchjd for autogram. This can be used to
-        de-augment a model.
-        """
-
-
-class AutogramHandleManager(HandleManager):
-    """
-    Private `HandleManager` that is used to track Module hooks' handles to de-augment a model that
-    was augmented for autogram.
-    """
-
-    def __init__(self) -> None:
-        self._handles: list[RemovableHandle] = []
-
-    def add_handle(self, handle: RemovableHandle) -> None:
-        self._handles.append(handle)
+    def __init__(self, handles: list[RemovableHandle]) -> None:
+        self._handles = handles
 
     def remove(self):
         for handle in self._handles:

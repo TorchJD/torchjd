@@ -4,7 +4,7 @@ from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._forward_hooks import make_model_hook, make_module_hook
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
-from torchjd._autogram._handle import AutogramHandleManager, HandleManager
+from torchjd._autogram._handle import RemovableHandle
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 # Note about import from protected _pytree module:
@@ -19,7 +19,7 @@ from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 def augment_model_for_gramian_based_iwrm(
     model: nn.Module,
     weighting: Weighting[PSDMatrix],
-) -> HandleManager:
+) -> RemovableHandle:
     """
     Adds module hooks to a model and its child modules so that the backward pass is replaced by a
     step of Gramian-based Jacobian descent automatically.
@@ -34,6 +34,8 @@ def augment_model_for_gramian_based_iwrm(
 
     :param model: The model to augment.
     :param weighting: The object responsible for extracting weights from the Gramian.
+    :returns: A :class:`~torchjd._autogram._handle.RemovableHandle` that can be used to return the
+        model to its original state.
 
     .. admonition::
         Example
@@ -75,7 +77,8 @@ def augment_model_for_gramian_based_iwrm(
 
     .. note::
         If you want to remove the hooks added by ``augment_model_for_gramian_based_iwrm``, you can
-        call ``remove()`` on the :class:`~torchjd._autogram._handle.HandleManager` that it returns.
+        call ``remove()`` on the :class:`~torchjd._autogram._handle.RemovableHandle` that it
+        returns.
 
             >>> # Augment the model
             >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
@@ -88,7 +91,7 @@ def augment_model_for_gramian_based_iwrm(
             >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
     """
 
-    handle_manager = AutogramHandleManager()
+    handles: list[RemovableHandle] = []
     gramian_accumulator = GramianAccumulator()
     hook_activator = Activator()
     target_edges = EdgeRegistry()
@@ -101,11 +104,12 @@ def augment_model_for_gramian_based_iwrm(
 
         module_hook = make_module_hook(target_edges, gramian_accumulator, hook_activator)
         handle = module.register_forward_hook(module_hook)
-        handle_manager.add_handle(handle)
+        handles.append(handle)
 
     # Add model forward hook to trigger autogram
     model_hook = make_model_hook(weighting, target_edges, gramian_accumulator, hook_activator)
     handle = model.register_forward_hook(model_hook)
-    handle_manager.add_handle(handle)
+    handles.append(handle)
+    handle_manager = RemovableHandle(handles)
 
     return handle_manager
