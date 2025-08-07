@@ -34,7 +34,8 @@ def augment_model_for_gramian_based_iwrm(
     - Backpropagate these weights for a normal backward pass.
 
     :param model: The model to augment.
-    :param weighting: The object responsible for extracting weights from the Gramian.
+    :param weighting: The object responsible for extracting weights from the Gramian. You can find
+        below a list of available weightings.
     :returns: A :class:`~torchjd._autogram._handle.RemovableHandle` that can be used to return the
         model to its original state.
 
@@ -75,6 +76,22 @@ def augment_model_for_gramian_based_iwrm(
         and has backpropagated these weights to obtain the gradients to use to update the model
         parameters, stored in their ``.grad`` fields. The call to ``optimizer.step()`` then updates
         the model parameters based on those ``.grad`` fields.
+
+    .. note::
+        The following weightings are supported by autogram:
+
+        * :class:`~torchjd.aggregation.UPGradWrapper`
+        * :class:`~torchjd.aggregation.AlignedMTLWrapper`
+        * :class:`~torchjd.aggregation.CAGradWeighting`
+        * :class:`~torchjd.aggregation.ConstantWeighting`
+        * :class:`~torchjd.aggregation.DualProjWrapper`
+        * :class:`~torchjd.aggregation.IMTLGWeighting`
+        * :class:`~torchjd.aggregation.KrumWeighting`
+        * :class:`~torchjd.aggregation.MeanWeighting`
+        * :class:`~torchjd.aggregation.MGDAWeighting`
+        * :class:`~torchjd.aggregation.PCGradWeighting`
+        * :class:`~torchjd.aggregation.RandomWeighting`
+        * :class:`~torchjd.aggregation.SumWeighting`
 
     .. note::
         If you want to remove the hooks added by ``augment_model_for_gramian_based_iwrm``, you can
