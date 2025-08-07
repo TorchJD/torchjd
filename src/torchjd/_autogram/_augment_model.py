@@ -92,21 +92,6 @@ def augment_model_for_gramian_based_iwrm(
         * :class:`~torchjd.aggregation.PCGradWeighting`
         * :class:`~torchjd.aggregation.RandomWeighting`
         * :class:`~torchjd.aggregation.SumWeighting`
-
-    .. note::
-        If you want to remove the hooks added by ``augment_model_for_gramian_based_iwrm``, you can
-        call ``remove()`` on the :class:`~torchjd._autogram._handle.RemovableHandle` that it
-        returns.
-
-            >>> # Augment the model
-            >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
-            >>>
-            >>>  # Use it
-            >>>  # ...
-            >>>
-            >>> # De-augment the model
-            >>> handle.remove()
-            >>> # All hooks added by augment_model_for_gramian_based_iwrm have now been removed
     """
 
     handles: list[TorchRemovableHandle] = []
