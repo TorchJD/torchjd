@@ -32,7 +32,7 @@ class MGDA(GramianWeightedAggregator):
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
-        super().__init__(_MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
+        super().__init__(MGDAWeighting(epsilon=epsilon, max_iters=max_iters))
         self._epsilon = epsilon
         self._max_iters = max_iters
 
@@ -40,7 +40,7 @@ class MGDA(GramianWeightedAggregator):
         return f"{self.__class__.__name__}(epsilon={self._epsilon}, max_iters={self._max_iters})"
 
 
-class _MGDAWeighting(Weighting[PSDMatrix]):
+class MGDAWeighting(Weighting[PSDMatrix]):
     r"""
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using Algorithm
     2 of `Multi-Task Learning as Multi-Objective Optimization
@@ -50,7 +50,7 @@ class _MGDAWeighting(Weighting[PSDMatrix]):
     :param max_iters: The maximum number of iterations of the optimization loop.
     """
 
-    def __init__(self, epsilon: float, max_iters: int):
+    def __init__(self, epsilon: float = 0.001, max_iters: int = 100):
         super().__init__()
         self.epsilon = epsilon
         self.max_iters = max_iters

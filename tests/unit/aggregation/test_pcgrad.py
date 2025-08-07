@@ -4,9 +4,9 @@ from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
 from torchjd.aggregation import PCGrad
-from torchjd.aggregation._pcgrad import _PCGradWeighting
+from torchjd.aggregation._pcgrad import PCGradWeighting
 from torchjd.aggregation._sum import _SumWeighting
-from torchjd.aggregation._upgrad import _UPGradWrapper
+from torchjd.aggregation._upgrad import UPGradWrapper
 from torchjd.aggregation._utils.gramian import compute_gramian
 
 from ._asserts import assert_expected_structure, assert_non_differentiable
@@ -51,8 +51,8 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     matrix = randn_(shape)
     gramian = compute_gramian(matrix)
 
-    pc_grad_weighting = _PCGradWeighting()
-    upgrad_sum_weighting = _UPGradWrapper(
+    pc_grad_weighting = PCGradWeighting()
+    upgrad_sum_weighting = UPGradWrapper(
         _SumWeighting(), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
     )
 

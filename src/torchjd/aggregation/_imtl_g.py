@@ -29,13 +29,13 @@ class IMTLG(GramianWeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(_IMTLGWeighting())
+        super().__init__(IMTLGWeighting())
 
         # This prevents computing gradients that can be very wrong.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _IMTLGWeighting(Weighting[PSDMatrix]):
+class IMTLGWeighting(Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights as described in
     the definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization

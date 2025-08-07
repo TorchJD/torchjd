@@ -40,7 +40,7 @@ class Krum(GramianWeightedAggregator):
     def __init__(self, n_byzantine: int, n_selected: int = 1):
         self._n_byzantine = n_byzantine
         self._n_selected = n_selected
-        super().__init__(_KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
+        super().__init__(KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
 
     def __repr__(self) -> str:
         return (
@@ -52,7 +52,7 @@ class Krum(GramianWeightedAggregator):
         return f"Krum{self._n_byzantine}-{self._n_selected}"
 
 
-class _KrumWeighting(Weighting[PSDMatrix]):
+class KrumWeighting(Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the
     (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
@@ -64,7 +64,7 @@ class _KrumWeighting(Weighting[PSDMatrix]):
     :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
     """
 
-    def __init__(self, n_byzantine: int, n_selected: int):
+    def __init__(self, n_byzantine: int, n_selected: int = 1):
         super().__init__()
         if n_byzantine < 0:
             raise ValueError(

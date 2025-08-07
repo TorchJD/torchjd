@@ -4,7 +4,7 @@ from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
 from torchjd.aggregation import MGDA
-from torchjd.aggregation._mgda import _MGDAWeighting
+from torchjd.aggregation._mgda import MGDAWeighting
 from torchjd.aggregation._utils.gramian import compute_gramian
 
 from ._asserts import (
@@ -47,7 +47,7 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     matrix = randn_(shape)
     gramian = compute_gramian(matrix)
 
-    weighting = _MGDAWeighting(epsilon=1e-05, max_iters=1000)
+    weighting = MGDAWeighting(epsilon=1e-05, max_iters=1000)
     weights = weighting(gramian)
 
     output_direction = gramian @ weights  # Stationarity

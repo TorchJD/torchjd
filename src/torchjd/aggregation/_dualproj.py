@@ -56,7 +56,7 @@ class DualProj(GramianWeightedAggregator):
         self._solver = solver
 
         super().__init__(
-            _DualProjWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            DualProjWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
@@ -72,7 +72,7 @@ class DualProj(GramianWeightedAggregator):
         return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _DualProjWrapper(Weighting[PSDMatrix]):
+class DualProjWrapper(Weighting[PSDMatrix]):
     """
     Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the extracted
     weight vector such the corresponding aggregation is projected onto the dual cone of the rows
@@ -92,10 +92,10 @@ class _DualProjWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix],
-        norm_eps: float,
-        reg_eps: float,
-        solver: Literal["quadprog"],
+        weighting: Weighting[PSDMatrix] = _MeanWeighting(),
+        norm_eps: float = 0.0001,
+        reg_eps: float = 0.0001,
+        solver: Literal["quadprog"] = "quadprog",
     ):
         super().__init__()
         self.weighting = weighting

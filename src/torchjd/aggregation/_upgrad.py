@@ -56,7 +56,7 @@ class UPGrad(GramianWeightedAggregator):
         self._solver = solver
 
         super().__init__(
-            _UPGradWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            UPGradWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
@@ -72,7 +72,7 @@ class UPGrad(GramianWeightedAggregator):
         return f"UPGrad{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _UPGradWrapper(Weighting[PSDMatrix]):
+class UPGradWrapper(Weighting[PSDMatrix]):
     """
     Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the weights
     vector such that each weighted row is projected onto the dual cone of all rows.
@@ -88,10 +88,10 @@ class _UPGradWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix],
-        norm_eps: float,
-        reg_eps: float,
-        solver: Literal["quadprog"],
+        weighting: Weighting[PSDMatrix] = _MeanWeighting(),
+        norm_eps: float = 0.0001,
+        reg_eps: float = 0.0001,
+        solver: Literal["quadprog"] = "quadprog",
     ):
         super().__init__()
         self.weighting = weighting

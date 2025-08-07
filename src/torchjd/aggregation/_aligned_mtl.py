@@ -65,7 +65,7 @@ class AlignedMTL(GramianWeightedAggregator):
         weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
 
-        super().__init__(_AlignedMTLWrapper(weighting))
+        super().__init__(AlignedMTLWrapper(weighting))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
@@ -74,7 +74,7 @@ class AlignedMTL(GramianWeightedAggregator):
         return f"AlignedMTL{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _AlignedMTLWrapper(Weighting[PSDMatrix]):
+class AlignedMTLWrapper(Weighting[PSDMatrix]):
     """
     Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that corrects the extracted
     weights with the balance transformation defined in Algorithm 1 of `Independent Component
@@ -85,7 +85,7 @@ class _AlignedMTLWrapper(Weighting[PSDMatrix]):
         responsible for extracting weight vectors from the input matrices.
     """
 
-    def __init__(self, weighting: Weighting[PSDMatrix]):
+    def __init__(self, weighting: Weighting[PSDMatrix] = _MeanWeighting()):
         super().__init__()
         self.weighting = weighting
 
