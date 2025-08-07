@@ -2,7 +2,7 @@ from collections.abc import Iterable
 
 import torch
 from torch import Tensor
-from unit._utils import ones_, tensor_, zeros_
+from utils.tensors import ones_, tensor_, zeros_
 
 from torchjd._autojac._transform import Stack, Transform
 from torchjd._autojac._transform._base import TensorDict

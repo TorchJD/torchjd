@@ -107,7 +107,7 @@ a = torch.ones(3, 4)
 ```
 use
 ```python
-from unit._utils import ones_
+from utils.tensors import ones_
 a = ones_(3, 4)
 ```
 

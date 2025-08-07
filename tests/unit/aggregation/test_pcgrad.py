@@ -1,7 +1,7 @@
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
-from unit._utils import ones_, randn_
+from utils.tensors import ones_, randn_
 
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation._pcgrad import _PCGradWeighting

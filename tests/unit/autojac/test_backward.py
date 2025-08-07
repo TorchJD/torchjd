@@ -2,7 +2,7 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
-from unit._utils import randn_, tensor_
+from utils.tensors import randn_, tensor_
 
 from torchjd import backward
 from torchjd._autojac._backward import _create_transform

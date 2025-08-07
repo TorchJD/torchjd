@@ -1,15 +1,11 @@
-import time
-from collections.abc import Callable
 from typing import cast
 
 import torch
 from pytest import mark, param
-from torch import Tensor, nn
-from torch.nn.functional import mse_loss
 from torch.optim import SGD
-from torch.utils._pytree import PyTree, tree_flatten, tree_map
-from unit._utils import randn_
-from unit.autogram._architectures import (
+from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
+from unit.conftest import DEVICE
+from utils.architectures import (
     Cifar10Model,
     FreeParam,
     InstanceNormResNet18,
@@ -35,17 +31,21 @@ from unit.autogram._architectures import (
     WithBuffered,
     WithNoTensorOutput,
 )
-from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
-from unit.conftest import DEVICE
+from utils.forward_backwards import (
+    autograd_forward_backward,
+    autogram_forward_backward,
+    autojac_forward_backward,
+    make_mse_loss_fn,
+)
+from utils.tensors import make_tensors
 
-from torchjd import backward
 from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
-from torchjd.aggregation import Aggregator, Mean, UPGrad
+from torchjd.aggregation import UPGrad
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
-STANDARD_PARAMETRIZATIONS = [
+PARAMETRIZATIONS = [
     (OverlyNested, 32),
     (MultiInputSingleOutput, 32),
     (MultiInputMultiOutput, 32),
@@ -74,82 +74,8 @@ STANDARD_PARAMETRIZATIONS = [
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
 
-BENCHMARKING_PARAMETRIZATIONS = [
-    (FreeParam, 64),
-    (NoFreeParam, 64),
-    (Cifar10Model, 64),
-    (InstanceNormResNet18, 16),
-]
 
-
-@mark.slow
-@mark.parametrize(["architecture", "batch_size"], BENCHMARKING_PARAMETRIZATIONS)
-def test_speed(architecture: type[ShapedModule], batch_size: int):
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
-    loss_fn = make_mse_loss_fn(targets)
-
-    model = architecture().to(device=DEVICE)
-
-    A = Mean()
-    W = A.weighting
-
-    print(f"\nTimes for forward + backward with BS={batch_size}, A={A} on {DEVICE}.")
-
-    def fn_autograd():
-        autograd_forward_backward(model, inputs, loss_fn)
-
-    def init_fn_autograd():
-        torch.cuda.empty_cache()
-        fn_autograd()
-
-    def fn_autojac():
-        autojac_forward_backward(model, inputs, loss_fn, A)
-
-    def init_fn_autojac():
-        torch.cuda.empty_cache()
-        fn_autojac()
-
-    def fn_autogram():
-        autogram_forward_backward(model, inputs, loss_fn)
-
-    def init_fn_autogram():
-        torch.cuda.empty_cache()
-        fn_autogram()
-
-    def optionally_cuda_sync():
-        if str(DEVICE).startswith("cuda"):
-            torch.cuda.synchronize()
-
-    def pre_fn():
-        model.zero_grad()
-        optionally_cuda_sync()
-
-    def post_fn():
-        optionally_cuda_sync()
-
-    n_runs = 10
-    autograd_times = torch.tensor(time_call(fn_autograd, init_fn_autograd, pre_fn, post_fn, n_runs))
-    print(f"autograd times (avg = {autograd_times.mean():.5f}, std = {autograd_times.std():.5f}")
-    print(autograd_times)
-    print()
-
-    autojac_times = torch.tensor(time_call(fn_autojac, init_fn_autojac, pre_fn, post_fn, n_runs))
-    print(f"autojac times (avg = {autojac_times.mean():.5f}, std = {autojac_times.std():.5f}")
-    print(autojac_times)
-    print()
-
-    handle = augment_model_for_gramian_based_iwrm(model, W)
-    autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
-    handle.remove()
-    print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
-    print(autogram_times)
-    print()
-
-
-@mark.parametrize(["architecture", "batch_size"], STANDARD_PARAMETRIZATIONS)
+@mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 def test_equivalence(architecture: type[ShapedModule], batch_size: int):
     n_iter = 3
 
@@ -192,7 +118,7 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int):
         model_autogram.zero_grad()
 
 
-@mark.parametrize(["architecture", "batch_size"], STANDARD_PARAMETRIZATIONS)
+@mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
@@ -295,89 +221,3 @@ def test_partial_autogram():
 
     assert_tensor_dicts_are_close(grads1, expected_grads1)
     assert_tensor_dicts_are_close(grads2, expected_grads2)
-
-
-def noop():
-    pass
-
-
-def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> list[float]:
-    init_fn()
-
-    times = []
-    for _ in range(n_runs):
-        pre_fn()
-        start = time.perf_counter()
-        fn()
-        post_fn()
-        elapsed_time = time.perf_counter() - start
-        times.append(elapsed_time)
-
-    return times
-
-
-def make_tensors(batch_size: int, tensor_shapes: PyTree) -> PyTree:
-    def is_leaf(s):
-        return isinstance(s, tuple) and all([isinstance(e, int) for e in s])
-
-    return tree_map(lambda s: randn_((batch_size,) + s), tensor_shapes, is_leaf=is_leaf)
-
-
-def autograd_forward_backward(
-    model: nn.Module,
-    inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
-) -> None:
-    losses = forward_pass(model, inputs, loss_fn)
-    losses.sum().backward()
-
-
-def autojac_forward_backward(
-    model: nn.Module,
-    inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
-    aggregator: Aggregator,
-) -> None:
-    losses = forward_pass(model, inputs, loss_fn)
-    backward(losses, aggregator=aggregator)
-
-
-def autogram_forward_backward(
-    model: nn.Module,
-    inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
-) -> None:
-    losses = forward_pass(model, inputs, loss_fn)
-    losses.backward(torch.ones_like(losses))
-
-
-def forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
-    output = model(inputs)
-
-    assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SHAPES
-
-    losses = loss_fn(output)
-    return losses
-
-
-def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], Tensor]:
-    def mse_loss_fn(outputs: PyTree) -> Tensor:
-        flat_outputs, _ = tree_flatten(outputs)
-        flat_targets, _ = tree_flatten(targets)
-
-        # For each (output_i, target_i) pair, compute the MSE at each coordinate and store it in
-        # a matrix of shape [batch_size, dim_i], where dim_i is the number of elements of
-        # output_i and target_i. Concatenate them along dim=1 to obtain a matrix of MSEs of
-        # shape [batch_size, dim], where dim is the total number of elements of the outputs.
-        # Then, reduce this into a vector of losses of size [batch_size], by applying the mean
-        # along dim=1.
-        losses = torch.concatenate(
-            [
-                mse_loss(output, target, reduction="none").flatten(start_dim=1)
-                for output, target in zip(flat_outputs, flat_targets)
-            ],
-            dim=1,
-        ).mean(dim=1)
-        return losses
-
-    return mse_loss_fn

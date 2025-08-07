@@ -2,8 +2,8 @@ import math
 
 import torch
 from pytest import mark, raises
-from unit._utils import rand_, tensor_, zeros_
 from unit.conftest import DEVICE
+from utils.tensors import rand_, tensor_, zeros_
 
 from torchjd._autojac._transform import OrderedSet, RequirementError
 from torchjd._autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape

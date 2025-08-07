@@ -1,7 +1,7 @@
 import torch
 from pytest import raises
 from torch.testing import assert_close
-from unit._utils import tensor_, zeros_
+from utils.tensors import tensor_, zeros_
 
 from torchjd._autojac._transform import (
     Accumulate,

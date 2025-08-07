@@ -1,5 +1,5 @@
 from pytest import raises
-from unit._utils import tensor_
+from utils.tensors import tensor_
 
 from torchjd._autojac._transform import Init, RequirementError
 
