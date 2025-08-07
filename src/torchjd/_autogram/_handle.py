@@ -15,7 +15,7 @@ class RemovableHandle:
     >>>
     >>> # De-augment the model
     >>> handle.remove()
-    >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
+    >>> # All hooks added by augment_model_for_gramian_based_iwrm have now been removed
     """
 
     def __init__(self, handles: list[TorchRemovableHandle]) -> None:

@@ -89,7 +89,7 @@ def augment_model_for_gramian_based_iwrm(
             >>>
             >>> # De-augment the model
             >>> handle.remove()
-            >>> # All hooks added by augment_model_for_gramian_based_iwrm should have been removed
+            >>> # All hooks added by augment_model_for_gramian_based_iwrm have now been removed
     """
 
     handles: list[TorchRemovableHandle] = []
