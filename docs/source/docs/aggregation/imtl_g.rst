@@ -7,3 +7,8 @@ IMTL-G
     :members:
     :undoc-members:
     :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.IMTLGWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward

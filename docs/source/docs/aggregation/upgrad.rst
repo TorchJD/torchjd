@@ -7,3 +7,8 @@ UPGrad
     :members:
     :undoc-members:
     :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.UPGradWrapper
+    :members:
+    :undoc-members:
+    :exclude-members: forward
