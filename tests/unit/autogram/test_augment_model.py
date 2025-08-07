@@ -165,8 +165,8 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int):
     model_autogram = architecture().to(device=DEVICE)
 
     augment_model_for_gramian_based_iwrm(model_autogram, W)
-    optimizer_autojac = SGD(model_autojac.parameters())
-    optimizer_autogram = SGD(model_autogram.parameters())
+    optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
+    optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
     for i in range(n_iter):
         inputs = make_tensors(batch_size, input_shapes)
