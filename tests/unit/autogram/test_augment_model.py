@@ -33,7 +33,7 @@ from unit.autogram._architectures import (
     SomeFrozenParam,
     SomeUnusedParam,
     WithBuffered,
-    WithEmptyOutput,
+    WithNoTensorOutput,
 )
 from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
@@ -61,7 +61,7 @@ STANDARD_PARAMETRIZATIONS = [
     (PIPOBranched, 1),
     (PIPOBranched, 2),
     (PIPOBranched, 32),
-    (WithEmptyOutput, 32),
+    (WithNoTensorOutput, 32),
     (WithBuffered, 32),
     (SimpleParamReuse, 32),
     (InterModuleParamReuse, 32),

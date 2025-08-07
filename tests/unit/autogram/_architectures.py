@@ -332,17 +332,16 @@ class PIPOBranched(ShapedModule):
         return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
-class WithEmptyOutput(ShapedModule):
+class WithNoTensorOutput(ShapedModule):
     """
-    Model that has a module that does not return anything and a module that returns a weird empty
-    PyTree. In reality, such a module could be used to gather some stats or print something, even
-    though this is not standard.
+    Model that has modules that return no tensor. In reality, such a module could be used to gather
+    some stats or print something, even though this is not standard.
     """
 
     INPUT_SHAPES = (27,)
     OUTPUT_SHAPES = (10,)
 
-    class _EmptyOutput(nn.Module):
+    class _NoneOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
             super().__init__()
             self.matrix = nn.Parameter(torch.randn(shape))
@@ -350,7 +349,7 @@ class WithEmptyOutput(ShapedModule):
         def forward(self, _: PyTree) -> None:
             pass
 
-    class _WeirdEmptyOutput(nn.Module):
+    class _NonePyTreeOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
             super().__init__()
             self.matrix = nn.Parameter(torch.randn(shape))
@@ -358,16 +357,36 @@ class WithEmptyOutput(ShapedModule):
         def forward(self, _: PyTree) -> PyTree:
             return {"one": [None, tuple()], "two": None}
 
+    class _EmptyTupleOutput(nn.Module):
+        def __init__(self, shape: tuple[int, ...]):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(shape))
+
+        def forward(self, _: PyTree) -> PyTree:
+            return tuple()
+
+    class _EmptyPytreeOutput(nn.Module):
+        def __init__(self, shape: tuple[int, ...]):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(shape))
+
+        def forward(self, _: PyTree) -> PyTree:
+            return {"one": [tuple(), tuple()], "two": [[], []]}
+
     def __init__(self):
         super().__init__()
-        self.module1 = self._EmptyOutput((27, 10))
-        self.module2 = self._WeirdEmptyOutput((27, 10))
-        self.module3 = nn.Linear(27, 10)
+        self.none_output = self._NoneOutput((27, 10))
+        self.none_pytree_output = self._NonePyTreeOutput((27, 10))
+        self.empty_tuple_output = self._EmptyTupleOutput((27, 10))
+        self.empty_pytree_output = self._EmptyPytreeOutput((27, 10))
+        self.linear = nn.Linear(27, 10)
 
     def forward(self, input: Tensor):
-        self.module1(input)
-        _ = self.module2(input)
-        return self.module3(input)
+        _ = self.none_output(input)
+        _ = self.none_pytree_output(input)
+        _ = self.empty_tuple_output(input)
+        _ = self.empty_pytree_output(input)
+        return self.linear(input)
 
 
 class SimpleParamReuse(ShapedModule):
