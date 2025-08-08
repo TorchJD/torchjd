@@ -72,12 +72,18 @@ class GramianAccumulator:
             self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
-    def gramian(self) -> Tensor | None:
+    def gramian(self) -> Tensor:
         """
         Get the Gramian matrix accumulated so far.
 
         :returns: Accumulated Gramian matrix of shape (batch_size, batch_size) or None if nothing
             was accumulated yet.
         """
+
+        if self._gramian is None:
+            raise ValueError(
+                "No Jacobian was accumulated into the Gramian. This is most likely because autogram"
+                "did not detect any parameters in your model."
+            )
 
         return self._gramian
