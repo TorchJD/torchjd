@@ -72,7 +72,7 @@ class GramianAccumulator:
             self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
-    def gramian(self) -> Tensor:
+    def gramian(self) -> Tensor | None:
         """
         Get the Gramian matrix accumulated so far.
 
@@ -80,7 +80,4 @@ class GramianAccumulator:
             was accumulated yet.
         """
 
-        # If this code is called, the assert must pass as we have a non-empty set of `leaf_targets`
-        # in the call to `torch.autograd.grad` in `AutogramScaler`.
-        assert self._gramian is not None
         return self._gramian

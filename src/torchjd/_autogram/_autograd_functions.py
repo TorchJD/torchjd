@@ -1,3 +1,5 @@
+from typing import cast
+
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
@@ -98,7 +100,9 @@ def _make_autogram_scaler(
                 retain_graph=True,
             )
 
-            gramian = gramian_accumulator.gramian
+            # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
+            # have failed. So gramian is necessarily a valid Tensor here.
+            gramian = cast(Tensor, gramian_accumulator.gramian)
 
             # Reset everything that has a state
             gramian_accumulator.reset()
