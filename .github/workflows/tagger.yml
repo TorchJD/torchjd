@@ -1,0 +1,53 @@
+name: PR Tagger
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  tag-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add tags based on changed files
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const tag_map = {
+              'src/torchjd/_autogram/': 'package: autogram',
+              'src/torchjd/_autojac/': 'package: autojac',
+              'src/torchjd/aggregation/': 'package: aggregation',
+              '.github/workflows/': 'CI',
+              'docs/': 'docs',
+              'tests/': 'test'
+            };
+
+            const tags_to_add = new Set();
+
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            for (const file of files.data) {
+              for (const package_dir in tag_map) {
+                if (file.filename.startsWith(package_dir)) {
+                  tags_to_add.add(tag_map[package_dir]);
+                }
+              }
+            }
+
+            if (tags_to_add.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: Array.from(tags_to_add)
+              });
+              console.log(`Added tags: ${Array.from(tags_to_add).join(', ')}`);
+            } else {
+              console.log('No relevant files changed, no tags added.');
+            }
