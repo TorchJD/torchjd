@@ -80,10 +80,7 @@ class GramianAccumulator:
             was accumulated yet.
         """
 
-        if self._gramian is None:
-            raise ValueError(
-                "No Jacobian was accumulated into the Gramian. This is most likely because autogram"
-                "did not detect any parameters in your model."
-            )
-
+        # If this code is called, the assert must pass as we have a non-empty set of `leaf_targets`
+        # in the call to `torch.autograd.grad` in `AutogramScaler`.
+        assert self._gramian is not None
         return self._gramian
