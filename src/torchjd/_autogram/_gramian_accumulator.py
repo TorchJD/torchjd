@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Iterable
+from typing import Iterable, Optional
 
 import torch
 from torch import Tensor
@@ -15,7 +15,7 @@ class GramianAccumulator:
     """
 
     def __init__(self) -> None:
-        self._gramian: Tensor | None = None
+        self._gramian: Optional[Tensor] = None
         self._summed_jacobians = dict[Tensor, Tensor]()
         self._path_counter = Counter[Tensor]()
 
@@ -72,7 +72,7 @@ class GramianAccumulator:
             self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
-    def gramian(self) -> Tensor | None:
+    def gramian(self) -> Optional[Tensor]:
         """
         Get the Gramian matrix accumulated so far.
 
