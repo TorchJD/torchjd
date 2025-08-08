@@ -53,7 +53,7 @@ class UPGrad(GramianWeightedAggregator):
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
-        self._solver = solver + "test"
+        self._solver = solver
 
         super().__init__(
             _UPGradWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
