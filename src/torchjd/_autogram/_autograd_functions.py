@@ -100,11 +100,6 @@ def _make_autogram_scaler(
 
             gramian = gramian_accumulator.gramian
 
-            # Should never happen, these asserts are temporary for development safety reason.
-            assert len(gramian_accumulator._path_counter) == 0
-            assert len(gramian_accumulator._summed_jacobians) == 0
-            assert gramian is not None
-
             # Reset everything that has a state
             gramian_accumulator.reset()
             hook_activator.activate()
