@@ -43,7 +43,7 @@ def test_non_differentiable(aggregator: PCGrad, matrix: Tensor):
 )
 def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     """
-    Tests that _UPGradWeighting of a _SumWeighting is equivalent to _PCGradWeighting for matrices of 2
+    Tests that UPGradWeighting of a SumWeighting is equivalent to PCGradWeighting for matrices of 2
     rows.
     """
 
