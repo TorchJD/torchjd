@@ -9,7 +9,7 @@ UPGrad
     :show-inheritance:
     :exclude-members: forward
 
-.. autoclass:: torchjd.aggregation.UPGradWrapper
+.. autoclass:: torchjd.aggregation.UPGradWeighting
     :members:
     :undoc-members:
     :show-inheritance:

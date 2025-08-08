@@ -1,6 +1,6 @@
 """This file contains tests for the usage examples related to autogram."""
 
-from torchjd.aggregation import UPGradWrapper
+from torchjd.aggregation import UPGradWeighting
 
 
 def test_augment_model_for_gramian_based_iwrm():
@@ -19,7 +19,7 @@ def test_augment_model_for_gramian_based_iwrm():
 
     criterion = MSELoss(reduction="none")
     # TODO: improve this by making weightings public
-    weighting = UPGradWrapper()
+    weighting = UPGradWeighting()
     augment_model_for_gramian_based_iwrm(model, weighting)
 
     for input, target in zip(inputs, targets):

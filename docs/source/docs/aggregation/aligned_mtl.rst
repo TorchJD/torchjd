@@ -9,7 +9,7 @@ Aligned-MTL
     :show-inheritance:
     :exclude-members: forward
 
-.. autoclass:: torchjd.aggregation.AlignedMTLWrapper
+.. autoclass:: torchjd.aggregation.AlignedMTLWeighting
     :members:
     :undoc-members:
     :show-inheritance:

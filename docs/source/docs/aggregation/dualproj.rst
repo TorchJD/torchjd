@@ -9,7 +9,7 @@ DualProj
     :show-inheritance:
     :exclude-members: forward
 
-.. autoclass:: torchjd.aggregation.DualProjWrapper
+.. autoclass:: torchjd.aggregation.DualProjWeighting
     :members:
     :undoc-members:
     :show-inheritance:
