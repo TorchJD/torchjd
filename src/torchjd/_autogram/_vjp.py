@@ -3,7 +3,7 @@ from typing import Callable
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_map
+from torch.utils._pytree import PyTree, tree_map_only
 
 
 def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
@@ -24,8 +24,8 @@ def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
         # an element of a batch. We thus always provide them with batches, just of a
         # different size.
-        inputs_j = tree_map(lambda x: x.unsqueeze(0), inputs_j)
-        grad_outputs_j = tree_map(lambda x: x.unsqueeze(0), grad_outputs_j)
+        inputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), inputs_j)
+        grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
 
         # _vjp_from_module returns a function that computes the vjp w.r.t. to the
         # primals (tuple), here the functional has a single primal which is
