@@ -4,7 +4,7 @@ The role of these aggregators is to combine a matrix (e.g. the Jacobian matrix) 
 vector, generally to be used like a gradient.
 """
 
-from ._aggregator_bases import Aggregator
+from ._aggregator_bases import Aggregator, GramianWeightedAggregator, WeightedAggregator
 from ._aligned_mtl import AlignedMTL, AlignedMTLWrapper
 from ._config import ConFIG
 from ._constant import Constant, ConstantWeighting
