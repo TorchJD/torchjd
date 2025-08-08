@@ -37,6 +37,19 @@ mandatory, we only provide installation steps with this tool. You can install it
 > created by `uv`, using `source .venv/bin/activate` from the root of `torchjd`. This will, however,
 > only work in the current terminal until it is closed.
 
+
+## Clean reinstallation
+
+If you want to update all dependencies or just reinstall from scratch, run the following command
+from the root of `torchjd`:
+```bash
+rm -rf .venv
+rm uv.lock
+uv venv
+CC=gcc uv pip install -e '.[full]' --group check --group doc --group test --group plot
+uv run pre-commit install
+```
+
 ## Running tests
    - To verify that your installation was successful, and that unit tests pass, run:
      ```bash
