@@ -1,7 +1,6 @@
 import torch
 from pytest import mark, param
 from torch.optim import SGD
-from unit.autojac._transform._dict_assertions import assert_tensor_dicts_are_close
 from unit.conftest import DEVICE
 from utils.architectures import (
     Cifar10Model,
@@ -29,6 +28,7 @@ from utils.architectures import (
     WithBuffered,
     WithNoTensorOutput,
 )
+from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
     autogram_forward_backward,

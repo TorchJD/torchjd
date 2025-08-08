@@ -1,6 +1,7 @@
 import torch
 from pytest import raises
 from torch.testing import assert_close
+from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import tensor_, zeros_
 
 from torchjd._autojac._transform import (
@@ -15,8 +16,6 @@ from torchjd._autojac._transform import (
     Select,
     Stack,
 )
-
-from ._dict_assertions import assert_tensor_dicts_are_close
 
 
 def test_jac_is_stack_of_grads():
