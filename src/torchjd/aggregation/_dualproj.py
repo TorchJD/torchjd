@@ -49,14 +49,13 @@ class DualProj(GramianWeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
         self._solver = solver
 
         super().__init__(
-            DualProjWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            DualProjWrapper(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
@@ -80,8 +79,8 @@ class DualProjWrapper(Weighting[PSDMatrix]):
     Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
+        the simple averaging.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
@@ -92,13 +91,14 @@ class DualProjWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix] = MeanWeighting(),
+        pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
         super().__init__()
-        self.weighting = weighting
+        self._pref_vector = pref_vector
+        self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self.norm_eps = norm_eps
         self.reg_eps = reg_eps
         self.solver = solver
