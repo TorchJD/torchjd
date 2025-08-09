@@ -46,8 +46,6 @@ from torchjd.aggregation import (
     Aggregator,
     AlignedMTL,
     AlignedMTLWeighting,
-    CAGrad,
-    CAGradWeighting,
     DualProj,
     DualProjWeighting,
     IMTLGWeighting,
@@ -95,10 +93,9 @@ PARAMETRIZATIONS = [
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
 
-AGGREGATORS_AND_WEIGHTINGS = [
+AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting[PSDMatrix]]] = [
     (UPGrad(), UPGradWeighting()),
     (AlignedMTL(), AlignedMTLWeighting()),
-    (CAGrad(c=0.5), CAGradWeighting(c=0.5)),
     (DualProj(), DualProjWeighting()),
     (IMTLG(), IMTLGWeighting()),  # Tiny numerical error I think
     (Mean(), MeanWeighting()),
@@ -107,6 +104,13 @@ AGGREGATORS_AND_WEIGHTINGS = [
     (Random(), RandomWeighting()),
     (Sum(), SumWeighting()),  # Tiny numerical error or pb with param reuse
 ]
+
+try:
+    from torchjd.aggregation import CAGrad, CAGradWeighting
+
+    AGGREGATORS_AND_WEIGHTINGS.append((CAGrad(c=0.5), CAGradWeighting(c=0.5)))
+except ImportError:
+    pass
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
