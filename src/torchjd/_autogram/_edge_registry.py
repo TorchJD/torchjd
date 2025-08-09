@@ -24,33 +24,36 @@ class EdgeRegistry:
         """
         self._edges.add(get_gradient_edge(tensor))
 
-    def get_leaf_edges(self, excluded: set[GradientEdge]) -> list[GradientEdge]:
+    def get_leaf_edges(
+        self, roots: set[GradientEdge], excluded: set[GradientEdge]
+    ) -> list[GradientEdge]:
         """
         Compute a minimal subset of edges that yields the same differentiation graph traversal: the
         leaf edges. Specifically, this removes edges that are reachable from other edges in the
         differentiation graph, avoiding the need to keep gradients in memory for all edges
         simultaneously.
 
+        :param roots: Roots of the graph traversal. Modified in-place.
         :param excluded: GradientEdges that stop graph traversal. Modified in-place.
         :returns: Minimal subset of leaf edges.
         """
-        nodes_to_traverse = deque(
-            (child, target) for target in self._edges for child in _next_edges(target)
-        )
 
-        already_added = {child for child, _ in nodes_to_traverse}
+        roots.difference_update(excluded)
+        nodes_to_traverse = deque((child, root) for root in roots for child in _next_edges(root))
+        result = {root for root in roots if root in self._edges}
 
+        excluded.update(roots)
         while nodes_to_traverse:
             node, origin = nodes_to_traverse.popleft()
             if node in self._edges:
-                excluded.add(origin)
-            else:
-                for child in _next_edges(node):
-                    if child not in already_added:
-                        nodes_to_traverse.append((child, origin))
-                        already_added.add(child)
-
-        return list(self._edges - excluded)
+                result.add(node)
+                result.discard(origin)
+                origin = node
+            for child in _next_edges(node):
+                if child not in excluded:
+                    nodes_to_traverse.append((child, origin))
+                    excluded.add(child)
+        return list(result)
 
 
 def _next_edges(edge: GradientEdge) -> list[GradientEdge]:

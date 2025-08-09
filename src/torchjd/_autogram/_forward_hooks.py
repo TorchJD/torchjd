@@ -79,11 +79,13 @@ def make_model_hook(
             return output
 
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
+        output_tensors = [a for a in tree_flatten(output)[0] if isinstance(a, Tensor)]
 
         flat_outputs, tree_spec = tree_flatten(output)
         AutogramScaler = _make_autogram_scaler(
             flat_outputs,
             input_tensors,
+            output_tensors,
             weighting,
             target_edges,
             gramian_accumulator,
@@ -148,6 +150,7 @@ def _make_jacobian_accumulator(
 def _make_autogram_scaler(
     flat_outputs: PyTree,
     input_tensors: list[Tensor],
+    output_tensors: list[Tensor],
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
@@ -155,7 +158,8 @@ def _make_autogram_scaler(
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
-    leaf_targets = target_edges.get_leaf_edges(excluded_edges)
+    roots = {get_gradient_edge(t) for t in output_tensors}
+    leaf_targets = target_edges.get_leaf_edges(roots, excluded_edges)
 
     class AutogramScaler(torch.autograd.Function):
         """
