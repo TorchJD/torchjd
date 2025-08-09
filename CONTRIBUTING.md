@@ -51,10 +51,15 @@ uv run pre-commit install
 ```
 
 ## Running tests
-   - To verify that your installation was successful, and that all unit tests pass, run:
+   - To verify that your installation was successful, and that unit tests pass, run:
      ```bash
      uv run pytest tests/unit
      ```
+
+   - To also run the unit tests that are marked as slow, add the `--runslow` flag:
+    ```bash
+    uv run pytest tests/unit --runslow
+    ```
 
    - If you have access to a cuda-enabled GPU, you should also check that the unit tests pass on it:
      ```bash
@@ -120,7 +125,7 @@ a = torch.ones(3, 4)
 ```
 use
 ```python
-from unit._utils import ones_
+from utils.tensors import ones_
 a = ones_(3, 4)
 ```
 

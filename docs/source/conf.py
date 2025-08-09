@@ -41,6 +41,9 @@ extensions = [
     "myst_parser",  # Enables markdown support
     "sphinx_design",  # Enables side to side cards
 ]
+nitpick_ignore = [
+    ("py:obj", "torchjd.aggregation._weighting_bases._T"),  # Weighting is a subclass of Generic[_T]
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
