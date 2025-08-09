@@ -40,7 +40,31 @@ from utils.tensors import make_tensors
 from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
 from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd._autojac._transform._aggregate import _Matrixify
-from torchjd.aggregation import UPGrad, UPGradWeighting
+from torchjd.aggregation import (
+    IMTLG,
+    MGDA,
+    Aggregator,
+    AlignedMTL,
+    AlignedMTLWeighting,
+    CAGrad,
+    CAGradWeighting,
+    DualProj,
+    DualProjWeighting,
+    IMTLGWeighting,
+    Mean,
+    MeanWeighting,
+    MGDAWeighting,
+    PCGrad,
+    PCGradWeighting,
+    PSDMatrix,
+    Random,
+    RandomWeighting,
+    Sum,
+    SumWeighting,
+    UPGrad,
+    UPGradWeighting,
+    Weighting,
+)
 
 PARAMETRIZATIONS = [
     (OverlyNested, 32),
@@ -71,23 +95,39 @@ PARAMETRIZATIONS = [
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
 
+AGGREGATORS_AND_WEIGHTINGS = [
+    (UPGrad(), UPGradWeighting()),
+    (AlignedMTL(), AlignedMTLWeighting()),
+    (CAGrad(c=0.5), CAGradWeighting(c=0.5)),
+    (DualProj(), DualProjWeighting()),
+    (IMTLG(), IMTLGWeighting()),  # Tiny numerical error I think
+    (Mean(), MeanWeighting()),
+    (MGDA(), MGDAWeighting()),
+    (PCGrad(), PCGradWeighting()),  # Tiny numerical error or pb with param reuse
+    (Random(), RandomWeighting()),
+    (Sum(), SumWeighting()),  # Tiny numerical error or pb with param reuse
+]
+
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_equivalence(architecture: type[ShapedModule], batch_size: int):
+@mark.parametrize(["aggregator", "weighting"], AGGREGATORS_AND_WEIGHTINGS)
+def test_equivalence(
+    architecture: type[ShapedModule],
+    batch_size: int,
+    aggregator: Aggregator,
+    weighting: Weighting[PSDMatrix],
+):
     n_iter = 3
 
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
-
-    W = UPGradWeighting()
-    A = UPGrad()
 
     torch.manual_seed(0)
     model_autojac = architecture().to(device=DEVICE)
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    augment_model_for_gramian_based_iwrm(model_autogram, W)
+    augment_model_for_gramian_based_iwrm(model_autogram, weighting)
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -96,11 +136,13 @@ def test_equivalence(architecture: type[ShapedModule], batch_size: int):
         targets = make_tensors(batch_size, output_shapes)
         loss_fn = make_mse_loss_fn(targets)
 
-        autojac_forward_backward(model_autojac, inputs, loss_fn, A)
+        torch.random.manual_seed(0)  # Fix randomness for random aggregators
+        autojac_forward_backward(model_autojac, inputs, loss_fn, aggregator)
         expected_grads = {
             name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
         }
 
+        torch.random.manual_seed(0)  # Fix randomness for random weightings
         autogram_forward_backward(model_autogram, inputs, loss_fn)
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
