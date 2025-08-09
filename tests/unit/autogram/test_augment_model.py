@@ -18,6 +18,7 @@ from utils.architectures import (
     PISOBranched,
     PyTreeInputPyTreeOutput,
     PyTreeInputSingleOutput,
+    Randomness,
     ShapedModule,
     SimpleBranched,
     SimpleParamReuse,
@@ -89,6 +90,7 @@ PARAMETRIZATIONS = [
     (SomeFrozenParam, 32),
     (FreeParam, 32),
     (NoFreeParam, 32),
+    (Randomness, 32),
     param(Cifar10Model, 32, marks=mark.slow),
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]

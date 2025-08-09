@@ -556,6 +556,22 @@ class NoFreeParam(ShapedModule):
         return output
 
 
+class Randomness(ShapedModule):
+    """Module with some randomness."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(9, 10))
+
+    def forward(self, input: Tensor):
+        noise = torch.zeros_like(input)
+        noise.normal_()
+        return (input * noise) @ self.matrix
+
+
 class Cifar10Model(ShapedModule):
     """
     Architecture for image classification on the CIFAR-10 dataset, similar to what we used in
