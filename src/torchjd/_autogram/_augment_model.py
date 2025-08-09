@@ -1,12 +1,13 @@
 from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
-from torchjd._autogram._activator import Activator
-from torchjd._autogram._edge_registry import EdgeRegistry
-from torchjd._autogram._forward_hooks import ModelHook, ModuleHook
-from torchjd._autogram._gramian_accumulator import GramianAccumulator
-from torchjd._autogram._handle import RemovableHandle
-from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
+from torchjd.aggregation import PSDMatrix, Weighting
+
+from ._activator import Activator
+from ._edge_registry import EdgeRegistry
+from ._forward_hooks import ModelHook, ModuleHook
+from ._gramian_accumulator import GramianAccumulator
+from ._handle import RemovableHandle
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
