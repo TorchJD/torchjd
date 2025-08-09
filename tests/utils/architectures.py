@@ -400,7 +400,7 @@ class SimpleParamReuse(ShapedModule):
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
     def forward(self, input: Tensor):
-        return input @ self.matrix + (input**2) @ self.matrix
+        return input @ self.matrix + (input**2 / 5.0) @ self.matrix
 
 
 class InterModuleParamReuse(ShapedModule):
@@ -429,7 +429,7 @@ class InterModuleParamReuse(ShapedModule):
         self.module2 = self._MatMulModule(matrix)
 
     def forward(self, input: Tensor):
-        return self.module1(input) + self.module2(input**2)
+        return self.module1(input) + self.module2(input**2 / 5.0)
 
 
 class ModuleReuse(ShapedModule):
@@ -443,7 +443,7 @@ class ModuleReuse(ShapedModule):
         self.module = nn.Linear(50, 10)
 
     def forward(self, input: Tensor):
-        return self.module(input) + self.module(input**2)
+        return self.module(input) + self.module(input**2 / 5.0)
 
 
 class SomeUnusedParam(ShapedModule):
@@ -476,7 +476,7 @@ class SomeFrozenParam(ShapedModule):
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
     def forward(self, input: Tensor):
-        return input @ self.matrix + (input**2) @ self.frozen_param
+        return input @ self.matrix + (input**2 / 5.0) @ self.frozen_param
 
 
 class WithBuffered(ShapedModule):
@@ -488,7 +488,7 @@ class WithBuffered(ShapedModule):
     class _Buffered(nn.Module):
         def __init__(self):
             super().__init__()
-            self.buffer = nn.Buffer(torch.tensor(10.0))
+            self.buffer = nn.Buffer(torch.tensor(1.5))
 
         def forward(self, input: Tensor):
             return input * self.buffer
