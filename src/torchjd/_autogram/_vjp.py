@@ -5,6 +5,14 @@ from torch import Tensor, nn
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_map_only
 
+# Note about import from protected _pytree module:
+# PyTorch maintainers plan to make pytree public (see
+# https://github.com/pytorch/pytorch/issues/65761, https://github.com/pytorch/pytorch/pull/137400).
+# It should also come with better speed, because the current implementation is slow, according to
+# https://github.com/pytorch/pytorch/issues/65761#issue-1010116111.
+# When pytree becomes public, this import will have to be changed with a conditional import (to
+# still support older versions of PyTorch where pytree is protected).
+
 
 def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
     """
