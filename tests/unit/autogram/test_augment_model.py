@@ -97,12 +97,12 @@ AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting[PSDMatrix]]] = [
     (UPGrad(), UPGradWeighting()),
     (AlignedMTL(), AlignedMTLWeighting()),
     (DualProj(), DualProjWeighting()),
-    (IMTLG(), IMTLGWeighting()),  # Tiny numerical error I think
+    (IMTLG(), IMTLGWeighting()),
     (Mean(), MeanWeighting()),
     (MGDA(), MGDAWeighting()),
-    (PCGrad(), PCGradWeighting()),  # Tiny numerical error or pb with param reuse
+    (PCGrad(), PCGradWeighting()),
     (Random(), RandomWeighting()),
-    (Sum(), SumWeighting()),  # Tiny numerical error or pb with param reuse
+    (Sum(), SumWeighting()),
 ]
 
 try:
