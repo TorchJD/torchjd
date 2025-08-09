@@ -1,4 +1,4 @@
-from typing import Callable, cast
+from typing import cast
 
 import torch
 from torch import Tensor, nn
@@ -12,11 +12,7 @@ from torchjd._autogram._vjp import get_instance_wise_vjp
 from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
 
 
-def make_module_hook(
-    target_edges: EdgeRegistry,
-    gramian_accumulator: GramianAccumulator,
-    hook_activator: Activator,
-) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
+class ModuleHook:
     """
     Create a forward hook used to insert Jacobian accumulation nodes into the backward graph.
 
@@ -32,8 +28,18 @@ def make_module_hook(
     :returns: Forward hook for a submodule.
     """
 
-    def module_hook(module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
-        if not hook_activator.is_active:
+    def __init__(
+        self,
+        target_edges: EdgeRegistry,
+        gramian_accumulator: GramianAccumulator,
+        hook_activator: Activator,
+    ):
+        self.target_edges = target_edges
+        self.gramian_accumulator = gramian_accumulator
+        self.hook_activator = hook_activator
+
+    def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
+        if not self.hook_activator.is_active:
             return output
         flat_outputs, tree_spec = tree_flatten(output)
 
@@ -43,30 +49,23 @@ def make_module_hook(
             return output
 
         JacobianAccumulator = _make_jacobian_accumulator(
-            module, gramian_accumulator, args, tree_spec
+            module, self.gramian_accumulator, args, tree_spec
         )
 
         requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-        gramian_accumulator.track_parameter_paths(requires_grad_params)
+        self.gramian_accumulator.track_parameter_paths(requires_grad_params)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original ouputs of the model) as target. For memory
         # efficiency, we select the smallest one.
         numels = torch.tensor([t.numel() for t in flat_outputs])
         index = cast(int, numels.argmin().item())
-        target_edges.register(flat_outputs[index])
+        self.target_edges.register(flat_outputs[index])
 
         return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
 
-    return module_hook
 
-
-def make_model_hook(
-    weighting: Weighting[PSDMatrix],
-    target_edges: EdgeRegistry,
-    gramian_accumulator: GramianAccumulator,
-    hook_activator: Activator,
-) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
+class ModelHook:
     """
     Create a forward hook that inserts the autogram scaling node into the backward graph.
 
@@ -74,8 +73,20 @@ def make_model_hook(
     two backward passes.
     """
 
-    def model_hook(_, args: PyTree, output: PyTree) -> PyTree:
-        if not hook_activator.is_active:
+    def __init__(
+        self,
+        weighting: Weighting[PSDMatrix],
+        target_edges: EdgeRegistry,
+        gramian_accumulator: GramianAccumulator,
+        hook_activator: Activator,
+    ):
+        self.weighting = weighting
+        self.target_edges = target_edges
+        self.gramian_accumulator = gramian_accumulator
+        self.hook_activator = hook_activator
+
+    def __call__(self, _, args: PyTree, output: PyTree) -> PyTree:
+        if not self.hook_activator.is_active:
             return output
 
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
@@ -86,15 +97,13 @@ def make_model_hook(
             flat_outputs,
             input_tensors,
             output_tensors,
-            weighting,
-            target_edges,
-            gramian_accumulator,
-            hook_activator,
+            self.weighting,
+            self.target_edges,
+            self.gramian_accumulator,
+            self.hook_activator,
         )
-        hook_activator.deactivate()
+        self.hook_activator.deactivate()
         return tree_unflatten(AutogramScaler.apply(*flat_outputs), tree_spec)
-
-    return model_hook
 
 
 def _make_jacobian_accumulator(
