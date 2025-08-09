@@ -9,7 +9,7 @@ from torchjd._autogram._activator import Activator
 from torchjd._autogram._edge_registry import EdgeRegistry
 from torchjd._autogram._gramian_accumulator import GramianAccumulator
 from torchjd._autogram._vjp import get_instance_wise_vjp
-from torchjd.aggregation._weighting_bases import PSDMatrix, Weighting
+from torchjd.aggregation import PSDMatrix, Weighting
 
 
 class ModuleHook:
