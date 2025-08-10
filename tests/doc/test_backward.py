@@ -9,7 +9,7 @@ from torch.testing import assert_close
 def test_backward():
     import torch
 
-    from torchjd import backward
+    from torchjd._autojac import backward
     from torchjd.aggregation import UPGrad
 
     param = torch.tensor([1.0, 2.0], requires_grad=True)

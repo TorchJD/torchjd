@@ -4,7 +4,7 @@ from torch.autograd import grad
 from torch.testing import assert_close
 from unit._utils import randn_, tensor_
 
-from torchjd import backward
+from torchjd._autojac import backward
 from torchjd._autojac._backward import _create_transform
 from torchjd._autojac._transform import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
