@@ -631,6 +631,24 @@ class Cifar10Model(ShapedModule):
         return output
 
 
+class AlexNet(ShapedModule):
+    """
+    AlexNet. Note that most of its parameters are in the last two linear layers (4096 * 4096 and
+    4096 * 1000, not counting the biases). Also note that AlexNet has some (properly isolated)
+    randomness due to having dropout layers.
+    """
+
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.alexnet = torchvision.models.alexnet()
+
+    def forward(self, input: Tensor):
+        return self.alexnet(input)
+
+
 class InstanceNormResNet18(ShapedModule):
     """
     ResNet18 with BatchNorm2d layers replaced by InstanceNorm2d without tracking of running

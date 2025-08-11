@@ -3,6 +3,7 @@ import time
 import torch
 from unit.conftest import DEVICE
 from utils.architectures import (
+    AlexNet,
     Cifar10Model,
     FreeParam,
     InstanceNormResNet18,
@@ -24,6 +25,7 @@ PARAMETRIZATIONS = [
     (FreeParam, 64),
     (NoFreeParam, 64),
     (Cifar10Model, 64),
+    (AlexNet, 8),
     (InstanceNormResNet18, 16),
 ]
 

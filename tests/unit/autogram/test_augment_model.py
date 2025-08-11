@@ -3,6 +3,7 @@ from pytest import mark, param
 from torch.optim import SGD
 from unit.conftest import DEVICE
 from utils.architectures import (
+    AlexNet,
     Cifar10Model,
     FreeParam,
     InstanceNormResNet18,
@@ -92,6 +93,7 @@ PARAMETRIZATIONS = [
     (NoFreeParam, 32),
     param(Randomness, 32, marks=mark.xfail),
     param(Cifar10Model, 32, marks=mark.slow),
+    param(AlexNet, 4, marks=mark.slow),
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
 
