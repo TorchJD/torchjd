@@ -1,7 +1,7 @@
 from torch.autograd.graph import get_gradient_edge
 from utils.tensors import randn_
 
-from torchjd._autogram._edge_registry import EdgeRegistry
+from torchjd._autogram._utils.edge_registry import EdgeRegistry
 
 
 def test_all_edges_are_leaves():

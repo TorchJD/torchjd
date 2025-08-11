@@ -1,11 +1,11 @@
 from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
+from torchjd._autogram._utils.edge_registry import EdgeRegistry
+from torchjd._autogram._utils.forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
+from torchjd._autogram._utils.gramian_accumulator import GramianAccumulator
 from torchjd.aggregation import PSDMatrix, Weighting
 
-from ._edge_registry import EdgeRegistry
-from ._forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
-from ._gramian_accumulator import GramianAccumulator
 from ._handle import RemovableHandle
 
 
