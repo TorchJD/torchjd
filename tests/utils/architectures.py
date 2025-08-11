@@ -502,6 +502,22 @@ class WithBuffered(ShapedModule):
         return self.linear(self.module_with_buffer(input))
 
 
+class Randomness(ShapedModule):
+    """Module with some randomness and a direct parameter."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(9, 10))
+
+    def forward(self, input: Tensor):
+        noise = torch.zeros_like(input)
+        noise.normal_()
+        return (input * noise) @ self.matrix
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
@@ -554,22 +570,6 @@ class NoFreeParam(ShapedModule):
         output = self.relu(self.linear3(output))
         output = self.linear4(output)
         return output
-
-
-class Randomness(ShapedModule):
-    """Module with some randomness and a direct parameter."""
-
-    INPUT_SHAPES = (9,)
-    OUTPUT_SHAPES = (10,)
-
-    def __init__(self):
-        super().__init__()
-        self.matrix = nn.Parameter(torch.randn(9, 10))
-
-    def forward(self, input: Tensor):
-        noise = torch.zeros_like(input)
-        noise.normal_()
-        return (input * noise) @ self.matrix
 
 
 class Cifar10Model(ShapedModule):
