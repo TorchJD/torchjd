@@ -557,7 +557,7 @@ class NoFreeParam(ShapedModule):
 
 
 class Randomness(ShapedModule):
-    """Module with some randomness."""
+    """Module with some randomness and a direct parameter."""
 
     INPUT_SHAPES = (9,)
     OUTPUT_SHAPES = (10,)
