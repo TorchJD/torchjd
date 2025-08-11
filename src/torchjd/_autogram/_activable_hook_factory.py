@@ -4,7 +4,7 @@ from torch import nn
 from torch.utils._pytree import PyTree
 
 
-class HookActivator:
+class ActivableHookFactory:
     """
     This class converts module hooks into hooks that can be activated or deactivated.
     """
@@ -18,7 +18,7 @@ class HookActivator:
     def deactivate(self) -> None:
         self.is_active = False
 
-    def make_activable_hook(
+    def make_hook_activable(
         self, hook: Callable[[nn.Module, PyTree, PyTree], PyTree]
     ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
         def activable_hook(module: nn.Module, args: PyTree, output: PyTree):

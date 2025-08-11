@@ -7,9 +7,9 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd.aggregation import PSDMatrix, Weighting
 
+from ._activable_hook_factory import ActivableHookFactory
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._hook_activator import HookActivator
 from ._vjp import get_instance_wise_vjp
 
 # Note about import from protected _pytree module:
@@ -80,7 +80,7 @@ class ModelHook:
         weighting: Weighting[PSDMatrix],
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        hook_activator: HookActivator,
+        hook_activator: ActivableHookFactory,
     ):
         self.weighting = weighting
         self.target_edges = target_edges
@@ -162,7 +162,7 @@ def _make_autogram_scaler(
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: HookActivator,
+    hook_activator: ActivableHookFactory,
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}

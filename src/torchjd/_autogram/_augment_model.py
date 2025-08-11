@@ -3,11 +3,11 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from torchjd.aggregation import PSDMatrix, Weighting
 
+from ._activable_hook_factory import ActivableHookFactory
 from ._edge_registry import EdgeRegistry
 from ._forward_hooks import ModelHook, ModuleHook
 from ._gramian_accumulator import GramianAccumulator
 from ._handle import RemovableHandle
-from ._hook_activator import HookActivator
 
 
 def augment_model_for_gramian_based_iwrm(
@@ -88,7 +88,7 @@ def augment_model_for_gramian_based_iwrm(
 
     handles: list[TorchRemovableHandle] = []
     gramian_accumulator = GramianAccumulator()
-    hook_activator = HookActivator()
+    hook_activator = ActivableHookFactory()
     target_edges = EdgeRegistry()
 
     # Add module forward hooks to compute jacobians
@@ -97,14 +97,14 @@ def augment_model_for_gramian_based_iwrm(
             # Skip un-parameterized modules
             continue
 
-        module_hook = hook_activator.make_activable_hook(
+        module_hook = hook_activator.make_hook_activable(
             ModuleHook(target_edges, gramian_accumulator)
         )
         handle = module.register_forward_hook(module_hook)
         handles.append(handle)
 
     # Add model forward hook to trigger autogram
-    model_hook = hook_activator.make_activable_hook(
+    model_hook = hook_activator.make_hook_activable(
         ModelHook(weighting, target_edges, gramian_accumulator, hook_activator)
     )
     handle = model.register_forward_hook(model_hook)
