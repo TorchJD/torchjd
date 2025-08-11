@@ -233,8 +233,8 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
 
     expected_jacobian = tensor_(
         [
-            [2.0 * 3.0 * a**2],
-            [2.0 * 4.0 * a**3],
+            [2.0 * 3.0 * (a**2).item()],
+            [2.0 * 4.0 * (a**3).item()],
         ],
     )
 
