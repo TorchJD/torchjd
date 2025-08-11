@@ -7,9 +7,9 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd.aggregation import PSDMatrix, Weighting
 
-from ._activator import Activator
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._module_activator import HookActivator
 from ._vjp import get_instance_wise_vjp
 
 # Note about import from protected _pytree module:
@@ -41,15 +41,11 @@ class ModuleHook:
         self,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        hook_activator: Activator,
     ):
         self.target_edges = target_edges
         self.gramian_accumulator = gramian_accumulator
-        self.hook_activator = hook_activator
 
     def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
-        if not self.hook_activator.is_active:
-            return output
         flat_outputs, tree_spec = tree_flatten(output)
 
         if not any(isinstance(t, Tensor) for t in flat_outputs):
@@ -87,7 +83,7 @@ class ModelHook:
         weighting: Weighting[PSDMatrix],
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        hook_activator: Activator,
+        hook_activator: HookActivator,
     ):
         self.weighting = weighting
         self.target_edges = target_edges
@@ -95,9 +91,6 @@ class ModelHook:
         self.hook_activator = hook_activator
 
     def __call__(self, _, args: PyTree, output: PyTree) -> PyTree:
-        if not self.hook_activator.is_active:
-            return output
-
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
         output_tensors = [a for a in tree_flatten(output)[0] if isinstance(a, Tensor)]
 
@@ -172,7 +165,7 @@ def _make_autogram_scaler(
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: Activator,
+    hook_activator: HookActivator,
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
