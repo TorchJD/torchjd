@@ -518,6 +518,22 @@ class Randomness(ShapedModule):
         return (input * noise) @ self.matrix
 
 
+class WithSideEffect(ShapedModule):
+    """Module with a side-effect during the forward."""
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(9, 10))
+        self.buffer = nn.Buffer(torch.zeros((9,)))
+
+    def forward(self, input: Tensor):
+        self.buffer = self.buffer + 1.0
+        return (input + self.buffer) @ self.matrix
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
