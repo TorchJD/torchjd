@@ -92,9 +92,9 @@ PARAMETRIZATIONS = [
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Randomness, 32, marks=mark.xfail),
-    param(Cifar10Model, 32, marks=mark.slow),
-    param(AlexNet, 4, marks=mark.slow),
-    param(InstanceNormResNet18, 8, marks=mark.slow),
+    param(Cifar10Model, 32, marks=[mark.slow, mark.garbage_collect]),
+    param(AlexNet, 4, marks=[mark.slow, mark.garbage_collect]),
+    param(InstanceNormResNet18, 8, marks=[mark.slow, mark.garbage_collect]),
 ]
 
 AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting[PSDMatrix]]] = [
