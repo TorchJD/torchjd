@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Callable, cast
 
 import torch
 from torch import Tensor, nn
@@ -7,7 +7,6 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
 from torchjd.aggregation import PSDMatrix, Weighting
 
-from ._activable_hook_factory import ActivableHookFactory
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._vjp import get_instance_wise_vjp
@@ -19,6 +18,31 @@ from ._vjp import get_instance_wise_vjp
 # https://github.com/pytorch/pytorch/issues/65761#issue-1010116111.
 # When pytree becomes public, this import will have to be changed with a conditional import (to
 # still support older versions of PyTorch where pytree is protected).
+
+
+class ActivableHookFactory:
+    """
+    This class converts module hooks into hooks that can be activated or deactivated.
+    """
+
+    def __init__(self):
+        self.is_active = True
+
+    def activate(self) -> None:
+        self.is_active = True
+
+    def deactivate(self) -> None:
+        self.is_active = False
+
+    def make_hook_activable(
+        self, hook: Callable[[nn.Module, PyTree, PyTree], PyTree]
+    ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
+        def activable_hook(module: nn.Module, args: PyTree, output: PyTree):
+            if not self.is_active:
+                return output
+            return hook(module, args, output)
+
+        return activable_hook
 
 
 class ModuleHook:

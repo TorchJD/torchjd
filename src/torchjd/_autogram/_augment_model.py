@@ -3,9 +3,8 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from torchjd.aggregation import PSDMatrix, Weighting
 
-from ._activable_hook_factory import ActivableHookFactory
 from ._edge_registry import EdgeRegistry
-from ._forward_hooks import ModelHook, ModuleHook
+from ._forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
 from ._gramian_accumulator import GramianAccumulator
 from ._handle import RemovableHandle
 
