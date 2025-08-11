@@ -34,7 +34,6 @@ def test_adding_jacobians_one_by_one(shapes, number_of_jacobians):
 
     gramian = gramian_accumulator.gramian
     assert_close(gramian, expected_gramian)
-    assert_close(gramian, expected_gramian)
 
 
 @mark.parametrize(
