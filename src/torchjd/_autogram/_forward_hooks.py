@@ -65,7 +65,7 @@ class ModuleHook:
         # efficiency, we select the smallest one.
         numels = torch.tensor([t.numel() for t in flat_outputs])
         index = cast(int, numels.argmin().item())
-        self.target_edges.register(flat_outputs[index])
+        self.target_edges.register(get_gradient_edge(flat_outputs[index]))
 
         return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
 
@@ -170,7 +170,7 @@ def _make_autogram_scaler(
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
     roots = {get_gradient_edge(t) for t in output_tensors}
-    leaf_targets = target_edges.get_leaf_edges(roots, excluded_edges)
+    leaf_targets = list(target_edges.get_leaf_edges(roots, excluded_edges))
 
     class AutogramScaler(torch.autograd.Function):
         """

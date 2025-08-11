@@ -1,7 +1,6 @@
 from collections import deque
 
-from torch import Tensor
-from torch.autograd.graph import GradientEdge, get_gradient_edge
+from torch.autograd.graph import GradientEdge
 
 
 class EdgeRegistry:
@@ -16,17 +15,17 @@ class EdgeRegistry:
     def reset(self) -> None:
         self._edges = set()
 
-    def register(self, tensor: Tensor) -> None:
+    def register(self, edge: GradientEdge) -> None:
         """
-        Track the GradientEdge of the provided target tensor.
+        Track the GradientEdge of the provided target gradient edge.
 
-        :param tensor: Tensor to track.
+        :param edge: Gradient edge to track.
         """
-        self._edges.add(get_gradient_edge(tensor))
+        self._edges.add(edge)
 
     def get_leaf_edges(
         self, roots: set[GradientEdge], excluded: set[GradientEdge]
-    ) -> list[GradientEdge]:
+    ) -> set[GradientEdge]:
         """
         Compute a minimal subset of edges that yields the same differentiation graph traversal: the
         leaf edges. Specifically, this removes edges that are reachable from other edges in the
@@ -53,7 +52,7 @@ class EdgeRegistry:
                 if child not in excluded:
                     nodes_to_traverse.append((child, origin))
                     excluded.add(child)
-        return list(result)
+        return result
 
 
 def _next_edges(edge: GradientEdge) -> list[GradientEdge]:
