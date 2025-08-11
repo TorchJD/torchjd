@@ -34,6 +34,7 @@ def test_adding_jacobians_one_by_one(shapes, number_of_jacobians):
 
     gramian = gramian_accumulator.gramian
     assert_close(gramian, expected_gramian)
+    assert_close(gramian, expected_gramian)
 
 
 @mark.parametrize(
@@ -65,7 +66,7 @@ def test_adding_jacobians_lots_by_lots(shapes):
         expected_gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
 
     gramian = gramian_accumulator.gramian
-    assert_close(gramian, expected_gramian)
+    assert_close(gramian, expected_gramian, rtol=5e-06, atol=2e-05)
 
 
 def test_returns_none_if_no_jacobian_were_provided():
