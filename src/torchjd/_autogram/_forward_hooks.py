@@ -31,9 +31,6 @@ class ModuleHook:
     :param target_edges: Registry for tracking gradient edges that serve as targets for the first
         differentiation.
     :param gramian_accumulator: Accumulator for collecting the Jacobians into a Gramian.
-    :param hook_activator: To only trigger the hook during the first forward pass. This is required
-        because we make an extra forward pass of the module when using the functional api to obtain
-        the Jacobian w.r.t. the parameters, and we don't want it to trigger this hook.
     :returns: Forward hook for a submodule.
     """
 
