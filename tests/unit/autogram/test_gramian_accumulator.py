@@ -30,7 +30,7 @@ def test_adding_jacobians_one_by_one(shapes, number_of_jacobians):
             gramian_accumulator.accumulate_path_jacobians({key: jacobian})
             cumulated_jacobian += jacobian
         jacobian_matrix = cumulated_jacobian.reshape([batch_size, -1])
-        expected_gramian += jacobian_matrix @ jacobian_matrix.T
+        expected_gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
 
     gramian = gramian_accumulator.gramian
     assert_close(gramian, expected_gramian)
@@ -62,7 +62,7 @@ def test_adding_jacobians_lots_by_lots(shapes):
             cumulated_jacobians[key] += jacobian
     for cumulated_jacobian in cumulated_jacobians.values():
         jacobian_matrix = cumulated_jacobian.reshape([batch_size, -1])
-        expected_gramian += jacobian_matrix @ jacobian_matrix.T
+        expected_gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
 
     gramian = gramian_accumulator.gramian
     assert_close(gramian, expected_gramian)
