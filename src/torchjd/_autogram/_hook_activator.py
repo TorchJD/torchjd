@@ -18,12 +18,12 @@ class HookActivator:
     def deactivate(self) -> None:
         self.is_active = False
 
-    def convert_hook(
+    def make_activable_hook(
         self, hook: Callable[[nn.Module, PyTree, PyTree], PyTree]
     ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
-        def activated_hook(module: nn.Module, args: PyTree, output: PyTree):
+        def activable_hook(module: nn.Module, args: PyTree, output: PyTree):
             if not self.is_active:
                 return output
             return hook(module, args, output)
 
-        return activated_hook
+        return activable_hook
