@@ -80,12 +80,12 @@ class ModelHook:
         weighting: Weighting[PSDMatrix],
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        hook_activator: ActivableHookFactory,
+        activable_hook_factory: ActivableHookFactory,
     ):
         self.weighting = weighting
         self.target_edges = target_edges
         self.gramian_accumulator = gramian_accumulator
-        self.hook_activator = hook_activator
+        self.activable_hook_factory = activable_hook_factory
 
     def __call__(self, _, args: PyTree, output: PyTree) -> PyTree:
         input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
@@ -99,9 +99,9 @@ class ModelHook:
             self.weighting,
             self.target_edges,
             self.gramian_accumulator,
-            self.hook_activator,
+            self.activable_hook_factory,
         )
-        self.hook_activator.deactivate()
+        self.activable_hook_factory.deactivate()
         return tree_unflatten(AutogramScaler.apply(*flat_outputs), tree_spec)
 
 
@@ -162,7 +162,7 @@ def _make_autogram_scaler(
     weighting: Weighting[PSDMatrix],
     target_edges: EdgeRegistry,
     gramian_accumulator: GramianAccumulator,
-    hook_activator: ActivableHookFactory,
+    activable_hook_factory: ActivableHookFactory,
 ) -> type[torch.autograd.Function]:
 
     excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
@@ -201,7 +201,7 @@ def _make_autogram_scaler(
 
             # Reset everything that has a state
             gramian_accumulator.reset()
-            hook_activator.activate()
+            activable_hook_factory.activate()
             target_edges.reset()
 
             weights = weighting(gramian).unsqueeze(1)
