@@ -46,7 +46,7 @@ def augment_model_for_gramian_based_iwrm(
             >>>
             >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
             >>> inputs = torch.randn(8, 16, 5)
-            >>> targets = torch.randn(8, 16)
+            >>> targets = torch.randn(8, 16, 1)
             >>>
             >>> model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
             >>> optimizer = SGD(model.parameters())
