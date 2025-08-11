@@ -142,13 +142,13 @@ def test_equivalence(
         targets = make_tensors(batch_size, output_shapes)
         loss_fn = make_mse_loss_fn(targets)
 
-        torch.random.manual_seed(0)  # Fix randomness for random aggregators
+        torch.random.manual_seed(0)  # Fix randomness for random aggregators and random models
         autojac_forward_backward(model_autojac, inputs, loss_fn, aggregator)
         expected_grads = {
             name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
         }
 
-        torch.random.manual_seed(0)  # Fix randomness for random weightings
+        torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
         autogram_forward_backward(model_autogram, inputs, loss_fn)
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
@@ -177,12 +177,14 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     torch.manual_seed(0)
     model = architecture().to(device=DEVICE)
 
+    torch.manual_seed(0)  # Fix randomness for random models
     autojac_forward_backward(model, input, loss_fn, A)
     autojac_grads = {
         name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
     }
     model.zero_grad()
 
+    torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model, input, loss_fn)
     autograd_grads = {
         name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
@@ -193,6 +195,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
 
     # Augment and verify that we're equivalent to autojac
     handle = augment_model_for_gramian_based_iwrm(model_autogram, W)
+    torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
@@ -200,6 +203,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
 
     # Deaugment and verify that we're equivalent to autograd
     handle.remove()  # De-augment model
+    torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autograd_grads)
@@ -207,6 +211,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
 
     # Re-augment and verify that we're equivalent to autojac
     augment_model_for_gramian_based_iwrm(model_autogram, W)
+    torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
