@@ -25,7 +25,7 @@ jobs:
       - name: Install default (with full options) and test dependencies
         run: uv pip install '.[full]' --group test
       - name: Run unit and doc tests with coverage report
-        run: uv run pytest tests/unit tests/doc --cov=src --cov-report=xml
+        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -44,7 +44,7 @@ jobs:
         run: uv pip install . --group test
       - name: Run unit and doc tests with coverage report
         run: |
-          uv run pytest tests/unit tests/doc \
+          uv run pytest -W error tests/unit tests/doc \
           --ignore tests/unit/aggregation/test_cagrad.py \
           --ignore tests/unit/aggregation/test_nash_mtl.py \
           --ignore tests/doc/test_aggregation.py \
