@@ -6,7 +6,7 @@ from torch.utils._pytree import PyTree
 
 class HookActivator:
     """
-    This class converts module hooks into hooks that can be activated or deactivate.
+    This class converts module hooks into hooks that can be activated or deactivated.
     """
 
     def __init__(self):
