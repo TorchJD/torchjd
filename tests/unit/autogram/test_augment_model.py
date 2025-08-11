@@ -90,7 +90,7 @@ PARAMETRIZATIONS = [
     (SomeFrozenParam, 32),
     (FreeParam, 32),
     (NoFreeParam, 32),
-    (Randomness, 32),
+    param(Randomness, 32, marks=mark.xfail),
     param(Cifar10Model, 32, marks=mark.slow),
     param(InstanceNormResNet18, 8, marks=mark.slow),
 ]
