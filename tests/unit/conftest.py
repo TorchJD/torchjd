@@ -22,7 +22,13 @@ DEVICE = torch.device(_device_str)
 def fix_randomness() -> None:
     rand.seed(0)
     torch.manual_seed(0)
-    torch.use_deterministic_algorithms(True)
+
+    # Only force to use deterministic algorithms on CPU.
+    # This is because the CI currently runs only on CPU, so we don't really need perfect
+    # reproducibility on GPU. We also use GPU to benchmark algorithms, and we would rather have them
+    # use non-deterministic but faster algorithms.
+    if DEVICE.type == "cpu":
+        torch.use_deterministic_algorithms(True)
 
 
 def pytest_addoption(parser):
