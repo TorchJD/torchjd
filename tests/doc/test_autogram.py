@@ -18,7 +18,6 @@ def test_augment_model_for_gramian_based_iwrm():
     optimizer = SGD(model.parameters())
 
     criterion = MSELoss(reduction="none")
-    # TODO: improve this by making weightings public
     weighting = UPGradWeighting()
     augment_model_for_gramian_based_iwrm(model, weighting)
 
