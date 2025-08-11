@@ -9,7 +9,7 @@ from torchjd.aggregation import PSDMatrix, Weighting
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._module_activator import HookActivator
+from ._hook_activator import HookActivator
 from ._vjp import get_instance_wise_vjp
 
 # Note about import from protected _pytree module:

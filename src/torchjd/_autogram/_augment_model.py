@@ -7,7 +7,7 @@ from ._edge_registry import EdgeRegistry
 from ._forward_hooks import ModelHook, ModuleHook
 from ._gramian_accumulator import GramianAccumulator
 from ._handle import RemovableHandle
-from ._module_activator import HookActivator
+from ._hook_activator import HookActivator
 
 
 def augment_model_for_gramian_based_iwrm(
