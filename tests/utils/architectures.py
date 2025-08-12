@@ -554,6 +554,67 @@ class SomeUnusedOutput(ShapedModule):
         return output
 
 
+class Ndim0Output(ShapedModule):
+    INPUT_SHAPES = (5,)
+    OUTPUT_SHAPES = tuple()
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(5, 1)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.linear(input).squeeze(dim=1)
+
+
+class Ndim1Output(ShapedModule):
+    INPUT_SHAPES = (5,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(5, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.linear(input)
+
+
+class Ndim2Output(ShapedModule):
+    INPUT_SHAPES = (5,)
+    OUTPUT_SHAPES = (2, 3)
+
+    def __init__(self):
+        super().__init__()
+        self.linear1 = nn.Linear(5, 3)
+        self.linear2 = nn.Linear(5, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.stack([self.linear1(input), self.linear2(input)], dim=1)
+
+
+class Ndim3Output(ShapedModule):
+    INPUT_SHAPES = (6,)
+    OUTPUT_SHAPES = (2, 3, 4)
+
+    def __init__(self):
+        super().__init__()
+        self.tensor = nn.Parameter(torch.randn(6, 2, 3, 4))
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.einsum("bi,icde->bcde", input, self.tensor)
+
+
+class Ndim4Output(ShapedModule):
+    INPUT_SHAPES = (6,)
+    OUTPUT_SHAPES = (2, 3, 4, 5)
+
+    def __init__(self):
+        super().__init__()
+        self.tensor = nn.Parameter(torch.randn(6, 2, 3, 4, 5))
+
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.einsum("bi,icdef->bcdef", input, self.tensor)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
