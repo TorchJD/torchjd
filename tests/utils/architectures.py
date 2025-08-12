@@ -534,6 +534,26 @@ class WithSideEffect(ShapedModule):
         return (input + self.buffer) @ self.matrix
 
 
+class SomeUnusedOutput(ShapedModule):
+    """
+    Model that contains a module whose output is not used in the computation graph leading to the
+    model outputs.
+    """
+
+    INPUT_SHAPES = (9,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear1 = nn.Linear(9, 12)
+        self.linear2 = nn.Linear(9, 10)
+
+    def forward(self, input: Tensor):
+        _ = self.linear1(input)
+        output = self.linear2(input)
+        return output
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
