@@ -227,8 +227,10 @@ def _make_autogram_scaler(
             activable_hook_factory.activate()
             target_edges.reset()
 
-            weights = weighting(gramian).unsqueeze(1)
-            scaled_grad_outputs = tuple([weights * grad_output for grad_output in grad_outputs])
+            weights = weighting(gramian)
+            scaled_grad_outputs = tuple(
+                [torch.einsum("b...,b->b...", grad_output, weights) for grad_output in grad_outputs]
+            )
             return scaled_grad_outputs
 
     return AutogramScaler
