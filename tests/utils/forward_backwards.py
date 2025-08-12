@@ -59,7 +59,7 @@ def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], Tensor]:
         # along dim=1.
         losses = torch.concatenate(
             [
-                mse_loss(output, target, reduction="none").flatten(start_dim=1)
+                reshape_raw_losses(mse_loss(output, target, reduction="none"))
                 for output, target in zip(flat_outputs, flat_targets)
             ],
             dim=1,
@@ -67,3 +67,12 @@ def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], Tensor]:
         return losses
 
     return mse_loss_fn
+
+
+def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
+    assert raw_losses.ndim > 0
+
+    if raw_losses.ndim == 1:
+        return raw_losses.unsqueeze(1)
+    else:
+        return raw_losses.flatten(start_dim=1)
