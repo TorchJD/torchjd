@@ -120,10 +120,10 @@ The following example shows how to use TorchJD to minimize the vector of per-ins
 + from torchjd import augment_model_for_gramian_based_iwrm
 + from torchjd.aggregation import UPGradWeighting
 
-  model = Sequential(Linear(10, 5), ReLU(), Linear(8, 5), ReLU(), Linear(5, 3), ReLU())
+  model = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU(), Linear(3, 1), ReLU())
 
   loss_fn = MSELoss()
-  optimizer = SGD(params, lr=0.1)
+  optimizer = SGD(model.parameters(), lr=0.1)
 
 + weighting = UPGradWeighting()
 + augment_model_for_gramian_based_iwrm(model, weighting)
