@@ -56,8 +56,12 @@ Some aggregators may have additional dependencies. Please refer to the
 [installation documentation](https://torchjd.org/stable/installation) for them.
 
 ## Usage
-The main way to use TorchJD is to replace the usual call to `loss.backward()` by a call to
-`torchjd.backward` or `torchjd.mtl_backward`, depending on the use-case.
+There are two main ways to use TorchJD. The first one is to replace the usual call to `loss.backward()` by a call to
+[`torchjd.backward`](https://torchjd.org/stable/docs/autojac/backward/) or
+[`torchjd.mtl_backward`](https://torchjd.org/stable/docs/autojac/mtl_backward/), depending on the use-case. The second
+one, tailored for optimizing the vector of per-instance losses, uses the
+[`torchjd.augment_model_for_gramian_based_iwrm`](https://torchjd.org/stable/docs/autogram/augment_model.html) to modify
+a model so that a call to backward will trigger the computation of the Jacobian descent step.
 
 The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
 using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
@@ -104,6 +108,37 @@ using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
 > [!NOTE]
 > In this example, the Jacobian is only with respect to the shared parameters. The task-specific
 > parameters are simply updated via the gradient of their task’s loss with respect to them.
+
+The following example shows how to use TorchJD to minimize the vector of per-instance losses with Jacobian descent using
+[UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
+
+```diff
+  import torch
+  from torch.nn import Linear, MSELoss, ReLU, Sequential
+  from torch.optim import SGD
+
++ from torchjd import augment_model_for_gramian_based_iwrm
++ from torchjd.aggregation import UPGradWeighting
+
+  model = Sequential(Linear(10, 5), ReLU(), Linear(8, 5), ReLU(), Linear(5, 3), ReLU())
+
+  loss_fn = MSELoss()
+  optimizer = SGD(params, lr=0.1)
+
++ weighting = UPGradWeighting()
++ augment_model_for_gramian_based_iwrm(model, weighting)
+
+  inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
+  targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
+
+  for input, target in zip(inputs, targets):
+      output = model(input)
+      loss = loss_fn(output, target)
+
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+```
 
 More usage examples can be found [here](https://torchjd.org/stable/examples/).
 
