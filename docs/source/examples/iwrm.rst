@@ -69,6 +69,9 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
 
 
 
+
+
+
                     params = model.parameters()
                     optimizer = SGD(params, lr=0.1)
 
@@ -85,7 +88,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                 IWRM with SSJD (autogram)
                 ^^^^^^^^^^^^^^
                 .. code-block:: python
-                    :emphasize-lines: 10-13, 25-26
+                    :emphasize-lines: 10-13, 25-29
 
                     import torch
                     from torch.nn import (
@@ -112,7 +115,10 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                     loss_fn = MSELoss()
 
                     weighting = UPGradWeighting()
-                    augment_model_for_gramian_based_iwrm(model, weighting)
+                    augment_model_for_gramian_based_iwrm(
+                        model,
+                        weighting,
+                    )
 
                     params = model.parameters()
                     optimizer = SGD(params, lr=0.1)
