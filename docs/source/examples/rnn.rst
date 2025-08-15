@@ -12,7 +12,7 @@ descent can be leveraged to enhance optimization.
     from torch.nn import RNN
     from torch.optim import SGD
 
-    from torchjd import backward
+    from torchjd.autojac import backward
     from torchjd.aggregation import UPGrad
 
     rnn = RNN(input_size=10, hidden_size=20, num_layers=2)

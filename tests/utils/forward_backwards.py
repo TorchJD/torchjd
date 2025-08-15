@@ -5,8 +5,8 @@ from torch import Tensor, nn
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 
-from torchjd import backward
 from torchjd.aggregation import Aggregator
+from torchjd.autojac import backward
 
 
 def autograd_forward_backward(

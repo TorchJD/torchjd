@@ -3,8 +3,8 @@
 augment_model
 =============
 
-.. autofunction:: torchjd.augment_model_for_gramian_based_iwrm
+.. autofunction:: torchjd.autogram.augment_model_for_gramian_based_iwrm
 
-.. autoclass:: torchjd.RemovableHandle
+.. autoclass:: torchjd.autogram.RemovableHandle
     :members:
     :undoc-members:

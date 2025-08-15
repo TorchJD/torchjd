@@ -5,8 +5,8 @@ from torch import Tensor
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import ones_, tensor_, zeros_
 
-from torchjd._autojac._transform import Stack, Transform
-from torchjd._autojac._transform._base import TensorDict
+from torchjd.autojac._transform import Stack, Transform
+from torchjd.autojac._transform._base import TensorDict
 
 
 class FakeGradientsTransform(Transform):

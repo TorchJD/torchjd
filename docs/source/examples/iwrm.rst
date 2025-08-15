@@ -99,7 +99,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                     )
                     from torch.optim import SGD
 
-                    from torchjd import
+                    from torchjd.autogram import
                         augment_model_for_gramian_based_iwrm
                     from torchjd.aggregation import
                         UPGradWeighting
@@ -192,7 +192,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                     )
                     from torch.optim import SGD
 
-                    from torchjd import backward
+                    from torchjd.autojac import backward
                     from torchjd.aggregation import UPGrad
 
                     X = torch.randn(8, 16, 10)

@@ -4,7 +4,7 @@ from torch.testing import assert_close
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import tensor_, zeros_
 
-from torchjd._autojac._transform import (
+from torchjd.autojac._transform import (
     Accumulate,
     Conjunction,
     Diagonalize,

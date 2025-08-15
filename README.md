@@ -71,7 +71,7 @@ using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
   from torch.nn import Linear, MSELoss, ReLU, Sequential
   from torch.optim import SGD
 
-+ from torchjd import mtl_backward
++ from torchjd.autojac import mtl_backward
 + from torchjd.aggregation import UPGrad
 
   shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
@@ -117,7 +117,7 @@ The following example shows how to use TorchJD to minimize the vector of per-ins
   from torch.nn import Linear, MSELoss, ReLU, Sequential
   from torch.optim import SGD
 
-+ from torchjd import augment_model_for_gramian_based_iwrm
++ from torchjd.autogram import augment_model_for_gramian_based_iwrm
 + from torchjd.aggregation import UPGradWeighting
 
   model = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU(), Linear(3, 1), ReLU())

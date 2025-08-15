@@ -22,7 +22,7 @@ they have a negative inner product).
     from torch.nn.functional import cosine_similarity
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd.autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     def print_weights(_, __, weights: torch.Tensor) -> None:

@@ -46,9 +46,6 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_tensors
 
-from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
-from torchjd._autojac._transform import Diagonalize, Init, Jac, OrderedSet
-from torchjd._autojac._transform._aggregate import _Matrixify
 from torchjd.aggregation import (
     IMTLG,
     MGDA,
@@ -72,6 +69,9 @@ from torchjd.aggregation import (
     UPGradWeighting,
     Weighting,
 )
+from torchjd.autogram._augment_model import augment_model_for_gramian_based_iwrm
+from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
+from torchjd.autojac._transform._aggregate import _Matrixify
 
 PARAMETRIZATIONS = [
     (OverlyNested, 32),

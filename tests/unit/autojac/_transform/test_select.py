@@ -3,7 +3,7 @@ from pytest import raises
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import tensor_
 
-from torchjd._autojac._transform import RequirementError, Select
+from torchjd.autojac._transform import RequirementError, Select
 
 
 def test_partition():

@@ -1,10 +1,10 @@
 from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
-from torchjd._autogram._utils.edge_registry import EdgeRegistry
-from torchjd._autogram._utils.forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
-from torchjd._autogram._utils.gramian_accumulator import GramianAccumulator
 from torchjd.aggregation import PSDMatrix, Weighting
+from torchjd.autogram._utils.edge_registry import EdgeRegistry
+from torchjd.autogram._utils.forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
+from torchjd.autogram._utils.gramian_accumulator import GramianAccumulator
 
 from ._handle import RemovableHandle
 
@@ -28,7 +28,7 @@ def augment_model_for_gramian_based_iwrm(
     :param model: The model to augment.
     :param weighting: The object responsible for extracting weights from the Gramian. You can find
         below a list of available weightings.
-    :returns: A :class:`~torchjd._autogram._handle.RemovableHandle` that can be used to return the
+    :returns: A :class:`~torchjd.autogram._handle.RemovableHandle` that can be used to return the
         model to its original state.
 
     .. admonition::
@@ -40,7 +40,7 @@ def augment_model_for_gramian_based_iwrm(
             >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
             >>> from torch.optim import SGD
             >>>
-            >>> from torchjd import augment_model_for_gramian_based_iwrm
+            >>> from torchjd.autogram import augment_model_for_gramian_based_iwrm
             >>> from torchjd.aggregation import UPGradWeighting
             >>>
             >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example

@@ -23,7 +23,7 @@ reducing memory usage and computation time.
     )
     from torch.optim import SGD
 
-    from torchjd import augment_model_for_gramian_based_iwrm
+    from torchjd.autogram import augment_model_for_gramian_based_iwrm
     from torchjd.aggregation import UPGradWeighting
 
     X = torch.randn(8, 16, 10)

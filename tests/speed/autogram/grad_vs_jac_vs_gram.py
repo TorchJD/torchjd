@@ -18,8 +18,8 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_tensors
 
-from torchjd._autogram._augment_model import augment_model_for_gramian_based_iwrm
 from torchjd.aggregation import Mean
+from torchjd.autogram._augment_model import augment_model_for_gramian_based_iwrm
 
 PARAMETRIZATIONS = [
     (FreeParam, 64),

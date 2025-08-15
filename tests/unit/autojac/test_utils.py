@@ -3,7 +3,7 @@ from torch.nn import Linear, MSELoss, ReLU, Sequential
 from unit.conftest import DEVICE
 from utils.tensors import randn_, tensor_
 
-from torchjd._autojac._utils import get_leaf_tensors
+from torchjd.autojac._utils import get_leaf_tensors
 
 
 def test_simple_get_leaf_tensors():
