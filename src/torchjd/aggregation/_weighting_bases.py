@@ -19,6 +19,9 @@ class Weighting(Generic[_T], nn.Module, ABC):
     of dimension :math:`m` from some statistic of a matrix of dimension :math:`m \times n`.
     """
 
+    def __init__(self):
+        super().__init__()
+
     @abstractmethod
     def forward(self, stat: _T) -> Tensor:
         """Computes the vector of weights from the input stat."""
