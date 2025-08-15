@@ -1,7 +1,5 @@
 :hide-toc:
 
-|
-
 .. image:: _static/logo-dark-mode.png
     :width: 400
     :alt: torchjd

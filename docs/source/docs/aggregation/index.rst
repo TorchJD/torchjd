@@ -4,11 +4,38 @@ torchjd.aggregation
 .. automodule:: torchjd.aggregation
    :no-members:
 
+Abstract base classes
+---------------------
+
+.. autoclass:: torchjd.aggregation.Aggregator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.WeightedAggregator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.GramianWeightedAggregator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.Weighting
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: forward
+
+
 .. toctree::
     :hidden:
     :maxdepth: 1
 
-    bases.rst
     upgrad.rst
     aligned_mtl.rst
     cagrad.rst

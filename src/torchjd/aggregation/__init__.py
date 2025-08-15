@@ -8,7 +8,7 @@ individual objectives. The aggregator is used to reduce this matrix into an upda
 parameters of the model
 
 In TorchJD, an aggregator is a class that inherits from the abstract class
-:doc:`Aggregator <bases>`. We provide the following list of aggregators from the literature:
+:doc:`Aggregator <index>`. We provide the following list of aggregators from the literature:
 
 .. role:: raw-html(raw)
    :format: html
@@ -20,7 +20,7 @@ In TorchJD, an aggregator is a class that inherits from the abstract class
    :widths: 25 15 15 15
    :header-rows: 1
 
-   * - :doc:`Aggregator <bases>`
+   * - :doc:`Aggregator <index>`
      - :ref:`Non-conflicting <Non-conflicting>`
      - :ref:`Linear under scaling <Linear under scaling>`
      - :ref:`Weighted <Weighted>`

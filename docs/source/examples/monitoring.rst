@@ -1,7 +1,7 @@
 Monitoring aggregations
 =======================
 
-The :doc:`Aggregator <../docs/aggregation/bases>` class is a subclass of :class:`torch.nn.Module`.
+The :doc:`Aggregator <../docs/aggregation/index>` class is a subclass of :class:`torch.nn.Module`.
 This allows registering hooks, which can be used to monitor some information about aggregations.
 The following code example demonstrates registering a hook to compute and print the cosine
 similarity between the aggregation performed by :doc:`UPGrad <../docs/aggregation/upgrad>` and the
