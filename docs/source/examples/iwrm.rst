@@ -34,7 +34,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
 approaches.
 
 .. tab-set::
-    .. tab-item:: autograd
+    .. tab-item:: autograd (baseline)
 
         Empirical Risk Minimization (ERM) with SGD.
 
@@ -64,6 +64,9 @@ approaches.
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+        In this baseline example, the update may negatively affect the loss of some elements of the
+        batch.
 
     .. tab-item:: autojac
 
@@ -97,6 +100,9 @@ approaches.
                 backward(losses, aggregator)
                 optimizer.step()
 
+        Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
+        use it to update the model such that no loss from the batch is locally negatively affected.
+
     .. tab-item:: autogram (recommended)
 
         Instance-Wise Risk Minimization (IWRM) with Gramian-based Stochastic Sub-Jacobian Descent.
@@ -129,11 +135,11 @@ approaches.
                 loss.backward()
                 optimizer.step()
 
-        The per-sample gradients are never fully stored in memory, leading to large improvements in
-        memory usage and speed in most practical cases. The results should be the same as with
-        autojac (up to tiny numerical imprecisions), as long as the model always treats each
-        instance independently from other instances in the batch (e.g. no batch-normalization is
-        used).
+        Here, the per-sample gradients are never fully stored in memory, leading to large
+        improvements in memory usage and speed compared to autojac, in most practical cases. The
+        results should be the same as with autojac (up to tiny numerical imprecisions), as long as
+        the model always treats each instance independently from other instances in the batch (e.g.
+        no batch-normalization is used).
 
 Note that in all three cases, we use the `torch.optim.SGD
 <https://pytorch.org/docs/stable/generated/torch.optim.SGD.html>`_ optimizer to update the
