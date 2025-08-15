@@ -1,0 +1,12 @@
+torchjd.autogram
+================
+
+
+.. automodule:: torchjd.autogram
+   :members:
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    augment_model.rst
