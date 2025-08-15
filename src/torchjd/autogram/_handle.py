@@ -8,14 +8,14 @@ class RemovableHandle:
     Typical usage is:
 
     >>> # Augment the model
-    >>> handle = augment_model_for_gramian_based_iwrm(model, weighting)
+    >>> handle = augment_model_for_iwrm(model, weighting)
     >>>
     >>>  # Use it
     >>>  # ...
     >>>
     >>> # De-augment the model
     >>> handle.remove()
-    >>> # All hooks added by augment_model_for_gramian_based_iwrm have now been removed
+    >>> # All hooks added by augment_model_for_iwrm have now been removed
     """
 
     def __init__(self, handles: list[TorchRemovableHandle]) -> None:

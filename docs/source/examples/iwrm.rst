@@ -100,7 +100,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                     from torch.optim import SGD
 
                     from torchjd.autogram import
-                        augment_model_for_gramian_based_iwrm
+                        augment_model_for_iwrm
                     from torchjd.aggregation import
                         UPGradWeighting
 
@@ -115,7 +115,7 @@ As shown in the code below, any standard PyTorch code can be easily adapted to e
                     loss_fn = MSELoss()
 
                     weighting = UPGradWeighting()
-                    augment_model_for_gramian_based_iwrm(
+                    augment_model_for_iwrm(
                         model,
                         weighting,
                     )

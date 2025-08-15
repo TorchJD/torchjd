@@ -23,7 +23,7 @@ reducing memory usage and computation time.
     )
     from torch.optim import SGD
 
-    from torchjd.autogram import augment_model_for_gramian_based_iwrm
+    from torchjd.autogram import augment_model_for_iwrm
     from torchjd.aggregation import UPGradWeighting
 
     X = torch.randn(8, 16, 10)
@@ -39,7 +39,7 @@ reducing memory usage and computation time.
     loss_fn = MSELoss()
 
     weighting = UPGradWeighting()
-    augment_model_for_gramian_based_iwrm(model[2:], weighting)
+    augment_model_for_iwrm(model[2:], weighting)
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)

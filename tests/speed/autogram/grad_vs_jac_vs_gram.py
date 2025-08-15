@@ -19,7 +19,7 @@ from utils.forward_backwards import (
 from utils.tensors import make_tensors
 
 from torchjd.aggregation import Mean
-from torchjd.autogram._augment_model import augment_model_for_gramian_based_iwrm
+from torchjd.autogram._augment_model import augment_model_for_iwrm
 
 PARAMETRIZATIONS = [
     (FreeParam, 64),
@@ -90,7 +90,7 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
     print(autojac_times)
     print()
 
-    handle = augment_model_for_gramian_based_iwrm(model, W)
+    handle = augment_model_for_iwrm(model, W)
     autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
     handle.remove()
     print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")

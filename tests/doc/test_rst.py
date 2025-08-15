@@ -84,7 +84,7 @@ def test_iwrm():
         from torch.optim import SGD
 
         from torchjd.aggregation import UPGradWeighting
-        from torchjd.autogram import augment_model_for_gramian_based_iwrm
+        from torchjd.autogram import augment_model_for_iwrm
 
         X = torch.randn(8, 16, 10)
         Y = torch.randn(8, 16, 1)
@@ -93,7 +93,7 @@ def test_iwrm():
         loss_fn = MSELoss()
 
         weighting = UPGradWeighting()
-        augment_model_for_gramian_based_iwrm(model, weighting)
+        augment_model_for_iwrm(model, weighting)
 
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)

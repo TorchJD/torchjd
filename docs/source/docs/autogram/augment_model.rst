@@ -3,7 +3,7 @@
 augment_model
 =============
 
-.. autofunction:: torchjd.autogram.augment_model_for_gramian_based_iwrm
+.. autofunction:: torchjd.autogram.augment_model_for_iwrm
 
 .. autoclass:: torchjd.autogram.RemovableHandle
     :members:

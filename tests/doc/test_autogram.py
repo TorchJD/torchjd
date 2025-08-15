@@ -3,12 +3,12 @@
 from torchjd.aggregation import UPGradWeighting
 
 
-def test_augment_model_for_gramian_based_iwrm():
+def test_augment_model_for_iwrm():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd.autogram import augment_model_for_gramian_based_iwrm
+    from torchjd.autogram import augment_model_for_iwrm
 
     # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
     inputs = torch.randn(8, 16, 5)
@@ -19,7 +19,7 @@ def test_augment_model_for_gramian_based_iwrm():
 
     criterion = MSELoss(reduction="none")
     weighting = UPGradWeighting()
-    augment_model_for_gramian_based_iwrm(model, weighting)
+    augment_model_for_iwrm(model, weighting)
 
     for input, target in zip(inputs, targets):
         output = model(input)

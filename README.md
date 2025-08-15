@@ -60,7 +60,7 @@ There are two main ways to use TorchJD. The first one is to replace the usual ca
 [`torchjd.backward`](https://torchjd.org/stable/docs/autojac/backward/) or
 [`torchjd.mtl_backward`](https://torchjd.org/stable/docs/autojac/mtl_backward/), depending on the use-case. The second
 one, tailored for optimizing the vector of per-instance losses, uses the
-[`torchjd.augment_model_for_gramian_based_iwrm`](https://torchjd.org/stable/docs/autogram/augment_model.html) to modify
+[`torchjd.augment_model_for_iwrm`](https://torchjd.org/stable/docs/autogram/augment_model.html) to modify
 a model so that a call to backward will trigger the computation of the Jacobian descent step.
 
 The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
@@ -117,7 +117,7 @@ The following example shows how to use TorchJD to minimize the vector of per-ins
   from torch.nn import Linear, MSELoss, ReLU, Sequential
   from torch.optim import SGD
 
-+ from torchjd.autogram import augment_model_for_gramian_based_iwrm
++ from torchjd.autogram import augment_model_for_iwrm
 + from torchjd.aggregation import UPGradWeighting
 
   model = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU(), Linear(3, 1), ReLU())
@@ -126,7 +126,7 @@ The following example shows how to use TorchJD to minimize the vector of per-ins
   optimizer = SGD(model.parameters(), lr=0.1)
 
 + weighting = UPGradWeighting()
-+ augment_model_for_gramian_based_iwrm(model, weighting)
++ augment_model_for_iwrm(model, weighting)
 
   inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
   targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
