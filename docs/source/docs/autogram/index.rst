@@ -9,4 +9,4 @@ torchjd.autogram
     :hidden:
     :maxdepth: 1
 
-    augment_model.rst
+    augment_model_for_iwrm.rst

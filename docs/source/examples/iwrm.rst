@@ -22,7 +22,7 @@ TorchJD offers two methods for performing IWRM. The recommended approach, known 
 backpropagating the Gramian of the Jacobian of each sample's loss with respect to the model's parameters. This method is
 more memory-efficient and generally faster because it avoids storing the full Jacobians. The resulting Gramian is then
 used with a specified weighting method for gradient descent. For more details on this approach, refer to the
-:doc:`augment_model <../docs/autogram/augment_model>` documentation.
+:doc:`augment_model <../docs/autogram/augment_model_for_iwrm>` documentation.
 
 The alternative method, the autojac engine, backpropagates the Jacobian of each sample's loss. This process can be less
 efficient because the intermediate Jacobians at activation layers are typically block diagonal and could be compressed,
