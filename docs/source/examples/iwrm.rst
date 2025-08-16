@@ -68,41 +68,6 @@ approaches.
         In this baseline example, the update may negatively affect the loss of some elements of the
         batch.
 
-    .. tab-item:: autojac
-
-        Instance-Wise Risk Minimization (IWRM) with standard Stochastic Sub-Jacobian Descent.
-
-        .. code-block:: python
-            :emphasize-lines: 5-6, 12, 16, 21, 23
-
-            import torch
-            from torch.nn import Linear, MSELoss, ReLU, Sequential
-            from torch.optim import SGD
-
-            from torchjd.autojac import backward
-            from torchjd.aggregation import UPGrad
-
-            X = torch.randn(8, 16, 10)
-            Y = torch.randn(8, 16, 1)
-
-            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            loss_fn = MSELoss(reduction='none')
-
-            params = model.parameters()
-            optimizer = SGD(params, lr=0.1)
-            aggregator = UPGrad()
-
-
-            for x, y in zip(X, Y):
-                y_hat = model(x)
-                losses = loss_fn(y_hat, y)
-                optimizer.zero_grad()
-                backward(losses, aggregator)
-                optimizer.step()
-
-        Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
-        use it to update the model such that no loss from the batch is locally negatively affected.
-
     .. tab-item:: autogram (recommended)
 
         Instance-Wise Risk Minimization (IWRM) with Gramian-based Stochastic Sub-Jacobian Descent.
@@ -140,6 +105,41 @@ approaches.
         results should be the same as with autojac (up to tiny numerical imprecisions), as long as
         the model always treats each instance independently from other instances in the batch (e.g.
         no batch-normalization is used).
+
+    .. tab-item:: autojac
+
+        Instance-Wise Risk Minimization (IWRM) with standard Stochastic Sub-Jacobian Descent.
+
+        .. code-block:: python
+            :emphasize-lines: 5-6, 12, 16, 21, 23
+
+            import torch
+            from torch.nn import Linear, MSELoss, ReLU, Sequential
+            from torch.optim import SGD
+
+            from torchjd.autojac import backward
+            from torchjd.aggregation import UPGrad
+
+            X = torch.randn(8, 16, 10)
+            Y = torch.randn(8, 16, 1)
+
+            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+            loss_fn = MSELoss(reduction='none')
+
+            params = model.parameters()
+            optimizer = SGD(params, lr=0.1)
+            aggregator = UPGrad()
+
+
+            for x, y in zip(X, Y):
+                y_hat = model(x)
+                losses = loss_fn(y_hat, y)
+                optimizer.zero_grad()
+                backward(losses, aggregator)
+                optimizer.step()
+
+        Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
+        use it to update the model such that no loss from the batch is locally negatively affected.
 
 Note that in all three cases, we use the `torch.optim.SGD
 <https://pytorch.org/docs/stable/generated/torch.optim.SGD.html>`_ optimizer to update the
