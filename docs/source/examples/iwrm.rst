@@ -36,8 +36,6 @@ approaches.
 .. tab-set::
     .. tab-item:: autograd (baseline)
 
-        Empirical Risk Minimization (ERM) with SGD.
-
         .. code-block:: python
 
             import torch
@@ -69,8 +67,6 @@ approaches.
         batch.
 
     .. tab-item:: autogram (recommended)
-
-        Instance-Wise Risk Minimization (IWRM) with Gramian-based Stochastic Sub-Jacobian Descent.
 
         .. code-block:: python
             :emphasize-lines: 5-6, 16-17
@@ -107,8 +103,6 @@ approaches.
         no batch-normalization is used).
 
     .. tab-item:: autojac
-
-        Instance-Wise Risk Minimization (IWRM) with standard Stochastic Sub-Jacobian Descent.
 
         .. code-block:: python
             :emphasize-lines: 5-6, 12, 16, 21, 23
