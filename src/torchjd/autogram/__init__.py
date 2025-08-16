@@ -1,6 +1,11 @@
 """
-This package enables Jacobian descent by reverse Gramian accumulation through the
-``augment_model_for_iwrm`` function.
+The autogram package enables the activation Gramian-based Jacobian descent on your models (As
+described in Section 8 of `Jacobian Descent For Multi-Objective Optimization
+<https://arxiv.org/pdf/2406.16232>`_). It provides a convenient way to modify a model's backward
+pass, allowing you to seamlessly integrate multi-objective optimization in your PyTorch code.
+
+This method typically provides a memory improvement over the :doc:`~torchjd.autojac` package which
+typically leads to time improvement.
 """
 
 from ._augment_model import augment_model_for_iwrm

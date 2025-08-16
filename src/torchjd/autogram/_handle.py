@@ -3,7 +3,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 class RemovableHandle:
     """
-    A handle which provides the capability to remove all hooks added by torchjd for autogram.
+    A handle which provides the capability to remove all hooks added by autogram.
 
     Typical usage is:
 
@@ -23,8 +23,8 @@ class RemovableHandle:
 
     def remove(self):
         """
-        Remove from a model and its submodules the module hooks added by torchjd for autogram. This
-        can be used to de-augment a model.
+        Remove from a model and its submodules the module hooks added by autogram. This can be used
+        to de-augment a model.
         """
         for handle in self._handles:
             handle.remove()
