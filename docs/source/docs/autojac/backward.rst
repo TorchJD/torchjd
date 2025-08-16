@@ -3,4 +3,4 @@
 backward
 ========
 
-.. autofunction:: torchjd.backward
+.. autofunction:: torchjd.autojac.backward

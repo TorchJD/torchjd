@@ -46,7 +46,7 @@ class CAGrad(GramianWeightedAggregator):
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):
-        super().__init__(_CAGradWeighting(c=c, norm_eps=norm_eps))
+        super().__init__(CAGradWeighting(c=c, norm_eps=norm_eps))
         self._c = c
         self._norm_eps = norm_eps
 
@@ -61,7 +61,7 @@ class CAGrad(GramianWeightedAggregator):
         return f"CAGrad{c_str}"
 
 
-class _CAGradWeighting(Weighting[PSDMatrix]):
+class CAGradWeighting(Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the CAGrad
     algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
@@ -79,7 +79,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
         function.
     """
 
-    def __init__(self, c: float, norm_eps: float):
+    def __init__(self, c: float, norm_eps: float = 0.0001):
         super().__init__()
 
         if c < 0.0:

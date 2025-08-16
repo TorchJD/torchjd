@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._mean import _MeanWeighting
+from ._mean import MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
@@ -49,14 +49,13 @@ class UPGrad(GramianWeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
         self._solver = solver
 
         super().__init__(
-            _UPGradWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            UPGradWeighting(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
@@ -72,12 +71,13 @@ class UPGrad(GramianWeightedAggregator):
         return f"UPGrad{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _UPGradWrapper(Weighting[PSDMatrix]):
+class UPGradWeighting(Weighting[PSDMatrix]):
     """
     Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the weights
     vector such that each weighted row is projected onto the dual cone of all rows.
 
-    :param weighting: The wrapped weighting.
+    :param pref_vector: The preference vector used to combine the projected rows. If not provided,
+        defaults to the simple averaging of the projected rows.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
@@ -88,13 +88,14 @@ class _UPGradWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix],
-        norm_eps: float,
-        reg_eps: float,
-        solver: Literal["quadprog"],
+        pref_vector: Tensor | None = None,
+        norm_eps: float = 0.0001,
+        reg_eps: float = 0.0001,
+        solver: Literal["quadprog"] = "quadprog",
     ):
         super().__init__()
-        self.weighting = weighting
+        self._pref_vector = pref_vector
+        self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self.norm_eps = norm_eps
         self.reg_eps = reg_eps
         self.solver = solver

@@ -19,7 +19,7 @@ following example shows the resulting code for a multi-task learning use-case.
     from torch.nn import Sequential, Linear, ReLU, MSELoss
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
+    from torchjd.autojac import mtl_backward
     from torchjd.aggregation import UPGrad
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())

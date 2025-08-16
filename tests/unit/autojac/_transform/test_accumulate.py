@@ -1,9 +1,8 @@
 from pytest import mark, raises
-from unit._utils import ones_, tensor_, zeros_
+from utils.dict_assertions import assert_tensor_dicts_are_close
+from utils.tensors import ones_, tensor_, zeros_
 
-from torchjd._autojac._transform import Accumulate
-
-from ._dict_assertions import assert_tensor_dicts_are_close
+from torchjd.autojac._transform import Accumulate
 
 
 def test_single_accumulation():

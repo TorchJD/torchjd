@@ -27,13 +27,13 @@ class PCGrad(GramianWeightedAggregator):
     """
 
     def __init__(self):
-        super().__init__(_PCGradWeighting())
+        super().__init__(PCGradWeighting())
 
         # This prevents running into a RuntimeError due to modifying stored tensors in place.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _PCGradWeighting(Weighting[PSDMatrix]):
+class PCGradWeighting(Weighting[PSDMatrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the PCGrad
     algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning

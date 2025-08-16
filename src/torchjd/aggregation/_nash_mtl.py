@@ -119,7 +119,7 @@ class NashMTL(WeightedAggregator):
 
 class _NashMTLWeighting(Weighting[Matrix]):
     """
-    :class:`~torchjd.aggregation._weighting.Weighting` that extracts weights using the step decision
+    :class:`~torchjd.aggregation.Weighting` that extracts weights using the step decision
     of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
