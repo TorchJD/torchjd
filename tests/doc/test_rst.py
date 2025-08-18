@@ -340,14 +340,16 @@ def test_partial_jd():
     X = torch.randn(8, 16, 10)
     Y = torch.randn(8, 16, 1)
 
-    model = Sequential(Linear(10, 8), ReLU(), Linear(8, 5), ReLU(), Linear(5, 1))
+    model_start = Sequential(Linear(10, 8), ReLU())
+    model_end = Sequential(Linear(8, 5), ReLU(), Linear(5, 1))
+    model = Sequential(model_start, model_end)
     loss_fn = MSELoss()
 
     weighting = UPGradWeighting()
 
     # Only augment the last part of the model. The weights will be deduced based on the Jacobian
     # only with respect to the parameters contained in this part of the model.
-    augment_model_for_iwrm(model[2:], weighting)
+    augment_model_for_iwrm(model_end, weighting)
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
