@@ -563,7 +563,7 @@ class Ndim0Output(ShapedModule):
         self.linear = nn.Linear(5, 1)
 
     def forward(self, input: Tensor) -> Tensor:
-        return self.linear(input).squeeze(dim=1)
+        return self.linear(input).squeeze(dim=1) / 5.0
 
 
 class Ndim1Output(ShapedModule):
@@ -575,7 +575,7 @@ class Ndim1Output(ShapedModule):
         self.linear = nn.Linear(5, 3)
 
     def forward(self, input: Tensor) -> Tensor:
-        return self.linear(input)
+        return self.linear(input) / 5.0
 
 
 class Ndim2Output(ShapedModule):
