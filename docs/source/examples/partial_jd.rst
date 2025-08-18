@@ -29,6 +29,9 @@ first `Linear` layer, thereby reducing memory usage and computation time.
     loss_fn = MSELoss()
 
     weighting = UPGradWeighting()
+
+    # Only augment the last part of the model. The weights will be deduced based on the Jacobian
+    # only with respect to the parameters contained in this part of the model.
     augment_model_for_iwrm(model[2:], weighting)
 
     params = model.parameters()
