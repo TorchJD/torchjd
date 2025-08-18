@@ -5,8 +5,8 @@ from .autojac import backward as _backward
 from .autojac import mtl_backward as _mtl_backward
 
 _deprecated_items: dict[str, tuple[str, Callable]] = {
-    "backward": ("autojac", _backward),  # deprecated since 2025-08-18
-    "mtl_backward": ("autojac", _mtl_backward),  # deprecated since 2025-08-18
+    "backward": ("autojac", _backward),
+    "mtl_backward": ("autojac", _mtl_backward),
 }
 
 
