@@ -1,15 +1,16 @@
+from collections.abc import Callable
 from warnings import warn as _warn
 
 from .autojac import backward as _backward
 from .autojac import mtl_backward as _mtl_backward
 
-_deprecated_items = {
-    "backward": ("autojac", _backward),
-    "mtl_backward": ("autojac", _mtl_backward),
+_deprecated_items: dict[str, tuple[str, Callable]] = {
+    "backward": ("autojac", _backward),  # deprecated since 2025-08-18
+    "mtl_backward": ("autojac", _mtl_backward),  # deprecated since 2025-08-18
 }
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Callable:
     """
     If an attribute is not found in the module's dictionary and its name is in _deprecated_items,
     then import it with a warning.
