@@ -1,5 +1,6 @@
 from collections import Counter
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import torch
 from torch import Tensor
