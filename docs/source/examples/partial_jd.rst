@@ -9,9 +9,9 @@ cost associated with full Jacobian Descent. For a complete, non-partial version,
 :doc:`IWRM <iwrm>` example.
 
 In this example, our model consists of three `Linear` layers separated by `ReLU` layers. We will
-perform the partial descent by considering only the parameters of the last two `Linear` layers and
-the intervening `ReLU`. By doing this, we avoid computing the Jacobian and its Gramian with respect
-to the parameters of the first `Linear` layer, thereby reducing memory usage and computation time.
+perform the partial descent by considering only the parameters of the last two `Linear` layers. By
+doing this, we avoid computing the Jacobian and its Gramian with respect to the parameters of the
+first `Linear` layer, thereby reducing memory usage and computation time.
 
 .. code-block:: python
 
