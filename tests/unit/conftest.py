@@ -42,6 +42,8 @@ def garbage_collect_if_marked(request):
 
     yield
     if request.node.get_closest_marker("garbage_collect"):
+        if DEVICE.type == "cuda":
+            torch.cuda.empty_cache()
         gc.collect()
 
 
