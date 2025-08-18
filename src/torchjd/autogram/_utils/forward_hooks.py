@@ -34,7 +34,7 @@ class ActivableHookFactory:
     def deactivate(self) -> None:
         self.is_active = False
 
-    def make_hook_activable(
+    def make_activable_hook(
         self, hook: Callable[[nn.Module, PyTree, PyTree], PyTree]
     ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
         def activable_hook(module: nn.Module, args: PyTree, output: PyTree):

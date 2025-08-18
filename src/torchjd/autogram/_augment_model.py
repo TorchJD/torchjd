@@ -96,14 +96,14 @@ def augment_model_for_iwrm(
             # Skip un-parameterized modules
             continue
 
-        module_hook = activable_hook_factory.make_hook_activable(
+        module_hook = activable_hook_factory.make_activable_hook(
             ModuleHook(target_edges, gramian_accumulator)
         )
         handle = module.register_forward_hook(module_hook)
         handles.append(handle)
 
     # Add model forward hook to trigger autogram
-    model_hook = activable_hook_factory.make_hook_activable(
+    model_hook = activable_hook_factory.make_activable_hook(
         ModelHook(weighting, target_edges, gramian_accumulator, activable_hook_factory)
     )
     handle = model.register_forward_hook(model_hook)
