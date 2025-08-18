@@ -762,4 +762,4 @@ class InstanceNormResNet18(ShapedModule):
         )
 
     def forward(self, input: Tensor):
-        return self.resnet18(input)
+        return self.resnet18(input) / 5.0
