@@ -1,5 +1,5 @@
-torchjd.aggregation
-===================
+aggregation
+===========
 
 .. automodule:: torchjd.aggregation
    :no-members:

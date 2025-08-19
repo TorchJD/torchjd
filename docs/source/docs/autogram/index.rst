@@ -1,5 +1,5 @@
-torchjd.autogram
-================
+autogram
+========
 
 
 .. automodule:: torchjd.autogram

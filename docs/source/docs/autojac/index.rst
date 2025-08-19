@@ -1,5 +1,5 @@
-torchjd.autojac
-===============
+autojac
+=======
 
 .. automodule:: torchjd.autojac
    :members:
