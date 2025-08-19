@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
-from torchjd.aggregation import PSDMatrix, Weighting
+from torchjd.aggregation import Weighting
 from torchjd.autogram._utils.edge_registry import EdgeRegistry
 from torchjd.autogram._utils.forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
 from torchjd.autogram._utils.gramian_accumulator import GramianAccumulator
@@ -13,7 +13,7 @@ from ._handle import RemovableHandle
 
 def augment_model_for_iwrm(
     model: nn.Module,
-    weighting: Weighting[PSDMatrix],
+    weighting: Weighting,
     submodules: Iterable[nn.Module] | None = None,
 ) -> RemovableHandle:
     """

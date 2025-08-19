@@ -60,7 +60,6 @@ from torchjd.aggregation import (
     MGDAWeighting,
     PCGrad,
     PCGradWeighting,
-    PSDMatrix,
     Random,
     RandomWeighting,
     Sum,
@@ -111,7 +110,7 @@ PARAMETRIZATIONS = [
     param(InstanceNormResNet18, 8, marks=[mark.slow, mark.garbage_collect]),
 ]
 
-AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting[PSDMatrix]]] = [
+AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting]] = [
     (UPGrad(), UPGradWeighting()),
     (AlignedMTL(), AlignedMTLWeighting()),
     (DualProj(), DualProjWeighting()),
@@ -137,7 +136,7 @@ def test_equivalence(
     architecture: type[ShapedModule],
     batch_size: int,
     aggregator: Aggregator,
-    weighting: Weighting[PSDMatrix],
+    weighting: Weighting,
 ):
     n_iter = 3
 

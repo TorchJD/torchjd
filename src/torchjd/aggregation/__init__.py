@@ -1,140 +1,23 @@
 r"""
-A mapping :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` reducing any matrix
-:math:`J \in \mathbb R^{m\times n}` into its aggregation :math:`\mathcal A(J) \in \mathbb R^n` is
-called an aggregator.
+When doing Jacobian descent, the Jacobian matrix has to be aggregated into a vector to store in the
+``.grad`` fields of the model parameters. The
+:class:`~torchjd.aggregation._aggregator_bases.Aggregator` is responsible for these aggregations.
 
-In the context of JD, the matrix to aggregate is a Jacobian whose rows are the gradients of the
-individual objectives. The aggregator is used to reduce this matrix into an update vector for the
-parameters of the model
+When using the :doc:`autogram <../autogram/index>` engine, we rather need to extract a vector
+of weights from the Gramian of the Jacobian. The
+:class:`~torchjd.aggregation._weighting_bases.Weighting` is responsible for this.
 
-In TorchJD, an aggregator is a class that inherits from the abstract class
-:class:`~torchjd.aggregation._aggregator_bases.Aggregator`. We provide the following list of
-aggregators from the literature:
-
-.. role:: raw-html(raw)
-   :format: html
-
-.. |yes| replace:: :raw-html:`<center><font color="#28b528">✔</font></center>`
-.. |no| replace:: :raw-html:`<center><font color="#e63232">✘</font></center>`
-
-.. list-table::
-   :widths: 25 15 15 15
-   :header-rows: 1
-
-   * - :doc:`Aggregator <index>`
-     - :ref:`Non-conflicting <Non-conflicting>`
-     - :ref:`Linear under scaling <Linear under scaling>`
-     - :ref:`Weighted <Weighted>`
-   * - :doc:`UPGrad <upgrad>` (recommended)
-     - |yes|
-     - |yes|
-     - |yes|
-   * - :doc:`Aligned-MTL <aligned_mtl>`
-     - |no|
-     - |no|
-     - |yes|
-   * - :doc:`CAGrad <cagrad>`
-     - |no|
-     - |no|
-     - |yes|
-   * - :doc:`ConFIG <config>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`Constant <constant>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`DualProj <dualproj>`
-     - |yes|
-     - |no|
-     - |yes|
-   * - :doc:`GradDrop <graddrop>`
-     - |no|
-     - |no|
-     - |no|
-   * - :doc:`IMTL-G <imtl_g>`
-     - |no|
-     - |no|
-     - |yes|
-   * - :doc:`Krum <krum>`
-     - |no|
-     - |no|
-     - |yes|
-   * - :doc:`Mean <mean>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`MGDA <mgda>`
-     - |yes|
-     - |no|
-     - |yes|
-   * - :doc:`Nash-MTL <nash_mtl>`
-     - |yes|
-     - |no|
-     - |yes|
-   * - :doc:`PCGrad <pcgrad>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`Random <random>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`Sum <sum>`
-     - |no|
-     - |yes|
-     - |yes|
-   * - :doc:`Trimmed Mean <trimmed_mean>`
-     - |no|
-     - |no|
-     - |no|
-
-.. hint::
-    This table is an adaptation of the one available in `Jacobian Descent For Multi-Objective
-    Optimization <https://arxiv.org/pdf/2406.16232>`_. The paper provides precise justification of
-    the properties in Section 2.2 as well as proofs in Appendix B.
-
-.. _Non-conflicting:
-.. admonition::
-    Non-conflicting
-
-    An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be
-    *non-conflicting* if for any :math:`J\in\mathbb R^{m\times n}`, :math:`J\cdot\mathcal A(J)` is a
-    vector with only non-negative elements.
-
-    In other words, :math:`\mathcal A` is non-conflicting whenever the aggregation of any matrix has
-    non-negative inner product with all rows of that matrix. In the context of JD, this ensures that
-    no objective locally increases.
-
-.. _Linear under scaling:
-.. admonition::
-    Linear under scaling
-
-    An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be
-    *linear under scaling* if for any :math:`J\in\mathbb R^{m\times n}`, the mapping from any
-    positive :math:`c\in\mathbb R^{n}` to :math:`\mathcal A(\operatorname{diag}(c)\cdot J)` is
-    linear in :math:`c`.
-
-    In other words, :math:`\mathcal A` is linear under scaling whenever scaling a row of the matrix
-    to aggregate scales its influence proportionally. In the context of JD, this ensures that even
-    when the gradient norms are imbalanced, each gradient will contribute to the update
-    proportionally to its norm.
-
-.. _Weighted:
-.. admonition::
-    Weighted
-
-    An aggregator :math:`\mathcal A: \mathbb R^{m\times n} \to \mathbb R^n` is said to be *weighted*
-    if for any :math:`J\in\mathbb R^{m\times n}`, there exists a weight vector
-    :math:`w\in\mathbb R^m` such that :math:`\mathcal A(J)=J^\top w`.
-
-    In other words, :math:`\mathcal A` is weighted whenever the aggregation of any matrix is always
-    in the span of the rows of that matrix. This ensures a higher precision of the Taylor
-    approximation that JD relies on.
+.. note::
+    Most aggregators rely on computing the Gramian of the Jacobian, extracting a vector of weights
+    from this Gramian using a :class:`~torchjd.aggregation._weighting_bases.Weighting`, and then
+    combining the rows of the Jacobian using these weights. For all of them, we provide both the
+    :class:`~torchjd.aggregation._aggregator_bases.Aggregator` interface (to be used in autojac) and
+    the :class:`~torchjd.aggregation._weighting_bases.Weighting` interface (to be used in autogram).
+    For the rest, we only provide the :class:`~torchjd.aggregation._aggregator_bases.Aggregator`
+    interface -- they are not compatible with autogram.
 """
 
-from ._aggregator_bases import Aggregator, GramianWeightedAggregator, WeightedAggregator
+from ._aggregator_bases import Aggregator
 from ._aligned_mtl import AlignedMTL, AlignedMTLWeighting
 from ._config import ConFIG
 from ._constant import Constant, ConstantWeighting
@@ -152,7 +35,7 @@ from ._upgrad import UPGrad, UPGradWeighting
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
-from ._weighting_bases import Matrix, PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 try:
     from ._cagrad import CAGrad, CAGradWeighting
