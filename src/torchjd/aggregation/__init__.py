@@ -15,6 +15,25 @@ of weights from the Gramian of the Jacobian. The
     the :class:`~torchjd.aggregation._weighting_bases.Weighting` interface (to be used in autogram).
     For the rest, we only provide the :class:`~torchjd.aggregation._aggregator_bases.Aggregator`
     interface -- they are not compatible with autogram.
+
+:class:`Aggregators <torchjd.aggregation._aggregator_bases.Aggregator>` and :class:`Weightings
+<torchjd.aggregation._weighting_bases.Weighting>` are callables that take a Jacobian matrix or a
+Gramian matrix as inputs, respectively. The following example shows how to use UPGrad to either
+aggregate a Jacobian or obtain the weights from the Gramian of the Jacobian.
+
+>>> from torch import tensor
+>>> from torchjd.aggregation import UPGrad, UPGradWeighting
+>>>
+>>> aggregator = UPGrad()
+>>> jacobian = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+>>> aggregation = aggregator(jacobian)
+>>> aggregation
+tensor([0.2929, 1.9004, 1.9004])
+>>> weighting = UPGradWeighting()
+>>> gramian = jacobian @ jacobian.T
+>>> weights = weighting(gramian)
+>>> weights
+tensor([1.1109, 0.7894])
 """
 
 from ._aggregator_bases import Aggregator
