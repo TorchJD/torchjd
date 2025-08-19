@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
@@ -12,6 +14,7 @@ from ._handle import RemovableHandle
 def augment_model_for_iwrm(
     model: nn.Module,
     weighting: Weighting[PSDMatrix],
+    submodules: Iterable[nn.Module] | None = None,
 ) -> RemovableHandle:
     """
     Adds module hooks to a model and its child modules so that the backward pass is replaced by a
@@ -28,6 +31,8 @@ def augment_model_for_iwrm(
     :param model: The model to augment.
     :param weighting: The object responsible for extracting weights from the Gramian. You can find
         below a list of available weightings.
+    :param submodules: A collection of submodules of model whose parameters will contribute to the
+        Gramian of the Jacobian. Defaults to all submodules of model.
     :returns: A :class:`~torchjd.autogram._handle.RemovableHandle` that can be used to return the
         model to its original state.
 
@@ -85,13 +90,20 @@ def augment_model_for_iwrm(
         * :class:`~torchjd.aggregation.SumWeighting`
     """
 
+    if submodules is None:
+        _submodules = set(model.modules())
+    else:
+        _submodules = set(submodules)
+        if not set(model.modules()).issubset(_submodules):
+            raise ValueError("`submodules` should all be submodules of model.")
+
     handles: list[TorchRemovableHandle] = []
     gramian_accumulator = GramianAccumulator()
     activable_hook_factory = ActivableHookFactory()
     target_edges = EdgeRegistry()
 
     # Add module forward hooks to compute jacobians
-    for module in model.modules():
+    for module in _submodules:
         if next(module.parameters(recurse=False), None) is None:
             # Skip un-parameterized modules
             continue
