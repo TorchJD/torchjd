@@ -43,20 +43,6 @@ class ConFIG(Aggregator):
     :param pref_vector: The preference vector used to weight the rows. If not provided, defaults to
         equal weights of 1.
 
-    .. admonition::
-        Example
-
-        Use ConFIG to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import ConFIG
-        >>>
-        >>> A = ConFIG()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.1588, 2.0706, 2.0706])
-
     .. note::
         This implementation was adapted from the `official implementation
         <https://github.com/tum-pbs/ConFIG/tree/main/conflictfree>`_.

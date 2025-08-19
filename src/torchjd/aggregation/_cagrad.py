@@ -24,20 +24,6 @@ class CAGrad(GramianWeightedAggregator):
     :param c: The scale of the radius of the ball constraint.
     :param norm_eps: A small value to avoid division by zero when normalizing.
 
-    .. admonition::
-        Example
-
-        Use CAGrad to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import CAGrad
-        >>>
-        >>> A = CAGrad(c=0.5)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.1835, 1.2041, 1.2041])
-
     .. note::
         This aggregator is not installed by default. When not installed, trying to import it should
         result in the following error:

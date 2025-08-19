@@ -26,20 +26,6 @@ class DualProj(GramianWeightedAggregator):
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem.
-
-    .. admonition::
-        Example
-
-        Use DualProj to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import DualProj
-        >>>
-        >>> A = DualProj()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.5563, 1.1109, 1.1109])
     """
 
     def __init__(

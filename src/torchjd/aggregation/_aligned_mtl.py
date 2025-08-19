@@ -42,20 +42,6 @@ class AlignedMTL(GramianWeightedAggregator):
 
     :param pref_vector: The preference vector to use.
 
-    .. admonition::
-        Example
-
-        Use AlignedMTL to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import AlignedMTL
-        >>>
-        >>> A = AlignedMTL()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.2133, 0.9673, 0.9673])
-
     .. note::
         This implementation was adapted from the `official implementation
         <https://github.com/SamsungLabs/MTL/tree/master/code/optim/aligned>`_.

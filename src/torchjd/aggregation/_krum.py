@@ -15,26 +15,6 @@ class Krum(GramianWeightedAggregator):
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
         source.
     :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
-
-    .. admonition::
-        Example
-
-        Use Multi-Krum to aggregate a matrix with 1 adversarial row.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import Krum
-        >>>
-        >>> A = Krum(n_byzantine=1, n_selected=4)
-        >>> J = tensor([
-        ...     [1.,     1., 1.],
-        ...     [1.,     0., 1.],
-        ...     [75., -666., 23],  # adversarial row
-        ...     [1.,     2., 3.],
-        ...     [2.,     0., 1.],
-        ... ])
-        >>>
-        >>> A(J)
-        tensor([1.2500, 0.7500, 1.5000])
     """
 
     def __init__(self, n_byzantine: int, n_selected: int = 1):

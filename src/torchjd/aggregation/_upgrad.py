@@ -26,20 +26,6 @@ class UPGrad(GramianWeightedAggregator):
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem.
-
-    .. admonition::
-        Example
-
-        Use UPGrad to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import UPGrad
-        >>>
-        >>> A = UPGrad()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.2929, 1.9004, 1.9004])
     """
 
     def __init__(

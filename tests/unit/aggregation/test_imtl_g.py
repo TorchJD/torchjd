@@ -1,5 +1,5 @@
 from pytest import mark
-from torch import Tensor
+from torch import Tensor, tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, zeros_
 
@@ -41,6 +41,14 @@ def test_imtlg_zero():
     A = IMTLG()
     J = zeros_(2, 3)
     assert_close(A(J), zeros_(3))
+
+
+def test_value():
+    """Test that the output values are fixed (on cpu)."""
+
+    A = IMTLG()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+    assert_close(A(J), tensor([0.0767, 1.0000, 1.0000]), rtol=0, atol=1e-4)
 
 
 def test_representations():

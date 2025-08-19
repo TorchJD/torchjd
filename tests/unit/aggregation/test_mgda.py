@@ -1,5 +1,5 @@
 from pytest import mark
-from torch import Tensor
+from torch import Tensor, tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
@@ -64,6 +64,14 @@ def test_mgda_satisfies_kkt_conditions(shape: tuple[int, int]):
     # Dual feasibility
     positive_mu = mu[mu >= 0]
     assert_close(positive_mu.norm(), mu.norm(), atol=1e-02, rtol=0.0)
+
+
+def test_value():
+    """Test that the output values are fixed (on cpu)."""
+
+    A = MGDA()
+    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
+    assert_close(A(J), tensor([1.1921e-07, 1.0000e00, 1.0000e00]), rtol=0, atol=1e-4)
 
 
 def test_representations():

@@ -15,20 +15,6 @@ class MGDA(GramianWeightedAggregator):
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.
-
-    .. admonition::
-        Example
-
-        Use MGDA to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import MGDA
-        >>>
-        >>> A = MGDA()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([1.1921e-07, 1.0000e+00, 1.0000e+00])
     """
 
     def __init__(self, epsilon: float = 0.001, max_iters: int = 100):

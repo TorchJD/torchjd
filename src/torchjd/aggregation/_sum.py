@@ -9,20 +9,6 @@ class Sum(WeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that sums of the rows of the input
     matrices.
-
-    .. admonition::
-        Example
-
-        Sum the rows of a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import Sum
-        >>>
-        >>> A = Sum()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([2., 2., 2.])
     """
 
     def __init__(self):

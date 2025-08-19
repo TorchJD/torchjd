@@ -10,20 +10,6 @@ class PCGrad(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in algorithm 1 of
     `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
-
-    .. admonition::
-        Example
-
-        Use PCGrad to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import PCGrad
-        >>>
-        >>> A = PCGrad()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.5848, 3.8012, 3.8012])
     """
 
     def __init__(self):
