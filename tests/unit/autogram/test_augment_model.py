@@ -68,7 +68,6 @@ from torchjd.aggregation import (
     UPGradWeighting,
     Weighting,
 )
-from torchjd.autogram._augment_model import augment_model_for_iwrm
 from torchjd.autogram._autogram_data import AutogramData
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd.autojac._transform._aggregate import _Matrixify
@@ -274,12 +273,12 @@ def test_partial_autogram():
     model1.zero_grad()
     model2.zero_grad()
 
-    augment_model_for_iwrm(model2, W)
+    autogram_data = AutogramData(model2.modules(), W)
 
     output = model1(input)
     output = model2(output)
     losses = loss_fn(output)
-    losses.backward(torch.ones_like(losses))
+    autogram_data.backward(losses)
 
     grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
     grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
