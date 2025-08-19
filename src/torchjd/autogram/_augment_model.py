@@ -90,11 +90,12 @@ def augment_model_for_iwrm(
         * :class:`~torchjd.aggregation.SumWeighting`
     """
 
+    all_submodules = set(model.modules())
     if submodules is None:
-        _submodules = set(model.modules())
+        _submodules = all_submodules
     else:
         _submodules = set(submodules)
-        if not set(model.modules()).issubset(_submodules):
+        if not all_submodules.issuperset(_submodules):
             raise ValueError("`submodules` should all be submodules of model.")
 
     handles: list[TorchRemovableHandle] = []
