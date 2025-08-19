@@ -69,6 +69,7 @@ from torchjd.aggregation import (
     Weighting,
 )
 from torchjd.autogram._augment_model import augment_model_for_iwrm
+from torchjd.autogram._autogram_data import AutogramData
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd.autojac._transform._aggregate import _Matrixify
 
@@ -148,7 +149,7 @@ def test_equivalence(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    augment_model_for_iwrm(model_autogram, weighting)
+    autogram_data = AutogramData(model_autogram.modules(), weighting)
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -164,7 +165,7 @@ def test_equivalence(
         }
 
         torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
-        autogram_forward_backward(model_autogram, inputs, loss_fn)
+        autogram_forward_backward(model_autogram, autogram_data, inputs, loss_fn)
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
         }
@@ -209,25 +210,25 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram = architecture().to(device=DEVICE)
 
     # Augment and verify that we're equivalent to autojac
-    handle = augment_model_for_iwrm(model_autogram, W)
+    autogram_data = AutogramData(model_autogram.modules(), W)
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, input, loss_fn)
+    autogram_forward_backward(model_autogram, autogram_data, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
-    # Deaugment and verify that we're equivalent to autograd
-    handle.remove()  # De-augment model
+    # Verify that after deaugmenting the modules, autograd works normally
+    autogram_data.untrack_modules()  # unhook model
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, input, loss_fn)
+    autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autograd_grads)
     model_autogram.zero_grad()
 
-    # Re-augment and verify that we're equivalent to autojac
-    augment_model_for_iwrm(model_autogram, W)
+    # Re-augment and verify that we're still equivalent to autojac
+    autogram_data = AutogramData(model_autogram.modules(), W)
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, input, loss_fn)
+    autogram_forward_backward(model_autogram, autogram_data, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
 
