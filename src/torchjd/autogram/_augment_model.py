@@ -4,10 +4,10 @@ from torch import nn
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from torchjd.aggregation import Weighting
-from torchjd.autogram._utils.edge_registry import EdgeRegistry
-from torchjd.autogram._utils.forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
-from torchjd.autogram._utils.gramian_accumulator import GramianAccumulator
 
+from ._edge_registry import EdgeRegistry
+from ._forward_hooks import ActivableHookFactory, ModelHook, ModuleHook
+from ._gramian_accumulator import GramianAccumulator
 from ._handle import RemovableHandle
 
 

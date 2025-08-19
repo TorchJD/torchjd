@@ -2,7 +2,7 @@ from pytest import mark
 from torch.testing import assert_close
 from utils.tensors import randn_, zeros_
 
-from torchjd.autogram._utils.gramian_accumulator import GramianAccumulator
+from torchjd.autogram._gramian_accumulator import GramianAccumulator
 
 
 @mark.parametrize(
