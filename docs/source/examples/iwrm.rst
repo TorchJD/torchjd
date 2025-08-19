@@ -3,35 +3,40 @@ Instance-Wise Risk Minimization (IWRM)
 
 This example shows how to use TorchJD to minimize the vector of per-instance losses. This learning
 paradigm, called IWRM, is multi-objective, as opposed to the usual empirical risk minimization
-(ERM), which seeks to minimize the average loss.
+(ERM), which seeks to minimize the average loss. While a step of ERM may increase the loss of some
+samples of the batch, a step of IWRM guarantees that no loss from the batch is increased (given a
+sufficiently small learning rate).
 
 .. hint::
     A proper definition of IWRM and its empirical results on some deep learning tasks are
     available in `Jacobian Descent For Multi-Objective Optimization
     <https://arxiv.org/pdf/2406.16232>`_.
 
+TorchJD offers two methods to perform IWRM. The :doc:`autojac <../docs/autojac/index>` engine
+backpropagates the Jacobian of each sample's loss. It uses an
+:doc:`Aggregator <../docs/aggregation/index>` to combine the rows of this Jacobian to fill the
+``.grad`` fields of the model's parameters. Because it has to store the full Jacobian in memory,
+this approach consumes a lot of memory.
+
+The recommended approach, called the :doc:`autogram <../docs/autogram/index>` engine, works by
+backpropagating the Gramian of the Jacobian of each sample's loss with respect to the model's
+parameters. This method is more memory-efficient and generally much faster because it avoids
+storing the full Jacobians. A vector of weights is then computed by applying a
+:doc:`Weighting <../docs/aggregation/index>` to the obtained Gramian, and a normal step of gradient
+descent is then done on the weighted sum of the losses.
+
+Both approaches (autojac and autogram) are mathematically equivalent, and should thus give the same
+results up to small numerical differences. Even though the autogram engine is generally much faster
+than the autojac engine, there are some layers that are incompatible with it. These limitations are
+documented :doc:`here <../docs/autogram/augment_model_for_iwrm>`.
+
 For the sake of the example, we generate a fake dataset consisting of 8 batches of 16 random input
 vectors of dimension 10, and their corresponding scalar labels. We train a very simple regression
-model to retrieve the label from the corresponding input. To minimize the average loss, we use
+model to retrieve the label from the corresponding input. To minimize the average loss (ERM), we use
 stochastic gradient descent (SGD), where each gradient is computed from the average loss over a
-batch of data. When minimizing per-instance losses, we use stochastic sub-Jacobian descent, where
-each Jacobian matrix consists of one gradient per loss. In this example, we use :doc:`UPGrad
-<../docs/aggregation/upgrad>` to aggregate these matrices.
-
-TorchJD offers two methods for performing IWRM. The recommended approach, known as the autogram
-engine, works by backpropagating the Gramian of the Jacobian of each sample's loss with respect to
-the model's parameters. This method is more memory-efficient and generally faster because it avoids
-storing the full Jacobians. The resulting Gramian is then used with a specified weighting method for
-gradient descent. For more details on this approach, refer to the
-:doc:`augment_model <../docs/autogram/augment_model_for_iwrm>` documentation.
-
-The alternative method, the autojac engine, backpropagates the Jacobian of each sample's loss. This
-process can be less efficient because the intermediate Jacobians at activation layers are typically
-block diagonal and could be compressed, but the autojac engine doesn't perform this optimization. As
-a result, it consumes more memory and can lead to a higher computational cost per iteration.
-
-As shown in the code below, any standard PyTorch code can be easily adapted to either of these
-approaches.
+batch of data. When minimizing per-instance losses (IWRM), we use either autojac, with
+:doc:`UPGrad <../docs/aggregation/upgrad>` to aggregate the Jacobian, or autogram, with
+:doc:`UPGradWeighting <../docs/aggregation/upgrad>` to extract weights from the Gramian.
 
 .. tab-set::
     .. tab-item:: autograd (baseline)
@@ -65,6 +70,39 @@ approaches.
 
         In this baseline example, the update may negatively affect the loss of some elements of the
         batch.
+
+    .. tab-item:: autojac
+
+        .. code-block:: python
+            :emphasize-lines: 5-6, 12, 16, 21, 23
+
+            import torch
+            from torch.nn import Linear, MSELoss, ReLU, Sequential
+            from torch.optim import SGD
+
+            from torchjd.autojac import backward
+            from torchjd.aggregation import UPGrad
+
+            X = torch.randn(8, 16, 10)
+            Y = torch.randn(8, 16, 1)
+
+            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+            loss_fn = MSELoss(reduction='none')
+
+            params = model.parameters()
+            optimizer = SGD(params, lr=0.1)
+            aggregator = UPGrad()
+
+
+            for x, y in zip(X, Y):
+                y_hat = model(x)
+                losses = loss_fn(y_hat, y)
+                optimizer.zero_grad()
+                backward(losses, aggregator)
+                optimizer.step()
+
+        Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
+        use it to update the model such that no loss from the batch is locally negatively affected.
 
     .. tab-item:: autogram (recommended)
 
@@ -101,39 +139,6 @@ approaches.
         results should be the same as with autojac (up to tiny numerical imprecisions), as long as
         the model always treats each instance independently from other instances in the batch (e.g.
         no batch-normalization is used).
-
-    .. tab-item:: autojac
-
-        .. code-block:: python
-            :emphasize-lines: 5-6, 12, 16, 21, 23
-
-            import torch
-            from torch.nn import Linear, MSELoss, ReLU, Sequential
-            from torch.optim import SGD
-
-            from torchjd.autojac import backward
-            from torchjd.aggregation import UPGrad
-
-            X = torch.randn(8, 16, 10)
-            Y = torch.randn(8, 16, 1)
-
-            model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            loss_fn = MSELoss(reduction='none')
-
-            params = model.parameters()
-            optimizer = SGD(params, lr=0.1)
-            aggregator = UPGrad()
-
-
-            for x, y in zip(X, Y):
-                y_hat = model(x)
-                losses = loss_fn(y_hat, y)
-                optimizer.zero_grad()
-                backward(losses, aggregator)
-                optimizer.step()
-
-        Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
-        use it to update the model such that no loss from the batch is locally negatively affected.
 
 Note that in all three cases, we use the `torch.optim.SGD
 <https://pytorch.org/docs/stable/generated/torch.optim.SGD.html>`_ optimizer to update the
