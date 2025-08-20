@@ -54,29 +54,32 @@ def test_iwrm():
             optimizer.step()
 
     def test_autogram():
+        # TODO: When done fixing this example, we have to copy it in IWRM and adapt the line skips
+        #   and highlights
         import torch
         from torch.nn import Linear, MSELoss, ReLU, Sequential
         from torch.optim import SGD
 
         from torchjd.aggregation import UPGradWeighting
-        from torchjd.autogram import augment_model_for_iwrm
+        from torchjd.autogram import GramianReverseAccumulator
 
         X = torch.randn(8, 16, 10)
         Y = torch.randn(8, 16, 1)
 
         model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-        loss_fn = MSELoss()
+        loss_fn = MSELoss(reduction="none")
 
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)
         weighting = UPGradWeighting()
-        augment_model_for_iwrm(model, weighting)
+        gramian_reverse_accumulator = GramianReverseAccumulator(model)
 
         for x, y in zip(X, Y):
             y_hat = model(x)
-            loss = loss_fn(y_hat, y)
+            losses = loss_fn(y_hat, y)
             optimizer.zero_grad()
-            loss.backward()
+            gramian = gramian_reverse_accumulator.compute_gramian(losses)
+            losses.backward(weighting(gramian))
             optimizer.step()
 
     def test_autojac():
@@ -330,31 +333,33 @@ def test_amp():
 
 
 def test_partial_jd():
+    # TODO: When this is fixed, we need to adapt example accordingly.
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGradWeighting
-    from torchjd.autogram import augment_model_for_iwrm
+    from torchjd.autogram import GramianReverseAccumulator
 
     X = torch.randn(8, 16, 10)
     Y = torch.randn(8, 16, 1)
 
     model = Sequential(Linear(10, 8), ReLU(), Linear(8, 5), ReLU(), Linear(5, 1))
-    loss_fn = MSELoss()
+    loss_fn = MSELoss(reduction="none")
 
     weighting = UPGradWeighting()
 
     # Only augment the last part of the model. The weights will be deduced based on the Jacobian
     # only with respect to the parameters contained in this part of the model.
-    augment_model_for_iwrm(model, weighting, submodules=model[2:])
+    gramian_reverse_accumulator = GramianReverseAccumulator(model[2:])
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
 
     for x, y in zip(X, Y):
         y_hat = model(x)
-        loss = loss_fn(y_hat, y)
+        losses = loss_fn(y_hat, y)
         optimizer.zero_grad()
-        loss.backward()
+        gramian = gramian_reverse_accumulator.compute_gramian(losses)
+        losses.backward(weighting(gramian))
         optimizer.step()

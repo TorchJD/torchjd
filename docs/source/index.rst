@@ -45,8 +45,8 @@ Jacobian in memory), weighting the losses using the information of the Gramian, 
 the gradient of the obtained weighted loss. The iterative computation of the Gramian corresponds to
 Algorithm 3 of
 `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_. The
-documentation and usage example of this algorithm is provided in :doc:`Gramian-based Jacobian
-descent for IWRM <docs/autogram/augment_model_for_iwrm>`.
+documentation and usage example of this algorithm is provided in :doc:`Gramian Reverse Accumulation
+<docs/autogram/gramian_reverse_accumulation>`.
 
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.

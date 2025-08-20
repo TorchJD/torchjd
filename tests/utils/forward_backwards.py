@@ -31,13 +31,13 @@ def autojac_forward_backward(
 
 def autogram_forward_backward(
     model: nn.Module,
-    autogram_data: GramianReverseAccumulator,
+    gramian_reverse_accumulator: GramianReverseAccumulator,
     weighting: Weighting,
     inputs: PyTree,
     loss_fn: Callable[[PyTree], Tensor],
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
-    gramian = autogram_data.compute_gramian(losses)
+    gramian = gramian_reverse_accumulator.compute_gramian(losses)
     losses.backward(weighting(gramian))
 
 
