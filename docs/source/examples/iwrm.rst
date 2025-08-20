@@ -28,7 +28,7 @@ descent is then done on the weighted sum of the losses.
 Both approaches (autojac and autogram) are mathematically equivalent, and should thus give the same
 results up to small numerical differences. Even though the autogram engine is generally much faster
 than the autojac engine, there are some layers that are incompatible with it. These limitations are
-documented :doc:`here <../docs/autogram/gramian_reverse_accumulation>`.
+documented :doc:`here <../docs/autogram/engine>`.
 
 For the sake of the example, we generate a fake dataset consisting of 8 batches of 16 random input
 vectors of dimension 10, and their corresponding scalar labels. We train a very simple regression

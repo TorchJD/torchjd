@@ -10,7 +10,7 @@ from ._gramian_accumulator import GramianAccumulator
 from ._module_hook_manager import ModuleHookManager
 
 
-class GramianReverseAccumulator:
+class Engine:
     """
     Used for computing the Gramian of the Jacobian of some vector with respect to the direct
     parameters of all provided modules.
@@ -35,7 +35,7 @@ class GramianReverseAccumulator:
             >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
             >>> from torch.optim import SGD
             >>>
-            >>> from torchjd.autogram import GramianReverseAccumulator
+            >>> from torchjd.autogram import Engine
             >>> from torchjd.aggregation import UPGradWeighting
             >>>
             >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
@@ -47,14 +47,14 @@ class GramianReverseAccumulator:
             >>>
             >>> criterion = MSELoss(reduction="none")
             >>> weighting = UPGradWeighting()
-            >>> gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+            >>> engine = Engine(model.modules())
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input)
             >>>     losses = criterion(output, target)
             >>>
             >>>     optimizer.zero_grad()
-            >>>     gramian = gramian_reverse_accumulator.compute_gramian(losses)
+            >>>     gramian = engine.compute_gramian(losses)
             >>>     losses.backward(weighting(gramian))
             >>>     optimizer.step()
     """
@@ -85,13 +85,13 @@ class GramianReverseAccumulator:
         Typical usage is:
 
         >>> # Augment the model
-        >>> gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+        >>> engine = Engine(model.modules())
         >>>
         >>>  # Use it
         >>>  # ...
         >>>
         >>> # De-augment the model
-        >>> gramian_reverse_accumulator.deaugment_modules()
+        >>> engine.deaugment_modules()
         >>> # All hooks added by augment_model_for_iwrm have now been removed
         """
         self._module_hook_manager.remove_handles()

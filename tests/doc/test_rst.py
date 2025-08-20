@@ -61,7 +61,7 @@ def test_iwrm():
         from torch.optim import SGD
 
         from torchjd.aggregation import UPGradWeighting
-        from torchjd.autogram import GramianReverseAccumulator
+        from torchjd.autogram import Engine
 
         X = torch.randn(8, 16, 10)
         Y = torch.randn(8, 16, 1)
@@ -72,13 +72,13 @@ def test_iwrm():
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)
         weighting = UPGradWeighting()
-        gramian_reverse_accumulator = GramianReverseAccumulator(model)
+        engine = Engine(model)
 
         for x, y in zip(X, Y):
             y_hat = model(x)
             losses = loss_fn(y_hat, y).squeeze()
             optimizer.zero_grad()
-            gramian = gramian_reverse_accumulator.compute_gramian(losses)
+            gramian = engine.compute_gramian(losses)
             losses.backward(weighting(gramian))
             optimizer.step()
 
@@ -339,7 +339,7 @@ def test_partial_jd():
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGradWeighting
-    from torchjd.autogram import GramianReverseAccumulator
+    from torchjd.autogram import Engine
 
     X = torch.randn(8, 16, 10)
     Y = torch.randn(8, 16, 1)
@@ -351,7 +351,7 @@ def test_partial_jd():
 
     # Only augment the last part of the model. The weights will be deduced based on the Jacobian
     # only with respect to the parameters contained in this part of the model.
-    gramian_reverse_accumulator = GramianReverseAccumulator(model[2:])
+    engine = Engine(model[2:])
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
@@ -360,6 +360,6 @@ def test_partial_jd():
         y_hat = model(x)
         losses = loss_fn(y_hat, y).squeeze()
         optimizer.zero_grad()
-        gramian = gramian_reverse_accumulator.compute_gramian(losses)
+        gramian = engine.compute_gramian(losses)
         losses.backward(weighting(gramian))
         optimizer.step()

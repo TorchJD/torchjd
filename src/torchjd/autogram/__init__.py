@@ -24,4 +24,4 @@ The exhaustive list of supported Weightings compatible with `autogram` is:
 * :class:`~torchjd.aggregation.SumWeighting`
 """
 
-from ._gramian_reverse_accumulator import GramianReverseAccumulator
+from ._engine import Engine

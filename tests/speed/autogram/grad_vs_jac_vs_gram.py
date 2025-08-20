@@ -19,7 +19,7 @@ from utils.forward_backwards import (
 from utils.tensors import make_tensors
 
 from torchjd.aggregation import Mean
-from torchjd.autogram import GramianReverseAccumulator
+from torchjd.autogram import Engine
 
 PARAMETRIZATIONS = [
     (FreeParam, 64),
@@ -62,7 +62,7 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, gramian_reverse_accumulator, W, inputs, loss_fn)
+        autogram_forward_backward(model, engine, W, inputs, loss_fn)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
@@ -90,9 +90,9 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
     print(autojac_times)
     print()
 
-    gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+    engine = Engine(model.modules())
     autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
-    gramian_reverse_accumulator.deaugment_modules()
+    engine.deaugment_modules()
     print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
     print(autogram_times)
     print()

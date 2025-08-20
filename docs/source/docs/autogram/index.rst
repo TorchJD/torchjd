@@ -9,4 +9,4 @@ autogram
     :hidden:
     :maxdepth: 1
 
-    gramian_reverse_accumulation.rst
+    engine.rst
