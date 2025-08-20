@@ -312,3 +312,28 @@ def test_non_vector_input_to_compute_gramian():
 
     with pytest.raises(ValueError):
         gramian_reverse_accumulator.compute_gramian(losses)
+
+
+def test_autograd_backward_on_augmented_model():
+    architecture = Cifar10Model
+    batch_size = 64
+
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
+
+    input = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.manual_seed(0)
+    model = architecture().to(device=DEVICE)
+
+    gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+
+    output = model(input)
+    losses = loss_fn(output).reshape([8, 8])
+
+    torch.autograd.backward(losses, torch.ones_like(losses))
+
+    # A call to autograd.backward phase should not compute the gramian.
+    assert gramian_reverse_accumulator._gramian_accumulator.gramian is None

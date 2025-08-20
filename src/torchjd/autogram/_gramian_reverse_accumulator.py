@@ -7,7 +7,7 @@ from torch.autograd.graph import get_gradient_edge
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
-from ._forward_hooks import ActivableHookFactory, ModuleHook
+from ._forward_hooks import ActivableHookFactory, ModuleHook, NodeActivator
 from ._gramian_accumulator import GramianAccumulator
 
 
@@ -67,6 +67,7 @@ class GramianReverseAccumulator:
         self._handles: list[TorchRemovableHandle] = []
         self._gramian_accumulator = GramianAccumulator()
         self._activable_hook_factory = ActivableHookFactory()
+        self._node_activator = NodeActivator()
         self._target_edges = EdgeRegistry()
 
         self._track_modules(modules)
@@ -81,7 +82,7 @@ class GramianReverseAccumulator:
                 continue
 
             module_hook = self._activable_hook_factory.make_activable_hook(
-                ModuleHook(self._target_edges, self._gramian_accumulator)
+                ModuleHook(self._target_edges, self._gramian_accumulator, self._node_activator)
             )
             handle = module.register_forward_hook(module_hook)
             self._handles.append(handle)
@@ -127,6 +128,8 @@ class GramianReverseAccumulator:
             grad_outputs = torch.ones_like(output)
 
         self._activable_hook_factory.deactivate()
+        self._node_activator.activate()
+
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
 
         _ = torch.autograd.grad(
@@ -143,6 +146,7 @@ class GramianReverseAccumulator:
         # Reset everything that has a state
         self._gramian_accumulator.reset()
         self._activable_hook_factory.activate()
+        self._node_activator.deactivate()
         self._target_edges.reset()
 
         return gramian

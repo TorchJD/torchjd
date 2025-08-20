@@ -44,6 +44,21 @@ class ActivableHookFactory:
         return activable_hook
 
 
+class NodeActivator:
+    """
+    This is mostly a pointer to a bool
+    """
+
+    def __init__(self):
+        self.is_active = False
+
+    def activate(self) -> None:
+        self.is_active = True
+
+    def deactivate(self) -> None:
+        self.is_active = False
+
+
 class ModuleHook:
     """
     Create a forward hook used to insert Jacobian accumulation nodes into the backward graph.
@@ -61,9 +76,11 @@ class ModuleHook:
         self,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
+        node_activator: NodeActivator,
     ):
         self.target_edges = target_edges
         self.gramian_accumulator = gramian_accumulator
+        self.node_activator = node_activator
 
     def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
         flat_outputs, tree_spec = tree_flatten(output)
@@ -74,7 +91,7 @@ class ModuleHook:
             return output
 
         JacobianAccumulator = _make_jacobian_accumulator(
-            module, self.gramian_accumulator, args, tree_spec
+            module, self.gramian_accumulator, args, tree_spec, self.node_activator
         )
 
         requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
@@ -95,6 +112,7 @@ def _make_jacobian_accumulator(
     gramian_accumulator: GramianAccumulator,
     args: PyTree,
     tree_spec: TreeSpec,
+    node_activator: NodeActivator,
 ) -> type[torch.autograd.Function]:
 
     class JacobianAccumulator(torch.autograd.Function):
@@ -107,8 +125,6 @@ def _make_jacobian_accumulator(
         autogram algorithm.
         """
 
-        activated = True
-
         @staticmethod
         def forward(*xs: Tensor) -> tuple[Tensor, ...]:
             return tuple([x.detach() for x in xs])
@@ -119,11 +135,8 @@ def _make_jacobian_accumulator(
 
         @staticmethod
         def backward(ctx, *flat_grad_outputs: Tensor):
-            if not JacobianAccumulator.activated:
-                JacobianAccumulator.activated = True
+            if not node_activator.is_active:
                 return flat_grad_outputs
-
-            JacobianAccumulator.activated = False
 
             grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
             jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
