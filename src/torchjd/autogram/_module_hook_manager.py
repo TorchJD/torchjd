@@ -20,6 +20,14 @@ from ._vjp import get_instance_wise_vjp
 
 
 class ModuleHookManager:
+    """
+    Class responsible for handling hooks and Nodes that computes the Gramian reverse accumulation.
+
+    :param target_edges: Registry for tracking gradient edges that serve as targets for the first
+        differentiation.
+    :param gramian_accumulator: Accumulator for collecting the Jacobians into a Gramian.
+    """
+
     def __init__(
         self,
         target_edges: EdgeRegistry,
@@ -36,11 +44,6 @@ class ModuleHookManager:
 
         The hook injects a JacobianAccumulator function into the computation graph after the module,
         enabling Gramian computation during autogram's first backward pass.
-
-        :param target_edges: Registry for tracking gradient edges that serve as targets for the first
-            differentiation.
-        :param gramian_accumulator: Accumulator for collecting the Jacobians into a Gramian.
-        :returns: Forward hook for a submodule.
         """
 
         def module_hook(_: nn.Module, args: PyTree, output: PyTree) -> PyTree:
@@ -88,8 +91,8 @@ class ModuleHookManager:
 
             Acts as identity on forward pass. On the first backward pass of the autogram algorithm,
             computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
-            accumulator. Uses a toggle mechanism to activate only during the first backward pass of the
-            autogram algorithm.
+            accumulator. Uses a toggle mechanism to activate only during the first backward pass of
+            the autogram algorithm.
             """
 
             @staticmethod
