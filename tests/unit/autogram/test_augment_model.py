@@ -68,7 +68,7 @@ from torchjd.aggregation import (
     UPGradWeighting,
     Weighting,
 )
-from torchjd.autogram._autogram_data import AutogramData
+from torchjd.autogram._gramian_reverse_accumulator import GramianReverseAccumulator
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd.autojac._transform._aggregate import _Matrixify
 
@@ -148,7 +148,7 @@ def test_equivalence(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    autogram_data = AutogramData(model_autogram.modules(), weighting)
+    gramian_reverse_accumulator = GramianReverseAccumulator(model_autogram.modules())
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -164,7 +164,9 @@ def test_equivalence(
         }
 
         torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
-        autogram_forward_backward(model_autogram, autogram_data, inputs, loss_fn)
+        autogram_forward_backward(
+            model_autogram, gramian_reverse_accumulator, weighting, inputs, loss_fn
+        )
         grads = {
             name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
         }
@@ -209,15 +211,15 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram = architecture().to(device=DEVICE)
 
     # Augment and verify that we're equivalent to autojac
-    autogram_data = AutogramData(model_autogram.modules(), W)
+    gramian_reverse_accumulator = GramianReverseAccumulator(model_autogram.modules())
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, autogram_data, input, loss_fn)
+    autogram_forward_backward(model_autogram, gramian_reverse_accumulator, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
     # Verify that after deaugmenting the modules, autograd works normally
-    autogram_data.untrack_modules()  # unhook model
+    gramian_reverse_accumulator.untrack_modules()  # unhook model
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
@@ -225,9 +227,9 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram.zero_grad()
 
     # Re-augment and verify that we're still equivalent to autojac
-    autogram_data = AutogramData(model_autogram.modules(), W)
+    gramian_reverse_accumulator = GramianReverseAccumulator(model_autogram.modules())
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, autogram_data, input, loss_fn)
+    autogram_forward_backward(model_autogram, gramian_reverse_accumulator, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autojac_grads)
 
@@ -273,12 +275,13 @@ def test_partial_autogram():
     model1.zero_grad()
     model2.zero_grad()
 
-    autogram_data = AutogramData(model2.modules(), W)
+    gramian_reverse_accumulator = GramianReverseAccumulator(model2.modules())
 
     output = model1(input)
     output = model2(output)
     losses = loss_fn(output)
-    autogram_data.backward(losses)
+    gramian = gramian_reverse_accumulator.compute_gramian(losses)
+    losses.backward(W(gramian))
 
     grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
     grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}

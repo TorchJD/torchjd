@@ -5,8 +5,8 @@ from torch import Tensor, nn
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 
-from torchjd.aggregation import Aggregator
-from torchjd.autogram._autogram_data import AutogramData
+from torchjd.aggregation import Aggregator, Weighting
+from torchjd.autogram._gramian_reverse_accumulator import GramianReverseAccumulator
 from torchjd.autojac import backward
 
 
@@ -31,12 +31,14 @@ def autojac_forward_backward(
 
 def autogram_forward_backward(
     model: nn.Module,
-    autogram_data: AutogramData,
+    autogram_data: GramianReverseAccumulator,
+    weighting: Weighting,
     inputs: PyTree,
     loss_fn: Callable[[PyTree], Tensor],
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
-    autogram_data.backward(losses)
+    gramian = autogram_data.compute_gramian(losses)
+    losses.backward(weighting(gramian))
 
 
 def _forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
