@@ -219,7 +219,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     model_autogram.zero_grad()
 
     # Verify that after deaugmenting the modules, autograd works normally
-    gramian_reverse_accumulator.untrack_modules()  # unhook model
+    gramian_reverse_accumulator.deaugment_modules()  # unhook model
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}

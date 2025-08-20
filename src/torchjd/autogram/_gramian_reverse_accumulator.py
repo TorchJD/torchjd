@@ -86,11 +86,38 @@ class GramianReverseAccumulator:
             handle = module.register_forward_hook(module_hook)
             self._handles.append(handle)
 
-    def untrack_modules(self) -> None:
+    def deaugment_modules(self) -> None:
+        """
+        Used to de-augment the provided modules. It removes all the hooks that we have added.
+
+        Typical usage is:
+
+        >>> # Augment the model
+        >>> gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+        >>>
+        >>>  # Use it
+        >>>  # ...
+        >>>
+        >>> # De-augment the model
+        >>> gramian_reverse_accumulator.deaugment_modules()
+        >>> # All hooks added by augment_model_for_iwrm have now been removed
+        """
+
         for handle in self._handles:
             handle.remove()
 
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
+        """
+        Compute the Gramian of the Jacobian of `output` with respect the direct parameters of all
+        `modules`.
+
+        :param output: The vector to differentiate. Must have `ndim == 1`.
+        :param grad_outputs: The tangents for the differentiation. Default to a vector of 1s of the
+            same shape as `output`.
+        :returns: the Gramian of the Jacobian of `output` with respect to the direct parameters of
+            all `modules`
+        """
+
         if output.ndim != 1:
             raise ValueError(
                 "We currently support computing the Gramian with respect to vectors" "only."
