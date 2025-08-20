@@ -1,3 +1,4 @@
+import pytest
 import torch
 from pytest import mark, param
 from torch.optim import SGD
@@ -288,3 +289,26 @@ def test_partial_autogram():
 
     assert_tensor_dicts_are_close(grads1, expected_grads1)
     assert_tensor_dicts_are_close(grads2, expected_grads2)
+
+
+def test_non_vector_input_to_compute_gramian():
+    architecture = Cifar10Model
+    batch_size = 64
+
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
+
+    input = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.manual_seed(0)
+    model = architecture().to(device=DEVICE)
+
+    gramian_reverse_accumulator = GramianReverseAccumulator(model.modules())
+
+    output = model(input)
+    losses = loss_fn(output).reshape([8, 8])
+
+    with pytest.raises(ValueError):
+        gramian_reverse_accumulator.compute_gramian(losses)
