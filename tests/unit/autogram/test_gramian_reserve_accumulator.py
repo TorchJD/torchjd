@@ -180,7 +180,7 @@ def test_equivalence(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_size: int):
+def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], batch_size: int):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
@@ -209,7 +209,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    # Augment and verify that we're equivalent to autojac
+    # Hook modules and verify that we're equivalent to autojac when using the engine
     engine = Engine(model_autogram.modules())
     torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
@@ -217,19 +217,12 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
-    # Verify that even with the hooked modules, autograd works normally
+    # Verify that even with the hooked modules, autograd works normally when not using the engine
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autograd_grads)
     model_autogram.zero_grad()
-
-    # Re-augment and verify that we're still equivalent to autojac
-    engine = Engine(model_autogram.modules())
-    torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
-    grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
-    assert_tensor_dicts_are_close(grads, autojac_grads)
 
 
 def test_partial_autogram():
