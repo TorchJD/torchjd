@@ -120,7 +120,7 @@ class GramianReverseAccumulator:
 
         if output.ndim != 1:
             raise ValueError(
-                "We currently support computing the Gramian with respect to vectors" "only."
+                "We currently support computing the Gramian with respect to vectors only."
             )
 
         if grad_outputs is None:
