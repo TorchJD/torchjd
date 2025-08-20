@@ -22,7 +22,7 @@ def test_augment_model_for_iwrm():
 
     for input, target in zip(inputs, targets):
         output = model(input)
-        losses = criterion(output, target)
+        losses = criterion(output, target).squeeze()
         # TODO: This loss is of shape [1, 16], I think it should be [16].
 
         optimizer.zero_grad()

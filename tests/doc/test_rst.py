@@ -76,7 +76,7 @@ def test_iwrm():
 
         for x, y in zip(X, Y):
             y_hat = model(x)
-            losses = loss_fn(y_hat, y)
+            losses = loss_fn(y_hat, y).squeeze()
             optimizer.zero_grad()
             gramian = gramian_reverse_accumulator.compute_gramian(losses)
             losses.backward(weighting(gramian))
@@ -358,7 +358,7 @@ def test_partial_jd():
 
     for x, y in zip(X, Y):
         y_hat = model(x)
-        losses = loss_fn(y_hat, y)
+        losses = loss_fn(y_hat, y).squeeze()
         optimizer.zero_grad()
         gramian = gramian_reverse_accumulator.compute_gramian(losses)
         losses.backward(weighting(gramian))
