@@ -4,10 +4,9 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
-from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
-from ._forward_hooks import ActivableHookFactory, ModuleHook, NodeActivator
+from ._forward_hooks import ModuleHookManager
 from ._gramian_accumulator import GramianAccumulator
 
 
@@ -64,11 +63,9 @@ class GramianReverseAccumulator:
         self,
         modules: Iterable[nn.Module],
     ):
-        self._handles: list[TorchRemovableHandle] = []
         self._gramian_accumulator = GramianAccumulator()
-        self._activable_hook_factory = ActivableHookFactory()
-        self._node_activator = NodeActivator()
         self._target_edges = EdgeRegistry()
+        self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
 
         self._track_modules(modules)
 
@@ -77,15 +74,9 @@ class GramianReverseAccumulator:
 
         # Add module forward hooks to compute jacobians
         for module in _modules:
-            if next(module.parameters(recurse=False), None) is None:
+            if next(module.parameters(recurse=False), None) is not None:
                 # Skip un-parameterized modules
-                continue
-
-            module_hook = self._activable_hook_factory.make_activable_hook(
-                ModuleHook(self._target_edges, self._gramian_accumulator, self._node_activator)
-            )
-            handle = module.register_forward_hook(module_hook)
-            self._handles.append(handle)
+                self._module_hook_manager.hook_module(module)
 
     def deaugment_modules(self) -> None:
         """
@@ -103,9 +94,7 @@ class GramianReverseAccumulator:
         >>> gramian_reverse_accumulator.deaugment_modules()
         >>> # All hooks added by augment_model_for_iwrm have now been removed
         """
-
-        for handle in self._handles:
-            handle.remove()
+        self._module_hook_manager.remove_handles()
 
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
         """
@@ -127,8 +116,7 @@ class GramianReverseAccumulator:
         if grad_outputs is None:
             grad_outputs = torch.ones_like(output)
 
-        self._activable_hook_factory.deactivate()
-        self._node_activator.activate()
+        self._module_hook_manager.gramian_accumulation_phase = True
 
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
 
@@ -144,9 +132,8 @@ class GramianReverseAccumulator:
         gramian = cast(Tensor, self._gramian_accumulator.gramian)
 
         # Reset everything that has a state
+        self._module_hook_manager.gramian_accumulation_phase = False
         self._gramian_accumulator.reset()
-        self._activable_hook_factory.activate()
-        self._node_activator.deactivate()
         self._target_edges.reset()
 
         return gramian

@@ -1,10 +1,10 @@
-from collections.abc import Callable
 from typing import cast
 
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
+from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
@@ -19,135 +19,102 @@ from ._vjp import get_instance_wise_vjp
 # still support older versions of PyTorch where pytree is protected).
 
 
-class ActivableHookFactory:
-    """
-    This class converts module hooks into hooks that can be activated or deactivated.
-    """
-
-    def __init__(self):
-        self.is_active = True
-
-    def activate(self) -> None:
-        self.is_active = True
-
-    def deactivate(self) -> None:
-        self.is_active = False
-
-    def make_activable_hook(
-        self, hook: Callable[[nn.Module, PyTree, PyTree], PyTree]
-    ) -> Callable[[nn.Module, PyTree, PyTree], PyTree]:
-        def activable_hook(module: nn.Module, args: PyTree, output: PyTree):
-            if not self.is_active:
-                return output
-            return hook(module, args, output)
-
-        return activable_hook
-
-
-class NodeActivator:
-    """
-    This is mostly a pointer to a bool
-    """
-
-    def __init__(self):
-        self.is_active = False
-
-    def activate(self) -> None:
-        self.is_active = True
-
-    def deactivate(self) -> None:
-        self.is_active = False
-
-
-class ModuleHook:
-    """
-    Create a forward hook used to insert Jacobian accumulation nodes into the backward graph.
-
-    The hook injects a JacobianAccumulator function into the computation graph after the module,
-    enabling Gramian computation during autogram's first backward pass.
-
-    :param target_edges: Registry for tracking gradient edges that serve as targets for the first
-        differentiation.
-    :param gramian_accumulator: Accumulator for collecting the Jacobians into a Gramian.
-    :returns: Forward hook for a submodule.
-    """
-
+class ModuleHookManager:
     def __init__(
         self,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        node_activator: NodeActivator,
     ):
-        self.target_edges = target_edges
-        self.gramian_accumulator = gramian_accumulator
-        self.node_activator = node_activator
+        self._gramian_accumulator = gramian_accumulator
+        self._target_edges = target_edges
+        self.gramian_accumulation_phase = False
+        self._handles: list[TorchRemovableHandle] = []
 
-    def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
-        flat_outputs, tree_spec = tree_flatten(output)
-
-        if not any(isinstance(t, Tensor) for t in flat_outputs):
-            # This can happen only if a module returns no Tensor, for instance some niche usage
-            # such as a module that prints something.
-            return output
-
-        JacobianAccumulator = _make_jacobian_accumulator(
-            module, self.gramian_accumulator, args, tree_spec, self.node_activator
-        )
-
-        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-        self.gramian_accumulator.track_parameter_paths(requires_grad_params)
-
-        # We only care about running the JacobianAccumulator node, so we need one of its child
-        # edges (the edges of the original ouputs of the model) as target. For memory
-        # efficiency, we select the smallest one.
-        numels = torch.tensor([t.numel() for t in flat_outputs])
-        index = cast(int, numels.argmin().item())
-        self.target_edges.register(get_gradient_edge(flat_outputs[index]))
-
-        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
-
-
-def _make_jacobian_accumulator(
-    module: nn.Module,
-    gramian_accumulator: GramianAccumulator,
-    args: PyTree,
-    tree_spec: TreeSpec,
-    node_activator: NodeActivator,
-) -> type[torch.autograd.Function]:
-
-    class JacobianAccumulator(torch.autograd.Function):
+    def hook_module(self, module: nn.Module) -> None:
         """
-        Autograd function that accumulates Jacobian Gramians during the first backward pass.
+        Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
 
-        Acts as identity on forward pass. On the first backward pass of the autogram algorithm,
-        computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
-        accumulator. Uses a toggle mechanism to activate only during the first backward pass of the
-        autogram algorithm.
+        The hook injects a JacobianAccumulator function into the computation graph after the module,
+        enabling Gramian computation during autogram's first backward pass.
+
+        :param target_edges: Registry for tracking gradient edges that serve as targets for the first
+            differentiation.
+        :param gramian_accumulator: Accumulator for collecting the Jacobians into a Gramian.
+        :returns: Forward hook for a submodule.
         """
 
-        @staticmethod
-        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-            return tuple([x.detach() for x in xs])
+        def module_hook(_: nn.Module, args: PyTree, output: PyTree) -> PyTree:
+            if self.gramian_accumulation_phase:
+                return output
 
-        @staticmethod
-        def setup_context(*_):
-            pass
+            flat_outputs, tree_spec = tree_flatten(output)
 
-        @staticmethod
-        def backward(ctx, *flat_grad_outputs: Tensor):
-            if not node_activator.is_active:
+            if not any(isinstance(t, Tensor) for t in flat_outputs):
+                # This can happen only if a module returns no Tensor, for instance some niche usage
+                # such as a module that prints something.
+                return output
+
+            JacobianAccumulator = self._make_jacobian_accumulator(module, args, tree_spec)
+
+            requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
+            self._gramian_accumulator.track_parameter_paths(requires_grad_params)
+
+            # We only care about running the JacobianAccumulator node, so we need one of its child
+            # edges (the edges of the original ouputs of the model) as target. For memory
+            # efficiency, we select the smallest one.
+            numels = torch.tensor([t.numel() for t in flat_outputs])
+            index = cast(int, numels.argmin().item())
+            self._target_edges.register(get_gradient_edge(flat_outputs[index]))
+
+            return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
+
+        handle = module.register_forward_hook(module_hook)
+        self._handles.append(handle)
+
+    def remove_handles(self) -> None:
+        for handle in self._handles:
+            handle.remove()
+
+    def _make_jacobian_accumulator(
+        self,
+        module: nn.Module,
+        args: PyTree,
+        tree_spec: TreeSpec,
+    ) -> type[torch.autograd.Function]:
+
+        class JacobianAccumulator(torch.autograd.Function):
+            """
+            Autograd function that accumulates Jacobian Gramians during the first backward pass.
+
+            Acts as identity on forward pass. On the first backward pass of the autogram algorithm,
+            computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
+            accumulator. Uses a toggle mechanism to activate only during the first backward pass of the
+            autogram algorithm.
+            """
+
+            @staticmethod
+            def forward(*xs: Tensor) -> tuple[Tensor, ...]:
+                return tuple([x.detach() for x in xs])
+
+            @staticmethod
+            def setup_context(*_):
+                pass
+
+            @staticmethod
+            def backward(ctx, *flat_grad_outputs: Tensor):
+                if not self.gramian_accumulation_phase:
+                    return flat_grad_outputs
+
+                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+                jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
+
+                self._gramian_accumulator.accumulate_path_jacobians(
+                    {
+                        module.get_parameter(param_name): jacobian
+                        for param_name, jacobian in jacobians.items()
+                    }
+                )
+
                 return flat_grad_outputs
 
-            grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-            jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
-
-            gramian_accumulator.accumulate_path_jacobians(
-                {
-                    module.get_parameter(param_name): jacobian
-                    for param_name, jacobian in jacobians.items()
-                }
-            )
-
-            return flat_grad_outputs
-
-    return JacobianAccumulator
+        return JacobianAccumulator
