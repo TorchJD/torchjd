@@ -91,6 +91,11 @@ class GramianReverseAccumulator:
             handle.remove()
 
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
+        if output.ndim != 1:
+            raise ValueError(
+                "We currently support computing the Gramian with respect to vectors" "only."
+            )
+
         if grad_outputs is None:
             grad_outputs = torch.ones_like(output)
 
