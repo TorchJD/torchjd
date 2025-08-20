@@ -6,8 +6,8 @@ from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
-from ._forward_hooks import ModuleHookManager
 from ._gramian_accumulator import GramianAccumulator
+from ._module_hook_manager import ModuleHookManager
 
 
 class GramianReverseAccumulator:
