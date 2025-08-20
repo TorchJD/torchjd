@@ -6,8 +6,6 @@ from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 
-from torchjd.aggregation import Weighting
-
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._vjp import get_instance_wise_vjp
@@ -92,44 +90,6 @@ class ModuleHook:
         return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
 
 
-class ModelHook:
-    """
-    Create a forward hook that inserts the autogram scaling node into the backward graph.
-
-    The hook injects an AutogramScaler function at the model's output to coordinate autogram's
-    two backward passes.
-    """
-
-    def __init__(
-        self,
-        weighting: Weighting,
-        target_edges: EdgeRegistry,
-        gramian_accumulator: GramianAccumulator,
-        activable_hook_factory: ActivableHookFactory,
-    ):
-        self.weighting = weighting
-        self.target_edges = target_edges
-        self.gramian_accumulator = gramian_accumulator
-        self.activable_hook_factory = activable_hook_factory
-
-    def __call__(self, _, args: PyTree, output: PyTree) -> PyTree:
-        input_tensors = [a for a in tree_flatten(args)[0] if isinstance(a, Tensor)]
-        output_tensors = [a for a in tree_flatten(output)[0] if isinstance(a, Tensor)]
-
-        flat_outputs, tree_spec = tree_flatten(output)
-        AutogramScaler = _make_autogram_scaler(
-            flat_outputs,
-            input_tensors,
-            output_tensors,
-            self.weighting,
-            self.target_edges,
-            self.gramian_accumulator,
-            self.activable_hook_factory,
-        )
-        self.activable_hook_factory.deactivate()
-        return tree_unflatten(AutogramScaler.apply(*flat_outputs), tree_spec)
-
-
 def _make_jacobian_accumulator(
     module: nn.Module,
     gramian_accumulator: GramianAccumulator,
@@ -178,61 +138,3 @@ def _make_jacobian_accumulator(
             return flat_grad_outputs
 
     return JacobianAccumulator
-
-
-def _make_autogram_scaler(
-    flat_outputs: PyTree,
-    input_tensors: list[Tensor],
-    output_tensors: list[Tensor],
-    weighting: Weighting,
-    target_edges: EdgeRegistry,
-    gramian_accumulator: GramianAccumulator,
-    activable_hook_factory: ActivableHookFactory,
-) -> type[torch.autograd.Function]:
-
-    excluded_edges = {get_gradient_edge(t) for t in input_tensors if t.requires_grad}
-    roots = {get_gradient_edge(t) for t in output_tensors}
-    leaf_targets = list(target_edges.get_leaf_edges(roots, excluded_edges))
-
-    class AutogramScaler(torch.autograd.Function):
-        """
-        Autograd function that coordinates the autogram algorithm's two-phase backward pass.
-
-        Triggers the first backward pass to accumulate the Gramian of the Jacobian, computes weights
-        from the Gramian using the provided weighting, then scales gradients for the second backward
-        pass.
-        """
-
-        @staticmethod
-        def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-            return tuple([x.detach() for x in xs])
-
-        @staticmethod
-        def setup_context(*_):
-            pass
-
-        @staticmethod
-        def backward(ctx, *grad_outputs: Tensor):
-            _ = torch.autograd.grad(
-                outputs=flat_outputs,
-                inputs=leaf_targets,
-                grad_outputs=grad_outputs,
-                retain_graph=True,
-            )
-
-            # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
-            # have failed. So gramian is necessarily a valid Tensor here.
-            gramian = cast(Tensor, gramian_accumulator.gramian)
-
-            # Reset everything that has a state
-            gramian_accumulator.reset()
-            activable_hook_factory.activate()
-            target_edges.reset()
-
-            weights = weighting(gramian)
-            scaled_grad_outputs = tuple(
-                [torch.einsum("b...,b->b...", grad_output, weights) for grad_output in grad_outputs]
-            )
-            return scaled_grad_outputs
-
-    return AutogramScaler
