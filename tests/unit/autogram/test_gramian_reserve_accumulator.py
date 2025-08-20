@@ -217,8 +217,7 @@ def test_augment_deaugment_reaugment(architecture: type[ShapedModule], batch_siz
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
-    # Verify that after deaugmenting the modules, autograd works normally
-    engine.deaugment_modules()  # unhook model
+    # Verify that even with the hooked modules, autograd works normally
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}

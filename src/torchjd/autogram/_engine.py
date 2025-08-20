@@ -78,24 +78,6 @@ class Engine:
                 # Skip un-parameterized modules
                 self._module_hook_manager.hook_module(module)
 
-    def deaugment_modules(self) -> None:
-        """
-        Used to de-augment the provided modules. It removes all the hooks that we have added.
-
-        Typical usage is:
-
-        >>> # Augment the model
-        >>> engine = Engine(model.modules())
-        >>>
-        >>>  # Use it
-        >>>  # ...
-        >>>
-        >>> # De-augment the model
-        >>> engine.deaugment_modules()
-        >>> # All hooks added by augment_model_for_iwrm have now been removed
-        """
-        self._module_hook_manager.remove_handles()
-
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
         """
         Compute the Gramian of the Jacobian of `output` with respect the direct parameters of all

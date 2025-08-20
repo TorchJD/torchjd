@@ -74,10 +74,6 @@ class ModuleHookManager:
         handle = module.register_forward_hook(module_hook)
         self._handles.append(handle)
 
-    def remove_handles(self) -> None:
-        for handle in self._handles:
-            handle.remove()
-
     def _make_jacobian_accumulator(
         self,
         module: nn.Module,
