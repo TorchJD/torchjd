@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from typing import cast
 
 import torch
-from torch import Tensor, nn
+from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
@@ -25,6 +25,9 @@ class Engine:
 
     :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
         to the Gramian of the Jacobian.
+    :param is_batched: If a dimension is batched, then many intermediary jacobians are block
+        diagonal, which allows for a substancial memory optimization by backpropagating a squashed
+        Jacobian instead. If the only dimension of the losses vector is batched. Default to True.
 
     .. admonition::
         Example
@@ -62,9 +65,11 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
+        is_batched: bool = True,
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
+        self._is_batched = is_batched
         self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
 
         self._track_modules(modules)
@@ -102,12 +107,20 @@ class Engine:
 
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
 
-        _ = torch.autograd.grad(
-            outputs=output,
-            inputs=leaf_targets,
-            grad_outputs=grad_outputs,
-            retain_graph=True,
-        )
+        def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
+            return torch.autograd.grad(
+                outputs=output,
+                inputs=leaf_targets,
+                grad_outputs=grad_outputs,
+                retain_graph=True,
+            )
+
+        if self._is_batched:
+            _ = differentiation(grad_outputs)
+        else:
+            jac_outputs = torch.diag(grad_outputs)
+            jacs = vmap(differentiation)(jac_outputs)
+            print(jacs)
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.

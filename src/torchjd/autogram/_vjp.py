@@ -39,12 +39,12 @@ def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[
         # primals (tuple), here the functional has a single primal which is
         # dict(module.named_parameters()). We therefore take the 0'th element to obtain
         # the dict of gradients w.r.t. the module's named_parameters.
-        return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+        return vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
 
     return get_vjp
 
 
-def _vjp_from_module(
+def vjp_from_module(
     module: nn.Module, inputs: PyTree
 ) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
     """

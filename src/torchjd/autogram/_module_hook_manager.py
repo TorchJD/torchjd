@@ -8,7 +8,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import get_instance_wise_vjp
+from ._vjp import get_instance_wise_vjp, vjp_from_module
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -81,6 +81,38 @@ class ModuleHookManager:
         tree_spec: TreeSpec,
     ) -> type[torch.autograd.Function]:
 
+        class AccumulateJacobian(torch.autograd.Function):
+
+            @staticmethod
+            def forward(*flat_grad_outputs: Tensor) -> tuple[Tensor, ...]:
+                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+                jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
+                self._gramian_accumulator.accumulate_path_jacobians(
+                    {
+                        module.get_parameter(param_name): jacobian
+                        for param_name, jacobian in jacobians.items()
+                    }
+                )
+                return flat_grad_outputs  # Useless output, but I put it here in case torch optimize stuff, can remove later. same in vmap
+
+            @staticmethod
+            def setup_context(*_):
+                pass
+
+            @staticmethod
+            def vmap(
+                info, in_dims, *flat_jac_outputs: Tensor
+            ) -> tuple[tuple[Tensor, ...], tuple[int | None, ...]]:
+                jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
+                jacobians = torch.vmap(vjp_from_module(module, args))(jac_outputs)
+                self._gramian_accumulator.accumulate_path_jacobians(
+                    {
+                        module.get_parameter(param_name): jacobian
+                        for param_name, jacobian in jacobians.items()
+                    }
+                )
+                return flat_jac_outputs, in_dims
+
         class JacobianAccumulator(torch.autograd.Function):
             """
             Autograd function that accumulates Jacobian Gramians during the first backward pass.
@@ -90,6 +122,8 @@ class ModuleHookManager:
             accumulator. Uses a toggle mechanism to activate only during the first backward pass of
             the autogram algorithm.
             """
+
+            # generate_vmap_rule = True
 
             @staticmethod
             def forward(*xs: Tensor) -> tuple[Tensor, ...]:
@@ -104,15 +138,7 @@ class ModuleHookManager:
                 if not self.gramian_accumulation_phase:
                     return flat_grad_outputs
 
-                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-                jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
-
-                self._gramian_accumulator.accumulate_path_jacobians(
-                    {
-                        module.get_parameter(param_name): jacobian
-                        for param_name, jacobian in jacobians.items()
-                    }
-                )
+                AccumulateJacobian.apply(*flat_grad_outputs)
 
                 return flat_grad_outputs
 
