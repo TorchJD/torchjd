@@ -497,6 +497,24 @@ class WithSomeFrozenModule(ShapedModule):
         return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)
 
 
+class MultiOutputWithFrozenBranch(ShapedModule):
+    """
+    Module that has two outputs: one comes from a frozen parameter, so it will only require grad
+    if the input requires grad, and one comes from a non-frozen parameter.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = ((10,), (10,))
+
+    def __init__(self):
+        super().__init__()
+        self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
+        self.matrix = nn.Parameter(torch.randn(50, 10))
+
+    def forward(self, input: Tensor):
+        return (input**2 / 5.0) @ self.frozen_param, input @ self.matrix
+
+
 class WithBuffered(ShapedModule):
     """Model using a module that has a buffer."""
 
