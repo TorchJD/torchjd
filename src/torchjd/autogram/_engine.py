@@ -79,7 +79,7 @@ class Engine:
 
         # Add module forward hooks to compute jacobians
         for module in _modules:
-            if next(module.parameters(recurse=False), None) is not None:
+            if any(p.requires_grad for p in module.parameters(recurse=False)):
                 # Skip un-parameterized modules
                 self._module_hook_manager.hook_module(module)
 
