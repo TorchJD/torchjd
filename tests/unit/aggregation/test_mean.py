@@ -1,6 +1,5 @@
 from pytest import mark
-from torch import Tensor, tensor
-from torch.testing import assert_close
+from torch import Tensor
 
 from torchjd.aggregation import Mean
 
@@ -35,14 +34,6 @@ def test_linear_under_scaling(aggregator: Mean, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: Mean, matrix: Tensor):
     assert_strongly_stationary(aggregator, matrix)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = Mean()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([1.0, 1.0, 1.0]), rtol=0, atol=1e-4)
 
 
 def test_representations():

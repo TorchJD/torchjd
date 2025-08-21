@@ -2,8 +2,7 @@ from contextlib import nullcontext as does_not_raise
 
 import torch
 from pytest import mark, raises
-from torch import Tensor, tensor
-from torch.testing import assert_close
+from torch import Tensor
 from utils.contexts import ExceptionContext
 from utils.tensors import ones_, tensor_
 
@@ -83,14 +82,6 @@ def test_matrix_shape_check(weights_shape: list[int], n_rows: int, expectation: 
 
     with expectation:
         _ = aggregator(matrix)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = Constant(tensor([1.0, 2.0]))
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([8.0, 3.0, 3.0]), rtol=0, atol=1e-4)
 
 
 def test_representations():

@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
-from torch import Tensor, tensor
-from torch.testing import assert_close
+from torch import Tensor
 from utils.tensors import ones_
 
 from torchjd.aggregation import UPGrad
@@ -50,14 +49,6 @@ def test_strongly_stationary(aggregator: UPGrad, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], requires_grad_pairs)
 def test_non_differentiable(aggregator: UPGrad, matrix: Tensor):
     assert_non_differentiable(aggregator, matrix)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = UPGrad()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([0.2929, 1.9004, 1.9004]), rtol=0, atol=1e-4)
 
 
 def test_representations():

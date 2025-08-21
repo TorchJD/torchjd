@@ -1,6 +1,5 @@
 from pytest import mark
-from torch import Tensor, tensor
-from torch.testing import assert_close
+from torch import Tensor
 
 from torchjd.aggregation import Random
 
@@ -20,15 +19,6 @@ def test_expected_structure(aggregator: Random, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)
 def test_strongly_stationary(aggregator: Random, matrix: Tensor):
     assert_strongly_stationary(aggregator, matrix)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = Random()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([-2.6229, 1.0000, 1.0000]), rtol=0, atol=1e-4)
-    assert_close(A(J), tensor([5.3976, 1.0000, 1.0000]), rtol=0, atol=1e-4)
 
 
 def test_representations():

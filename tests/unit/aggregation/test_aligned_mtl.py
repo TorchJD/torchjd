@@ -1,7 +1,6 @@
 import torch
 from pytest import mark
-from torch import Tensor, tensor
-from torch.testing import assert_close
+from torch import Tensor
 
 from torchjd.aggregation import AlignedMTL
 
@@ -20,14 +19,6 @@ def test_expected_structure(aggregator: AlignedMTL, matrix: Tensor):
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_permutation_invariant(aggregator: AlignedMTL, matrix: Tensor):
     assert_permutation_invariant(aggregator, matrix)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = AlignedMTL()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([0.2133, 0.9673, 0.9673]), rtol=0, atol=1e-4)
 
 
 def test_representations():

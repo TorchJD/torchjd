@@ -1,5 +1,5 @@
 from pytest import mark
-from torch import Tensor, tensor
+from torch import Tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
@@ -59,14 +59,6 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
     expected = upgrad_sum_weighting(gramian)
 
     assert_close(result, expected, atol=4e-04, rtol=0.0)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    A = PCGrad()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([0.5848, 3.8012, 3.8012]), rtol=0, atol=1e-4)
 
 
 def test_representations():

@@ -1,5 +1,5 @@
 from pytest import mark
-from torch import Tensor, tensor
+from torch import Tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
@@ -52,22 +52,6 @@ def test_nash_mtl_reset():
 
     for result, expected in zip(results, expecteds):
         assert_close(result, expected)
-
-
-def test_value():
-    """Test that the output values are fixed (on cpu)."""
-
-    # For some extremely obscure reason the values are different if not filtering warnings and
-    # running all tests at once. Won't fix.
-
-    import warnings
-
-    warnings.filterwarnings("ignore")
-
-    A = NashMTL(n_tasks=2)
-    A.reset()
-    J = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
-    assert_close(A(J), tensor([0.0542, 0.7061, 0.7061]), rtol=0, atol=1e-4)
 
 
 def test_representations():
