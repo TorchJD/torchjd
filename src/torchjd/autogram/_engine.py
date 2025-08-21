@@ -72,9 +72,9 @@ class Engine:
         self._is_batched = is_batched
         self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
 
-        self._track_modules(modules)
+        self._hook_modules(modules)
 
-    def _track_modules(self, modules: Iterable[nn.Module]) -> None:
+    def _hook_modules(self, modules: Iterable[nn.Module]) -> None:
         _modules = set(modules)
 
         # Add module forward hooks to compute jacobians
