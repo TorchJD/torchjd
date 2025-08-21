@@ -9,19 +9,31 @@ from torchjd.aggregation import (
     MGDA,
     Aggregator,
     AlignedMTL,
+    AlignedMTLWeighting,
     CAGrad,
+    CAGradWeighting,
     ConFIG,
     Constant,
+    ConstantWeighting,
     DualProj,
+    DualProjWeighting,
     GradDrop,
+    IMTLGWeighting,
     Krum,
+    KrumWeighting,
     Mean,
+    MeanWeighting,
+    MGDAWeighting,
     NashMTL,
     PCGrad,
+    PCGradWeighting,
     Random,
+    RandomWeighting,
     Sum,
+    SumWeighting,
     TrimmedMean,
     UPGrad,
+    UPGradWeighting,
 )
 
 J_base = tensor([[-4.0, 1.0, 1.0], [6.0, 1.0, 1.0]])
@@ -65,9 +77,35 @@ AGGREGATOR_PARAMETRIZATIONS = [
 
 @mark.parametrize(["A", "J", "expected_output"], AGGREGATOR_PARAMETRIZATIONS)
 def test_aggregator_output(A: Aggregator, J: Tensor, expected_output: Tensor):
-    """Test that the output values are fixed (on cpu)."""
+    """Test that the output values of an aggregator are fixed (on cpu)."""
 
     if isinstance(A, NashMTL):
         warnings.filterwarnings("ignore")
 
     assert_close(A(J), expected_output, rtol=0, atol=1e-4)
+
+
+G_base = J_base @ J_base.T
+G_Krum = J_Krum @ J_Krum.T
+
+WEIGHTING_PARAMETRIZATIONS = [
+    (AlignedMTLWeighting(), G_base, tensor([0.5591, 0.4083])),
+    (CAGradWeighting(c=0.5), G_base, tensor([0.7041, 0.5000])),
+    (ConstantWeighting(tensor([1.0, 2.0])), G_base, tensor([1.0, 2.0])),
+    (DualProjWeighting(), G_base, tensor([0.6109, 0.5000])),
+    (IMTLGWeighting(), G_base, tensor([0.5923, 0.4077])),
+    (KrumWeighting(1, 4), G_Krum, tensor([0.2500, 0.2500, 0.0000, 0.2500, 0.2500])),
+    (MeanWeighting(), G_base, tensor([0.5000, 0.5000])),
+    (MGDAWeighting(), G_base, tensor([0.6000, 0.4000])),
+    (PCGradWeighting(), G_base, tensor([2.2222, 1.5789])),
+    (RandomWeighting(), G_base, tensor([0.8623, 0.1377])),
+    (SumWeighting(), G_base, tensor([1.0, 1.0])),
+    (UPGradWeighting(), G_base, tensor([1.1109, 0.7894])),
+]
+
+
+@mark.parametrize(["W", "G", "expected_output"], WEIGHTING_PARAMETRIZATIONS)
+def test_weighting_output(W: Aggregator, G: Tensor, expected_output: Tensor):
+    """Test that the output values of a weighting are fixed (on cpu)."""
+
+    assert_close(W(G), expected_output, rtol=0, atol=1e-4)
