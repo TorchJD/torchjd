@@ -64,9 +64,10 @@ class ModuleHookManager:
 
             # We only care about running the JacobianAccumulator node, so we need one of its child
             # edges (the edges of the original ouputs of the model) as target. For memory
-            # efficiency, we select the smallest one.
-            numels = torch.tensor([t.numel() for t in flat_outputs])
-            index = cast(int, numels.argmin().item())
+            # efficiency, we select the smallest one (that requires grad).
+            inf = float("inf")
+            preference = torch.tensor([t.numel() if t.requires_grad else inf for t in flat_outputs])
+            index = cast(int, preference.argmin().item())
             self._target_edges.register(get_gradient_edge(flat_outputs[index]))
 
             return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
