@@ -479,6 +479,24 @@ class SomeFrozenParam(ShapedModule):
         return input @ self.matrix + (input**2 / 5.0) @ self.frozen_param
 
 
+class WithSomeFrozenModule(ShapedModule):
+    """
+    Model that has a module whose params are all frozen, and a module whose params are not frozen.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (10,)
+
+    def __init__(self):
+        super().__init__()
+        self.non_frozen = nn.Linear(50, 10)
+        self.all_frozen = nn.Linear(50, 10)
+        self.all_frozen.requires_grad_(False)
+
+    def forward(self, input: Tensor):
+        return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)
+
+
 class WithBuffered(ShapedModule):
     """Model using a module that has a buffer."""
 

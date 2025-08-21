@@ -37,6 +37,7 @@ from utils.architectures import (
     WithBuffered,
     WithNoTensorOutput,
     WithSideEffect,
+    WithSomeFrozenModule,
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
@@ -96,6 +97,7 @@ PARAMETRIZATIONS = [
     (ModuleReuse, 32),
     (SomeUnusedParam, 32),
     (SomeFrozenParam, 32),
+    (WithSomeFrozenModule, 32),
     param(WithSideEffect, 32, marks=mark.xfail),
     (SomeUnusedOutput, 32),
     (Ndim0Output, 32),
