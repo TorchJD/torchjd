@@ -307,7 +307,7 @@ def test_non_vector_input_to_compute_gramian():
         engine.compute_gramian(losses)
 
 
-def test_non_batched_gramian_reverse_accumulation():
+def test_non_batched():
     # This is an adaptation of basic example using autogram.
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -316,7 +316,7 @@ def test_non_batched_gramian_reverse_accumulation():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
     optimizer = SGD(model.parameters(), lr=0.1)
 
-    gramian_reverse_accumulator = Engine(model.modules(), False)
+    engine = Engine(model.modules(), False)
 
     weighting = UPGradWeighting()
     input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
@@ -330,6 +330,6 @@ def test_non_batched_gramian_reverse_accumulation():
     losses = torch.stack([loss1, loss2])
 
     optimizer.zero_grad()
-    gramian = gramian_reverse_accumulator.compute_gramian(losses)
+    gramian = engine.compute_gramian(losses)
     losses.backward(weighting(gramian))
     optimizer.step()
