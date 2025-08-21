@@ -84,7 +84,7 @@ class ModuleHookManager:
         class AccumulateJacobian(torch.autograd.Function):
 
             @staticmethod
-            def forward(*flat_grad_outputs: Tensor) -> tuple[Tensor, ...]:
+            def forward(*flat_grad_outputs: Tensor) -> None:
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
                 self._gramian_accumulator.accumulate_path_jacobians(
@@ -93,16 +93,13 @@ class ModuleHookManager:
                         for param_name, jacobian in jacobians.items()
                     }
                 )
-                return flat_grad_outputs  # Useless output, but I put it here in case torch optimize stuff, can remove later. same in vmap
 
             @staticmethod
             def setup_context(*_):
                 pass
 
             @staticmethod
-            def vmap(
-                info, in_dims, *flat_jac_outputs: Tensor
-            ) -> tuple[tuple[Tensor, ...], tuple[int | None, ...]]:
+            def vmap(info, in_dims, *flat_jac_outputs: Tensor) -> tuple[None, None]:
                 jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
                 jacobians = torch.vmap(vjp_from_module(module, args))(jac_outputs)
                 self._gramian_accumulator.accumulate_path_jacobians(
@@ -111,7 +108,7 @@ class ModuleHookManager:
                         for param_name, jacobian in jacobians.items()
                     }
                 )
-                return flat_jac_outputs, in_dims
+                return None, None
 
         class JacobianAccumulator(torch.autograd.Function):
             """

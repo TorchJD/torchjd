@@ -4,16 +4,16 @@ from torch import Tensor, vmap
 
 class backward_fn(torch.autograd.Function):
     @staticmethod
-    def forward(t: Tensor) -> Tensor:
-        return t
+    def forward(t: Tensor) -> None:
+        return None
 
     @staticmethod
     def setup_context(*_):
         pass
 
     @staticmethod
-    def vmap(info, in_dims: tuple[int | None], t: Tensor) -> tuple[Tensor, int]:
-        return t, 0
+    def vmap(info, in_dims: tuple[int | None], t: Tensor) -> tuple[None, None]:
+        return None, None
 
 
 class test_fn(torch.autograd.Function):
@@ -28,7 +28,8 @@ class test_fn(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, t: Tensor) -> Tensor:
-        return backward_fn.apply(t)
+        backward_fn.apply(t)
+        return t
 
 
 def test_backward_vmap():
