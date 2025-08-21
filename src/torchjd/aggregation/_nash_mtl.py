@@ -33,7 +33,7 @@ check_dependencies_are_installed(["cvxpy", "ecos"])
 import cvxpy as cp
 import numpy as np
 import torch
-from cvxpy import Expression
+from cvxpy import Expression, SolverError
 from torch import Tensor
 
 from ._aggregator_bases import WeightedAggregator
@@ -170,8 +170,8 @@ class _NashMTLWeighting(Weighting[Matrix]):
 
             try:
                 self.prob.solve(solver=cp.ECOS, warm_start=True, max_iters=100)
-            except Exception:
-                # On macOS, this can happen with a cvxpy.error.SolverError: Solver 'ECOS' failed.
+            except SolverError:
+                # On macOS, this can happen with: Solver 'ECOS' failed.
                 # No idea why. The corresponding matrix is of shape [9, 11] with rank 5.
                 # Maybe other exceptions can happen in other cases.
                 self.alpha_param.value = self.prvs_alpha_param.value
