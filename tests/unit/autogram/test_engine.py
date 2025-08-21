@@ -217,9 +217,12 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     assert_tensor_dicts_are_close(grads, autojac_grads)
     model_autogram.zero_grad()
 
-    # Verify that even with the hooked modules, autograd works normally when not using the engine
+    # Verify that even with the hooked modules, autograd works normally when not using the engine.
+    # Results should be the same as a normal call to autograd, and no time should be spent computing
+    # the gramian at all.
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
+    assert engine._gramian_accumulator.gramian is None
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, autograd_grads)
     model_autogram.zero_grad()
@@ -302,31 +305,6 @@ def test_non_vector_input_to_compute_gramian():
 
     with pytest.raises(ValueError):
         engine.compute_gramian(losses)
-
-
-def test_autograd_backward_on_augmented_model():
-    architecture = Cifar10Model
-    batch_size = 64
-
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
-
-    input = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
-    loss_fn = make_mse_loss_fn(targets)
-
-    torch.manual_seed(0)
-    model = architecture().to(device=DEVICE)
-
-    engine = Engine(model.modules())
-
-    output = model(input)
-    losses = loss_fn(output).reshape([8, 8])
-
-    torch.autograd.backward(losses, torch.ones_like(losses))
-
-    # A call to autograd.backward phase should not compute the gramian.
-    assert engine._gramian_accumulator.gramian is None
 
 
 def test_non_batched_gramian_reverse_accumulation():
