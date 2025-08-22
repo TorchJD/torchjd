@@ -23,9 +23,8 @@ class IMTLG(GramianWeightedAggregator):
 
 class IMTLGWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights as described in
-    the definition of A_IMTLG of `Jacobian Descent For Multi-Objective Optimization
-    <https://arxiv.org/pdf/2406.16232>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.IMTLG`.
     """
 
     def forward(self, gramian: Tensor) -> Tensor:

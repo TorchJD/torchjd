@@ -28,9 +28,8 @@ class MGDA(GramianWeightedAggregator):
 
 class MGDAWeighting(Weighting[PSDMatrix]):
     r"""
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using Algorithm
-    2 of `Multi-Task Learning as Multi-Objective Optimization
-    <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.MGDA`.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
     :param max_iters: The maximum number of iterations of the optimization loop.

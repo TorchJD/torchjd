@@ -30,7 +30,7 @@ class ConstantWeighting(Weighting[Matrix]):
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that returns constant, pre-determined
     weights.
 
-    :param weights: The weights associated to the rows of the input matrices.
+    :param weights: The weights to return at each call.
     """
 
     def __init__(self, weights: Tensor):

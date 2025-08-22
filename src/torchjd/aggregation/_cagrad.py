@@ -49,9 +49,8 @@ class CAGrad(GramianWeightedAggregator):
 
 class CAGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the CAGrad
-    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
-    Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.CAGrad`.
 
     :param c: The scale of the radius of the ball constraint.
     :param norm_eps: A small value to avoid division by zero when normalizing.

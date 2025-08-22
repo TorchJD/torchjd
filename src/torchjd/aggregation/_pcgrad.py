@@ -21,13 +21,8 @@ class PCGrad(GramianWeightedAggregator):
 
 class PCGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the PCGrad
-    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
-    <https://arxiv.org/pdf/2001.06782.pdf>`_.
-
-    .. note::
-        This implementation corresponds to the paper's algorithm, which differs from the `official
-        implementation <https://github.com/tianheyu927/PCGrad>`_ in the way randomness is handled.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.PCGrad`.
     """
 
     def forward(self, gramian: Tensor) -> Tensor:

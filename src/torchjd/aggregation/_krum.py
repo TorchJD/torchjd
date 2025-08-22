@@ -34,10 +34,8 @@ class Krum(GramianWeightedAggregator):
 
 class KrumWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the
-    (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
-    Tolerant Gradient Descent
-    <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.Krum`.
 
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
         source.

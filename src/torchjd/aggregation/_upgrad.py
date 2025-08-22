@@ -13,13 +13,14 @@ from ._weighting_bases import PSDMatrix, Weighting
 
 
 class UPGrad(GramianWeightedAggregator):
-    """
+    r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that projects each row of the input
     matrix onto the dual cone of all rows of this matrix, and that combines the result, as proposed
     in `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_.
 
-    :param pref_vector: The preference vector used to combine the projected rows. If not provided,
-        defaults to the simple averaging of the projected rows.
+    :param pref_vector: The preference vector used to combine the projected rows.  If not provided,
+        defaults to :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in
+        \mathbb{R}^m`.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
@@ -58,12 +59,12 @@ class UPGrad(GramianWeightedAggregator):
 
 
 class UPGradWeighting(Weighting[PSDMatrix]):
-    """
-    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the weights
-    vector such that each weighted row is projected onto the dual cone of all rows.
+    r"""
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.UPGrad`.
 
-    :param pref_vector: The preference vector used to combine the projected rows. If not provided,
-        defaults to the simple averaging of the projected rows.
+    :param pref_vector: The preference vector to use. If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.

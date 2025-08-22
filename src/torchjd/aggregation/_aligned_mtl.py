@@ -35,12 +35,13 @@ from ._weighting_bases import PSDMatrix, Weighting
 
 
 class AlignedMTL(GramianWeightedAggregator):
-    """
+    r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
-    :param pref_vector: The preference vector to use.
+    :param pref_vector: The preference vector to use.  If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
 
     .. note::
         This implementation was adapted from the `official implementation
@@ -59,13 +60,12 @@ class AlignedMTL(GramianWeightedAggregator):
 
 
 class AlignedMTLWeighting(Weighting[PSDMatrix]):
-    """
-    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that corrects the extracted
-    weights with the balance transformation defined in Algorithm 1 of `Independent Component
-    Alignment for Multi-Task Learning
-    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+    r"""
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.AlignedMTL`.
 
-    :param pref_vector: The preference vector to use.
+    :param pref_vector: The preference vector to use. If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
