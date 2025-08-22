@@ -56,12 +56,13 @@ Some aggregators may have additional dependencies. Please refer to the
 [installation documentation](https://torchjd.org/stable/installation) for them.
 
 ## Usage
-There are two main ways to use TorchJD. The first one is to replace the usual call to `loss.backward()` by a call to
+There are two main ways to use TorchJD. The first one is to replace the usual call to
+`loss.backward()` by a call to
 [`torchjd.backward`](https://torchjd.org/stable/docs/autojac/backward/) or
-[`torchjd.mtl_backward`](https://torchjd.org/stable/docs/autojac/mtl_backward/), depending on the use-case. The second
-one, tailored for optimizing the vector of per-instance losses, uses the
-[`torchjd.augment_model_for_iwrm`](https://torchjd.org/stable/docs/autogram/augment_model.html) to modify
-a model so that a call to backward will trigger the computation of the Jacobian descent step.
+[`torchjd.mtl_backward`](https://torchjd.org/stable/docs/autojac/mtl_backward/), depending on the
+use-case. The second one, tailored for optimizing the vector of per-instance losses, uses the
+[`torchjd.augment_model_for_iwrm`](https://torchjd.org/stable/docs/autogram/augment_model.html) to
+modify a model so that a call to backward will trigger the computation of the Jacobian descent step.
 
 The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
 using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
@@ -109,8 +110,8 @@ using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
 > In this example, the Jacobian is only with respect to the shared parameters. The task-specific
 > parameters are simply updated via the gradient of their task’s loss with respect to them.
 
-The following example shows how to use TorchJD to minimize the vector of per-instance losses with Jacobian descent using
-[UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
+The following example shows how to use TorchJD to minimize the vector of per-instance losses with
+Jacobian descent using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
 
 ```diff
   import torch
