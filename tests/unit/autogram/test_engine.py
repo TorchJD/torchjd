@@ -134,6 +134,8 @@ try:
 except ImportError:
     pass
 
+WEIGHTINGS = [pair[1] for pair in AGGREGATORS_AND_WEIGHTINGS]
+
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 @mark.parametrize(["aggregator", "weighting"], AGGREGATORS_AND_WEIGHTINGS)
@@ -232,7 +234,8 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model_autogram.zero_grad()
 
 
-def test_partial_autogram():
+@mark.parametrize("weighting", WEIGHTINGS)
+def test_partial_autogram(weighting: Weighting):
     architecture1 = Cifar10Model.Body
     architecture2 = Cifar10Model.Head
     batch_size = 64
@@ -240,7 +243,6 @@ def test_partial_autogram():
     input_shapes = architecture1.INPUT_SHAPES
     output_shapes = architecture2.OUTPUT_SHAPES
 
-    W = UPGradWeighting()
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
@@ -263,7 +265,7 @@ def test_partial_autogram():
     jacobian_matrices = transform({})
     jacobian_matrix = torch.cat(list(jacobian_matrices.values()), dim=1)
     gramian = jacobian_matrix @ jacobian_matrix.T
-    weights = W(gramian)
+    weights = weighting(gramian)
 
     loss = losses @ weights
     loss.backward()
@@ -279,7 +281,7 @@ def test_partial_autogram():
     output = model2(output)
     losses = loss_fn(output)
     gramian = engine.compute_gramian(losses)
-    losses.backward(W(gramian))
+    losses.backward(weighting(gramian))
 
     grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
     grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
