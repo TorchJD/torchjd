@@ -236,29 +236,35 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
 
 @mark.parametrize("weighting", WEIGHTINGS)
 def test_partial_autogram(weighting: Weighting):
-    architecture1 = Cifar10Model.Body
-    architecture2 = Cifar10Model.Head
+    """
+    Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
+    the autojac engine.
+
+    Note that this test is a bit redundant now that we have the Engine interface, because it now
+    just compares two ways of computing the Gramian, which is independant of the idea of partial JD.
+    """
+
+    architecture = Cifar10Model
     batch_size = 64
 
-    input_shapes = architecture1.INPUT_SHAPES
-    output_shapes = architecture2.OUTPUT_SHAPES
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
 
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
     torch.manual_seed(0)
-    model1 = architecture1().to(device=DEVICE)
-    model2 = architecture2().to(device=DEVICE)
+    model = architecture().to(device=DEVICE)
+    body, head = model.body, model.head
 
-    output1 = model1(input)
-    output2 = model2(output1)
-    losses = loss_fn(output2)
+    output = model(input)
+    losses = loss_fn(output)
     losses_ = OrderedSet(losses)
 
     init = Init(losses_)
     diag = Diagonalize(losses_)
-    jac = Jac(losses_, OrderedSet(model2.parameters()), None, True)
+    jac = Jac(losses_, OrderedSet(head.parameters()), None, True)
     mat = _Matrixify()
     transform = mat << jac << diag << init
 
@@ -266,30 +272,25 @@ def test_partial_autogram(weighting: Weighting):
     jacobian_matrix = torch.cat(list(jacobian_matrices.values()), dim=1)
     gramian = jacobian_matrix @ jacobian_matrix.T
     torch.manual_seed(0)
-    weights = weighting(gramian)
+    losses.backward(weighting(gramian))
 
-    loss = losses @ weights
-    loss.backward()
+    expected_grads_b = {name: p.grad for name, p in body.named_parameters() if p.grad is not None}
+    expected_grads_h = {name: p.grad for name, p in head.named_parameters() if p.grad is not None}
+    model.zero_grad()
 
-    expected_grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
-    expected_grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
-    model1.zero_grad()
-    model2.zero_grad()
+    engine = Engine(head.modules())
 
-    engine = Engine(model2.modules())
-
-    output = model1(input)
-    output = model2(output)
+    output = model(input)
     losses = loss_fn(output)
     gramian = engine.compute_gramian(losses)
     torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
-    grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
-    grads2 = {name: p.grad for name, p in model2.named_parameters() if p.grad is not None}
+    grads_b = {name: p.grad for name, p in body.named_parameters() if p.grad is not None}
+    grads_h = {name: p.grad for name, p in head.named_parameters() if p.grad is not None}
 
-    assert_tensor_dicts_are_close(grads1, expected_grads1)
-    assert_tensor_dicts_are_close(grads2, expected_grads2)
+    assert_tensor_dicts_are_close(grads_b, expected_grads_b)
+    assert_tensor_dicts_are_close(grads_h, expected_grads_h)
 
 
 def test_non_vector_input_to_compute_gramian():
