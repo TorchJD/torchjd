@@ -66,6 +66,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
                 loss = loss_fn(y_hat, y)
                 optimizer.zero_grad()
                 loss.backward()
+
+
                 optimizer.step()
 
         In this baseline example, the update may negatively affect the loss of some elements of the
@@ -80,14 +82,14 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
             from torch.nn import Linear, MSELoss, ReLU, Sequential
             from torch.optim import SGD
 
-            from torchjd.autojac import backward
             from torchjd.aggregation import UPGrad
+            from torchjd.autojac import backward
 
             X = torch.randn(8, 16, 10)
             Y = torch.randn(8, 16, 1)
 
             model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            loss_fn = MSELoss(reduction='none')
+            loss_fn = MSELoss(reduction="none")
 
             params = model.parameters()
             optimizer = SGD(params, lr=0.1)
@@ -99,6 +101,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
                 losses = loss_fn(y_hat, y)
                 optimizer.zero_grad()
                 backward(losses, aggregator)
+
+
                 optimizer.step()
 
         Here, we compute the Jacobian of per-sample losses with respect to the model parameters and
@@ -107,31 +111,33 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
     .. tab-item:: autogram (recommended)
 
         .. code-block:: python
-            :emphasize-lines: 5-6, 16-17
+            :emphasize-lines: 5-6, 12, 16-17, 21, 23-25
 
             import torch
             from torch.nn import Linear, MSELoss, ReLU, Sequential
             from torch.optim import SGD
 
-            from torchjd.autogram import augment_model_for_iwrm
             from torchjd.aggregation import UPGradWeighting
+            from torchjd.autogram import Engine
 
             X = torch.randn(8, 16, 10)
             Y = torch.randn(8, 16, 1)
 
             model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
-            loss_fn = MSELoss()
+            loss_fn = MSELoss(reduction="none")
 
             params = model.parameters()
             optimizer = SGD(params, lr=0.1)
             weighting = UPGradWeighting()
-            augment_model_for_iwrm(model, weighting)
+            engine = Engine(model.modules())
 
             for x, y in zip(X, Y):
                 y_hat = model(x)
-                loss = loss_fn(y_hat, y)
+                losses = loss_fn(y_hat, y).squeeze()
                 optimizer.zero_grad()
-                loss.backward()
+                gramian = engine.compute_gramian(losses)
+                weights = weighting(gramian)
+                losses.backward(weights)
                 optimizer.step()
 
         Here, the per-sample gradients are never fully stored in memory, leading to large
