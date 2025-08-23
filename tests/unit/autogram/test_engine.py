@@ -265,6 +265,7 @@ def test_partial_autogram(weighting: Weighting):
     jacobian_matrices = transform({})
     jacobian_matrix = torch.cat(list(jacobian_matrices.values()), dim=1)
     gramian = jacobian_matrix @ jacobian_matrix.T
+    torch.manual_seed(0)
     weights = weighting(gramian)
 
     loss = losses @ weights
@@ -281,6 +282,7 @@ def test_partial_autogram(weighting: Weighting):
     output = model2(output)
     losses = loss_fn(output)
     gramian = engine.compute_gramian(losses)
+    torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
     grads1 = {name: p.grad for name, p in model1.named_parameters() if p.grad is not None}
