@@ -7,7 +7,6 @@ pass, allowing you to seamlessly integrate multi-objective optimization in your 
 This method typically provides a memory improvement over the :doc:`autojac <../autojac/index>`
 package which typically leads to time improvement.
 
-# TODO improve:
 The exhaustive list of supported Weightings compatible with `autogram` is:
 
 * :class:`~torchjd.aggregation.UPGradWeighting`
