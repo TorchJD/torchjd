@@ -1,7 +1,7 @@
 """This file contains tests for the usage examples related to autogram."""
 
 
-def test_augment_model_for_iwrm():
+def test_engine():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
@@ -23,7 +23,6 @@ def test_augment_model_for_iwrm():
     for input, target in zip(inputs, targets):
         output = model(input)
         losses = criterion(output, target).squeeze()
-        # TODO: This loss is of shape [1, 16], I think it should be [16].
 
         optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)

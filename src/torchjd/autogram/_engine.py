@@ -38,8 +38,8 @@ class Engine:
             >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
             >>> from torch.optim import SGD
             >>>
-            >>> from torchjd.autogram import Engine
             >>> from torchjd.aggregation import UPGradWeighting
+            >>> from torchjd.autogram import Engine
             >>>
             >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
             >>> inputs = torch.randn(8, 16, 5)
@@ -54,7 +54,7 @@ class Engine:
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input)
-            >>>     losses = criterion(output, target)
+            >>>     losses = criterion(output, target).squeeze()
             >>>
             >>>     optimizer.zero_grad()
             >>>     gramian = engine.compute_gramian(losses)
