@@ -2,11 +2,11 @@ Partial Jacobian Descent for IWRM
 =================================
 
 This example demonstrates how to perform Partial Jacobian Descent using TorchJD. This technique
-minimizes a vector of per-instance losses by considering only a submatrix of the Jacobian —
-specifically, the portion corresponding to a selected subset of the model's parameters. This
-approach offers a trade-off between the precision of the aggregation decision and the computational
-cost associated with full Jacobian Descent. For a complete, non-partial version, see the
-:doc:`IWRM <iwrm>` example.
+minimizes a vector of per-instance losses by resolving conflict only based on a submatrix of the
+Jacobian — specifically, the portion corresponding to a selected subset of the model's parameters.
+This approach offers a trade-off between the precision of the aggregation decision and the
+computational cost associated with computing the Gramian of the full Jacobian. For a complete,
+non-partial version, see the :doc:`IWRM <iwrm>` example.
 
 In this example, our model consists of three `Linear` layers separated by `ReLU` layers. We will
 perform the partial descent by considering only the parameters of the last two `Linear` layers. By
@@ -20,26 +20,28 @@ first `Linear` layer, thereby reducing memory usage and computation time.
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGradWeighting
-    from torchjd.autogram import augment_model_for_iwrm
+    from torchjd.autogram import Engine
 
     X = torch.randn(8, 16, 10)
     Y = torch.randn(8, 16, 1)
 
     model = Sequential(Linear(10, 8), ReLU(), Linear(8, 5), ReLU(), Linear(5, 1))
-    loss_fn = MSELoss()
+    loss_fn = MSELoss(reduction="none")
 
     weighting = UPGradWeighting()
 
-    # Only augment the last part of the model. The weights will be deduced based on the Jacobian
-    # only with respect to the parameters contained in this part of the model.
-    augment_model_for_iwrm(model, weighting, submodules=model[2:])
+    # Create the autogram engine that will compute the Gramian of the Jacobian with respect to the
+    # two last Linear layers' parameters.
+    engine = Engine(model[2:].modules())
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
 
     for x, y in zip(X, Y):
         y_hat = model(x)
-        loss = loss_fn(y_hat, y)
+        losses = loss_fn(y_hat, y).squeeze()
         optimizer.zero_grad()
-        loss.backward()
+        gramian = engine.compute_gramian(losses)
+        weights = weighting(gramian)
+        losses.backward(weights)
         optimizer.step()

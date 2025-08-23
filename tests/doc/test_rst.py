@@ -331,7 +331,6 @@ def test_amp():
 
 
 def test_partial_jd():
-    # TODO: When this is fixed, we need to adapt example accordingly.
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
@@ -347,9 +346,9 @@ def test_partial_jd():
 
     weighting = UPGradWeighting()
 
-    # Only augment the last part of the model. The weights will be deduced based on the Jacobian
-    # only with respect to the parameters contained in this part of the model.
-    engine = Engine(model[2:])
+    # Create the autogram engine that will compute the Gramian of the Jacobian with respect to the
+    # two last Linear layers' parameters.
+    engine = Engine(model[2:].modules())
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
@@ -359,5 +358,6 @@ def test_partial_jd():
         losses = loss_fn(y_hat, y).squeeze()
         optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)
-        losses.backward(weighting(gramian))
+        weights = weighting(gramian)
+        losses.backward(weights)
         optimizer.step()
