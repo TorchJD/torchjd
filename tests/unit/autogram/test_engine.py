@@ -3,6 +3,7 @@ from itertools import combinations
 import pytest
 import torch
 from pytest import mark, param
+from torch import nn
 from torch.optim import SGD
 from unit.conftest import DEVICE
 from utils.architectures import (
@@ -38,7 +39,9 @@ from utils.architectures import (
     SomeUnusedOutput,
     SomeUnusedParam,
     WithBuffered,
+    WithModuleTrackingRunningStats,
     WithNoTensorOutput,
+    WithRNN,
     WithSideEffect,
     WithSomeFrozenModule,
 )
@@ -302,6 +305,14 @@ def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
 
     grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
     assert_tensor_dicts_are_close(grads, expected_grads)
+
+
+@mark.parametrize("architecture", [WithRNN, WithModuleTrackingRunningStats])
+def test_incompatible_modules(architecture: type[nn.Module]):
+    model = architecture().to(device=DEVICE)
+
+    with pytest.raises(ValueError):
+        _ = Engine(model.modules())
 
 
 def test_non_vector_input_to_compute_gramian():

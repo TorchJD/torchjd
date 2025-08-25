@@ -652,6 +652,27 @@ class Ndim4Output(ShapedModule):
         return torch.einsum("bi,icdef->bcdef", input, self.tensor)
 
 
+class WithRNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.rnn = nn.RNN(input_size=10, hidden_size=5)
+
+    def forward(self, input: Tensor) -> Tensor:
+        pass
+
+
+class WithModuleTrackingRunningStats(ShapedModule):
+    INPUT_SHAPES = (3, 6, 6)
+    OUTPUT_SHAPES = (3, 6, 6)
+
+    def __init__(self):
+        super().__init__()
+        self.instance_norm = nn.InstanceNorm2d(3, affine=True, track_running_stats=True)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.instance_norm(input)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
