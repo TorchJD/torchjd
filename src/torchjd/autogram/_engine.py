@@ -111,7 +111,7 @@ class Engine:
             return torch.autograd.grad(
                 outputs=output,
                 inputs=leaf_targets,
-                grad_outputs=grad_outputs,
+                grad_outputs=_grad_output,
                 retain_graph=True,
             )
 
