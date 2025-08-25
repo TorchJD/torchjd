@@ -592,6 +592,8 @@ class SomeUnusedOutput(ShapedModule):
 
 
 class Ndim0Output(ShapedModule):
+    """Simple model whose output is a scalar."""
+
     INPUT_SHAPES = (5,)
     OUTPUT_SHAPES = tuple()
 
@@ -604,6 +606,8 @@ class Ndim0Output(ShapedModule):
 
 
 class Ndim1Output(ShapedModule):
+    """Simple model whose output is a vector."""
+
     INPUT_SHAPES = (5,)
     OUTPUT_SHAPES = (3,)
 
@@ -616,6 +620,8 @@ class Ndim1Output(ShapedModule):
 
 
 class Ndim2Output(ShapedModule):
+    """Simple model whose output is a matrix."""
+
     INPUT_SHAPES = (5,)
     OUTPUT_SHAPES = (2, 3)
 
@@ -629,6 +635,8 @@ class Ndim2Output(ShapedModule):
 
 
 class Ndim3Output(ShapedModule):
+    """Simple model whose output is a tensor of 3 dimensions."""
+
     INPUT_SHAPES = (6,)
     OUTPUT_SHAPES = (2, 3, 4)
 
@@ -641,6 +649,8 @@ class Ndim3Output(ShapedModule):
 
 
 class Ndim4Output(ShapedModule):
+    """Simple model whose output is a tensor of 4 dimensions."""
+
     INPUT_SHAPES = (6,)
     OUTPUT_SHAPES = (2, 3, 4, 5)
 
@@ -653,6 +663,8 @@ class Ndim4Output(ShapedModule):
 
 
 class WithRNN(nn.Module):
+    """Simple model containing an RNN module (that is not even used)."""
+
     def __init__(self):
         super().__init__()
         self.rnn = nn.RNN(input_size=10, hidden_size=5)
@@ -662,6 +674,8 @@ class WithRNN(nn.Module):
 
 
 class WithModuleTrackingRunningStats(ShapedModule):
+    """Simple model containing a module that has side-effects and modifies tensors in-place."""
+
     INPUT_SHAPES = (3, 6, 6)
     OUTPUT_SHAPES = (3, 6, 6)
 
