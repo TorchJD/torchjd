@@ -1,9 +1,7 @@
 from torch import vmap
 from torch.autograd.graph import get_gradient_edge
 
-from torchjd.autogram._edge_registry import EdgeRegistry
-from torchjd.autogram._gramian_accumulator import GramianAccumulator
-from torchjd.autogram._module_hook_manager import ModuleHookManager
+from torchjd.autogram import Engine
 
 
 def test_non_batched():
@@ -12,14 +10,8 @@ def test_non_batched():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
 
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
-    edge_registry = EdgeRegistry()
-    gramian_accumulator = GramianAccumulator()
 
-    module_hook_manager = ModuleHookManager(edge_registry, gramian_accumulator)
-
-    for module in model.modules():
-        if any(True for _ in module.parameters(recurse=False)):
-            module_hook_manager.hook_module(module)
+    engine = Engine(model.modules(), False)
 
     input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
     target1 = torch.randn(16)  # First batch of 16 targets
@@ -31,14 +23,14 @@ def test_non_batched():
     loss2 = loss_fn(output[:, 1], target2)
     losses = torch.stack([loss1, loss2])
 
-    module_hook_manager.gramian_accumulation_phase = True
+    engine._module_hook_manager.gramian_accumulation_phase = True
 
-    leaves = list(edge_registry.get_leaf_edges({get_gradient_edge(losses)}, set()))
+    leaves = list(engine._target_edges.get_leaf_edges({get_gradient_edge(losses)}, set()))
 
     def differentiation(grads):
         return torch.autograd.grad(
-            losses,
-            leaves,
+            outputs=losses,
+            inputs=leaves,
             grad_outputs=grads,
             retain_graph=True,
         )
