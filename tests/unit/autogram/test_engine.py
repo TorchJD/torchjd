@@ -1,3 +1,5 @@
+from typing import Literal
+
 import pytest
 import torch
 from pytest import mark, param
@@ -235,7 +237,8 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
 
 
 @mark.parametrize("weighting", WEIGHTINGS)
-def test_partial_autogram(weighting: Weighting):
+@mark.parametrize("gramian_wrt", ["head", "body", "both"])
+def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "body", "both"]):
     """
     Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
     the autojac engine.
@@ -264,7 +267,15 @@ def test_partial_autogram(weighting: Weighting):
 
     init = Init(losses_)
     diag = Diagonalize(losses_)
-    jac = Jac(losses_, OrderedSet(head.parameters()), None, True)
+
+    if gramian_wrt == "head":
+        gramian_model = head
+    elif gramian_wrt == "body":
+        gramian_model = body
+    elif gramian_wrt == "both":
+        gramian_model = model
+
+    jac = Jac(losses_, OrderedSet(gramian_model.parameters()), None, True)
     mat = _Matrixify()
     transform = mat << jac << diag << init
 
@@ -278,7 +289,7 @@ def test_partial_autogram(weighting: Weighting):
     expected_grads_h = {name: p.grad for name, p in head.named_parameters() if p.grad is not None}
     model.zero_grad()
 
-    engine = Engine(head.modules())
+    engine = Engine(gramian_model.modules())
 
     output = model(input)
     losses = loss_fn(output)
