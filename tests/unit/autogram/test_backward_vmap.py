@@ -1,4 +1,4 @@
-from torch import vmap
+from torch import Tensor, vmap
 from torch.autograd.graph import get_gradient_edge
 
 from torchjd.autogram import Engine
@@ -23,16 +23,26 @@ def test_non_batched():
     loss2 = loss_fn(output[:, 1], target2)
     losses = torch.stack([loss1, loss2])
 
+    output = losses
+    grad_outputs = None
+
+    # code of `Engine.compute_gramian`, copy-pasted and we replace all self with engine
+    if output.ndim != 1:
+        raise ValueError("We currently support computing the Gramian with respect to vectors only.")
+
+    if grad_outputs is None:
+        grad_outputs = torch.ones_like(output)
+
     engine._module_hook_manager.gramian_accumulation_phase = True
 
-    leaves = list(engine._target_edges.get_leaf_edges({get_gradient_edge(losses)}, set()))
+    leaf_targets = list(engine._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
 
-    def differentiation(grads):
+    def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
         return torch.autograd.grad(
-            outputs=losses,
-            inputs=leaves,
-            grad_outputs=grads,
+            outputs=output,
+            inputs=leaf_targets,
+            grad_outputs=grad_outputs,
             retain_graph=True,
         )
 
-    vmap(differentiation)(torch.diag(torch.ones_like(losses)))
+    _ = vmap(differentiation)(torch.diag(grad_outputs))
