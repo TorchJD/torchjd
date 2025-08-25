@@ -1,4 +1,4 @@
-from typing import Literal
+from itertools import combinations
 
 import pytest
 import torch
@@ -236,9 +236,16 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model_autogram.zero_grad()
 
 
+def _non_empty_subsets(elements: set) -> list[set]:
+    """
+    Generates the list of subsets of the given set, excluding the empty set.
+    """
+    return [set(c) for r in range(1, len(elements) + 1) for c in combinations(elements, r)]
+
+
 @mark.parametrize("weighting", WEIGHTINGS)
-@mark.parametrize("gramian_wrt", ["head", "body", "both"])
-def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "body", "both"]):
+@mark.parametrize("gramian_module_names", _non_empty_subsets({"fc0", "fc1", "fc2", "fc3", "fc4"}))
+def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
     """
     Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
     the autojac engine.
@@ -247,7 +254,7 @@ def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "bo
     just compares two ways of computing the Gramian, which is independant of the idea of partial JD.
     """
 
-    architecture = Cifar10Model
+    architecture = SimpleBranched
     batch_size = 64
 
     input_shapes = architecture.INPUT_SHAPES
@@ -259,7 +266,6 @@ def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "bo
 
     torch.manual_seed(0)
     model = architecture().to(device=DEVICE)
-    body, head = model.body, model.head
 
     output = model(input)
     losses = loss_fn(output)
@@ -268,14 +274,12 @@ def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "bo
     init = Init(losses_)
     diag = Diagonalize(losses_)
 
-    if gramian_wrt == "head":
-        gramian_model = head
-    elif gramian_wrt == "body":
-        gramian_model = body
-    elif gramian_wrt == "both":
-        gramian_model = model
+    gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
+    gramian_params = OrderedSet({})
+    for m in gramian_modules:
+        gramian_params += OrderedSet(m.parameters())
 
-    jac = Jac(losses_, OrderedSet(gramian_model.parameters()), None, True)
+    jac = Jac(losses_, OrderedSet(gramian_params), None, True)
     mat = _Matrixify()
     transform = mat << jac << diag << init
 
@@ -285,11 +289,10 @@ def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "bo
     torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
-    expected_grads_b = {name: p.grad for name, p in body.named_parameters() if p.grad is not None}
-    expected_grads_h = {name: p.grad for name, p in head.named_parameters() if p.grad is not None}
+    expected_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
     model.zero_grad()
 
-    engine = Engine(gramian_model.modules())
+    engine = Engine(gramian_modules)
 
     output = model(input)
     losses = loss_fn(output)
@@ -297,11 +300,8 @@ def test_partial_autogram(weighting: Weighting, gramian_wrt: Literal["head", "bo
     torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
-    grads_b = {name: p.grad for name, p in body.named_parameters() if p.grad is not None}
-    grads_h = {name: p.grad for name, p in head.named_parameters() if p.grad is not None}
-
-    assert_tensor_dicts_are_close(grads_b, expected_grads_b)
-    assert_tensor_dicts_are_close(grads_h, expected_grads_h)
+    grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
+    assert_tensor_dicts_are_close(grads, expected_grads)
 
 
 def test_non_vector_input_to_compute_gramian():
