@@ -7,3 +7,8 @@ PCGrad
     :members:
     :undoc-members:
     :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.PCGradWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward

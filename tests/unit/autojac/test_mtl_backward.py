@@ -2,12 +2,12 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
-from unit._utils import rand_, randn_, tensor_
+from utils.tensors import rand_, randn_, tensor_
 
-from torchjd import mtl_backward
-from torchjd._autojac._mtl_backward import _create_transform
-from torchjd._autojac._transform import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac import mtl_backward
+from torchjd.autojac._mtl_backward import _create_transform
+from torchjd.autojac._transform import OrderedSet
 
 
 def test_check_create_transform():

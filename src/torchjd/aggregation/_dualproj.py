@@ -3,7 +3,7 @@ from typing import Literal
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._mean import _MeanWeighting
+from ._mean import MeanWeighting
 from ._utils.dual_cone import project_weights
 from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
@@ -12,34 +12,20 @@ from ._weighting_bases import PSDMatrix, Weighting
 
 
 class DualProj(GramianWeightedAggregator):
-    """
+    r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` that averages the rows of the input
     matrix, and projects the result onto the dual cone of the rows of the matrix. This corresponds
     to the solution to Equation 11 of `Gradient Episodic Memory for Continual Learning
     <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
 
     :param pref_vector: The preference vector used to combine the rows. If not provided, defaults to
-        the simple averaging.
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
         This issue can make the optimization fail. Adding ``reg_eps`` to the diagonal of the gramian
         ensures that it is positive definite.
     :param solver: The solver used to optimize the underlying optimization problem.
-
-    .. admonition::
-        Example
-
-        Use DualProj to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import DualProj
-        >>>
-        >>> A = DualProj()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.5563, 1.1109, 1.1109])
     """
 
     def __init__(
@@ -49,14 +35,13 @@ class DualProj(GramianWeightedAggregator):
         reg_eps: float = 0.0001,
         solver: Literal["quadprog"] = "quadprog",
     ):
-        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
         self._solver = solver
 
         super().__init__(
-            _DualProjWrapper(weighting, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            DualProjWeighting(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.
@@ -72,16 +57,13 @@ class DualProj(GramianWeightedAggregator):
         return f"DualProj{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _DualProjWrapper(Weighting[PSDMatrix]):
-    """
-    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that changes the extracted
-    weight vector such the corresponding aggregation is projected onto the dual cone of the rows
-    of the input matrix. This corresponds to the solution to Equation 11 of `Gradient Episodic
-    Memory for Continual Learning
-    <https://proceedings.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf>`_.
+class DualProjWeighting(Weighting[PSDMatrix]):
+    r"""
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.DualProj`.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param pref_vector: The preference vector to use. If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
     :param norm_eps: A small value to avoid division by zero when normalizing.
     :param reg_eps: A small value to add to the diagonal of the gramian of the matrix. Due to
         numerical errors when computing the gramian, it might not exactly be positive definite.
@@ -92,13 +74,14 @@ class _DualProjWrapper(Weighting[PSDMatrix]):
 
     def __init__(
         self,
-        weighting: Weighting[PSDMatrix],
-        norm_eps: float,
-        reg_eps: float,
-        solver: Literal["quadprog"],
+        pref_vector: Tensor | None = None,
+        norm_eps: float = 0.0001,
+        reg_eps: float = 0.0001,
+        solver: Literal["quadprog"] = "quadprog",
     ):
         super().__init__()
-        self.weighting = weighting
+        self._pref_vector = pref_vector
+        self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self.norm_eps = norm_eps
         self.reg_eps = reg_eps
         self.solver = solver

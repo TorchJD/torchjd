@@ -10,6 +10,11 @@ This section contains some usage examples for TorchJD.
   vector of per-instance losses, using stochastic sub-Jacobian descent (SSJD). It is compared to the
   usual minimization of the average loss, called empirical risk minimization (ERM), using stochastic
   gradient descent (SGD).
+- :doc:`Partial Jacobian Descent for IWRM <partial_jd>` provides an example in which we minimize the
+  vector of per-instance losses using stochastic sub-Jacobian descent, similar to our :doc:`IWRM <iwrm>`
+  example. However, this method bases the aggregation decision on the Jacobian of the losses with respect
+  to **only a subset** of the model's parameters, offering a trade-off between computational cost and
+  aggregation precision.
 - :doc:`Multi-Task Learning (MTL) <mtl>` provides an example of multi-task learning where Jacobian
   descent is used to optimize the vector of per-task losses of a multi-task model, using the
   dedicated backpropagation function :doc:`mtl_backward <../docs/autojac/mtl_backward>`.
@@ -27,6 +32,7 @@ This section contains some usage examples for TorchJD.
 
     basic_usage.rst
     iwrm.rst
+    partial_jd.rst
     mtl.rst
     rnn.rst
     monitoring.rst

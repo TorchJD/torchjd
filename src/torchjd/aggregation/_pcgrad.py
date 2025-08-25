@@ -10,38 +10,19 @@ class PCGrad(GramianWeightedAggregator):
     """
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in algorithm 1 of
     `Gradient Surgery for Multi-Task Learning <https://arxiv.org/pdf/2001.06782.pdf>`_.
-
-    .. admonition::
-        Example
-
-        Use PCGrad to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import PCGrad
-        >>>
-        >>> A = PCGrad()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.5848, 3.8012, 3.8012])
     """
 
     def __init__(self):
-        super().__init__(_PCGradWeighting())
+        super().__init__(PCGradWeighting())
 
         # This prevents running into a RuntimeError due to modifying stored tensors in place.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
 
-class _PCGradWeighting(Weighting[PSDMatrix]):
+class PCGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the PCGrad
-    algorithm, as defined in algorithm 1 of `Gradient Surgery for Multi-Task Learning
-    <https://arxiv.org/pdf/2001.06782.pdf>`_.
-
-    .. note::
-        This implementation corresponds to the paper's algorithm, which differs from the `official
-        implementation <https://github.com/tianheyu927/PCGrad>`_ in the way randomness is handled.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.PCGrad`.
     """
 
     def forward(self, gramian: Tensor) -> Tensor:

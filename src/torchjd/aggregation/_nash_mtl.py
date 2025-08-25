@@ -53,20 +53,6 @@ class NashMTL(WeightedAggregator):
         aggregator.
     :param optim_niter: The number of iterations of the underlying optimization process.
 
-    .. admonition::
-        Example
-
-        Use NashMTL to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import NashMTL
-        >>>
-        >>> A = NashMTL(n_tasks=2)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.0542, 0.7061, 0.7061])
-
     .. note::
         This aggregator is not installed by default. When not installed, trying to import it should
         result in the following error:
@@ -119,7 +105,7 @@ class NashMTL(WeightedAggregator):
 
 class _NashMTLWeighting(Weighting[Matrix]):
     """
-    :class:`~torchjd.aggregation._weighting.Weighting` that extracts weights using the step decision
+    :class:`~torchjd.aggregation.Weighting` that extracts weights using the step decision
     of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 

@@ -3,4 +3,4 @@
 mtl_backward
 ============
 
-.. autofunction:: torchjd.mtl_backward
+.. autofunction:: torchjd.autojac.mtl_backward

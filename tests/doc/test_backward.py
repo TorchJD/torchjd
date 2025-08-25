@@ -9,8 +9,8 @@ from torch.testing import assert_close
 def test_backward():
     import torch
 
-    from torchjd import backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import backward
 
     param = torch.tensor([1.0, 2.0], requires_grad=True)
     # Compute arbitrary quantities that are function of param

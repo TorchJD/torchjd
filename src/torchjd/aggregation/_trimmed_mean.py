@@ -13,26 +13,6 @@ class TrimmedMean(Aggregator):
 
     :param trim_number: The number of maximum and minimum values to remove from each column of the
         input matrix (note that ``2 * trim_number`` values are removed from each column).
-
-    .. admonition::
-        Example
-
-        Remove the maximum and the minimum value from each column of the ``matrix``, then average
-        the rows of the remaining matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import TrimmedMean
-        >>>
-        >>> A = TrimmedMean(trim_number=1)
-        >>> J = tensor([
-        ...     [ 1e11,    3.],
-        ...     [   1., -1e11],
-        ...     [-1e10,  1e10],
-        ...     [   2.,    2.],
-        ... ])
-        >>>
-        >>> A(J)
-        tensor([1.5000, 2.5000])
     """
 
     def __init__(self, trim_number: int):

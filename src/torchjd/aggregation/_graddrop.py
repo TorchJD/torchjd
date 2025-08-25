@@ -22,20 +22,6 @@ class GradDrop(Aggregator):
         increasing. Defaults to identity.
     :param leak: The tensor of leak values, determining how much each row is allowed to leak
         through. Defaults to None, which means no leak.
-
-    .. admonition::
-        Example
-
-        Use GradDrop to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import GradDrop
-        >>>
-        >>> A = GradDrop()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([6., 2., 2.])
     """
 
     def __init__(self, f: Callable = _identity, leak: Tensor | None = None):

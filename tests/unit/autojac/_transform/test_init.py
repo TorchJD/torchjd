@@ -1,9 +1,8 @@
 from pytest import raises
-from unit._utils import tensor_
+from utils.dict_assertions import assert_tensor_dicts_are_close
+from utils.tensors import tensor_
 
-from torchjd._autojac._transform import Init, RequirementError
-
-from ._dict_assertions import assert_tensor_dicts_are_close
+from torchjd.autojac._transform import Init, RequirementError
 
 
 def test_single_input():

@@ -27,12 +27,12 @@ def test_basic_usage():
     loss2 = loss_fn(output[:, 1], target2)
 
     optimizer.zero_grad()
-    torchjd.backward([loss1, loss2], aggregator)
+    torchjd.autojac.backward([loss1, loss2], aggregator)
     optimizer.step()
 
 
 def test_iwrm():
-    def test_erm_with_sgd():
+    def test_autograd():
         import torch
         from torch.nn import Linear, MSELoss, ReLU, Sequential
         from torch.optim import SGD
@@ -53,13 +53,13 @@ def test_iwrm():
             loss.backward()
             optimizer.step()
 
-    def test_iwrm_with_ssjd():
+    def test_autojac():
         import torch
         from torch.nn import Linear, MSELoss, ReLU, Sequential
         from torch.optim import SGD
 
-        from torchjd import backward
         from torchjd.aggregation import UPGrad
+        from torchjd.autojac import backward
 
         X = torch.randn(8, 16, 10)
         Y = torch.randn(8, 16, 1)
@@ -78,8 +78,36 @@ def test_iwrm():
             backward(losses, aggregator)
             optimizer.step()
 
-    test_erm_with_sgd()
-    test_iwrm_with_ssjd()
+    def test_autogram():
+        import torch
+        from torch.nn import Linear, MSELoss, ReLU, Sequential
+        from torch.optim import SGD
+
+        from torchjd.aggregation import UPGradWeighting
+        from torchjd.autogram import Engine
+
+        X = torch.randn(8, 16, 10)
+        Y = torch.randn(8, 16, 1)
+
+        model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
+        loss_fn = MSELoss(reduction="none")
+
+        params = model.parameters()
+        optimizer = SGD(params, lr=0.1)
+        weighting = UPGradWeighting()
+        engine = Engine(model.modules())
+
+        for x, y in zip(X, Y):
+            y_hat = model(x)
+            losses = loss_fn(y_hat, y).squeeze()
+            optimizer.zero_grad()
+            gramian = engine.compute_gramian(losses)
+            losses.backward(weighting(gramian))
+            optimizer.step()
+
+    test_autograd()
+    test_autojac()
+    test_autogram()
 
 
 def test_mtl():
@@ -87,8 +115,8 @@ def test_mtl():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)
@@ -136,8 +164,8 @@ def test_lightning_integration():
     from torch.optim import Adam
     from torch.utils.data import DataLoader, TensorDataset
 
-    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     class Model(LightningModule):
         def __init__(self):
@@ -190,8 +218,8 @@ def test_rnn():
     from torch.nn import RNN
     from torch.optim import SGD
 
-    from torchjd import backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import backward
 
     rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
     optimizer = SGD(rnn.parameters(), lr=0.1)
@@ -215,8 +243,8 @@ def test_monitoring():
     from torch.nn.functional import cosine_similarity
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     def print_weights(_, __, weights: torch.Tensor) -> None:
         """Prints the extracted weights."""
@@ -267,8 +295,8 @@ def test_amp():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)
@@ -300,3 +328,36 @@ def test_amp():
         mtl_backward(losses=scaled_losses, features=features, aggregator=aggregator)
         scaler.step(optimizer)
         scaler.update()
+
+
+def test_partial_jd():
+    import torch
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    from torchjd.aggregation import UPGradWeighting
+    from torchjd.autogram import Engine
+
+    X = torch.randn(8, 16, 10)
+    Y = torch.randn(8, 16, 1)
+
+    model = Sequential(Linear(10, 8), ReLU(), Linear(8, 5), ReLU(), Linear(5, 1))
+    loss_fn = MSELoss(reduction="none")
+
+    weighting = UPGradWeighting()
+
+    # Create the autogram engine that will compute the Gramian of the Jacobian with respect to the
+    # two last Linear layers' parameters.
+    engine = Engine(model[2:].modules())
+
+    params = model.parameters()
+    optimizer = SGD(params, lr=0.1)
+
+    for x, y in zip(X, Y):
+        y_hat = model(x)
+        losses = loss_fn(y_hat, y).squeeze()
+        optimizer.zero_grad()
+        gramian = engine.compute_gramian(losses)
+        weights = weighting(gramian)
+        losses.backward(weights)
+        optimizer.step()

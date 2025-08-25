@@ -51,10 +51,15 @@ uv run pre-commit install
 ```
 
 ## Running tests
-   - To verify that your installation was successful, and that all unit tests pass, run:
+   - To verify that your installation was successful, and that unit tests pass, run:
      ```bash
      uv run pytest tests/unit
      ```
+
+   - To also run the unit tests that are marked as slow, add the `--runslow` flag:
+    ```bash
+    uv run pytest tests/unit --runslow
+    ```
 
    - If you have access to a cuda-enabled GPU, you should also check that the unit tests pass on it:
      ```bash
@@ -120,7 +125,7 @@ a = torch.ones(3, 4)
 ```
 use
 ```python
-from unit._utils import ones_
+from utils.tensors import ones_
 a = ones_(3, 4)
 ```
 
@@ -161,6 +166,13 @@ implementation of a mathematical aggregator.
 > [!NOTE]
 > Before working on the implementation of a new aggregator, please contact us via an issue or a
 > discussion: in many cases, we have already thought about it, or even started an implementation.
+
+## Removing code
+
+If you want to remove some code, or move something into another package, you need to deprecate it.
+This should be done by raising a `DeprecationWarning` which will make the test fail if raised, and
+you should add to the file `tests/units/test_deprecations.py` a test that ensures that a deprecation
+warning is issued. Add the date in a comment above so that the code can be removed later on.
 
 ## Release
 
