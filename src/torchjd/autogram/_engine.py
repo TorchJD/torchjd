@@ -153,7 +153,7 @@ class Engine:
     @staticmethod
     def _check_module_is_compatible(module: nn.Module) -> None:
         if isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
-            raise TypeError(
+            raise ValueError(
                 f"Found a module of type {type(module)}, which is incompatible with the autogram "
                 f"engine. The incompatible module types are {_INCOMPATIBLE_MODULE_TYPES} (and their"
                 " subclasses)."
@@ -162,8 +162,9 @@ class Engine:
         if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
             raise ValueError(
                 f"Found a module of type {type(module)}, with `track_running_stats=True`, which is "
-                f"incompatible with the autogram engine due to performing in-place operations on "
-                f"tensors and having side-effects during the forward pass."
+                "incompatible with the autogram engine due to performing in-place operations on "
+                "tensors and having side-effects during the forward pass. Try setting"
+                "`track_running_stats` to `False`."
             )
 
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
