@@ -39,12 +39,32 @@ def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[
         # primals (tuple), here the functional has a single primal which is
         # dict(module.named_parameters()). We therefore take the 0'th element to obtain
         # the dict of gradients w.r.t. the module's named_parameters.
-        return vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+        return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
 
     return get_vjp
 
 
-def vjp_from_module(
+def get_flat_vjp(module: nn.Module, inputs: PyTree) -> Callable[[PyTree], dict[str, Tensor]]:
+    inputs = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), inputs)
+
+    def get_vjp(grad_outputs_j: PyTree) -> dict[str, Tensor]:
+        # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
+        # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
+        # nn.Flatten) do not work equivalently if they're provided with a batch or with
+        # an element of a batch. We thus always provide them with batches, just of a
+        # different size.
+        grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
+
+        # _vjp_from_module returns a function that computes the vjp w.r.t. to the
+        # primals (tuple), here the functional has a single primal which is
+        # dict(module.named_parameters()). We therefore take the 0'th element to obtain
+        # the dict of gradients w.r.t. the module's named_parameters.
+        return _vjp_from_module(module, inputs)(grad_outputs_j)[0]
+
+    return get_vjp
+
+
+def _vjp_from_module(
     module: nn.Module, inputs: PyTree
 ) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
     """

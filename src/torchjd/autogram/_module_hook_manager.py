@@ -8,7 +8,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import get_instance_wise_vjp, vjp_from_module
+from ._vjp import get_flat_vjp, get_instance_wise_vjp
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -102,7 +102,7 @@ class ModuleHookManager:
             @staticmethod
             def vmap(info, in_dims, *flat_jac_outputs: Tensor) -> tuple[None, None]:
                 jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
-                jacobians = torch.vmap(vjp_from_module(module, args))(jac_outputs)
+                jacobians = torch.vmap(get_flat_vjp(module, args))(jac_outputs)
                 self._gramian_accumulator.accumulate_path_jacobians(
                     {
                         module.get_parameter(param_name): jacobian
