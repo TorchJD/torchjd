@@ -193,7 +193,7 @@ class SimpleBranched(ShapedModule):
     """Model with one input and two branches that rejoin into one output."""
 
     INPUT_SHAPES = (9,)
-    OUTPUT_SHAPES = (15,)
+    OUTPUT_SHAPES = (16,)
 
     def __init__(self):
         super().__init__()
@@ -202,12 +202,13 @@ class SimpleBranched(ShapedModule):
         self.fc1 = nn.Linear(13, 14)
         self.fc2 = nn.Linear(14, 15)
         self.fc3 = nn.Linear(13, 15)
+        self.fc4 = nn.Linear(15, 16)
 
     def forward(self, input: Tensor) -> Tensor:
         common_input = self.relu(self.fc0(input))
         branch1 = self.fc2(self.relu(self.fc1(common_input)))
         branch2 = self.fc3(common_input)
-        output = branch1 + branch2
+        output = self.fc4(self.relu(branch1 + branch2))
         return output
 
 
