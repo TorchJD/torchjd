@@ -109,7 +109,7 @@ except ImportError:
 def test_aggregator_output(A: Aggregator, J: Tensor, expected_output: Tensor):
     """Test that the output values of an aggregator are fixed (on cpu)."""
 
-    if isinstance(A, NashMTL):
+    if str(A).startswith("NashMTL"):
         warnings.filterwarnings("ignore")
 
     assert_close(A(J), expected_output, rtol=0, atol=1e-4)
