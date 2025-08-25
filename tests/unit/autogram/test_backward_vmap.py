@@ -36,6 +36,11 @@ def test_non_batched():
     leaves = list(edge_registry.get_leaf_edges({get_gradient_edge(losses)}, set()))
 
     def differentiation(grads):
-        return torch.autograd.grad(losses, leaves, grad_outputs=grads)
+        return torch.autograd.grad(
+            losses,
+            leaves,
+            grad_outputs=grads,
+            retain_graph=True,
+        )
 
     vmap(differentiation)(torch.diag(torch.ones_like(losses)))

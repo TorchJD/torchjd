@@ -118,9 +118,7 @@ class Engine:
         if self._is_batched:
             _ = differentiation(grad_outputs)
         else:
-            jac_outputs = torch.diag(grad_outputs)
-            jacs = vmap(differentiation)(jac_outputs)
-            print(jacs)
+            _ = vmap(differentiation)(torch.diag(grad_outputs))
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.
