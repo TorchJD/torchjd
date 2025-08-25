@@ -9,6 +9,38 @@ from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._module_hook_manager import ModuleHookManager
 
+_INCOMPATIBLE_MODULE_TYPES = (
+    nn.BatchNorm1d,
+    nn.BatchNorm2d,
+    nn.BatchNorm3d,
+    nn.LazyBatchNorm1d,
+    nn.LazyBatchNorm2d,
+    nn.LazyBatchNorm3d,
+    nn.SyncBatchNorm,
+    nn.RNNBase,
+    nn.Transformer,
+    nn.TransformerEncoder,
+    nn.TransformerDecoder,
+    nn.TransformerEncoderLayer,
+    nn.TransformerDecoderLayer,
+)
+
+_TRACK_RUNNING_STATS_MODULE_TYPES = (
+    nn.BatchNorm1d,
+    nn.BatchNorm2d,
+    nn.BatchNorm3d,
+    nn.LazyBatchNorm1d,
+    nn.LazyBatchNorm2d,
+    nn.LazyBatchNorm3d,
+    nn.SyncBatchNorm,
+    nn.InstanceNorm1d,
+    nn.InstanceNorm2d,
+    nn.InstanceNorm3d,
+    nn.LazyInstanceNorm1d,
+    nn.LazyInstanceNorm2d,
+    nn.LazyInstanceNorm3d,
+)
+
 
 class Engine:
     """
@@ -115,8 +147,24 @@ class Engine:
         # Add module forward hooks to compute jacobians
         for module in _modules:
             if any(p.requires_grad for p in module.parameters(recurse=False)):
-                # Skip un-parameterized modules
+                self._check_module_is_compatible(module)
                 self._module_hook_manager.hook_module(module)
+
+    @staticmethod
+    def _check_module_is_compatible(module: nn.Module) -> None:
+        if isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
+            raise TypeError(
+                f"Found a module of type {type(module)}, which is incompatible with the autogram "
+                f"engine. The incompatible module types are {_INCOMPATIBLE_MODULE_TYPES} (and their"
+                " subclasses)."
+            )
+
+        if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
+            raise ValueError(
+                f"Found a module of type {type(module)}, with `track_running_stats=True`, which is "
+                f"incompatible with the autogram engine due to performing in-place operations on "
+                f"tensors and having side-effects during the forward pass."
+            )
 
     def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
         """
