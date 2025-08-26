@@ -57,8 +57,6 @@ class ModuleHookManager:
                 # such as a module that prints something.
                 return output
 
-            JacobianAccumulator = self._make_jacobian_accumulator(module, args, tree_spec)
-
             requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
             self._gramian_accumulator.track_parameter_paths(requires_grad_params)
 
@@ -70,17 +68,18 @@ class ModuleHookManager:
             index = cast(int, preference.argmin().item())
             self._target_edges.register(get_gradient_edge(flat_outputs[index]))
 
-            return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
+            return self._apply_jacobian_accumulator(module, args, tree_spec, flat_outputs)
 
         handle = module.register_forward_hook(module_hook)
         self._handles.append(handle)
 
-    def _make_jacobian_accumulator(
+    def _apply_jacobian_accumulator(
         self,
         module: nn.Module,
         args: PyTree,
         tree_spec: TreeSpec,
-    ) -> type[torch.autograd.Function]:
+        flat_outputs: list[Tensor],
+    ) -> PyTree:
 
         class AccumulateJacobian(torch.autograd.Function):
 
@@ -138,4 +137,4 @@ class ModuleHookManager:
 
                 return flat_grad_outputs
 
-        return JacobianAccumulator
+        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
