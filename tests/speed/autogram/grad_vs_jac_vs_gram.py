@@ -10,6 +10,7 @@ from utils.architectures import (
     InstanceNormResNet18,
     NoFreeParam,
     ShapedModule,
+    SqueezeNet,
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
@@ -29,6 +30,7 @@ PARAMETRIZATIONS = [
     (AlexNet, 8),
     (InstanceNormResNet18, 16),
     (GroupNormMobileNetV3Small, 16),
+    (SqueezeNet, 16),
 ]
 
 

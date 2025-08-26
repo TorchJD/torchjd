@@ -851,3 +851,17 @@ class GroupNormMobileNetV3Small(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.mobile_net(input)
+
+
+class SqueezeNet(ShapedModule):
+    """SqueezeNet."""
+
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.squeezenet = torchvision.models.squeezenet1_0()
+
+    def forward(self, input: Tensor):
+        return self.squeezenet(input)

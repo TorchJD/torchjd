@@ -39,6 +39,7 @@ from utils.architectures import (
     SomeFrozenParam,
     SomeUnusedOutput,
     SomeUnusedParam,
+    SqueezeNet,
     WithBuffered,
     WithModuleTrackingRunningStats,
     WithNoTensorOutput,
@@ -120,6 +121,7 @@ PARAMETRIZATIONS = [
     param(AlexNet, 2, marks=[mark.slow, mark.garbage_collect]),
     param(InstanceNormResNet18, 4, marks=[mark.slow, mark.garbage_collect]),
     param(GroupNormMobileNetV3Small, 3, marks=[mark.slow, mark.garbage_collect]),
+    param(SqueezeNet, 8, marks=[mark.slow, mark.garbage_collect]),
 ]
 
 AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting]] = [
