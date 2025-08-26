@@ -85,6 +85,7 @@ class ModuleHookManager:
 
             @staticmethod
             def forward(*flat_grad_outputs: Tensor) -> None:
+                # There is no non-batched dimension
                 grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
                 jacobians = torch.vmap(get_instance_wise_vjp(module))(grad_outputs, args)
                 self._gramian_accumulator.accumulate_path_jacobians(
@@ -96,6 +97,7 @@ class ModuleHookManager:
 
             @staticmethod
             def vmap(info, in_dims, *flat_jac_outputs: Tensor) -> tuple[None, None]:
+                # There is a non-batched dimension
                 jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
                 jacobians = torch.vmap(get_flat_vjp(module, args))(jac_outputs)
                 self._gramian_accumulator.accumulate_path_jacobians(
