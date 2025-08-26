@@ -96,10 +96,6 @@ class ModuleHookManager:
                 )
 
             @staticmethod
-            def setup_context(*_):
-                pass
-
-            @staticmethod
             def vmap(info, in_dims, *flat_jac_outputs: Tensor) -> tuple[None, None]:
                 jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
                 jacobians = torch.vmap(get_flat_vjp(module, args))(jac_outputs)
@@ -111,6 +107,10 @@ class ModuleHookManager:
                 )
                 return None, None
 
+            @staticmethod
+            def setup_context(*_):
+                pass
+
         class JacobianAccumulator(torch.autograd.Function):
             """
             Autograd function that accumulates Jacobian Gramians during the first backward pass.
@@ -120,8 +120,6 @@ class ModuleHookManager:
             accumulator. Uses a toggle mechanism to activate only during the first backward pass of
             the autogram algorithm.
             """
-
-            # generate_vmap_rule = True
 
             @staticmethod
             def forward(*xs: Tensor) -> tuple[Tensor, ...]:
