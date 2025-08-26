@@ -865,3 +865,14 @@ class SqueezeNet(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.squeezenet(input)
+
+
+# Other torchvision.models were not added for the following reasons:
+# - VGG16: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - DenseNet: no way to easily replace the BatchNorms (no norm_layer param)
+# - InceptionV3: no way to easily replace the BatchNorms (no norm_layer param)
+# - GoogleNet: no way to easily replace the BatchNorms (no norm_layer param)
+# - ShuffleNetV2: no way to easily replace the BatchNorms (no norm_layer param)
+# - ResNeXt: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - WideResNet50: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - MNASNet: no way to easily replace the BatchNorms (no norm_layer param)
