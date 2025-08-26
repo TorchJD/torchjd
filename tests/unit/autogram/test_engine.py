@@ -10,6 +10,7 @@ from utils.architectures import (
     AlexNet,
     Cifar10Model,
     FreeParam,
+    GroupNormMobileNetV3Small,
     InstanceNormResNet18,
     InterModuleParamReuse,
     MIMOBranched,
@@ -118,6 +119,7 @@ PARAMETRIZATIONS = [
     param(Cifar10Model, 16, marks=[mark.slow, mark.garbage_collect]),
     param(AlexNet, 2, marks=[mark.slow, mark.garbage_collect]),
     param(InstanceNormResNet18, 4, marks=[mark.slow, mark.garbage_collect]),
+    param(GroupNormMobileNetV3Small, 3, marks=[mark.slow, mark.garbage_collect]),
 ]
 
 AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting]] = [

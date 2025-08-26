@@ -835,3 +835,19 @@ class InstanceNormResNet18(ShapedModule):
 
     def forward(self, input: Tensor):
         return self.resnet18(input) / 5.0
+
+
+class GroupNormMobileNetV3Small(ShapedModule):
+    """MobileNetV3Small with BatchNorm2d layers replaced by GroupNorm layers."""
+
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.mobile_net = torchvision.models.mobilenet_v3_small(
+            norm_layer=partial(nn.GroupNorm, 2, affine=True)
+        )
+
+    def forward(self, input: Tensor):
+        return self.mobile_net(input)

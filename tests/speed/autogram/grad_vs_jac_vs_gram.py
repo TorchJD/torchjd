@@ -6,6 +6,7 @@ from utils.architectures import (
     AlexNet,
     Cifar10Model,
     FreeParam,
+    GroupNormMobileNetV3Small,
     InstanceNormResNet18,
     NoFreeParam,
     ShapedModule,
@@ -27,6 +28,7 @@ PARAMETRIZATIONS = [
     (Cifar10Model, 64),
     (AlexNet, 8),
     (InstanceNormResNet18, 16),
+    (GroupNormMobileNetV3Small, 16),
 ]
 
 
