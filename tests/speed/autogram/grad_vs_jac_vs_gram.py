@@ -7,6 +7,7 @@ from utils.architectures import (
     Cifar10Model,
     FreeParam,
     GroupNormMobileNetV3Small,
+    InstanceNormMobileNetV2,
     InstanceNormResNet18,
     NoFreeParam,
     ShapedModule,
@@ -31,6 +32,7 @@ PARAMETRIZATIONS = [
     (InstanceNormResNet18, 16),
     (GroupNormMobileNetV3Small, 16),
     (SqueezeNet, 16),
+    (InstanceNormMobileNetV2, 8),
 ]
 
 

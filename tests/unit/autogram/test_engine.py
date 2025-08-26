@@ -11,6 +11,7 @@ from utils.architectures import (
     Cifar10Model,
     FreeParam,
     GroupNormMobileNetV3Small,
+    InstanceNormMobileNetV2,
     InstanceNormResNet18,
     InterModuleParamReuse,
     MIMOBranched,
@@ -122,6 +123,7 @@ PARAMETRIZATIONS = [
     param(InstanceNormResNet18, 4, marks=[mark.slow, mark.garbage_collect]),
     param(GroupNormMobileNetV3Small, 3, marks=[mark.slow, mark.garbage_collect]),
     param(SqueezeNet, 8, marks=[mark.slow, mark.garbage_collect]),
+    param(InstanceNormMobileNetV2, 2, marks=[mark.slow, mark.garbage_collect]),
 ]
 
 AGGREGATORS_AND_WEIGHTINGS: list[tuple[Aggregator, Weighting]] = [

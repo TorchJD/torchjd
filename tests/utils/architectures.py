@@ -867,6 +867,22 @@ class SqueezeNet(ShapedModule):
         return self.squeezenet(input)
 
 
+class InstanceNormMobileNetV2(ShapedModule):
+    """MobileNetV3Small with BatchNorm2d layers replaced by InstanceNorm layers."""
+
+    INPUT_SHAPES = (3, 224, 224)
+    OUTPUT_SHAPES = (1000,)
+
+    def __init__(self):
+        super().__init__()
+        self.mobilenet = torchvision.models.mobilenet_v2(
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+        )
+
+    def forward(self, input: Tensor):
+        return self.mobilenet(input) / 10.0
+
+
 # Other torchvision.models were not added for the following reasons:
 # - VGG16: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
 # - DenseNet: no way to easily replace the BatchNorms (no norm_layer param)
