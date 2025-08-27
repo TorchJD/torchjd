@@ -38,7 +38,7 @@ def test_iwrm():
         from torch.optim import SGD
 
         X = torch.randn(8, 16, 10)
-        Y = torch.randn(8, 16, 1)
+        Y = torch.randn(8, 16)
 
         model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
         loss_fn = MSELoss()
@@ -47,8 +47,8 @@ def test_iwrm():
         optimizer = SGD(params, lr=0.1)
 
         for x, y in zip(X, Y):
-            y_hat = model(x)
-            loss = loss_fn(y_hat, y)
+            y_hat = model(x).squeeze(dim=1)  # shape: [16]
+            loss = loss_fn(y_hat, y)  # shape: [] (scalar)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -62,7 +62,7 @@ def test_iwrm():
         from torchjd.autojac import backward
 
         X = torch.randn(8, 16, 10)
-        Y = torch.randn(8, 16, 1)
+        Y = torch.randn(8, 16)
 
         model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
         loss_fn = MSELoss(reduction="none")
@@ -72,8 +72,8 @@ def test_iwrm():
         aggregator = UPGrad()
 
         for x, y in zip(X, Y):
-            y_hat = model(x)
-            losses = loss_fn(y_hat, y)
+            y_hat = model(x).squeeze(dim=1)  # shape: [16]
+            losses = loss_fn(y_hat, y)  # shape: [16]
             optimizer.zero_grad()
             backward(losses, aggregator)
             optimizer.step()
@@ -87,7 +87,7 @@ def test_iwrm():
         from torchjd.autogram import Engine
 
         X = torch.randn(8, 16, 10)
-        Y = torch.randn(8, 16, 1)
+        Y = torch.randn(8, 16)
 
         model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
         loss_fn = MSELoss(reduction="none")
@@ -98,8 +98,8 @@ def test_iwrm():
         engine = Engine(model.modules())
 
         for x, y in zip(X, Y):
-            y_hat = model(x)
-            losses = loss_fn(y_hat, y).squeeze()
+            y_hat = model(x).squeeze(dim=1)  # shape: [16]
+            losses = loss_fn(y_hat, y)  # shape: [16]
             optimizer.zero_grad()
             gramian = engine.compute_gramian(losses)
             losses.backward(weighting(gramian))
@@ -339,7 +339,7 @@ def test_partial_jd():
     from torchjd.autogram import Engine
 
     X = torch.randn(8, 16, 10)
-    Y = torch.randn(8, 16, 1)
+    Y = torch.randn(8, 16)
 
     model = Sequential(Linear(10, 8), ReLU(), Linear(8, 5), ReLU(), Linear(5, 1))
     loss_fn = MSELoss(reduction="none")
@@ -354,8 +354,8 @@ def test_partial_jd():
     optimizer = SGD(params, lr=0.1)
 
     for x, y in zip(X, Y):
-        y_hat = model(x)
-        losses = loss_fn(y_hat, y).squeeze()
+        y_hat = model(x).squeeze(dim=1)  # shape: [16]
+        losses = loss_fn(y_hat, y)  # shape: [16]
         optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)
         weights = weighting(gramian)

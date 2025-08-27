@@ -51,7 +51,7 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
 
             X = torch.randn(8, 16, 10)
-            Y = torch.randn(8, 16, 1)
+            Y = torch.randn(8, 16)
 
             model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
             loss_fn = MSELoss()
@@ -62,8 +62,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
 
             for x, y in zip(X, Y):
-                y_hat = model(x)
-                loss = loss_fn(y_hat, y)
+                y_hat = model(x).squeeze(dim=1)  # shape: [16]
+                loss = loss_fn(y_hat, y)  # shape: [] (scalar)
                 optimizer.zero_grad()
                 loss.backward()
 
@@ -86,7 +86,7 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
             from torchjd.autojac import backward
 
             X = torch.randn(8, 16, 10)
-            Y = torch.randn(8, 16, 1)
+            Y = torch.randn(8, 16)
 
             model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
             loss_fn = MSELoss(reduction="none")
@@ -97,8 +97,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
 
             for x, y in zip(X, Y):
-                y_hat = model(x)
-                losses = loss_fn(y_hat, y)
+                y_hat = model(x).squeeze(dim=1)  # shape: [16]
+                losses = loss_fn(y_hat, y)  # shape: [16]
                 optimizer.zero_grad()
                 backward(losses, aggregator)
 
@@ -121,7 +121,7 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
             from torchjd.autogram import Engine
 
             X = torch.randn(8, 16, 10)
-            Y = torch.randn(8, 16, 1)
+            Y = torch.randn(8, 16)
 
             model = Sequential(Linear(10, 5), ReLU(), Linear(5, 1))
             loss_fn = MSELoss(reduction="none")
@@ -132,8 +132,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
             engine = Engine(model.modules())
 
             for x, y in zip(X, Y):
-                y_hat = model(x)
-                losses = loss_fn(y_hat, y).squeeze()
+                y_hat = model(x).squeeze(dim=1)  # shape: [16]
+                losses = loss_fn(y_hat, y)  # shape: [16]
                 optimizer.zero_grad()
                 gramian = engine.compute_gramian(losses)
                 weights = weighting(gramian)

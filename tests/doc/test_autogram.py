@@ -11,7 +11,7 @@ def test_engine():
 
     # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
     inputs = torch.randn(8, 16, 5)
-    targets = torch.randn(8, 16, 1)
+    targets = torch.randn(8, 16)
 
     model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
     optimizer = SGD(model.parameters())
@@ -21,8 +21,8 @@ def test_engine():
     engine = Engine(model.modules())
 
     for input, target in zip(inputs, targets):
-        output = model(input)
-        losses = criterion(output, target).squeeze()
+        output = model(input).squeeze(dim=1)  # shape: [16]
+        losses = criterion(output, target)  # shape: [16]
 
         optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)
