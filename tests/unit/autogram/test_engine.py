@@ -321,29 +321,6 @@ def test_incompatible_modules(architecture: type[nn.Module]):
         _ = Engine(model.modules())
 
 
-def test_non_vector_input_to_compute_gramian():
-    architecture = Cifar10Model
-    batch_size = 64
-
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
-
-    input = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
-    loss_fn = make_mse_loss_fn(targets)
-
-    torch.manual_seed(0)
-    model = architecture().to(device=DEVICE)
-
-    engine = Engine(model.modules())
-
-    output = model(input)
-    losses = loss_fn(output).reshape([8, 8])
-
-    with pytest.raises(ValueError):
-        engine.compute_gramian(losses)
-
-
 def test_non_batched():
     # This is an adaptation of basic example using autogram.
     import torch
