@@ -185,7 +185,7 @@ class Engine:
         if grad_output is None:
             grad_output = torch.ones_like(output)
 
-        non_batched_dims = list(range(output.ndim - len(self._batched_dims)))
+        non_batched_dims = list(set(range(output.ndim)) - set(self._batched_dims))
         has_batched_dim = len(self._batched_dims) != 0
         has_non_batched_dim = len(non_batched_dims) != 0
 
