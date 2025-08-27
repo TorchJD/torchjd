@@ -181,11 +181,7 @@ class Engine:
             all `modules`
         """
 
-        if output.ndim > 2:
-            raise ValueError(
-                "We currently support computing the Gramian with respect to scalars, vectors or "
-                "matrices only."
-            )
+        assert output.ndim <= 2
 
         if grad_output is None:
             grad_output = torch.ones_like(output)
