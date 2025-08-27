@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from math import prod
 from typing import cast
 
 import torch
@@ -132,13 +133,13 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        has_batched_dim: bool = True,
+        batched_dims: tuple[int, ...] = (0,),
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._has_batched_dim = has_batched_dim
+        self._batched_dims = batched_dims
         self._module_hook_manager = ModuleHookManager(
-            self._target_edges, self._gramian_accumulator, has_batched_dim
+            self._target_edges, self._gramian_accumulator, len(batched_dims) != 0
         )
 
         self._hook_modules(modules)
@@ -181,11 +182,53 @@ class Engine:
             all `modules`
         """
 
-        assert output.ndim <= 2
-
         if grad_output is None:
             grad_output = torch.ones_like(output)
 
+        non_batched_dims = list(range(output.ndim - len(self._batched_dims)))
+        has_batched_dim = len(self._batched_dims) != 0
+        has_non_batched_dim = len(non_batched_dims) != 0
+
+        if has_non_batched_dim:
+            # move non-batched dims to front
+            indices = list(range(len(non_batched_dims)))
+            ordered_output = torch.movedim(output, non_batched_dims, indices)
+            ordered_grad_output = torch.movedim(grad_output, non_batched_dims, indices)
+            ordered_shape = list(ordered_output.shape)
+            target_shape = [prod([output.shape[i] for i in non_batched_dims])]
+        else:
+            indices = []
+            ordered_output = output
+            ordered_grad_output = grad_output
+            ordered_shape = list(ordered_output.shape)
+            target_shape = []
+
+        if has_batched_dim:
+            target_shape += [-1]
+
+        reshaped_output = ordered_output.reshape(target_shape)
+        reshaped_grad_output = ordered_grad_output.reshape(target_shape)
+
+        flat_gramian = self._compute_square_gramian(
+            reshaped_output, reshaped_grad_output, has_non_batched_dim
+        )
+
+        unordered_gramian_shape = ordered_shape + ordered_shape[::-1]
+        unordered_gramian = flat_gramian.reshape(unordered_gramian_shape)
+
+        if has_non_batched_dim:
+            last_index = 2 * output.ndim - 1
+            source_dims = indices + [last_index - i for i in indices]
+            destination_dims = non_batched_dims + [last_index - i for i in non_batched_dims]
+            gramian = torch.movedim(unordered_gramian, source_dims, destination_dims)
+        else:
+            gramian = unordered_gramian
+
+        return gramian
+
+    def _compute_square_gramian(
+        self, output: Tensor, grad_output: Tensor, has_non_batched_dim: bool
+    ) -> Tensor:
         self._module_hook_manager.gramian_accumulation_phase = True
 
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
@@ -198,14 +241,16 @@ class Engine:
                 retain_graph=True,
             )
 
-        has_non_batched_dim = output.ndim - int(self._has_batched_dim) == 1
         if has_non_batched_dim:
             # There is one non-batched dimension, it is the first one
             non_batched_dim_len = output.shape[0]
             jac_output_shape = [output.shape[0]] + list(output.shape)
+
+            # Need to batch `grad_output` over the first dimension
             jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
             for i in range(non_batched_dim_len):
                 jac_output[i, i] = grad_output[i]
+
             _ = vmap(differentiation)(jac_output)
         else:
             _ = differentiation(grad_output)
@@ -219,6 +264,4 @@ class Engine:
         self._gramian_accumulator.reset()
         self._target_edges.reset()
 
-        gramian_shape = list(output.shape) + list(reversed(output.shape))
-
-        return gramian.reshape(gramian_shape)
+        return gramian

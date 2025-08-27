@@ -330,7 +330,7 @@ def test_non_batched():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
     optimizer = SGD(model.parameters(), lr=0.1)
 
-    engine = Engine(model.modules(), False)
+    engine = Engine(model.modules(), ())
 
     weighting = UPGradWeighting()
     input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
@@ -358,7 +358,7 @@ def test_two_dimensions_batched_non_batched():
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
     optimizer = SGD(model.parameters(), lr=0.1)
 
-    engine = Engine(model.modules(), True)
+    engine = Engine(model.modules(), (1,))
 
     weighting = UPGradWeighting()
     input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
