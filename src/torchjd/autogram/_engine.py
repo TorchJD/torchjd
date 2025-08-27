@@ -132,12 +132,14 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        is_batched: bool = True,
+        has_batched_dim: bool = True,
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._is_batched = is_batched
-        self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
+        self._has_batched_dim = has_batched_dim
+        self._module_hook_manager = ModuleHookManager(
+            self._target_edges, self._gramian_accumulator, has_batched_dim
+        )
 
         self._hook_modules(modules)
 
@@ -167,25 +169,26 @@ class Engine:
                 "`track_running_stats` to `False`."
             )
 
-    def compute_gramian(self, output: Tensor, grad_outputs: Tensor | None = None) -> Tensor:
+    def compute_gramian(self, output: Tensor, grad_output: Tensor | None = None) -> Tensor:
         """
         Compute the Gramian of the Jacobian of `output` with respect the direct parameters of all
         `modules`.
 
         :param output: The vector to differentiate. Must have `ndim == 1`.
-        :param grad_outputs: The tangents for the differentiation. Default to a vector of 1s of the
+        :param grad_output: The tangents for the differentiation. Default to a vector of 1s of the
             same shape as `output`.
         :returns: the Gramian of the Jacobian of `output` with respect to the direct parameters of
             all `modules`
         """
 
-        if output.ndim != 1:
+        if output.ndim > 2:
             raise ValueError(
-                "We currently support computing the Gramian with respect to vectors only."
+                "We currently support computing the Gramian with respect to scalars, vectors or "
+                "matrices only."
             )
 
-        if grad_outputs is None:
-            grad_outputs = torch.ones_like(output)
+        if grad_output is None:
+            grad_output = torch.ones_like(output)
 
         self._module_hook_manager.gramian_accumulation_phase = True
 
@@ -199,10 +202,17 @@ class Engine:
                 retain_graph=True,
             )
 
-        if self._is_batched:
-            _ = differentiation(grad_outputs)
+        has_non_batched_dim = output.ndim - int(self._has_batched_dim) == 1
+        if has_non_batched_dim:
+            # There is one non-batched dimension, it is the first one
+            non_batched_dim_len = output.shape[0]
+            jac_output_shape = [output.shape[0]] + list(output.shape)
+            jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
+            for i in range(non_batched_dim_len):
+                jac_output[i, i] = grad_output[i]
+            _ = vmap(differentiation)(jac_output)
         else:
-            _ = vmap(differentiation)(torch.diag(grad_outputs))
+            _ = differentiation(grad_output)
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.

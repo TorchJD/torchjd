@@ -370,3 +370,31 @@ def test_non_batched():
     gramian = engine.compute_gramian(losses)
     losses.backward(weighting(gramian))
     optimizer.step()
+
+
+def test_two_dimensions_batched_non_batched():
+    # This is an adaptation of basic example using autogram.
+    import torch
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
+    optimizer = SGD(model.parameters(), lr=0.1)
+
+    engine = Engine(model.modules(), True)
+
+    weighting = UPGradWeighting()
+    input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
+    target1 = torch.randn(16)  # First batch of 16 targets
+    target2 = torch.randn(16)  # Second batch of 16 targets
+
+    loss_fn = MSELoss(reduction="none")
+    output = model(input)
+    loss1 = loss_fn(output[:, 0], target1)
+    loss2 = loss_fn(output[:, 1], target2)
+    losses = torch.vstack([loss1, loss2])
+
+    optimizer.zero_grad()
+    gramian = engine.compute_gramian(losses).reshape([32, 32])
+    losses.backward(weighting(gramian).reshape([2, 16]))
+    optimizer.step()
