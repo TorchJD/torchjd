@@ -14,7 +14,7 @@ from torch.utils._pytree import PyTree, tree_map_only
 # still support older versions of PyTorch where pytree is protected).
 
 
-def get_instance_wise_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+def get_functional_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
     """
     Create a VJP function for a module's forward pass with respect to its parameters. The returned
     function takes both the input and the cotangents that can be vmaped jointly in both terms to

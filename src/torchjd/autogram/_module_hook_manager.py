@@ -8,7 +8,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import get_instance_wise_vjp
+from ._vjp import get_functional_vjp
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -84,10 +84,10 @@ class ModuleHookManager:
     ) -> PyTree:
 
         if self._has_batch_dim:
-            vjp = torch.vmap(get_instance_wise_vjp(module))
+            vjp = torch.vmap(get_functional_vjp(module))
         else:
             # This might be doable without the functional api.
-            vjp = get_instance_wise_vjp(module)
+            vjp = get_functional_vjp(module)
 
         class AccumulateJacobian(torch.autograd.Function):
 
