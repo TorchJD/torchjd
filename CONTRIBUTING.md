@@ -167,12 +167,10 @@ implementation of a mathematical aggregator.
 > Before working on the implementation of a new aggregator, please contact us via an issue or a
 > discussion: in many cases, we have already thought about it, or even started an implementation.
 
-## Removing code
+## Deprecation
 
-If you want to remove some code, or move something into another package, you need to deprecate it.
-This should be done by raising a `DeprecationWarning` which will make the test fail if raised, and
-you should add to the file `tests/units/test_deprecations.py` a test that ensures that a deprecation
-warning is issued. Add the date in a comment above so that the code can be removed later on.
+To deprecate some public functionality, make it raise a `DeprecationWarning`. A test should also be
+added in `tests/units/test_deprecations.py`, ensuring that this warning is issued.
 
 ## Release
 
