@@ -166,7 +166,7 @@ def test_equivalence(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules())
+    engine = Engine(model_autogram.modules(), (0,))
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -227,7 +227,7 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model_autogram = architecture().to(device=DEVICE)
 
     # Hook modules and verify that we're equivalent to autojac when using the engine
-    engine = Engine(model_autogram.modules())
+    engine = Engine(model_autogram.modules(), (0,))
     torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
@@ -301,7 +301,7 @@ def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
     expected_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
     model.zero_grad()
 
-    engine = Engine(gramian_modules)
+    engine = Engine(gramian_modules, (0,))
 
     output = model(input)
     losses = loss_fn(output)
@@ -318,4 +318,60 @@ def test_incompatible_modules(architecture: type[nn.Module]):
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
-        _ = Engine(model.modules())
+        _ = Engine(model.modules(), (0,))
+
+
+def test_non_batched():
+    # This is an adaptation of basic example using autogram.
+    import torch
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
+    optimizer = SGD(model.parameters(), lr=0.1)
+
+    engine = Engine(model.modules())
+
+    weighting = UPGradWeighting()
+    input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
+    target1 = torch.randn(16)  # First batch of 16 targets
+    target2 = torch.randn(16)  # Second batch of 16 targets
+
+    loss_fn = MSELoss()
+    output = model(input)
+    loss1 = loss_fn(output[:, 0], target1)
+    loss2 = loss_fn(output[:, 1], target2)
+    losses = torch.stack([loss1, loss2])
+
+    optimizer.zero_grad()
+    gramian = engine.compute_gramian(losses)
+    losses.backward(weighting(gramian))
+    optimizer.step()
+
+
+def test_two_dimensions_batched_non_batched():
+    # This is an adaptation of basic example using autogram.
+    import torch
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
+    optimizer = SGD(model.parameters(), lr=0.1)
+
+    engine = Engine(model.modules(), (1,))
+
+    weighting = UPGradWeighting()
+    input = torch.randn(16, 10)  # Batch of 16 random input vectors of length 10
+    target1 = torch.randn(16)  # First batch of 16 targets
+    target2 = torch.randn(16)  # Second batch of 16 targets
+
+    loss_fn = MSELoss(reduction="none")
+    output = model(input)
+    loss1 = loss_fn(output[:, 0], target1)
+    loss2 = loss_fn(output[:, 1], target2)
+    losses = torch.vstack([loss1, loss2])
+
+    optimizer.zero_grad()
+    gramian = engine.compute_gramian(losses).reshape([32, 32])
+    losses.backward(weighting(gramian).reshape([2, 16]))
+    optimizer.step()

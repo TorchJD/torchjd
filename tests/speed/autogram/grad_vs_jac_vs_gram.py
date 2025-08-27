@@ -96,7 +96,7 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
     print(autojac_times)
     print()
 
-    engine = Engine(model.modules())
+    engine = Engine(model.modules(), (0,))
     autogram_times = torch.tensor(time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs))
     print(f"autogram times (avg = {autogram_times.mean():.5f}, std = {autogram_times.std():.5f}")
     print(autogram_times)
