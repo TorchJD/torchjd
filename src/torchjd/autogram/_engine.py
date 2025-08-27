@@ -83,7 +83,7 @@ class Engine:
             >>>
             >>> criterion = MSELoss(reduction="none")
             >>> weighting = UPGradWeighting()
-            >>> engine = Engine(model.modules())
+            >>> engine = Engine(model.modules(), (0,))
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input)
@@ -133,7 +133,7 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        batched_dims: tuple[int, ...] = (0,),
+        batched_dims: tuple[int, ...] = (),
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
