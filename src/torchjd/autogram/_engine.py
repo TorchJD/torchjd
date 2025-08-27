@@ -2,11 +2,12 @@ from collections.abc import Iterable
 from typing import cast
 
 import torch
-from torch import Tensor, nn
+from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._gramian_utils import movedim_gramian, reshape_gramian
 from ._module_hook_manager import ModuleHookManager
 
 _INCOMPATIBLE_MODULE_TYPES = (
@@ -57,6 +58,9 @@ class Engine:
 
     :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
         to the Gramian of the Jacobian.
+    :param is_batched: If a dimension is batched, then many intermediary jacobians are block
+        diagonal, which allows for a substancial memory optimization by backpropagating a squashed
+        Jacobian instead. If the only dimension of the losses vector is batched. Default to True.
 
     .. admonition::
         Example
@@ -79,7 +83,7 @@ class Engine:
             >>>
             >>> criterion = MSELoss(reduction="none")
             >>> weighting = UPGradWeighting()
-            >>> engine = Engine(model.modules())
+            >>> engine = Engine(model.modules(), (0,))
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input).squeeze(dim=1)  # shape: [16]
@@ -127,10 +131,17 @@ class Engine:
         <https://docs.pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html>`_ layers.
     """
 
-    def __init__(self, modules: Iterable[nn.Module]):
+    def __init__(
+        self,
+        modules: Iterable[nn.Module],
+        batched_dim: int | None = None,
+    ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
+        self._batched_dim = batched_dim
+        self._module_hook_manager = ModuleHookManager(
+            self._target_edges, self._gramian_accumulator, batched_dim is not None
+        )
 
         self._hook_modules(modules)
 
@@ -143,9 +154,8 @@ class Engine:
                 self._check_module_is_compatible(module)
                 self._module_hook_manager.hook_module(module)
 
-    @staticmethod
-    def _check_module_is_compatible(module: nn.Module) -> None:
-        if isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
+    def _check_module_is_compatible(self, module: nn.Module) -> None:
+        if self._batched_dim is not None and isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
             raise ValueError(
                 f"Found a module of type {type(module)}, which is incompatible with the autogram "
                 f"engine. The incompatible module types are {_INCOMPATIBLE_MODULE_TYPES} (and their"
@@ -166,12 +176,39 @@ class Engine:
         ``modules``.
 
         :param output: The vector to differentiate. Must be a 1-D tensor.
+        :param grad_output: The tangents for the differentiation. Default to a vector of 1s of the
+            same shape as `output`.
         """
 
-        reshaped_output = output.reshape([-1])
-        return self._compute_square_gramian(reshaped_output)
+        if self._batched_dim is not None:
+            # move batched dim to the end
+            ordered_output = torch.movedim(output, self._batched_dim, -1)
+            ordered_shape = list(ordered_output.shape)
+            has_non_batched_dim = len(ordered_shape) > 1
+            target_shape = [ordered_shape[-1]]
+        else:
+            ordered_output = output
+            ordered_shape = list(ordered_output.shape)
+            has_non_batched_dim = len(ordered_shape) > 0
+            target_shape = []
 
-    def _compute_square_gramian(self, output: Tensor) -> Tensor:
+        if has_non_batched_dim:
+            target_shape = [-1] + target_shape
+
+        reshaped_output = ordered_output.reshape(target_shape)
+
+        flat_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
+
+        unordered_gramian = reshape_gramian(flat_gramian, ordered_shape)
+
+        if self._batched_dim is not None:
+            gramian = movedim_gramian(unordered_gramian, [-1], [self._batched_dim])
+        else:
+            gramian = unordered_gramian
+
+        return gramian
+
+    def _compute_square_gramian(self, output: Tensor, has_non_batched_dim: bool) -> Tensor:
         self._module_hook_manager.gramian_accumulation_phase = True
 
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
@@ -184,7 +221,20 @@ class Engine:
                 retain_graph=True,
             )
 
-        _ = differentiation(torch.ones_like(output))
+        if has_non_batched_dim:
+            # There is one non-batched dimension, it is the first one
+            non_batched_dim_len = output.shape[0]
+            jac_output_shape = [output.shape[0]] + list(output.shape)
+
+            # Need to batch `grad_output` over the first dimension
+            jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
+            for i in range(non_batched_dim_len):
+                jac_output[i, i] = 1
+
+            _ = vmap(differentiation)(jac_output)
+        else:
+            grad_output = torch.ones_like(output)
+            _ = differentiation(grad_output)
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.
