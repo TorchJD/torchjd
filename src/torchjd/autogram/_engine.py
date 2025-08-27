@@ -223,4 +223,6 @@ class Engine:
         self._gramian_accumulator.reset()
         self._target_edges.reset()
 
-        return gramian
+        gramian_shape = list(output.shape) + list(reversed(output.shape))
+
+        return gramian.reshape(gramian_shape)
