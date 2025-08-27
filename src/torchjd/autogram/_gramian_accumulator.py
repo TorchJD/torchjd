@@ -66,11 +66,11 @@ class GramianAccumulator:
 
         :param parameter: Parameter whose full Jacobian is available.
         """
-        gramian = _compute_gramian_of_jacobian(parameter, self._summed_jacobians[parameter])
-        if self._gramian is None:
-            self._gramian = gramian
+        full_jacobian_matrix = torch.flatten(self._summed_jacobians[parameter], start_dim=1)
+        if self._gramian is not None:
+            self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
         else:
-            self._gramian += gramian
+            self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
 
     @property
     def gramian(self) -> Optional[Tensor]:
@@ -82,10 +82,3 @@ class GramianAccumulator:
         """
 
         return self._gramian
-
-
-def _compute_gramian_of_jacobian(tensor: Tensor, jacobian: Tensor) -> Tensor:
-    permuted_jacobian = jacobian.permute(tuple(reversed(range(jacobian.ndim))))
-    indices1 = list(range(jacobian.ndim - tensor.ndim, jacobian.ndim))
-    indices2 = list(range(tensor.ndim))[::-1]
-    return torch.tensordot(jacobian, permuted_jacobian, dims=(indices1, indices2))
