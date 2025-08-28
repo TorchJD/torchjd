@@ -98,7 +98,9 @@ class ModuleHookManager:
                 jacobians = vjp(grad_outputs, args)
                 self._gramian_accumulator.accumulate_path_jacobians(
                     {
-                        module.get_parameter(param_name): jacobian
+                        module.get_parameter(param_name): jacobian.reshape(
+                            [-1] + list(module.get_parameter(param_name).shape)
+                        )
                         for param_name, jacobian in jacobians.items()
                     }
                 )
