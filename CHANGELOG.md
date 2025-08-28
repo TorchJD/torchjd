@@ -8,6 +8,36 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added the `autogram` package, with the `autogram.Engine`. This is an implementation of Algorithm 3
+  from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232),
+  optimized for batched computations, as in IWRM.
+- For all `Aggregator`s based on the weighting of the Gramian of the Jacobian, make their
+  `Weighting` class public. It can be used directly on a Gramian (computed via the
+  `autogram.Engine`) to extract some weights. The list of new public classes is:
+  - `Weighting` (abstract base class)
+  - `UPGradWeighting`
+  - `AlignedMTLWeighting`
+  - `CAGradWeighting`
+  - `ConstantWeighting`
+  - `DualProjWeighting`
+  - `IMTLGWeighting`
+  - `KrumWeighting`
+  - `MeanWeighting`
+  - `MGDAWeighting`
+  - `PCGradWeighting`
+  - `RandomWeighting`
+  - `SumWeighting`
+- Add usage example for IWRM with autogram.
+- Add usage example for IWRM with partial autogram.
+
+### Changed
+
+- Revamped documentation.
+- Made `backward` and `mtl_backward` importable from `torchjd.autojac` (like it was prior to 0.7.0).
+- Deprecated importing `backward` and `mtl_backward` from `torchjd` directly.
+
 ## [0.7.0] - 2025-06-04
 
 ### Changed
