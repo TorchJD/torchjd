@@ -17,9 +17,9 @@ class EdgeRegistry:
 
     def register(self, edge: GradientEdge) -> None:
         """
-        Track the GradientEdge of the provided target gradient edge.
+        Track the provided edge.
 
-        :param edge: Gradient edge to track.
+        :param edge: Edge to track.
         """
         self._edges.add(edge)
 
