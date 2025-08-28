@@ -136,6 +136,8 @@ class ModuleHookManager:
             the autogram algorithm.
             """
 
+            generate_vmap_rule = True
+
             @staticmethod
             def forward(*xs: Tensor) -> tuple[Tensor, ...]:
                 return tuple([x.detach() for x in xs])
