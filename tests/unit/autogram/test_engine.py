@@ -480,3 +480,8 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     expected_moved_gramian = movedim_gramian(gramian, source, destination)
 
     assert_close(moved_gramian, expected_moved_gramian)
+
+
+# Add tests of equivalence between batched and non-batched
+# Add tests trying several batched/non-batched dims
+# Add tests for grad_output.
