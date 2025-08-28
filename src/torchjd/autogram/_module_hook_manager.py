@@ -43,7 +43,7 @@ class ModuleHookManager:
         Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
 
         The hook injects a JacobianAccumulator function into the computation graph after the module,
-        enabling Gramian computation during autogram's first backward pass.
+        enabling Gramian computation.
         """
 
         def module_hook(_: nn.Module, args: PyTree, output: PyTree) -> PyTree:
