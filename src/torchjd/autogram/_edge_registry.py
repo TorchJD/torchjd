@@ -57,8 +57,8 @@ class EdgeRegistry:
 
 def _next_edges(edge: GradientEdge) -> list[GradientEdge]:
     """
-    Get the next GradientEdges in the autograd graph from the given edge.
+    Get the next edges in the autograd graph from the given edge.
 
-    :param edge: The current gradient edge.
+    :param edge: The current edge.
     """
     return [GradientEdge(child, nr) for child, nr in edge.node.next_functions if child is not None]
