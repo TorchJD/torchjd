@@ -83,7 +83,7 @@ from torchjd.aggregation import (
     Weighting,
 )
 from torchjd.autogram._engine import Engine
-from torchjd.autogram._gramian_utils import reshape_gramian
+from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd.autojac._transform._aggregate import _Matrixify
 
@@ -445,3 +445,38 @@ def test_reshape_equivariance(shape: list[int]):
     expected_reshaped_gramian = reshape_gramian(gramian, shape[1:])
 
     assert_close(reshaped_gramian, expected_reshaped_gramian)
+
+
+@mark.parametrize(
+    ["shape", "source", "destination"],
+    [
+        ([50, 2, 2, 3], [0, 2], [1, 0]),
+        ([60, 3, 2, 5], [1], [2]),
+        ([30, 6, 7], [0, 1], [1, 0]),
+    ],
+)
+def test_movedim_equivariance(shape: list[int], source: list[int], destination: list[int]):
+    """
+    Test equivariance of `compute_gramian` under movedim operation. More precisely, if we movedim
+    the `output` on some dimensions, then the result is the same as movedim on the Gramian with the
+    corresponding dimensions.
+    """
+
+    input_shape = shape[0]
+    output_shape = prod(shape[1:])
+
+    model = Linear(input_shape, output_shape)
+    engine1 = Engine([model])
+    engine2 = Engine([model])
+
+    input = randn_([input_shape])
+    output = model(input).reshape(shape[1:])
+
+    moved_output = output.movedim(source, destination)
+
+    gramian = engine1.compute_gramian(output)
+    moved_gramian = engine2.compute_gramian(moved_output)
+
+    expected_moved_gramian = movedim_gramian(gramian, source, destination)
+
+    assert_close(moved_gramian, expected_moved_gramian)
