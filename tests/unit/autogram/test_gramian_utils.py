@@ -27,7 +27,7 @@ def compute_quadratic_form(gramian: Tensor, vector: Tensor) -> Tensor:
         [30, 6, 7],
     ],
 )
-def test_reshape_gramian(shape: list[int]):
+def test_quadratic_form_invariance_to_reshape(shape: list[int]):
     """
     When reshaping a Gramian, we expect it to represent the same quadratic form that now applies to
     reshaped inputs. So the mapping x -> x^T G x commutes with reshaping x, G and then computing the
@@ -59,7 +59,9 @@ def test_reshape_gramian(shape: list[int]):
         ([30, 6, 7], [0, 1], [1, 0]),
     ],
 )
-def test_movedim_gramian(shape: list[int], source: list[int], destination: list[int]):
+def test_quadratic_form_invariance_to_movedim(
+    shape: list[int], source: list[int], destination: list[int]
+):
     """
     When moving dims on a Gramian, we expect it to represent the same quadratic form that now
     applies to inputs with moved dims. So the mapping x -> x^T G x commutes with moving dims x, G
