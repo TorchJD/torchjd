@@ -213,8 +213,11 @@ class Engine:
             reshaped_output, reshaped_grad_output, has_non_batched_dim
         )
 
-        unordered_gramian_shape = ordered_shape + ordered_shape[::-1]
-        unordered_gramian = flat_gramian.reshape(unordered_gramian_shape)
+        unordered_gramian_shape = ordered_shape + ordered_shape
+        last_dims = [output.ndim + i for i in range(output.ndim)]
+        unordered_gramian = flat_gramian.reshape(unordered_gramian_shape).movedim(
+            last_dims, last_dims[::-1]
+        )
 
         if has_non_batched_dim:
             last_index = 2 * output.ndim - 1
