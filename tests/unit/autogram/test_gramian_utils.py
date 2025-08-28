@@ -45,7 +45,7 @@ def test_quadratic_form_invariance_to_reshape(shape: list[int]):
         vector = rand_([flat_dim])
         reshaped_vector = vector.reshape(shape[1:])
 
-        quadratic_form = vector.T @ gramian @ vector
+        quadratic_form = vector @ gramian @ vector
         reshaped_quadratic_form = compute_quadratic_form(reshaped_gramian, reshaped_vector)
 
         assert_close(reshaped_quadratic_form, quadratic_form)
