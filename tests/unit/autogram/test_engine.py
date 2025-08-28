@@ -1,4 +1,5 @@
 from itertools import combinations
+from math import prod
 
 import pytest
 import torch
@@ -82,6 +83,7 @@ from torchjd.aggregation import (
     Weighting,
 )
 from torchjd.autogram._engine import Engine
+from torchjd.autogram._gramian_utils import reshape_gramian
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
 from torchjd.autojac._transform._aggregate import _Matrixify
 
@@ -329,7 +331,7 @@ def test_incompatible_modules(architecture: type[nn.Module]):
 def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_output: bool):
     """
     Tests that the Gramian computed by then `Engine` equals to a manual computation of the expected
-    Gramian
+    Gramian.
     """
 
     is_batched = batch_size is not None
@@ -408,3 +410,38 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
     expected_gramian = weight_gramian + bias_gramian
 
     assert_close(gramian, expected_gramian)
+
+
+@mark.parametrize(
+    "shape",
+    [
+        [1, 2, 2, 3],
+        [7, 3, 2, 5],
+        [27, 6, 7],
+    ],
+)
+def test_reshape_equivariance(shape: list[int]):
+    """
+    Test equivariance of `compute_gramian` under reshape operation. More precisely, if we reshape
+    the `output` to some `shape`, then the result is the same as reshaping the Gramian to the
+    corresponding shape.
+    """
+
+    input_shape = shape[0]
+    output_shape = prod(shape[1:])
+
+    model = Linear(input_shape, output_shape)
+    engine1 = Engine([model])
+    engine2 = Engine([model])
+
+    input = randn_([input_shape])
+    output = model(input)
+
+    reshaped_output = output.reshape(shape[1:])
+
+    gramian = engine1.compute_gramian(output)
+    reshaped_gramian = engine2.compute_gramian(reshaped_output)
+
+    expected_reshaped_gramian = reshape_gramian(gramian, shape[1:])
+
+    assert_close(reshaped_gramian, expected_reshaped_gramian)
