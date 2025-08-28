@@ -8,6 +8,7 @@ from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._gramian_utils import movedim_gramian, reshape_gramian
 from ._module_hook_manager import ModuleHookManager
 
 _INCOMPATIBLE_MODULE_TYPES = (
@@ -213,17 +214,10 @@ class Engine:
             reshaped_output, reshaped_grad_output, has_non_batched_dim
         )
 
-        unordered_gramian_shape = ordered_shape + ordered_shape
-        last_dims = [output.ndim + i for i in range(output.ndim)]
-        unordered_gramian = flat_gramian.reshape(unordered_gramian_shape).movedim(
-            last_dims, last_dims[::-1]
-        )
+        unordered_gramian = reshape_gramian(flat_gramian, ordered_shape)
 
         if has_non_batched_dim:
-            last_index = 2 * output.ndim - 1
-            source_dims = indices + [last_index - i for i in indices]
-            destination_dims = non_batched_dims + [last_index - i for i in non_batched_dims]
-            gramian = torch.movedim(unordered_gramian, source_dims, destination_dims)
+            gramian = movedim_gramian(unordered_gramian, indices, non_batched_dims)
         else:
             gramian = unordered_gramian
 
