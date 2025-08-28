@@ -4,8 +4,8 @@ Instance-Wise Risk Minimization (IWRM)
 This example shows how to use TorchJD to minimize the vector of per-instance losses. This learning
 paradigm, called IWRM, is multi-objective, as opposed to the usual empirical risk minimization
 (ERM), which seeks to minimize the average loss. While a step of ERM may increase the loss of some
-samples of the batch, a step of IWRM guarantees that no loss from the batch is increased (given a
-sufficiently small learning rate).
+samples of the batch, a step of IWRM using :doc:`UPGrad <../docs/aggregation/upgrad>` guarantees
+that no loss from the batch is increased (given a sufficiently small learning rate).
 
 .. hint::
     A proper definition of IWRM and its empirical results on some deep learning tasks are
