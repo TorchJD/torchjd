@@ -5,8 +5,8 @@ from torch.autograd.graph import GradientEdge
 
 class EdgeRegistry:
     """
-    Tracks GradientEdges and provides as way to efficiently compute a minimally sufficient subset of
-    leaf edges (reaching them passes by all tracked edges).
+    Tracks `GradientEdge`s and provides a way to efficiently compute a minimally sufficient subset of
+    leaf edges that are reachable from some given `GradientEdge`s.
     """
 
     def __init__(self) -> None:
