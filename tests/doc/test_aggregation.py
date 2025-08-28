@@ -1,4 +1,4 @@
-"""This file contains the test corresponding to the usage examples of aggregators and weightings."""
+"""This file contains the test corresponding to the usage example of Aggregator and Weighting."""
 
 from torch.testing import assert_close
 
