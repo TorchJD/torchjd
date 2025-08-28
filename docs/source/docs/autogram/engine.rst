@@ -3,4 +3,6 @@
 Engine
 ======
 
-.. autofunction:: torchjd.autogram.Engine
+.. autoclass:: torchjd.autogram.Engine
+    :members:
+    :undoc-members:
