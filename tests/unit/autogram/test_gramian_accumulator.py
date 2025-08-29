@@ -12,7 +12,7 @@ from torchjd.autogram._gramian_accumulator import GramianAccumulator
         ([[3], [7, 5, 8], [2, 3]], [0, 7, 1]),
     ],
 )
-def test_adding_jacobians_one_by_one(shapes, number_of_jacobians):
+def test_adding_jacobians_one_by_one(shapes: list[list[int]], number_of_jacobians: list[int]):
     batch_size = 10
     gramian_accumulator = GramianAccumulator()
 
@@ -37,13 +37,13 @@ def test_adding_jacobians_one_by_one(shapes, number_of_jacobians):
 
 
 @mark.parametrize(
-    ["shapes"],
+    "shapes",
     [
-        ([[3, 4, 5], [7, 5]],),
-        ([[3], [7, 5, 8], [2, 3]],),
+        [[3, 4, 5], [7, 5]],
+        [[3], [7, 5, 8], [2, 3]],
     ],
 )
-def test_adding_jacobians_lots_by_lots(shapes):
+def test_adding_jacobians_lots_by_lots(shapes: list[list[int]]):
     number_of_jacobians = 4
     batch_size = 10
     gramian_accumulator = GramianAccumulator()
@@ -80,7 +80,7 @@ def test_returns_none_if_no_jacobian_were_provided():
         ([[3], [7, 5, 8], [2, 3]], [0, 7, 1]),
     ],
 )
-def test_internal_dicts_are_cleaned(shapes, number_of_jacobians):
+def test_internal_dicts_are_cleaned(shapes: list[list[int]], number_of_jacobians: list[int]):
     batch_size = 10
     gramian_accumulator = GramianAccumulator()
 
