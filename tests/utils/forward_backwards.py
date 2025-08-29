@@ -6,7 +6,7 @@ from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 
 from torchjd.aggregation import Aggregator, Weighting
-from torchjd.autogram._engine import Engine
+from torchjd.autogram import Engine
 from torchjd.autojac import backward
 
 
