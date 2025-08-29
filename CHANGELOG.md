@@ -30,7 +30,7 @@ changes that do not affect the user.
   - `RandomWeighting`
   - `SumWeighting`
 - Added usage example for IWRM with autogram.
-- Add usage example for IWRM with partial autogram.
+- Added usage example for IWRM with partial autogram.
 
 ### Changed
 
