@@ -105,8 +105,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
                 optimizer.step()
 
-        Here, we compute the Jacobian of the per-sample losses with respect to the model parameters and
-        use it to update the model such that no loss from the batch is (locally) negatively affected.
+        Here, we compute the Jacobian of the per-sample losses with respect to the model parameters
+        and use it to update the model such that no loss from the batch is (locally) increased.
 
     .. tab-item:: autogram (recommended)
 
