@@ -140,12 +140,12 @@ Jacobian descent using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgr
 + engine = Engine(model.modules())
 
   inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
-  targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
+  targets = torch.randn(8, 16)  # 8 batches of 16 targets for the first task
 
   for input, target in zip(inputs, targets):
-      output = model(input)
--     loss = loss_fn(output, target)
-+     losses = loss_fn(output, target)
+      output = model(input).squeeze(dim=1)  # shape [16]
+-     loss = loss_fn(output, target)  # shape [1]
++     losses = loss_fn(output, target)  # shape [16]
 
       optimizer.zero_grad()
 -     loss.backward()
