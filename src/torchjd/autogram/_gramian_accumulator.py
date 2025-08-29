@@ -62,7 +62,7 @@ class GramianAccumulator:
 
     def _accumulate_gramian(self, parameter: Tensor) -> None:
         """
-        Compute the Gramian of full Jacobian and accumulate it.
+        Compute the Gramian of the full Jacobian and accumulate it.
 
         :param parameter: Parameter whose full Jacobian is available.
         """
