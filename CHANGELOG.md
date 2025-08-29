@@ -29,7 +29,7 @@ changes that do not affect the user.
   - `PCGradWeighting`
   - `RandomWeighting`
   - `SumWeighting`
-- Add usage example for IWRM with autogram.
+- Added usage example for IWRM with autogram.
 - Add usage example for IWRM with partial autogram.
 
 ### Changed
