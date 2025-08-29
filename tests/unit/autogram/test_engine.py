@@ -170,7 +170,7 @@ def test_equivalence(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules(), (0,))
+    engine = Engine(model_autogram.modules(), 0)
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -231,7 +231,7 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model_autogram = architecture().to(device=DEVICE)
 
     # Hook modules and verify that we're equivalent to autojac when using the engine
-    engine = Engine(model_autogram.modules(), (0,))
+    engine = Engine(model_autogram.modules(), 0)
     torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
@@ -305,7 +305,7 @@ def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
     expected_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
     model.zero_grad()
 
-    engine = Engine(gramian_modules, (0,))
+    engine = Engine(gramian_modules, 0)
 
     output = model(input)
     losses = loss_fn(output)
@@ -322,7 +322,7 @@ def test_incompatible_modules(architecture: type[nn.Module]):
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
-        _ = Engine(model.modules(), (0,))
+        _ = Engine(model.modules(), 0)
 
 
 @mark.parametrize("shape", [(1, 3), (7, 15), (27, 15)])
@@ -337,10 +337,10 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
     is_batched = batch_size is not None
 
     if is_batched:
-        batched_dims = (0,)
+        batched_dims = 0
         input_dim = [batch_size, shape[0]]
     else:
-        batched_dims = ()
+        batched_dims = None
         input_dim = [shape[0]]
 
     model = Linear(shape[0], shape[1])
@@ -427,14 +427,14 @@ def test_reshape_equivariance(shape: list[int]):
     corresponding shape.
     """
 
-    input_shape = shape[0]
-    output_shape = prod(shape[1:])
+    input_size = shape[0]
+    output_size = prod(shape[1:])
 
-    model = Linear(input_shape, output_shape)
+    model = Linear(input_size, output_size)
     engine1 = Engine([model])
     engine2 = Engine([model])
 
-    input = randn_([input_shape])
+    input = randn_([input_size])
     output = model(input)
 
     reshaped_output = output.reshape(shape[1:])
@@ -462,14 +462,14 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     corresponding dimensions.
     """
 
-    input_shape = shape[0]
-    output_shape = prod(shape[1:])
+    input_size = shape[0]
+    output_size = prod(shape[1:])
 
-    model = Linear(input_shape, output_shape)
+    model = Linear(input_size, output_size)
     engine1 = Engine([model])
     engine2 = Engine([model])
 
-    input = randn_([input_shape])
+    input = randn_([input_size])
     output = model(input).reshape(shape[1:])
 
     moved_output = output.movedim(source, destination)
@@ -480,6 +480,41 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     expected_moved_gramian = movedim_gramian(gramian, source, destination)
 
     assert_close(moved_gramian, expected_moved_gramian)
+
+
+@mark.parametrize(
+    ["shape", "batched_dim"],
+    [
+        ([2, 5, 3, 2], 2),
+        ([3, 2, 5], 1),
+        ([6, 3], 0),
+        ([4, 3, 2], 1),
+    ],
+)
+def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
+    """
+    Tests that for a vector with some batched dimensions, the gramian is the same if we use the
+    appropriate `batched_dims` or if we don't use any.
+    """
+
+    non_batched_shape = [shape[i] for i in range(len(shape)) if i != batched_dim]
+    input_size = prod(non_batched_shape)
+    batch_size = shape[batched_dim]
+    output_size = input_size
+
+    model = Linear(input_size, output_size)
+    engine1 = Engine([model], batched_dim)
+    engine2 = Engine([model])
+
+    input = randn_([batch_size, input_size])
+    output = model(input)
+    output = output.reshape([batch_size] + non_batched_shape)
+    output = output.movedim(0, batched_dim)
+
+    gramian1 = engine1.compute_gramian(output)
+    gramian2 = engine2.compute_gramian(output)
+
+    assert_close(gramian1, gramian2)
 
 
 # Add tests of equivalence between batched and non-batched

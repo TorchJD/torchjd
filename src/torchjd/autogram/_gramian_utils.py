@@ -29,6 +29,10 @@ def movedim_gramian(gramian: Tensor, source: list[int], destination: list[int]) 
         be unique and should have the same size as `source`.
     """
 
+    length = gramian.ndim // 2
+    source = [i if 0 <= i else i + length for i in source]
+    destination = [i if 0 <= i else i + length for i in destination]
+
     last_index = gramian.ndim - 1
     source_dims = source + [last_index - i for i in source]
     destination_dims = destination + [last_index - i for i in destination]

@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from math import prod
 from typing import cast
 
 import torch
@@ -134,13 +133,13 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        batched_dims: tuple[int, ...] = (),
+        batched_dim: int | None = None,
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._batched_dims = batched_dims
+        self._batched_dim = batched_dim
         self._module_hook_manager = ModuleHookManager(
-            self._target_edges, self._gramian_accumulator, len(batched_dims) != 0
+            self._target_edges, self._gramian_accumulator, batched_dim is not None
         )
 
         self._hook_modules(modules)
@@ -186,26 +185,22 @@ class Engine:
         if grad_output is None:
             grad_output = torch.ones_like(output)
 
-        non_batched_dims = list(set(range(output.ndim)) - set(self._batched_dims))
-        has_batched_dim = len(self._batched_dims) != 0
-        has_non_batched_dim = len(non_batched_dims) != 0
-
-        if has_non_batched_dim:
-            # move non-batched dims to front
-            indices = list(range(len(non_batched_dims)))
-            ordered_output = torch.movedim(output, non_batched_dims, indices)
-            ordered_grad_output = torch.movedim(grad_output, non_batched_dims, indices)
+        if self._batched_dim is not None:
+            # move batched dim to the end
+            ordered_output = torch.movedim(output, self._batched_dim, -1)
+            ordered_grad_output = torch.movedim(grad_output, self._batched_dim, -1)
             ordered_shape = list(ordered_output.shape)
-            target_shape = [prod([output.shape[i] for i in non_batched_dims])]
+            has_non_batched_dim = len(ordered_shape) > 1
+            target_shape = [ordered_shape[-1]]
         else:
-            indices = []
             ordered_output = output
             ordered_grad_output = grad_output
             ordered_shape = list(ordered_output.shape)
+            has_non_batched_dim = len(ordered_shape) > 0
             target_shape = []
 
-        if has_batched_dim:
-            target_shape += [-1]
+        if has_non_batched_dim:
+            target_shape = [-1] + target_shape
 
         reshaped_output = ordered_output.reshape(target_shape)
         reshaped_grad_output = ordered_grad_output.reshape(target_shape)
@@ -216,8 +211,8 @@ class Engine:
 
         unordered_gramian = reshape_gramian(flat_gramian, ordered_shape)
 
-        if has_non_batched_dim:
-            gramian = movedim_gramian(unordered_gramian, indices, non_batched_dims)
+        if self._batched_dim is not None:
+            gramian = movedim_gramian(unordered_gramian, [-1], [self._batched_dim])
         else:
             gramian = unordered_gramian
 
