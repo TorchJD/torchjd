@@ -10,7 +10,7 @@ def test_basic_usage():
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    import torchjd
+    from torchjd import autojac
     from torchjd.aggregation import UPGrad
 
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
@@ -27,7 +27,7 @@ def test_basic_usage():
     loss2 = loss_fn(output[:, 1], target2)
 
     optimizer.zero_grad()
-    torchjd.autojac.backward([loss1, loss2], aggregator)
+    autojac.backward([loss1, loss2], aggregator)
     optimizer.step()
 
 
