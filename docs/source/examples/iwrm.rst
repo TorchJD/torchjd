@@ -18,7 +18,7 @@ backpropagates the Jacobian of each sample's loss. It uses an
 ``.grad`` fields of the model's parameters. Because it has to store the full Jacobian, this approach
 uses a lot of memory.
 
-The recommended approach, called the :doc:`autogram <../docs/autogram/index>` engine, works by
+The recommended approach, called the :doc:`autogram engine <../docs/autogram/engine>`, works by
 backpropagating the Gramian of the Jacobian of each sample's loss with respect to the model's
 parameters. This method is more memory-efficient and generally much faster because it avoids
 storing the full Jacobians. A vector of weights is then computed by applying a

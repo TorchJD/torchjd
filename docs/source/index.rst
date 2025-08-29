@@ -46,7 +46,7 @@ the gradient of the obtained weighted loss. The iterative computation of the Gra
 Algorithm 3 of
 `Jacobian Descent For Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_. The
 documentation and usage example of this algorithm is provided in
-:doc:`Engine <docs/autogram/engine>`.
+:doc:`autogram.Engine <docs/autogram/engine>`.
 
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
