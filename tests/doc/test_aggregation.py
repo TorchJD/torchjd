@@ -3,7 +3,7 @@
 from torch.testing import assert_close
 
 
-def test_aggregation():
+def test_aggregation_and_weighting():
     from torch import tensor
 
     from torchjd.aggregation import UPGrad, UPGradWeighting
