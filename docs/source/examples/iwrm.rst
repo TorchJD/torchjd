@@ -135,8 +135,8 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
                 y_hat = model(x).squeeze(dim=1)  # shape: [16]
                 losses = loss_fn(y_hat, y)  # shape: [16]
                 optimizer.zero_grad()
-                gramian = engine.compute_gramian(losses)
-                weights = weighting(gramian)
+                gramian = engine.compute_gramian(losses)  # shape: [16, 16]
+                weights = weighting(gramian)  # shape: [16]
                 losses.backward(weights)
                 optimizer.step()
 

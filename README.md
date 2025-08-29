@@ -149,8 +149,9 @@ Jacobian descent using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgr
 
       optimizer.zero_grad()
 -     loss.backward()
-+     gramian = engine.compute_gramian(losses)
-+     losses.backward(weighting(gramian))
++     gramian = engine.compute_gramian(losses)  # shape: [16, 16]
++     weights = weighting(gramian)  # shape: [16]
++     losses.backward(weights)
       optimizer.step()
 ```
 

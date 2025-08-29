@@ -25,6 +25,7 @@ def test_engine():
         losses = criterion(output, target)  # shape: [16]
 
         optimizer.zero_grad()
-        gramian = engine.compute_gramian(losses)
-        losses.backward(weighting(gramian))
+        gramian = engine.compute_gramian(losses)  # shape: [16, 16]
+        weights = weighting(gramian)  # shape: [16]
+        losses.backward(weights)
         optimizer.step()
