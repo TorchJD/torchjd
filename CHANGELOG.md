@@ -13,7 +13,7 @@ changes that do not affect the user.
 - Added the `autogram` package, with the `autogram.Engine`. This is an implementation of Algorithm 3
   from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232),
   optimized for batched computations, as in IWRM.
-- For all `Aggregator`s based on the weighting of the Gramian of the Jacobian, make their
+- For all `Aggregator`s based on the weighting of the Gramian of the Jacobian, made their
   `Weighting` class public. It can be used directly on a Gramian (computed via the
   `autogram.Engine`) to extract some weights. The list of new public classes is:
   - `Weighting` (abstract base class)
