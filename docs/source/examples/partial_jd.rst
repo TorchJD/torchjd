@@ -8,7 +8,7 @@ This approach offers a trade-off between the precision of the aggregation decisi
 computational cost associated with computing the Gramian of the full Jacobian. For a complete,
 non-partial version, see the :doc:`IWRM <iwrm>` example.
 
-In this example, our model consists of three `Linear` layers separated by `ReLU` layers. We will
+In this example, our model consists of three `Linear` layers separated by `ReLU` layers. We
 perform the partial descent by considering only the parameters of the last two `Linear` layers. By
 doing this, we avoid computing the Jacobian and its Gramian with respect to the parameters of the
 first `Linear` layer, thereby reducing memory usage and computation time.
