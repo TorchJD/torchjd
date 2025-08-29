@@ -18,7 +18,7 @@ def test_all_edges_are_leaves1():
         edge_registry.register(get_gradient_edge(tensor))
 
     expected_leaves = {get_gradient_edge(tensor) for tensor in [a, b, c]}
-    leaves = edge_registry.get_leaf_edges({get_gradient_edge(d)}, set())
+    leaves = edge_registry.get_leaf_edges({get_gradient_edge(d)})
     assert leaves == expected_leaves
 
 
@@ -42,7 +42,7 @@ def test_all_edges_are_leaves2():
         edge_registry.register(get_gradient_edge(tensor))
 
     expected_leaves = {get_gradient_edge(tensor) for tensor in [e, g]}
-    leaves = edge_registry.get_leaf_edges({get_gradient_edge(e), get_gradient_edge(g)}, set())
+    leaves = edge_registry.get_leaf_edges({get_gradient_edge(e), get_gradient_edge(g)})
     assert leaves == expected_leaves
 
 
@@ -63,7 +63,7 @@ def test_some_edges_are_not_leaves1():
         edge_registry.register(get_gradient_edge(tensor))
 
     expected_leaves = {get_gradient_edge(tensor) for tensor in [a, b, c, d]}
-    leaves = edge_registry.get_leaf_edges({get_gradient_edge(g)}, set())
+    leaves = edge_registry.get_leaf_edges({get_gradient_edge(g)})
     assert leaves == expected_leaves
 
 
@@ -88,5 +88,5 @@ def test_some_edges_are_not_leaves2():
         edge_registry.register(get_gradient_edge(tensor))
 
     expected_leaves = {get_gradient_edge(tensor) for tensor in [a, c, d]}
-    leaves = edge_registry.get_leaf_edges({get_gradient_edge(g)}, set())
+    leaves = edge_registry.get_leaf_edges({get_gradient_edge(g)})
     assert leaves == expected_leaves

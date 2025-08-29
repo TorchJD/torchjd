@@ -175,7 +175,7 @@ class Engine:
     def _compute_square_gramian(self, output: Tensor) -> Tensor:
         self._module_hook_manager.gramian_accumulation_phase = True
 
-        leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
+        leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
 
         def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
             return torch.autograd.grad(

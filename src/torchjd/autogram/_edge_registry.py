@@ -23,9 +23,7 @@ class EdgeRegistry:
         """
         self._edges.add(edge)
 
-    def get_leaf_edges(
-        self, roots: set[GradientEdge], excluded: set[GradientEdge]
-    ) -> set[GradientEdge]:
+    def get_leaf_edges(self, roots: set[GradientEdge]) -> set[GradientEdge]:
         """
         Compute a minimal subset of edges that yields the same differentiation graph traversal: the
         leaf edges. Specifically, this removes edges that are reachable from other edges in the
@@ -33,15 +31,13 @@ class EdgeRegistry:
         simultaneously.
 
         :param roots: Roots of the graph traversal. Modified in-place.
-        :param excluded: GradientEdges that stop graph traversal. Modified in-place.
         :returns: Minimal subset of leaf edges.
         """
 
-        roots.difference_update(excluded)
         nodes_to_traverse = deque((child, root) for root in roots for child in _next_edges(root))
         result = {root for root in roots if root in self._edges}
 
-        excluded.update(roots)
+        excluded = roots
         while nodes_to_traverse:
             node, origin = nodes_to_traverse.popleft()
             if node in self._edges:
