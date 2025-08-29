@@ -153,9 +153,8 @@ class Engine:
                 self._check_module_is_compatible(module)
                 self._module_hook_manager.hook_module(module)
 
-    @staticmethod
-    def _check_module_is_compatible(module: nn.Module) -> None:
-        if isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
+    def _check_module_is_compatible(self, module: nn.Module) -> None:
+        if self._batched_dim is not None and isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
             raise ValueError(
                 f"Found a module of type {type(module)}, which is incompatible with the autogram "
                 f"engine. The incompatible module types are {_INCOMPATIBLE_MODULE_TYPES} (and their"
