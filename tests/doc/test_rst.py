@@ -346,8 +346,8 @@ def test_partial_jd():
 
     weighting = UPGradWeighting()
 
-    # Create the autogram engine that will compute the Gramian of the Jacobian with respect to the
-    # two last Linear layers' parameters.
+    # Create the autogram engine that will compute the Gramian of the
+    # Jacobian with respect to the two last Linear layers' parameters.
     engine = Engine(model[2:].modules())
 
     params = model.parameters()

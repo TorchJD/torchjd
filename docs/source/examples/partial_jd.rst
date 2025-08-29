@@ -8,12 +8,13 @@ This approach offers a trade-off between the precision of the aggregation decisi
 computational cost associated with computing the Gramian of the full Jacobian. For a complete,
 non-partial version, see the :doc:`IWRM <iwrm>` example.
 
-In this example, our model consists of three `Linear` layers separated by `ReLU` layers. We
-perform the partial descent by considering only the parameters of the last two `Linear` layers. By
+In this example, our model consists of three ``Linear`` layers separated by ``ReLU`` layers. We
+perform the partial descent by considering only the parameters of the last two ``Linear`` layers. By
 doing this, we avoid computing the Jacobian and its Gramian with respect to the parameters of the
-first `Linear` layer, thereby reducing memory usage and computation time.
+first ``Linear`` layer, thereby reducing memory usage and computation time.
 
 .. code-block:: python
+    :emphasize-lines: 16-18
 
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -30,8 +31,8 @@ first `Linear` layer, thereby reducing memory usage and computation time.
 
     weighting = UPGradWeighting()
 
-    # Create the autogram engine that will compute the Gramian of the Jacobian with respect to the
-    # two last Linear layers' parameters.
+    # Create the autogram engine that will compute the Gramian of the
+    # Jacobian with respect to the two last Linear layers' parameters.
     engine = Engine(model[2:].modules())
 
     params = model.parameters()
