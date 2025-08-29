@@ -515,8 +515,3 @@ def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
     gramian2 = engine2.compute_gramian(output)
 
     assert_close(gramian1, gramian2)
-
-
-# Add tests of equivalence between batched and non-batched
-# Add tests trying several batched/non-batched dims
-# Add tests for grad_output.

@@ -170,7 +170,7 @@ class Engine:
                 "`track_running_stats` to `False`."
             )
 
-    def compute_gramian(self, output: Tensor, grad_output: Tensor | None = None) -> Tensor:
+    def compute_gramian(self, output: Tensor) -> Tensor:
         """
         Compute the Gramian of the Jacobian of `output` with respect the direct parameters of all
         `modules`.
@@ -182,19 +182,14 @@ class Engine:
             all `modules`
         """
 
-        if grad_output is None:
-            grad_output = torch.ones_like(output)
-
         if self._batched_dim is not None:
             # move batched dim to the end
             ordered_output = torch.movedim(output, self._batched_dim, -1)
-            ordered_grad_output = torch.movedim(grad_output, self._batched_dim, -1)
             ordered_shape = list(ordered_output.shape)
             has_non_batched_dim = len(ordered_shape) > 1
             target_shape = [ordered_shape[-1]]
         else:
             ordered_output = output
-            ordered_grad_output = grad_output
             ordered_shape = list(ordered_output.shape)
             has_non_batched_dim = len(ordered_shape) > 0
             target_shape = []
@@ -203,11 +198,8 @@ class Engine:
             target_shape = [-1] + target_shape
 
         reshaped_output = ordered_output.reshape(target_shape)
-        reshaped_grad_output = ordered_grad_output.reshape(target_shape)
 
-        flat_gramian = self._compute_square_gramian(
-            reshaped_output, reshaped_grad_output, has_non_batched_dim
-        )
+        flat_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
 
         unordered_gramian = reshape_gramian(flat_gramian, ordered_shape)
 
@@ -218,9 +210,7 @@ class Engine:
 
         return gramian
 
-    def _compute_square_gramian(
-        self, output: Tensor, grad_output: Tensor, has_non_batched_dim: bool
-    ) -> Tensor:
+    def _compute_square_gramian(self, output: Tensor, has_non_batched_dim: bool) -> Tensor:
         self._module_hook_manager.gramian_accumulation_phase = True
 
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}, set()))
@@ -241,10 +231,11 @@ class Engine:
             # Need to batch `grad_output` over the first dimension
             jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
             for i in range(non_batched_dim_len):
-                jac_output[i, i] = grad_output[i]
+                jac_output[i, i] = 1
 
             _ = vmap(differentiation)(jac_output)
         else:
+            grad_output = torch.ones_like(output)
             _ = differentiation(grad_output)
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
