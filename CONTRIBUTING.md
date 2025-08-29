@@ -118,7 +118,8 @@ We ask contributors to implement the unit tests necessary to check the correctne
 implementations. Besides, whenever usage examples are provided, we require the example's code to be
 tested in `tests/doc`. We require a very high code coverage for newly introduced sources (~95-100%).
 To ensure that the tensors generated during the tests are on the right device, you have to use the
-partial functions defined in `tests/unit/_utils.py` to instantiate tensors. For instance, instead of
+partial functions defined in `tests/utils/tensors.py` to instantiate tensors. For instance, instead
+of
 ```python
 import torch
 a = torch.ones(3, 4)
@@ -130,7 +131,7 @@ a = ones_(3, 4)
 ```
 
 This will automatically call `torch.ones` with `device=unit.conftest.DEVICE`.
-If the function you need does not exist yet as a partial function in `_utils.py`, add it.
+If the function you need does not exist yet as a partial function in `tensors.py`, add it.
 Lastly, when you create a model or a random generator, you have to move them manually to the right
 device (the `DEVICE` defined in `unit.conftest`):
 ```python
