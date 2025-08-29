@@ -1,7 +1,8 @@
 r"""
 When doing Jacobian descent, the Jacobian matrix has to be aggregated into a vector to store in the
 ``.grad`` fields of the model parameters. The
-The :class:`~torchjd.aggregation._aggregator_bases.Aggregator` is responsible for these aggregations.
+The :class:`~torchjd.aggregation._aggregator_bases.Aggregator` is responsible for these
+aggregations.
 
 When using the :doc:`autogram <../autogram/index>` engine, we rather need to extract a vector
 of weights from the Gramian of the Jacobian. The

@@ -103,9 +103,9 @@ class ModuleHookManager:
             """
             Autograd function that accumulates Jacobian Gramians during the first backward pass.
 
-            Acts as identity on forward pass. During the autogram algorithm,
-            computes the Jacobian of outputs w.r.t. module parameters and feeds it to the gramian
-            accumulator. Uses a toggle mechanism to activate only during the Gramian accumulation phase.
+            Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
+            of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
+            toggle mechanism to activate only during the Gramian accumulation phase.
             """
 
             @staticmethod
