@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 
 import torch
@@ -14,20 +15,41 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
-def get_functional_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+class VJP(ABC):
     """
-    Create a VJP function for a module's forward pass with respect to its parameters using the
-    func api. The returned function takes both the inputs and the cotangents that can be vmaped
+    Represents a VJP function for a module's forward pass with respect to its parameters using the
+    func api.
+
+    :params module: The module to differentiate.
+    """
+
+    def __init__(self, module: nn.Module):
+        self.module = module
+        self.named_parameters = dict(module.named_parameters(recurse=False))
+
+    @abstractmethod
+    def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
+        """
+        VJP function that takes cotangents and inputs and returns dictionary of names of
+        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
+        for the given cotangents at the given inputs.
+        """
+
+
+class FunctionalVJP(VJP):
+    """
+    Represents a VJP function for a module's forward pass with respect to its parameters using the
+    func api. The __call__ function takes both the inputs and the cotangents that can be vmaped
     jointly in both terms to avoid providing to block diagonal jacobians. The disadvantage of using
     this method is that it computes the forward phase.
 
     :params module: The module to differentiate.
-    :returns: VJP function that takes cotangents and inputs and returns dictionary of names of
-        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
-        for the given cotangents at the given inputs.
     """
 
-    def get_vjp(grad_outputs_j: PyTree, inputs_j: PyTree) -> dict[str, Tensor]:
+    def __init__(self, module: nn.Module):
+        super().__init__(module)
+
+    def __call__(self, grad_outputs_j: PyTree, inputs_j: PyTree) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
@@ -40,56 +62,51 @@ def get_functional_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str
         # primals (tuple), here the functional has a single primal which is
         # dict(module.named_parameters()). We therefore take the 0'th element to obtain
         # the dict of gradients w.r.t. the module's named_parameters.
-        return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+        return self._vjp_from_module(inputs_j)(grad_outputs_j)[0]
 
-    return get_vjp
+    def _vjp_from_module(self, inputs: PyTree) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
+        """
+        Create a VJP function for a module's forward pass with respect to its parameters.
+
+        Returns a function that computes vector-Jacobian products for the module's parameters given
+        fixed inputs. Only parameters with requires_grad=True are included in the differentiation.
+
+        :param inputs: Fixed inputs to the module for the VJP computation.
+        :returns: VJP function that takes cotangents and returns parameter gradients.
+        """
+        requires_grad_named_params = {
+            k: v for k, v in self.named_parameters.items() if v.requires_grad
+        }
+        no_requires_grad_named_params = {
+            k: v for k, v in self.named_parameters.items() if not v.requires_grad
+        }
+
+        def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
+            all_state = {
+                **primals,
+                **dict(self.module.named_buffers()),
+                **no_requires_grad_named_params,
+            }
+            return torch.func.functional_call(self.module, all_state, inputs)
+
+        return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
 
 
-def get_autograd_vjp(
-    module: nn.Module, outputs: Sequence[Tensor]
-) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+class AutogradVJP(VJP):
     """
-    Create a VJP function for a module's forward pass with respect to its parameters using the
-    autograd engine. The returned function takes both the inputs and the cotangents but ignores the
+    Represents a VJP function for a module's forward pass with respect to its parameters using the
+    autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
     inputs. The main advantage of using this method is that it doesn't require computing the forward
     phase.
-
-    :params module: The module to differentiate.
-    :returns: VJP function that takes cotangents and inputs and returns dictionary of names of
-        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
-        for the given cotangents at the given inputs.
     """
 
-    parameters, tree_spec = tree_flatten(dict(module.named_parameters(recurse=False)))
+    def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
+        super().__init__(module)
+        self.outputs = outputs
+        self.parameters, self.tree_spec = tree_flatten(dict(self.named_parameters))
 
-    def get_vjp(grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
+    def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
-            outputs, parameters, tree_flatten(grad_outputs)[0], retain_graph=True
+            self.outputs, self.parameters, tree_flatten(grad_outputs)[0], retain_graph=True
         )
-        return tree_unflatten(grads, tree_spec)
-
-    return get_vjp
-
-
-def _vjp_from_module(
-    module: nn.Module, inputs: PyTree
-) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
-    """
-    Create a VJP function for a module's forward pass with respect to its parameters.
-
-    Returns a function that computes vector-Jacobian products for the module's parameters given
-    fixed inputs. Only parameters with requires_grad=True are included in the differentiation.
-
-    :param module: The module to differentiate.
-    :param inputs: Fixed inputs to the module for the VJP computation.
-    :returns: VJP function that takes cotangents and returns parameter gradients.
-    """
-    named_params = dict(module.named_parameters(recurse=False))
-    requires_grad_named_params = {k: v for k, v in named_params.items() if v.requires_grad}
-    no_requires_grad_named_params = {k: v for k, v in named_params.items() if not v.requires_grad}
-
-    def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
-        all_state = {**primals, **dict(module.named_buffers()), **no_requires_grad_named_params}
-        return torch.func.functional_call(module, all_state, inputs)
-
-    return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
+        return tree_unflatten(grads, self.tree_spec)
