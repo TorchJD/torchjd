@@ -7,7 +7,7 @@ from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_u
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import get_functional_vjp
+from ._vjp import get_autograd_vjp, get_functional_vjp
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -83,8 +83,7 @@ class ModuleHookManager:
         if self._has_batch_dim:
             vjp = torch.vmap(get_functional_vjp(module))
         else:
-            # This might be doable without the functional api.
-            vjp = get_functional_vjp(module)
+            vjp = get_autograd_vjp(module, flat_outputs)
 
         class AccumulateJacobian(torch.autograd.Function):
 

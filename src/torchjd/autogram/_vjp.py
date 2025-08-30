@@ -1,9 +1,9 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_map_only
+from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -16,9 +16,10 @@ from torch.utils._pytree import PyTree, tree_map_only
 
 def get_functional_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
     """
-    Create a VJP function for a module's forward pass with respect to its parameters. The returned
-    function takes both the input and the cotangents that can be vmaped jointly in both terms to
-    avoid providing to block diagonal jacobians.
+    Create a VJP function for a module's forward pass with respect to its parameters using the
+    func api. The returned function takes both the inputs and the cotangents that can be vmaped
+    jointly in both terms to avoid providing to block diagonal jacobians. The disadvantage of using
+    this method is that it computes the forward phase.
 
     :params module: The module to differentiate.
     :returns: VJP function that takes cotangents and inputs and returns dictionary of names of
@@ -40,6 +41,32 @@ def get_functional_vjp(module: nn.Module) -> Callable[[PyTree, PyTree], dict[str
         # dict(module.named_parameters()). We therefore take the 0'th element to obtain
         # the dict of gradients w.r.t. the module's named_parameters.
         return _vjp_from_module(module, inputs_j)(grad_outputs_j)[0]
+
+    return get_vjp
+
+
+def get_autograd_vjp(
+    module: nn.Module, outputs: Sequence[Tensor]
+) -> Callable[[PyTree, PyTree], dict[str, Tensor]]:
+    """
+    Create a VJP function for a module's forward pass with respect to its parameters using the
+    autograd engine. The returned function takes both the inputs and the cotangents but ignores the
+    inputs. The main advantage of using this method is that it doesn't require computing the forward
+    phase.
+
+    :params module: The module to differentiate.
+    :returns: VJP function that takes cotangents and inputs and returns dictionary of names of
+        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
+        for the given cotangents at the given inputs.
+    """
+
+    parameters, tree_spec = tree_flatten(dict(module.named_parameters(recurse=False)))
+
+    def get_vjp(grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
+        grads = torch.autograd.grad(
+            outputs, parameters, tree_flatten(grad_outputs)[0], retain_graph=True
+        )
+        return tree_unflatten(grads, tree_spec)
 
     return get_vjp
 
