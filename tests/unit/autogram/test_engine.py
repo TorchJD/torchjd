@@ -145,17 +145,22 @@ try:
 except ImportError:
     pass
 
-WEIGHTINGS = [pair[1] for pair in AGGREGATORS_AND_WEIGHTINGS]
+WEIGHTINGS = [weighting for _, weighting in AGGREGATORS_AND_WEIGHTINGS]
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 @mark.parametrize(["aggregator", "weighting"], AGGREGATORS_AND_WEIGHTINGS)
-def test_equivalence(
+def test_equivalence_autojac_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
     aggregator: Aggregator,
     weighting: Weighting,
 ):
+    """
+    Tests that the autogram engine gives the same results as the autojac engine on IWRM for several
+    JD steps.
+    """
+
     n_iter = 3
 
     input_shapes = architecture.INPUT_SHAPES
@@ -198,6 +203,11 @@ def test_equivalence(
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], batch_size: int):
+    """
+    Tests that the hooks added when constructing the engine do not interfere with a simple autograd
+    call.
+    """
+
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
@@ -315,6 +325,8 @@ def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
 
 @mark.parametrize("architecture", [WithRNN, WithModuleTrackingRunningStats])
 def test_incompatible_modules(architecture: type[nn.Module]):
+    """Tests that the engine cannot be constructed with incompatible modules."""
+
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
