@@ -5,6 +5,47 @@ functions here to test them.
 """
 
 
+def test_amp():
+    import torch
+    from torch.amp import GradScaler
+    from torch.nn import Linear, MSELoss, ReLU, Sequential
+    from torch.optim import SGD
+
+    from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
+
+    shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
+    task1_module = Linear(3, 1)
+    task2_module = Linear(3, 1)
+    params = [
+        *shared_module.parameters(),
+        *task1_module.parameters(),
+        *task2_module.parameters(),
+    ]
+    scaler = GradScaler(device="cpu")
+    loss_fn = MSELoss()
+    optimizer = SGD(params, lr=0.1)
+    aggregator = UPGrad()
+
+    inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
+    task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
+    task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
+
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+        with torch.autocast(device_type="cpu", dtype=torch.float16):
+            features = shared_module(input)
+            output1 = task1_module(features)
+            output2 = task2_module(features)
+            loss1 = loss_fn(output1, target1)
+            loss2 = loss_fn(output2, target2)
+
+        scaled_losses = scaler.scale([loss1, loss2])
+        optimizer.zero_grad()
+        mtl_backward(losses=scaled_losses, features=features, aggregator=aggregator)
+        scaler.step(optimizer)
+        scaler.update()
+
+
 def test_basic_usage():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -111,43 +152,6 @@ def test_iwrm():
     test_autogram()
 
 
-def test_mtl():
-    import torch
-    from torch.nn import Linear, MSELoss, ReLU, Sequential
-    from torch.optim import SGD
-
-    from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-
-    shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
-    task1_module = Linear(3, 1)
-    task2_module = Linear(3, 1)
-    params = [
-        *shared_module.parameters(),
-        *task1_module.parameters(),
-        *task2_module.parameters(),
-    ]
-
-    loss_fn = MSELoss()
-    optimizer = SGD(params, lr=0.1)
-    aggregator = UPGrad()
-
-    inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
-    task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
-    task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
-
-    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
-        features = shared_module(input)
-        output1 = task1_module(features)
-        output2 = task2_module(features)
-        loss1 = loss_fn(output1, target1)
-        loss2 = loss_fn(output2, target2)
-
-        optimizer.zero_grad()
-        mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
-        optimizer.step()
-
-
 def test_lightning_integration():
     # Extra ----------------------------------------------------------------------------------------
     import logging
@@ -214,30 +218,6 @@ def test_lightning_integration():
     trainer.fit(model=model, train_dataloaders=train_loader)
 
 
-def test_rnn():
-    import torch
-    from torch.nn import RNN
-    from torch.optim import SGD
-
-    from torchjd.aggregation import UPGrad
-    from torchjd.autojac import backward
-
-    rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
-    optimizer = SGD(rnn.parameters(), lr=0.1)
-    aggregator = UPGrad()
-
-    inputs = torch.randn(8, 5, 3, 10)  # 8 batches of 3 sequences of length 5 and of dim 10.
-    targets = torch.randn(8, 5, 3, 20)  # 8 batches of 3 sequences of length 5 and of dim 20.
-
-    for input, target in zip(inputs, targets):
-        output, _ = rnn(input)  # output is of shape [5, 3, 20].
-        losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
-
-        optimizer.zero_grad()
-        backward(losses, aggregator, parallel_chunk_size=1)
-        optimizer.step()
-
-
 def test_monitoring():
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -290,9 +270,8 @@ def test_monitoring():
         optimizer.step()
 
 
-def test_amp():
+def test_mtl():
     import torch
-    from torch.amp import GradScaler
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
@@ -307,7 +286,7 @@ def test_amp():
         *task1_module.parameters(),
         *task2_module.parameters(),
     ]
-    scaler = GradScaler(device="cpu")
+
     loss_fn = MSELoss()
     optimizer = SGD(params, lr=0.1)
     aggregator = UPGrad()
@@ -317,18 +296,15 @@ def test_amp():
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
 
     for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
-        with torch.autocast(device_type="cpu", dtype=torch.float16):
-            features = shared_module(input)
-            output1 = task1_module(features)
-            output2 = task2_module(features)
-            loss1 = loss_fn(output1, target1)
-            loss2 = loss_fn(output2, target2)
+        features = shared_module(input)
+        output1 = task1_module(features)
+        output2 = task2_module(features)
+        loss1 = loss_fn(output1, target1)
+        loss2 = loss_fn(output2, target2)
 
-        scaled_losses = scaler.scale([loss1, loss2])
         optimizer.zero_grad()
-        mtl_backward(losses=scaled_losses, features=features, aggregator=aggregator)
-        scaler.step(optimizer)
-        scaler.update()
+        mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
+        optimizer.step()
 
 
 def test_partial_jd():
@@ -361,4 +337,28 @@ def test_partial_jd():
         gramian = engine.compute_gramian(losses)
         weights = weighting(gramian)
         losses.backward(weights)
+        optimizer.step()
+
+
+def test_rnn():
+    import torch
+    from torch.nn import RNN
+    from torch.optim import SGD
+
+    from torchjd.aggregation import UPGrad
+    from torchjd.autojac import backward
+
+    rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
+    optimizer = SGD(rnn.parameters(), lr=0.1)
+    aggregator = UPGrad()
+
+    inputs = torch.randn(8, 5, 3, 10)  # 8 batches of 3 sequences of length 5 and of dim 10.
+    targets = torch.randn(8, 5, 3, 20)  # 8 batches of 3 sequences of length 5 and of dim 20.
+
+    for input, target in zip(inputs, targets):
+        output, _ = rnn(input)  # output is of shape [5, 3, 20].
+        losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
+
+        optimizer.zero_grad()
+        backward(losses, aggregator, parallel_chunk_size=1)
         optimizer.step()
