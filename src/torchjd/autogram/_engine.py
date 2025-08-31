@@ -162,12 +162,10 @@ class Engine:
 
     def compute_gramian(self, output: Tensor) -> Tensor:
         """
-        Compute the Gramian of the Jacobian of `output` with respect the direct parameters of all
-        `modules`.
+        Compute the Gramian of the Jacobian of ``output`` with respect the direct parameters of all
+        ``modules``.
 
-        :param output: The vector to differentiate. Must have `ndim == 1`.
-        :returns: the Gramian of the Jacobian of `output` with respect to the direct parameters of
-            all `modules`
+        :param output: The vector to differentiate. Must be a 1-D tensor.
         """
 
         reshaped_output = output.reshape([-1])
