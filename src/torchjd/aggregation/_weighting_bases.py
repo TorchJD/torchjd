@@ -16,8 +16,12 @@ PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 class Weighting(Generic[_T], nn.Module, ABC):
     r"""
     Abstract base class for all weighting methods. It has the role of extracting a vector of weights
-    of dimension :math:`m` from some statistic of a matrix of dimension :math:`m \times n`.
+    of dimension :math:`m` from some statistic of a matrix of dimension :math:`m \times n`,
+    generally its Gramian, of dimension :math:`m \times m`.
     """
+
+    def __init__(self):
+        super().__init__()
 
     @abstractmethod
     def forward(self, stat: _T) -> Tensor:

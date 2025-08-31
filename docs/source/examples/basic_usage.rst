@@ -18,7 +18,7 @@ Import several classes from ``torch`` and ``torchjd``:
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
-    import torchjd
+    from torchjd import autojac
     from torchjd.aggregation import UPGrad
 
 Define the model and the optimizer, as usual:
@@ -69,7 +69,7 @@ Perform the Jacobian descent backward pass:
 
 .. code-block:: python
 
-    torchjd.backward([loss1, loss2], aggregator)
+    autojac.backward([loss1, loss2], aggregator)
 
 This will populate the ``.grad`` field of each model parameter with the corresponding aggregated
 Jacobian matrix.

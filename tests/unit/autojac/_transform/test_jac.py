@@ -1,10 +1,9 @@
 import torch
 from pytest import mark, raises
-from unit._utils import eye_, ones_, tensor_, zeros_
+from utils.dict_assertions import assert_tensor_dicts_are_close
+from utils.tensors import eye_, ones_, tensor_, zeros_
 
-from torchjd._autojac._transform import Jac, OrderedSet, RequirementError
-
-from ._dict_assertions import assert_tensor_dicts_are_close
+from torchjd.autojac._transform import Jac, OrderedSet, RequirementError
 
 
 @mark.parametrize("chunk_size", [1, 3, None])

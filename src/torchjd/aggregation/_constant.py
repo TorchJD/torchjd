@@ -11,24 +11,10 @@ class Constant(WeightedAggregator):
     the rows of the provided matrix, with constant, pre-determined weights.
 
     :param weights: The weights associated to the rows of the input matrices.
-
-    .. admonition::
-        Example
-
-        Compute a linear combination of the rows of a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import Constant
-        >>>
-        >>> A = Constant(tensor([1., 2.]))
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([8., 3., 3.])
     """
 
     def __init__(self, weights: Tensor):
-        super().__init__(weighting=_ConstantWeighting(weights=weights))
+        super().__init__(weighting=ConstantWeighting(weights=weights))
         self._weights = weights
 
     def __repr__(self) -> str:
@@ -39,12 +25,12 @@ class Constant(WeightedAggregator):
         return f"{self.__class__.__name__}([{weights_str}])"
 
 
-class _ConstantWeighting(Weighting[Matrix]):
+class ConstantWeighting(Weighting[Matrix]):
     """
     :class:`~torchjd.aggregation._weighting_bases.Weighting` that returns constant, pre-determined
     weights.
 
-    :param weights: The weights associated to the rows of the input matrices.
+    :param weights: The weights to return at each call.
     """
 
     def __init__(self, weights: Tensor):

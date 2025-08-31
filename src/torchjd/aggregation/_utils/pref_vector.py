@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from torchjd.aggregation._constant import _ConstantWeighting
+from torchjd.aggregation._constant import ConstantWeighting
 from torchjd.aggregation._weighting_bases import Matrix, Weighting
 
 from .str import vector_to_str
@@ -22,7 +22,7 @@ def pref_vector_to_weighting(
                 "Parameter `pref_vector` must be a vector (1D Tensor). Found `pref_vector.ndim = "
                 f"{pref_vector.ndim}`."
             )
-        return _ConstantWeighting(pref_vector)
+        return ConstantWeighting(pref_vector)
 
 
 def pref_vector_to_str_suffix(pref_vector: Tensor | None) -> str:

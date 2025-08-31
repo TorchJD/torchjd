@@ -12,6 +12,9 @@ class Aggregator(nn.Module, ABC):
     :math:`m \times n` into row vectors of dimension :math:`n`.
     """
 
+    def __init__(self):
+        super().__init__()
+
     @staticmethod
     def _check_is_matrix(matrix: Tensor) -> None:
         if len(matrix.shape) != 2:

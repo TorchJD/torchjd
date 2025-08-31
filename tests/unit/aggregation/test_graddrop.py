@@ -4,7 +4,8 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
-from unit._utils import ExceptionContext, ones_
+from utils.contexts import ExceptionContext
+from utils.tensors import ones_
 
 from torchjd.aggregation import GradDrop
 

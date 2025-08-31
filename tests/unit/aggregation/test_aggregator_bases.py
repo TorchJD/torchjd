@@ -2,7 +2,8 @@ from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
 
 from pytest import mark, raises
-from unit._utils import ExceptionContext, randn_
+from utils.contexts import ExceptionContext
+from utils.tensors import randn_
 
 from torchjd.aggregation import Aggregator
 

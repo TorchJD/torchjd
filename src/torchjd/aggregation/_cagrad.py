@@ -24,20 +24,6 @@ class CAGrad(GramianWeightedAggregator):
     :param c: The scale of the radius of the ball constraint.
     :param norm_eps: A small value to avoid division by zero when normalizing.
 
-    .. admonition::
-        Example
-
-        Use CAGrad to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import CAGrad
-        >>>
-        >>> A = CAGrad(c=0.5)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.1835, 1.2041, 1.2041])
-
     .. note::
         This aggregator is not installed by default. When not installed, trying to import it should
         result in the following error:
@@ -46,7 +32,7 @@ class CAGrad(GramianWeightedAggregator):
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):
-        super().__init__(_CAGradWeighting(c=c, norm_eps=norm_eps))
+        super().__init__(CAGradWeighting(c=c, norm_eps=norm_eps))
         self._c = c
         self._norm_eps = norm_eps
 
@@ -61,11 +47,10 @@ class CAGrad(GramianWeightedAggregator):
         return f"CAGrad{c_str}"
 
 
-class _CAGradWeighting(Weighting[PSDMatrix]):
+class CAGradWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the CAGrad
-    algorithm, as defined in algorithm 1 of `Conflict-Averse Gradient Descent for Multi-task
-    Learning <https://arxiv.org/pdf/2110.14048.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.CAGrad`.
 
     :param c: The scale of the radius of the ball constraint.
     :param norm_eps: A small value to avoid division by zero when normalizing.
@@ -79,7 +64,7 @@ class _CAGradWeighting(Weighting[PSDMatrix]):
         function.
     """
 
-    def __init__(self, c: float, norm_eps: float):
+    def __init__(self, c: float, norm_eps: float = 0.0001):
         super().__init__()
 
         if c < 0.0:
