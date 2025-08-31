@@ -22,8 +22,8 @@ they have a negative inner product).
     from torch.nn.functional import cosine_similarity
     from torch.optim import SGD
 
-    from torchjd.autojac import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     def print_weights(_, __, weights: torch.Tensor) -> None:
         """Prints the extracted weights."""
