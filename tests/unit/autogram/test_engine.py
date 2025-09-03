@@ -342,7 +342,7 @@ def test_incompatible_modules(architecture: type[nn.Module]):
 @mark.parametrize("reduce_output", [True, False])
 def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_output: bool):
     """
-    Tests that the Gramian computed by then `Engine` equals to a manual computation of the expected
+    Tests that the Gramian computed by the `Engine` equals to a manual computation of the expected
     Gramian.
     """
 
