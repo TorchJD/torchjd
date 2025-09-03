@@ -17,8 +17,7 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 
 class VJP(ABC):
     """
-    Represents a VJP function for a module's forward pass with respect to its parameters using the
-    func api.
+    Represents an abstract VJP function for a module's forward pass with respect to its parameters.
 
     :params module: The module to differentiate.
     """
