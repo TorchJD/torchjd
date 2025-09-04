@@ -9,14 +9,14 @@ from utils.tensors import rand_
 from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
 
 
-def compute_quadratic_form(gramian: Tensor, vector: Tensor) -> Tensor:
+def compute_quadratic_form(generalized_gramian: Tensor, x: Tensor) -> Tensor:
     """
-    Compute the quadratic form x^T G x when the provided Gramian and vector may have multiple
+    Compute the quadratic form x^T G x when the provided generalized Gramian and x may have multiple
     dimensions.
     """
-    indices = list(range(vector.ndim))
-    linear_form = torch.tensordot(vector, gramian, dims=(indices, indices))
-    return torch.tensordot(linear_form, vector, dims=(indices[::-1], indices))
+    indices = list(range(x.ndim))
+    linear_form = torch.tensordot(x, generalized_gramian, dims=(indices, indices))
+    return torch.tensordot(linear_form, x, dims=(indices[::-1], indices))
 
 
 @mark.parametrize(
