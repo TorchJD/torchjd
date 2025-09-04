@@ -175,11 +175,30 @@ class Engine:
             )
 
     def compute_gramian(self, output: Tensor) -> Tensor:
-        """
-        Compute the Gramian of the Jacobian of ``output`` with respect the direct parameters of all
-        ``modules``.
+        r"""
+        Computes the Gramian of the Jacobian of ``output`` with respect to the direct parameters of
+        all ``modules``.
 
-        :param output: The vector to differentiate. Must be a 1-D tensor.
+        .. note::
+            This function doesn't require ``output`` to be a vector. For example, if ``output`` is
+            a matrix of shape :math:`[m_1, m_2]`, its Jacobian :math:`J` with respect to the
+            parameters will be of shape :math:`[m_1, m_2, n]`, where :math:`n` is the number of
+            parameters in the model. This is what we call a `generalized Jacobian`. The
+            corresponding Gramian :math:`G = J J^\top` will be of shape :math:`[m_1, m_2, m_2, m_1]`.
+            This is what we call a `generalized Gramian`. The number of dimensions of the returned
+            generalized Gramian will always be twice that of the ``output``.
+
+            A few examples:
+                - 0D (scalar) ``output``: 0D Gramian (this can be used to efficiently compute the
+                  norm of the gradient of ``output``).
+                - 1D (vector) ``output``: 2D Gramian (this is the standard setting of Jacobian
+                  descent).
+                - 2D (matrix) ``output``: 4D Gramian (this can happen when combining IWRM and
+                  multi-task learning, as each sample in the batch has one loss per task).
+                - etc.
+
+        :param output: The tensor of arbitrary shape to differentiate. The shape of the returned
+            Gramian depends on the shape of this output, as explained in the note above.
         """
 
         if self._batched_dim is not None:
