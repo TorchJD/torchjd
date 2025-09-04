@@ -349,14 +349,14 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
     is_batched = batch_size is not None
 
     if is_batched:
-        batched_dims = 0
+        batched_dim = 0
         input_dim = [batch_size, shape[0]]
     else:
-        batched_dims = None
+        batched_dim = None
         input_dim = [shape[0]]
 
     model = Linear(shape[0], shape[1])
-    engine = Engine([model], batched_dim=batched_dims)
+    engine = Engine([model], batched_dim=batched_dim)
 
     input = randn_(input_dim)
     output = model(input)
