@@ -199,9 +199,9 @@ class Engine:
 
         reshaped_output = ordered_output.reshape(target_shape)
 
-        flat_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
+        square_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
 
-        unordered_gramian = reshape_gramian(flat_gramian, ordered_shape)
+        unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
 
         if self._batched_dim is not None:
             gramian = movedim_gramian(unordered_gramian, [-1], [self._batched_dim])
