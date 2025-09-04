@@ -50,7 +50,7 @@ class ModuleHookManager:
             if self.gramian_accumulation_phase:
                 return output
 
-            flat_outputs, tree_spec = tree_flatten(output)
+            flat_outputs, output_spec = tree_flatten(output)
 
             if not any(isinstance(t, Tensor) for t in flat_outputs):
                 # This can happen only if a module returns no Tensor, for instance some niche usage
@@ -68,7 +68,7 @@ class ModuleHookManager:
             index = cast(int, preference.argmin().item())
             self._target_edges.register(get_gradient_edge(flat_outputs[index]))
 
-            return self._apply_jacobian_accumulator(module, args, tree_spec, flat_outputs)
+            return self._apply_jacobian_accumulator(module, args, output_spec, flat_outputs)
 
         _ = module.register_forward_hook(module_hook)
 
@@ -76,7 +76,7 @@ class ModuleHookManager:
         self,
         module: nn.Module,
         args: PyTree,
-        tree_spec: TreeSpec,
+        output_spec: TreeSpec,
         flat_outputs: list[Tensor],
     ) -> PyTree:
 
@@ -90,7 +90,7 @@ class ModuleHookManager:
             @staticmethod
             def forward(*flat_grad_outputs: Tensor) -> None:
                 # There is no non-batched dimension
-                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+                grad_outputs = tree_unflatten(flat_grad_outputs, output_spec)
                 jacobians = vjp(grad_outputs, args)
                 self._gramian_accumulator.accumulate_path_jacobians(
                     {
@@ -104,9 +104,9 @@ class ModuleHookManager:
             @staticmethod
             def vmap(_, in_dims: PyTree, *flat_jac_outputs: Tensor) -> tuple[None, None]:
                 # There is a non-batched dimension
-                jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
+                jac_outputs = tree_unflatten(flat_jac_outputs, output_spec)
                 # We do not vmap over the args for the non-batched dimension
-                in_dims = (tree_unflatten(in_dims, tree_spec), tree_map(lambda _: None, args))
+                in_dims = (tree_unflatten(in_dims, output_spec), tree_map(lambda _: None, args))
                 jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
                 self._gramian_accumulator.accumulate_path_jacobians(
                     {
@@ -150,4 +150,4 @@ class ModuleHookManager:
 
                 return flat_grad_outputs
 
-        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
+        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), output_spec)
