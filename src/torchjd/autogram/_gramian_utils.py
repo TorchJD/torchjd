@@ -11,6 +11,10 @@ def reshape_gramian(gramian: Tensor, shape: list[int]) -> Tensor:
         `shape + shape[::-1]`.
     """
 
+    # Example: `gramian` of shape [24, 24] and `shape` of [4, 3, 2]:
+    # - The `unordered_gramian` will be of shape [4, 3, 2, 4, 3, 2]
+    # - The returned gramian will be of shape [4, 3, 2, 2, 3, 4]
+
     target_ndim = len(shape)
     unordered_shape = shape + shape
     unordered_gramian = gramian.reshape(unordered_shape)
