@@ -102,7 +102,7 @@ class AutogradVJP(VJP):
     def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
         super().__init__(module)
         self.outputs = outputs
-        self.parameters, self.tree_spec = tree_flatten(dict(self.named_parameters))
+        self.parameters, self.tree_spec = tree_flatten(self.named_parameters)
 
     def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
