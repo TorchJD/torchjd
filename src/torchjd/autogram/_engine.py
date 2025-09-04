@@ -58,9 +58,10 @@ class Engine:
 
     :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
         to the Gramian of the Jacobian.
-    :param is_batched: If a dimension is batched, then many intermediary jacobians are block
-        diagonal, which allows for a substancial memory optimization by backpropagating a squashed
-        Jacobian instead. If the only dimension of the losses vector is batched. Default to True.
+    :param batched_dim: If the modules work with batches and process each batch element
+        independently, then many intermediary jacobians are sparse (block-diagonal), which allows
+        for a substancial memory optimization by backpropagating a squashed Jacobian instead. This
+        parameter indicates the batch dimension, if any. Defaults to None.
 
     .. admonition::
         Example
