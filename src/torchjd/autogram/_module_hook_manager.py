@@ -102,7 +102,7 @@ class ModuleHookManager:
                 )
 
             @staticmethod
-            def vmap(_, in_dims, *flat_jac_outputs: Tensor) -> tuple[None, None]:
+            def vmap(_, in_dims: PyTree, *flat_jac_outputs: Tensor) -> tuple[None, None]:
                 # There is a non-batched dimension
                 jac_outputs = tree_unflatten(flat_jac_outputs, tree_spec)
                 # We do not vmap over the args for the non-batched dimension
