@@ -136,7 +136,7 @@ def test_iwrm():
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)
         weighting = UPGradWeighting()
-        engine = Engine(model.modules(), 0)
+        engine = Engine(model.modules(), batched_dim=0)
 
         for x, y in zip(X, Y):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
@@ -325,7 +325,7 @@ def test_partial_jd():
 
     # Create the autogram engine that will compute the Gramian of the
     # Jacobian with respect to the two last Linear layers' parameters.
-    engine = Engine(model[2:].modules(), 0)
+    engine = Engine(model[2:].modules(), batched_dim=0)
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)

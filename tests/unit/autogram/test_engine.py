@@ -175,7 +175,7 @@ def test_equivalence_autojac_autogram(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules(), 0)
+    engine = Engine(model_autogram.modules(), batched_dim=0)
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
@@ -241,7 +241,7 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model_autogram = architecture().to(device=DEVICE)
 
     # Hook modules and verify that we're equivalent to autojac when using the engine
-    engine = Engine(model_autogram.modules(), 0)
+    engine = Engine(model_autogram.modules(), batched_dim=0)
     torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
@@ -315,7 +315,7 @@ def test_partial_autogram(weighting: Weighting, gramian_module_names: set[str]):
     expected_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
     model.zero_grad()
 
-    engine = Engine(gramian_modules, 0)
+    engine = Engine(gramian_modules, batched_dim=0)
 
     output = model(input)
     losses = loss_fn(output)
@@ -334,7 +334,7 @@ def test_incompatible_modules(architecture: type[nn.Module]):
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
-        _ = Engine(model.modules(), 0)
+        _ = Engine(model.modules(), batched_dim=0)
 
 
 @mark.parametrize("shape", [(1, 3), (7, 15), (27, 15)])
@@ -356,7 +356,7 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
         input_dim = [shape[0]]
 
     model = Linear(shape[0], shape[1])
-    engine = Engine([model], batched_dims)
+    engine = Engine([model], batched_dim=batched_dims)
 
     input = randn_(input_dim)
     output = model(input)
@@ -515,7 +515,7 @@ def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
     output_size = input_size
 
     model = Linear(input_size, output_size)
-    engine1 = Engine([model], batched_dim)
+    engine1 = Engine([model], batched_dim=batched_dim)
     engine2 = Engine([model])
 
     input = randn_([batch_size, input_size])
