@@ -159,8 +159,11 @@ class Engine:
         if self._batched_dim is not None and isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
             raise ValueError(
                 f"Found a module of type {type(module)}, which is incompatible with the autogram "
-                f"engine. The incompatible module types are {_INCOMPATIBLE_MODULE_TYPES} (and their"
-                " subclasses)."
+                f"engine when `batched_dim` is not `None`. The incompatible module types are "
+                f"{_INCOMPATIBLE_MODULE_TYPES} (and their subclasses). The recommended fix is to "
+                f"replace incompatible layers by something else (e.g. BatchNorm by InstanceNorm), "
+                f"but if you really can't and performance not a priority, you may also just set"
+                f"`batch_dim=None` when creating the engine."
             )
 
         if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
