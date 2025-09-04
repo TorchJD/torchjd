@@ -180,8 +180,6 @@ class Engine:
         ``modules``.
 
         :param output: The vector to differentiate. Must be a 1-D tensor.
-        :param grad_output: The tangents for the differentiation. Default to a vector of 1s of the
-            same shape as `output`.
         """
 
         if self._batched_dim is not None:
