@@ -95,14 +95,8 @@ class ModuleHookManager:
                 # There is no non-batched dimension
                 grad_outputs = tree_unflatten(flat_grad_outputs, output_spec)
                 jacobians = vjp(grad_outputs, args)
-                self._gramian_accumulator.accumulate_path_jacobians(
-                    {
-                        module.get_parameter(param_name): jacobian.reshape(
-                            [-1] + list(module.get_parameter(param_name).shape)
-                        )
-                        for param_name, jacobian in jacobians.items()
-                    }
-                )
+                path_jacobians = AccumulateJacobian._make_path_jacobians(jacobians)
+                self._gramian_accumulator.accumulate_path_jacobians(path_jacobians)
 
             @staticmethod
             def vmap(_, in_dims: PyTree, *flat_jac_outputs: Tensor) -> tuple[None, None]:
@@ -111,15 +105,18 @@ class ModuleHookManager:
                 # We do not vmap over the args for the non-batched dimension
                 in_dims = (tree_unflatten(in_dims, output_spec), tree_map(lambda _: None, args))
                 jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
-                self._gramian_accumulator.accumulate_path_jacobians(
-                    {
-                        module.get_parameter(param_name): jacobian.reshape(
-                            [-1] + list(module.get_parameter(param_name).shape)
-                        )
-                        for param_name, jacobian in jacobians.items()
-                    }
-                )
+                path_jacobians = AccumulateJacobian._make_path_jacobians(jacobians)
+                self._gramian_accumulator.accumulate_path_jacobians(path_jacobians)
                 return None, None
+
+            @staticmethod
+            def _make_path_jacobians(jacobians: dict[str, Tensor]) -> dict[Tensor, Tensor]:
+                path_jacobians: dict[Tensor, Tensor] = {}
+                for param_name, jacobian in jacobians.items():
+                    key = module.get_parameter(param_name)
+                    value = jacobian.reshape([-1] + list(key.shape))
+                    path_jacobians[key] = value
+                return path_jacobians
 
             @staticmethod
             def setup_context(*_):
