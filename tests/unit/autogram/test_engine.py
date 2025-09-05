@@ -473,6 +473,11 @@ def test_reshape_equivariance(shape: list[int]):
         ([50, 2, 2, 3], [0, 2], [1, 0]),
         ([60, 3, 2, 5], [1], [2]),
         ([30, 6, 7], [0, 1], [1, 0]),
+        ([3, 2], [0], [0]),
+        ([3], [], []),
+        ([3, 2, 1], [1, 0], [0, 1]),
+        ([4, 3, 2], [], []),
+        ([1, 1, 1], [1, 0], [0, 1]),
     ],
 )
 def test_movedim_equivariance(shape: list[int], source: list[int], destination: list[int]):
