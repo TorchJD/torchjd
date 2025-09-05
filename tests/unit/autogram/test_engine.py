@@ -430,6 +430,14 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
         [1, 2, 2, 3],
         [7, 3, 2, 5],
         [27, 6, 7],
+        [3, 2, 1, 1],
+        [3, 2, 1],
+        [3, 2],
+        [3],
+        [1, 1, 1, 1],
+        [1, 1, 1],
+        [1, 1],
+        [1],
     ],
 )
 def test_reshape_equivariance(shape: list[int]):
