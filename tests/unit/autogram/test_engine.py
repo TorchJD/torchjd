@@ -355,7 +355,7 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
         batched_dim = None
         input_dim = [shape[0]]
 
-    model = Linear(shape[0], shape[1])
+    model = Linear(shape[0], shape[1]).to(device=DEVICE)
     engine = Engine([model], batched_dim=batched_dim)
 
     input = randn_(input_dim)
@@ -450,7 +450,7 @@ def test_reshape_equivariance(shape: list[int]):
     input_size = shape[0]
     output_size = prod(shape[1:])
 
-    model = Linear(input_size, output_size)
+    model = Linear(input_size, output_size).to(device=DEVICE)
     engine1 = Engine([model])
     engine2 = Engine([model])
 
@@ -490,7 +490,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     input_size = shape[0]
     output_size = prod(shape[1:])
 
-    model = Linear(input_size, output_size)
+    model = Linear(input_size, output_size).to(device=DEVICE)
     engine1 = Engine([model])
     engine2 = Engine([model])
 
@@ -533,7 +533,7 @@ def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
     batch_size = shape[batched_dim]
     output_size = input_size
 
-    model = Linear(input_size, output_size)
+    model = Linear(input_size, output_size).to(device=DEVICE)
     engine1 = Engine([model], batched_dim=batched_dim)
     engine2 = Engine([model])
 
