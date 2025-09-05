@@ -514,6 +514,12 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
         ([3, 2, 5], 1),
         ([6, 3], 0),
         ([4, 3, 2], 1),
+        ([1, 1, 1], 0),
+        ([1, 1, 1], 1),
+        ([1, 1, 1], 2),
+        ([1, 1], 0),
+        ([1], 0),
+        ([4, 3, 1], 2),
     ],
 )
 def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
