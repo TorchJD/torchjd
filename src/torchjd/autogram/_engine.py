@@ -190,7 +190,7 @@ class Engine:
 
             A few examples:
                 - 0D (scalar) ``output``: 0D Gramian (this can be used to efficiently compute the
-                  norm of the gradient of ``output``).
+                  squared norm of the gradient of ``output``).
                 - 1D (vector) ``output``: 2D Gramian (this is the standard setting of Jacobian
                   descent).
                 - 2D (matrix) ``output``: 4D Gramian (this can happen when combining IWRM and
