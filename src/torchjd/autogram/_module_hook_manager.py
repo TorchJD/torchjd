@@ -4,6 +4,7 @@ import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
 from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
+from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
@@ -37,6 +38,7 @@ class ModuleHookManager:
         self._gramian_accumulator = gramian_accumulator
         self._has_batch_dim = has_batch_dim
         self.gramian_accumulation_phase = False
+        self._handles: list[TorchRemovableHandle] = []
 
     def hook_module(self, module: nn.Module) -> None:
         """
@@ -70,7 +72,8 @@ class ModuleHookManager:
 
             return self._apply_jacobian_accumulator(module, args, output_spec, flat_outputs)
 
-        _ = module.register_forward_hook(module_hook)
+        handle = module.register_forward_hook(module_hook)
+        self._handles.append(handle)
 
     def _apply_jacobian_accumulator(
         self,
