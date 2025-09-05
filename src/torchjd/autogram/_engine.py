@@ -218,6 +218,11 @@ class Engine:
             target_shape = [-1] + target_shape
 
         reshaped_output = ordered_output.reshape(target_shape)
+        # There are four different cases for the shape of reshaped_output:
+        # - Not batched and not non-batched: scalar of shape []
+        # - Batched only: vector of shape [batch_size]
+        # - Non-batched only: vector of shape [dim]
+        # - Batched and non-batched: matrix of shape [dim, batch_size]
 
         square_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
 
