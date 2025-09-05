@@ -29,16 +29,26 @@ def movedim_gramian(gramian: Tensor, source: list[int], destination: list[int]) 
     Gramian is quadratic form, moving dimension must be done simultaneously on the first half of the
     dimensions and on the second half of the dimensions reversed.
     :param gramian: Gramian to reshape.
-    :param source: Source dimensions, should be in the range [0, gramian.ndim/2]. Should be unique
-    :param destination: Destination dimensions, should be in the range [0, gramian.ndim/2]. Should
-        be unique and should have the same size as `source`.
+    :param source: Source dimensions, that should be in the range
+        [-gramian.ndim//2, gramian.ndim//2[. Its elements should be unique.
+    :param destination: Destination dimensions, that should be in the range
+        [-gramian.ndim//2, gramian.ndim//2[. It should have the same size as `source`, and its
+        elements should be unique.
     """
 
-    length = gramian.ndim // 2
-    source = [i if 0 <= i else i + length for i in source]
-    destination = [i if 0 <= i else i + length for i in destination]
+    # Example: `gramian` of shape [4, 3, 2, 2, 3, 4], `source` of [-2, 2] and destination of [0, 1]:
+    # - `source_` will be [1, 2] and `destination_` will be [0, 1]
+    # - `mirrored_source` will be [1, 2, 4, 3] and `mirrored_destination` will be [0, 1, 5, 4]
+    # - The `moved_gramian` will be of shape [3, 2, 4, 4, 2, 3]
 
-    last_index = gramian.ndim - 1
-    source_dims = source + [last_index - i for i in source]
-    destination_dims = destination + [last_index - i for i in destination]
-    return gramian.movedim(source_dims, destination_dims)
+    # Map everything to the range [0, gramian.ndim//2[
+    length = gramian.ndim // 2
+    source_ = [i if 0 <= i else i + length for i in source]
+    destination_ = [i if 0 <= i else i + length for i in destination]
+
+    # Mirror the source and destination and use the result to move the dimensions of the gramian
+    last_dim = gramian.ndim - 1
+    mirrored_source = source_ + [last_dim - i for i in source_]
+    mirrored_destination = destination_ + [last_dim - i for i in destination_]
+    moved_gramian = gramian.movedim(mirrored_source, mirrored_destination)
+    return moved_gramian
