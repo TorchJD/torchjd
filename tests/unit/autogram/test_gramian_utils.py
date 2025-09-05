@@ -25,6 +25,13 @@ def compute_quadratic_form(generalized_gramian: Tensor, x: Tensor) -> Tensor:
         [50, 2, 2, 3],
         [60, 3, 2, 5],
         [30, 6, 7],
+        [4, 3, 1],
+        [4, 1, 1],
+        [1, 1, 1],
+        [4, 1],
+        [4],
+        [1, 1],
+        [1],
     ],
 )
 def test_quadratic_form_invariance_to_reshape(shape: list[int]):
