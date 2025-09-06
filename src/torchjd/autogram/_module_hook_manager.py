@@ -94,8 +94,8 @@ class ModuleHookManager:
             def forward(*flat_grad_outputs: Tensor) -> None:
                 # There is no non-batched dimension
                 grad_outputs = tree_unflatten(flat_grad_outputs, output_spec)
-                jacobians = vjp(grad_outputs, args)
-                path_jacobians = AccumulateJacobian._make_path_jacobians(jacobians)
+                generalized_jacobians = vjp(grad_outputs, args)
+                path_jacobians = AccumulateJacobian._make_path_jacobians(generalized_jacobians)
                 self._gramian_accumulator.accumulate_path_jacobians(path_jacobians)
 
             @staticmethod
@@ -104,18 +104,20 @@ class ModuleHookManager:
                 jac_outputs = tree_unflatten(flat_jac_outputs, output_spec)
                 # We do not vmap over the args for the non-batched dimension
                 in_dims = (tree_unflatten(in_dims, output_spec), tree_map(lambda _: None, args))
-                jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
-                path_jacobians = AccumulateJacobian._make_path_jacobians(jacobians)
+                generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
+                path_jacobians = AccumulateJacobian._make_path_jacobians(generalized_jacobians)
                 self._gramian_accumulator.accumulate_path_jacobians(path_jacobians)
                 return None, None
 
             @staticmethod
-            def _make_path_jacobians(jacobians: dict[str, Tensor]) -> dict[Tensor, Tensor]:
+            def _make_path_jacobians(
+                generalized_jacobians: dict[str, Tensor],
+            ) -> dict[Tensor, Tensor]:
                 path_jacobians: dict[Tensor, Tensor] = {}
-                for param_name, jacobian in jacobians.items():
+                for param_name, generalized_jacobian in generalized_jacobians.items():
                     key = module.get_parameter(param_name)
-                    value = jacobian.reshape([-1] + list(key.shape))
-                    path_jacobians[key] = value
+                    jacobian = generalized_jacobian.reshape([-1] + list(key.shape))
+                    path_jacobians[key] = jacobian
                 return path_jacobians
 
             @staticmethod
