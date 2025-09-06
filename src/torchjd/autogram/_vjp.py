@@ -98,13 +98,15 @@ class AutogradVJP(VJP):
     def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
         super().__init__(module)
         self.outputs = outputs
+        self.mask = [output.requires_grad for output in self.outputs]
         self.trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
     def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
+        flat_grad_outputs = tree_flatten(grad_outputs)[0]
         grads = torch.autograd.grad(
-            self.outputs,
+            [t for t, requires_grad in zip(self.outputs, self.mask) if requires_grad],
             self.trainable_params,
-            tree_flatten(grad_outputs)[0],
+            [t for t, requires_grad in zip(flat_grad_outputs, self.mask) if requires_grad],
             retain_graph=True,
             allow_unused=True,
             materialize_grads=True,
