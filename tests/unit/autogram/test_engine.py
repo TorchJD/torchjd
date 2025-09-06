@@ -154,11 +154,13 @@ WEIGHTINGS = [weighting for _, weighting in AGGREGATORS_AND_WEIGHTINGS]
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 @mark.parametrize(["aggregator", "weighting"], AGGREGATORS_AND_WEIGHTINGS)
+@mark.parametrize("batched_engine", [False, True])
 def test_equivalence_autojac_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
     aggregator: Aggregator,
     weighting: Weighting,
+    batched_engine: bool,
 ):
     """
     Tests that the autogram engine gives the same results as the autojac engine on IWRM for several
@@ -175,7 +177,7 @@ def test_equivalence_autojac_autogram(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules(), batched_dim=0)
+    engine = Engine(model_autogram.modules(), batched_dim=0 if batched_engine else None)
     optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
