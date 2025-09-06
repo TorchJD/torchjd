@@ -204,7 +204,7 @@ class Engine:
 
         if self._batched_dim is not None:
             # move batched dim to the end
-            ordered_output = torch.movedim(output, self._batched_dim, -1)
+            ordered_output = output.movedim(self._batched_dim, -1)
             ordered_shape = list(ordered_output.shape)
             has_non_batched_dim = len(ordered_shape) > 1
             target_shape = [ordered_shape[-1]]
