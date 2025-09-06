@@ -24,7 +24,9 @@ class VJP(ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        self.named_parameters = dict(module.named_parameters(recurse=False))
+        named_parameters = dict(module.named_parameters(recurse=False))
+        self.trainable_params = {k: v for k, v in named_parameters.items() if v.requires_grad}
+        self.frozen_params = {k: v for k, v in named_parameters.items() if not v.requires_grad}
 
     @abstractmethod
     def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
@@ -73,22 +75,16 @@ class FunctionalVJP(VJP):
         :param inputs: Fixed inputs to the module for the VJP computation.
         :returns: VJP function that takes cotangents and returns parameter gradients.
         """
-        requires_grad_named_params = {
-            k: v for k, v in self.named_parameters.items() if v.requires_grad
-        }
-        no_requires_grad_named_params = {
-            k: v for k, v in self.named_parameters.items() if not v.requires_grad
-        }
 
         def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
             all_state = {
                 **primals,
                 **dict(self.module.named_buffers()),
-                **no_requires_grad_named_params,
+                **self.frozen_params,
             }
             return torch.func.functional_call(self.module, all_state, inputs)
 
-        return torch.func.vjp(functional_model_call, requires_grad_named_params)[1]
+        return torch.func.vjp(functional_model_call, self.trainable_params)[1]
 
 
 class AutogradVJP(VJP):
@@ -102,10 +98,10 @@ class AutogradVJP(VJP):
     def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
         super().__init__(module)
         self.outputs = outputs
-        self.parameters, self.param_spec = tree_flatten(self.named_parameters)
+        self.trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
     def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
-            self.outputs, self.parameters, tree_flatten(grad_outputs)[0], retain_graph=True
+            self.outputs, self.trainable_params, tree_flatten(grad_outputs)[0], retain_graph=True
         )
         return tree_unflatten(grads, self.param_spec)
