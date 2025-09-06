@@ -102,6 +102,11 @@ class AutogradVJP(VJP):
 
     def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
-            self.outputs, self.trainable_params, tree_flatten(grad_outputs)[0], retain_graph=True
+            self.outputs,
+            self.trainable_params,
+            tree_flatten(grad_outputs)[0],
+            retain_graph=True,
+            allow_unused=True,
+            materialize_grads=True,
         )
         return tree_unflatten(grads, self.param_spec)
