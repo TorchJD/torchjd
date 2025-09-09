@@ -108,6 +108,8 @@ class ModuleHookManager:
             toggle mechanism to activate only during the Gramian accumulation phase.
             """
 
+            generate_vmap_rule = True
+
             @staticmethod
             def forward(*xs: Tensor) -> tuple[Tensor, ...]:
                 return tuple([x.detach() for x in xs])
