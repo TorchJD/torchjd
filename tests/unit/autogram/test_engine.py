@@ -4,7 +4,7 @@ from math import prod
 import pytest
 import torch
 from pytest import mark, param
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import Linear
 from torch.optim import SGD
 from torch.testing import assert_close
@@ -60,7 +60,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_tensors, ones_, randn_, zeros_
 
-from torchjd.aggregation import UPGrad, UPGradWeighting
+from torchjd.aggregation import GeneralizedWeighting, UPGrad, UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
 from torchjd.autojac._transform import Diagonalize, Init, Jac, OrderedSet
@@ -507,3 +507,22 @@ def test_batched_non_batched_equivalence(shape: list[int], batched_dim: int):
     gramian2 = engine2.compute_gramian(output)
 
     assert_close(gramian1, gramian2)
+
+
+class FakeGeneralizedWeighting(GeneralizedWeighting):
+    """
+    Fake GeneralizedWeighting flattening the Gramian and using UPGradWeighting on it. Could be
+    removed when we implement a proper FlatteningGeneralizedWeighting."""
+
+    def __init__(self):
+        super().__init__()
+        self.weighting = UPGradWeighting()
+
+    def forward(self, generalized_gramian: Tensor) -> Tensor:
+        k = generalized_gramian.ndim // 2
+        shape = generalized_gramian.shape[:k]
+        m = prod(shape)
+        square_gramian = reshape_gramian(generalized_gramian, [m])
+        weights_vector = self.weighting(square_gramian)
+        weights = weights_vector.reshape(shape)
+        return weights
