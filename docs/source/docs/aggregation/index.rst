@@ -17,6 +17,11 @@ Abstract base classes
     :undoc-members:
     :exclude-members: forward
 
+.. autoclass:: torchjd.aggregation.GeneralizedWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward
+
 
 .. toctree::
     :hidden:

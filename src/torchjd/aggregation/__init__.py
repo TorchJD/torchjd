@@ -55,7 +55,7 @@ from ._upgrad import UPGrad, UPGradWeighting
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
-from ._weighting_bases import Weighting
+from ._weighting_bases import GeneralizedWeighting, Weighting
 
 try:
     from ._cagrad import CAGrad, CAGradWeighting
