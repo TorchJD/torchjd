@@ -1,3 +1,5 @@
+from math import prod
+
 from torch import Tensor
 
 
@@ -16,11 +18,18 @@ def reshape_gramian(gramian: Tensor, shape: list[int]) -> Tensor:
     # - The `last_dims` will be [3, 4, 5] and `last_dims[::-1]` will be [5, 4, 3]
     # - The `reordered_gramian` will be of shape [4, 3, 2, 2, 3, 4]
 
-    target_ndim = len(shape)
-    unordered_gramian = gramian.reshape(shape + shape)
-    last_dims = [target_ndim + i for i in range(target_ndim)]
-    reordered_gramian = unordered_gramian.movedim(last_dims, last_dims[::-1])
-    return reordered_gramian
+    automatic_dimensions = [i for i in range(len(shape)) if shape[i] == -1]
+    if len(automatic_dimensions) == 1:
+        index = automatic_dimensions[0]
+        current_shape = gramian.shape[: len(gramian.shape) // 2]
+        numel = prod(current_shape)
+        specified_numel = -prod(shape)  # shape[index] == -1, this is the product of all other dims
+        shape[index] = numel // specified_numel
+
+    unordered_intput_gramian = _revert_last_dims(gramian)
+    unordered_output_gramian = unordered_intput_gramian.reshape(shape + shape)
+    reordered_output_gramian = _revert_last_dims(unordered_output_gramian)
+    return reordered_output_gramian
 
 
 def movedim_gramian(gramian: Tensor, source: list[int], destination: list[int]) -> Tensor:
@@ -52,3 +61,9 @@ def movedim_gramian(gramian: Tensor, source: list[int], destination: list[int]) 
     mirrored_destination = destination_ + [last_dim - i for i in destination_]
     moved_gramian = gramian.movedim(mirrored_source, mirrored_destination)
     return moved_gramian
+
+
+def _revert_last_dims(generalized_gramian: Tensor) -> Tensor:
+    input_ndim = len(generalized_gramian.shape) // 2
+    last_dims = [input_ndim + i for i in range(input_ndim)]
+    return generalized_gramian.movedim(last_dims, last_dims[::-1])
