@@ -36,6 +36,27 @@ tensor([0.2929, 1.9004, 1.9004])
 >>> weights = weighting(gramian)
 >>> weights
 tensor([1.1109, 0.7894])
+
+When dealing with a more general tensor of objectives, of shape ``[m_1, ..., m_k]`` (i.e. not
+necessarily a simple vector), the Jacobian will be of shape ``[m_1, ..., m_k, n]``, and its Gramian
+will be called a `generalized Gramian`, of shape ``[m_1, ..., m_k, m_k, ..., m_1]``. One can use a
+:class:`GeneralizedWeighting<torchjd.aggregation._weighting_bases.GeneralizedWeighting>` to extract
+a tensor of weights (of shape ``[m_1, ..., m_k]``) from such a generalized Gramian. The simplest
+:class:`GeneralizedWeighting<torchjd.aggregation._weighting_bases.GeneralizedWeighting>` is
+:class:`Flattening<torchjd.aggregation._flattening.Flattening>`: it simply "flattens" the
+generalized Gramian into a square matrix, applies a normal weighting to it to obtain a vector of
+weights, and returns the reshaped tensor of weights.
+
+>>> from torch import ones
+>>> from torchjd.aggregation import Flattening, UPGradWeighting
+>>>
+>>> weighting = Flattening(UPGradWeighting())
+>>> # Generate a generalized Gramian filled with ones, for the sake of the example
+>>> generalized_gramian = ones((2, 3, 3, 2))
+>>> weights = weighting(generalized_gramian)
+>>> weights
+tensor([[0.1667, 0.1667, 0.1667],
+        [0.1667, 0.1667, 0.1667]])
 """
 
 from ._aggregator_bases import Aggregator
