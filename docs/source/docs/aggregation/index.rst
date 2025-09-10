@@ -33,6 +33,7 @@ Abstract base classes
     config.rst
     constant.rst
     dualproj.rst
+    flattening.rst
     graddrop.rst
     imtl_g.rst
     krum.rst
