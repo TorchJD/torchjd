@@ -20,7 +20,8 @@ of weights from the Gramian of the Jacobian. The
 :class:`Aggregators <torchjd.aggregation._aggregator_bases.Aggregator>` and :class:`Weightings
 <torchjd.aggregation._weighting_bases.Weighting>` are callables that take a Jacobian matrix or a
 Gramian matrix as inputs, respectively. The following example shows how to use UPGrad to either
-aggregate a Jacobian or obtain the weights from the Gramian of the Jacobian.
+aggregate a Jacobian (of shape ``[m, n]``, where ``m`` is the number of objectives and ``n`` is the
+number of parameters), or obtain the weights from the Gramian of the Jacobian (of shape ``[m, m]``).
 
 >>> from torch import tensor
 >>> from torchjd.aggregation import UPGrad, UPGradWeighting
