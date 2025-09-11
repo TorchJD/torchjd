@@ -11,15 +11,14 @@ def reshape_gramian(gramian: Tensor, shape: list[int]) -> Tensor:
         `shape + shape[::-1]`.
     """
 
-    # Example: `gramian` of shape [24, 24] and `shape` of [4, 3, 2]:
-    # - The `unordered_gramian` will be of shape [4, 3, 2, 4, 3, 2]
-    # - The `last_dims` will be [3, 4, 5] and `last_dims[::-1]` will be [5, 4, 3]
-    # - The `reordered_gramian` will be of shape [4, 3, 2, 2, 3, 4]
+    # Example 1: `gramian` of shape [4, 3, 2, 2, 3, 4] and `shape` of [8, 3]:
+    # [4, 3, 2, 2, 3, 4] -(movedim)-> [4, 3, 2, 4, 3, 2] -(reshape)-> [8, 3, 8, 3] -(movedim)->
+    # [8, 3, 3, 8]
+    #
+    # Example 2: `gramian` of shape [24, 24] and `shape` of [4, 3, 2]:
+    # [24, 24] -(movedim)-> [24, 24] -(reshape)-> [4, 3, 2, 4, 3, 2] -(movedim)-> [4, 3, 2, 2, 3, 4]
 
-    unordered_intput_gramian = _revert_last_dims(gramian)
-    unordered_output_gramian = unordered_intput_gramian.reshape(shape + shape)
-    reordered_output_gramian = _revert_last_dims(unordered_output_gramian)
-    return reordered_output_gramian
+    return _revert_last_dims(_revert_last_dims(gramian).reshape(shape + shape))
 
 
 def movedim_gramian(gramian: Tensor, source: list[int], destination: list[int]) -> Tensor:
