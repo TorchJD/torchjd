@@ -324,24 +324,31 @@ def test_iwmtl():
         *task2_module.parameters(),
     ]
 
-    loss_fn = MSELoss(reduction="none")
     optimizer = SGD(params, lr=0.1)
+    mse = MSELoss(reduction="none")
     weighting = Flattening(UPGradWeighting())
-    engine = Engine(shared_module.modules(), batched_dim=1)
+    engine = Engine(shared_module.modules(), batched_dim=0)
 
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16)  # 8 batches of 16 targets for the second task
 
     for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
-        features = shared_module(input)
-        output1 = task1_module(features).squeeze(1)
-        output2 = task2_module(features).squeeze(1)
-        losses = torch.stack([loss_fn(output1, target1), loss_fn(output2, target2)])
-        gramian = engine.compute_gramian(losses)
-        weights = weighting(gramian)
+        features = shared_module(input)  # shape: [16, 3]
+        out1 = task1_module(features).squeeze(1)  # shape: [16]
+        out2 = task2_module(features).squeeze(1)  # shape: [16]
+
+        # Compute the matrix of losses: one loss per element of the batch and per task
+        losses = torch.stack([mse(out1, target1), mse(out2, target2)], dim=1)  # shape: [16, 2]
+
+        # Compute the gramian (inner products between pairs of gradients of the losses)
+        gramian = engine.compute_gramian(losses)  # shape: [16, 2, 2, 16]
+
+        # Obtain the weights that lead to no conflict between reweighted gradients
+        weights = weighting(gramian)  # shape [16, 2]
 
         optimizer.zero_grad()
+        # Do the standard backward pass, but weighted using the obtained weights
         losses.backward(weights)
         optimizer.step()
 
