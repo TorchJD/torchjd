@@ -1,5 +1,3 @@
-from math import prod
-
 from torch import Tensor
 
 
@@ -17,14 +15,6 @@ def reshape_gramian(gramian: Tensor, shape: list[int]) -> Tensor:
     # - The `unordered_gramian` will be of shape [4, 3, 2, 4, 3, 2]
     # - The `last_dims` will be [3, 4, 5] and `last_dims[::-1]` will be [5, 4, 3]
     # - The `reordered_gramian` will be of shape [4, 3, 2, 2, 3, 4]
-
-    automatic_dimensions = [i for i in range(len(shape)) if shape[i] == -1]
-    if len(automatic_dimensions) == 1:
-        index = automatic_dimensions[0]
-        current_shape = gramian.shape[: len(gramian.shape) // 2]
-        numel = prod(current_shape)
-        specified_numel = -prod(shape)  # shape[index] == -1, this is the product of all other dims
-        shape[index] = numel // specified_numel
 
     unordered_intput_gramian = _revert_last_dims(gramian)
     unordered_output_gramian = unordered_intput_gramian.reshape(shape + shape)
