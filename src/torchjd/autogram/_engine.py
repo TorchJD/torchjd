@@ -194,8 +194,9 @@ class Engine:
                   squared norm of the gradient of ``output``).
                 - 1D (vector) ``output``: 2D Gramian (this is the standard setting of Jacobian
                   descent).
-                - 2D (matrix) ``output``: 4D Gramian (this can happen when combining IWRM and
-                  multi-task learning, as each sample in the batch has one loss per task).
+                - 2D (matrix) ``output``: 4D Gramian (this can be used for :doc:`Instance-Wise
+                  Multi-Task Learning (IWMTL) <../../examples/iwmtl>`, as each sample in the batch
+                  has one loss per task).
                 - etc.
 
         :param output: The tensor of arbitrary shape to differentiate. The shape of the returned
