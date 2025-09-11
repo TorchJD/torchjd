@@ -345,7 +345,7 @@ def test_iwmtl():
         gramian = engine.compute_gramian(losses)  # shape: [16, 2, 2, 16]
 
         # Obtain the weights that lead to no conflict between reweighted gradients
-        weights = weighting(gramian)  # shape [16, 2]
+        weights = weighting(gramian)  # shape: [16, 2]
 
         optimizer.zero_grad()
         # Do the standard backward pass, but weighted using the obtained weights
