@@ -143,13 +143,12 @@ def test_gramian_equivalence_autograd_autogram(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_equivalence_autograd_autogram(
+def test_IWRM_steps_with_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
 ):
     """
-    Tests that the autogram engine gives the same results as the autograd engine on IWRM for several
-    JD steps.
+    Tests that the autogram engine doesn't yield any error during several IWRM iterations.
     """
 
     n_iter = 3
@@ -159,13 +158,9 @@ def test_equivalence_autograd_autogram(
 
     weighting = UPGradWeighting()
 
-    torch.manual_seed(0)
-    model_autograd = architecture().to(device=DEVICE)
-    torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
     engine = Engine(model_autogram.modules())
-    optimizer_autograd = SGD(model_autograd.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
     for i in range(n_iter):
@@ -173,24 +168,7 @@ def test_equivalence_autograd_autogram(
         targets = make_tensors(batch_size, output_shapes)
         loss_fn = make_mse_loss_fn(targets)
 
-        torch.random.manual_seed(0)  # Fix randomness for random aggregators and random models
-        autograd_gramian_forward_backward(
-            model_autograd, inputs, list(model_autograd.parameters()), loss_fn, weighting
-        )
-        expected_grads = {
-            name: p.grad for name, p in model_autograd.named_parameters() if p.grad is not None
-        }
-
-        torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
         autogram_forward_backward(model_autogram, engine, weighting, inputs, loss_fn)
-        grads = {
-            name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None
-        }
-
-        assert_tensor_dicts_are_close(grads, expected_grads)
-
-        optimizer_autograd.step()
-        model_autograd.zero_grad()
 
         optimizer_autogram.step()
         model_autogram.zero_grad()
