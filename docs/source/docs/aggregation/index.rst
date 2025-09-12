@@ -17,6 +17,11 @@ Abstract base classes
     :undoc-members:
     :exclude-members: forward
 
+.. autoclass:: torchjd.aggregation.GeneralizedWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward
+
 
 .. toctree::
     :hidden:
@@ -28,6 +33,7 @@ Abstract base classes
     config.rst
     constant.rst
     dualproj.rst
+    flattening.rst
     graddrop.rst
     imtl_g.rst
     krum.rst
