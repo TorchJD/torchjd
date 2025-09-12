@@ -247,8 +247,6 @@ def test_partial_autogram(gramian_module_names: set[str]):
     architecture = SimpleBranched
     batch_size = 64
 
-    weighting = UPGradWeighting()
-
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
@@ -267,23 +265,16 @@ def test_partial_autogram(gramian_module_names: set[str]):
     for m in gramian_modules:
         gramian_params += list(m.parameters())
 
-    gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
+    autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
     torch.manual_seed(0)
-    losses.backward(weighting(gramian))
-
-    expected_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
-    model.zero_grad()
 
     engine = Engine(gramian_modules)
 
     output = model(input)
     losses = loss_fn(output)
     gramian = engine.compute_gramian(losses)
-    torch.manual_seed(0)
-    losses.backward(weighting(gramian))
 
-    grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
-    assert_tensor_dicts_are_close(grads, expected_grads)
+    assert_close(gramian, autograd_gramian)
 
 
 @mark.parametrize("architecture", [WithRNN, WithModuleTrackingRunningStats])
