@@ -12,7 +12,7 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     Contracts the last dimension of matrix to make it into a Gramian.
     """
 
-    indices = list(range(len(matrix.shape)))
+    indices = list(range(matrix.ndim))
     transposed_matrix = matrix.movedim(indices, indices[::-1])
     return torch.tensordot(matrix, transposed_matrix, dims=([-1], [0]))
 
