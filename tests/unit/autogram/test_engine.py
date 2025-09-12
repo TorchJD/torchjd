@@ -310,7 +310,7 @@ def test_partial_autogram(gramian_module_names: set[str]):
     for m in gramian_modules:
         gramian_params += list(m.parameters())
 
-    gramian = _compute_gramian_with_autograd(losses, gramian_params)
+    gramian = _compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
     torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
