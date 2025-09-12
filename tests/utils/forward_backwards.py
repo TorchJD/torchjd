@@ -4,10 +4,10 @@ import torch
 from torch import Tensor, nn
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
+from utils.autograd_compute_gramian import compute_gramian_with_autograd
 
-from torchjd.aggregation import Aggregator, Weighting
+from torchjd.aggregation import Weighting
 from torchjd.autogram import Engine
-from torchjd.autojac import backward
 
 
 def autograd_forward_backward(
@@ -19,14 +19,16 @@ def autograd_forward_backward(
     losses.sum().backward()
 
 
-def autojac_forward_backward(
+def autograd_gramian_forward_backward(
     model: nn.Module,
     inputs: PyTree,
+    params: list[nn.Parameter],
     loss_fn: Callable[[PyTree], Tensor],
-    aggregator: Aggregator,
+    weighting: Weighting,
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
-    backward(losses, aggregator=aggregator)
+    gramian = compute_gramian_with_autograd(losses, params, retain_graph=True)
+    losses.backward(weighting(gramian))
 
 
 def autogram_forward_backward(

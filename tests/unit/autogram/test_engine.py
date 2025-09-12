@@ -53,13 +53,13 @@ from utils.autograd_compute_gramian import compute_gramian_with_autograd
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
+    autograd_gramian_forward_backward,
     autogram_forward_backward,
-    autojac_forward_backward,
     make_mse_loss_fn,
 )
 from utils.tensors import make_tensors
 
-from torchjd.aggregation import UPGrad, UPGradWeighting
+from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 
 PARAMETRIZATIONS = [
@@ -143,12 +143,12 @@ def test_gramian_equivalence_autograd_autogram(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_equivalence_autojac_autogram(
+def test_equivalence_autograd_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
 ):
     """
-    Tests that the autogram engine gives the same results as the autojac engine on IWRM for several
+    Tests that the autogram engine gives the same results as the autograd engine on IWRM for several
     JD steps.
     """
 
@@ -158,15 +158,14 @@ def test_equivalence_autojac_autogram(
     output_shapes = architecture.OUTPUT_SHAPES
 
     weighting = UPGradWeighting()
-    aggregator = UPGrad()
 
     torch.manual_seed(0)
-    model_autojac = architecture().to(device=DEVICE)
+    model_autograd = architecture().to(device=DEVICE)
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
     engine = Engine(model_autogram.modules())
-    optimizer_autojac = SGD(model_autojac.parameters(), lr=1e-7)
+    optimizer_autograd = SGD(model_autograd.parameters(), lr=1e-7)
     optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
 
     for i in range(n_iter):
@@ -175,9 +174,11 @@ def test_equivalence_autojac_autogram(
         loss_fn = make_mse_loss_fn(targets)
 
         torch.random.manual_seed(0)  # Fix randomness for random aggregators and random models
-        autojac_forward_backward(model_autojac, inputs, loss_fn, aggregator)
+        autograd_gramian_forward_backward(
+            model_autograd, inputs, list(model_autograd.parameters()), loss_fn, weighting
+        )
         expected_grads = {
-            name: p.grad for name, p in model_autojac.named_parameters() if p.grad is not None
+            name: p.grad for name, p in model_autograd.named_parameters() if p.grad is not None
         }
 
         torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
@@ -188,8 +189,8 @@ def test_equivalence_autojac_autogram(
 
         assert_tensor_dicts_are_close(grads, expected_grads)
 
-        optimizer_autojac.step()
-        model_autojac.zero_grad()
+        optimizer_autograd.step()
+        model_autograd.zero_grad()
 
         optimizer_autogram.step()
         model_autogram.zero_grad()
@@ -206,7 +207,6 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     output_shapes = architecture.OUTPUT_SHAPES
 
     W = UPGradWeighting()
-    A = UPGrad()
     input = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
@@ -215,8 +215,8 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     model = architecture().to(device=DEVICE)
 
     torch.manual_seed(0)  # Fix randomness for random models
-    autojac_forward_backward(model, input, loss_fn, A)
-    autojac_grads = {
+    autograd_gramian_forward_backward(model, input, list(model.parameters()), loss_fn, W)
+    autograd_gramian_grads = {
         name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
     }
     model.zero_grad()
@@ -230,12 +230,12 @@ def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], bat
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    # Hook modules and verify that we're equivalent to autojac when using the engine
+    # Hook modules and verify that we're equivalent to autograd when using the engine
     engine = Engine(model_autogram.modules())
     torch.manual_seed(0)  # Fix randomness for random models
     autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
-    assert_tensor_dicts_are_close(grads, autojac_grads)
+    assert_tensor_dicts_are_close(grads, autograd_gramian_grads)
     model_autogram.zero_grad()
 
     # Verify that even with the hooked modules, autograd works normally when not using the engine.
@@ -260,7 +260,7 @@ def _non_empty_subsets(elements: set) -> list[set]:
 def test_partial_autogram(gramian_module_names: set[str]):
     """
     Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
-    the autojac engine.
+    the autograd engine.
 
     Note that this test is a bit redundant now that we have the Engine interface, because it now
     just compares two ways of computing the Gramian, which is independant of the idea of partial JD.

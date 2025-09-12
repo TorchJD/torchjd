@@ -15,8 +15,8 @@ from utils.architectures import (
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
+    autograd_gramian_forward_backward,
     autogram_forward_backward,
-    autojac_forward_backward,
     make_mse_loss_fn,
 )
 from utils.tensors import make_tensors
@@ -61,7 +61,7 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
         fn_autograd()
 
     def fn_autojac():
-        autojac_forward_backward(model, inputs, loss_fn, A)
+        autograd_gramian_forward_backward(model, inputs, loss_fn, A)
 
     def init_fn_autojac():
         torch.cuda.empty_cache()
