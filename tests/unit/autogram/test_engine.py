@@ -3,7 +3,7 @@ from itertools import combinations
 import pytest
 import torch
 from pytest import mark, param
-from torch import Tensor, nn, vmap
+from torch import nn
 from torch.optim import SGD
 from torch.testing import assert_close
 from unit.conftest import DEVICE
@@ -49,6 +49,7 @@ from utils.architectures import (
     WithSideEffect,
     WithSomeFrozenModule,
 )
+from utils.autograd_compute_gramian import compute_gramian_with_autograd
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
@@ -105,28 +106,6 @@ PARAMETRIZATIONS = [
 ]
 
 
-def _compute_gramian_with_autograd(
-    output: Tensor, inputs: list[nn.Parameter], retain_graph: bool = False
-) -> Tensor:
-    filtered_inputs = [input for input in inputs if input.requires_grad]
-
-    def get_vjp(grad_outputs: Tensor) -> list[Tensor]:
-        grads = torch.autograd.grad(
-            output,
-            filtered_inputs,
-            grad_outputs=grad_outputs,
-            retain_graph=retain_graph,
-            allow_unused=True,
-        )
-        return [grad for grad in grads if grad is not None]
-
-    jacobians = vmap(get_vjp)(torch.diag(torch.ones_like(output)))
-    jacobian_matrices = [jacobian.reshape([jacobian.shape[0], -1]) for jacobian in jacobians]
-    gramian = sum([jacobian @ jacobian.T for jacobian in jacobian_matrices])
-
-    return gramian
-
-
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 def test_gramian_equivalence_autograd_autogram(
     architecture: type[ShapedModule],
@@ -153,7 +132,7 @@ def test_gramian_equivalence_autograd_autogram(
     torch.random.manual_seed(0)  # Fix randomness for random aggregators and random models
     output = model_autograd(inputs)
     losses = loss_fn(output)
-    autograd_gramian = _compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
+    autograd_gramian = compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
 
     torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
     output = model_autogram(inputs)
@@ -310,7 +289,7 @@ def test_partial_autogram(gramian_module_names: set[str]):
     for m in gramian_modules:
         gramian_params += list(m.parameters())
 
-    gramian = _compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
+    gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
     torch.manual_seed(0)
     losses.backward(weighting(gramian))
 
