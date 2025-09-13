@@ -6,7 +6,6 @@ import torch
 from torch import Tensor
 
 from ._differentiate import Differentiate
-from ._materialize import materialize
 from ._ordered_set import OrderedSet
 
 
@@ -68,18 +67,6 @@ class Jac(Differentiate):
                 ]
             )
 
-        def _get_vjp(grad_outputs: Sequence[Tensor], retain_graph: bool) -> tuple[Tensor, ...]:
-            optional_grads = torch.autograd.grad(
-                self.outputs,
-                self.inputs,
-                grad_outputs=grad_outputs,
-                retain_graph=retain_graph,
-                create_graph=self.create_graph,
-                allow_unused=True,
-            )
-            grads = materialize(optional_grads, inputs=self.inputs)
-            return grads
-
         # If the jac_outputs are correct, this value should be the same for all jac_outputs.
         m = jac_outputs[0].shape[0]
         max_chunk_size = self.chunk_size if self.chunk_size is not None else m
@@ -90,7 +77,7 @@ class Jac(Differentiate):
         jacs_chunks: list[tuple[Tensor, ...]] = []
 
         # First differentiations: always retain graph
-        get_vjp_retain = partial(_get_vjp, retain_graph=True)
+        get_vjp_retain = partial(self._get_vjp, retain_graph=True)
         for i in range(n_chunks - 1):
             start = i * max_chunk_size
             end = (i + 1) * max_chunk_size
@@ -98,7 +85,7 @@ class Jac(Differentiate):
             jacs_chunks.append(_get_jacs_chunk(jac_outputs_chunk, get_vjp_retain))
 
         # Last differentiation: retain the graph only if self.retain_graph==True
-        get_vjp_last = partial(_get_vjp, retain_graph=self.retain_graph)
+        get_vjp_last = partial(self._get_vjp, retain_graph=self.retain_graph)
         start = (n_chunks - 1) * max_chunk_size
         jac_outputs_chunk = [jac_output[start:] for jac_output in jac_outputs]
         jacs_chunks.append(_get_jacs_chunk(jac_outputs_chunk, get_vjp_last))
