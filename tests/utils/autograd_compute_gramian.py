@@ -24,6 +24,6 @@ def compute_gramian_with_autograd(
 
     jacobians = vmap(get_vjp)(torch.diag(torch.ones_like(output)))
     jacobian_matrices = [jacobian.reshape([jacobian.shape[0], -1]) for jacobian in jacobians]
-    gramian = sum([jacobian @ jacobian.T for jacobian in jacobian_matrices])
+    gramian = torch.sum(torch.stack([jacobian @ jacobian.T for jacobian in jacobian_matrices]))
 
     return gramian
