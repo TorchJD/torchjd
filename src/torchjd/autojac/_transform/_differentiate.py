@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
+import torch
 from torch import Tensor
 
 from ._base import RequirementError, TensorDict, Transform
+from ._materialize import materialize
 from ._ordered_set import OrderedSet
 
 
@@ -61,3 +63,15 @@ class Differentiate(Transform, ABC):
                 f"outputs {outputs}."
             )
         return set(self.inputs)
+
+    def _get_vjp(self, grad_outputs: Sequence[Tensor], retain_graph: bool) -> tuple[Tensor, ...]:
+        optional_grads = torch.autograd.grad(
+            self.outputs,
+            self.inputs,
+            grad_outputs=grad_outputs,
+            retain_graph=retain_graph,
+            create_graph=self.create_graph,
+            allow_unused=True,
+        )
+        grads = materialize(optional_grads, inputs=self.inputs)
+        return grads

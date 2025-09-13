@@ -34,6 +34,8 @@ changes that do not affect the user.
 
 ### Changed
 
+- Removed an unnecessary internal reshape when computing Jacobians. This should have no effect but a
+  slight performance improvement in `autojac`.
 - Revamped documentation.
 - Made `backward` and `mtl_backward` importable from `torchjd.autojac` (like it was prior to 0.7.0).
 - Deprecated importing `backward` and `mtl_backward` from `torchjd` directly.
