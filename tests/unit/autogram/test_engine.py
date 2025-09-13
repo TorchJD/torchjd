@@ -49,12 +49,12 @@ from utils.architectures import (
     WithSideEffect,
     WithSomeFrozenModule,
 )
-from utils.autograd_compute_gramian import compute_gramian_with_autograd
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
     autograd_gramian_forward_backward,
     autogram_forward_backward,
+    compute_gramian_with_autograd,
     make_mse_loss_fn,
 )
 from utils.tensors import make_tensors
