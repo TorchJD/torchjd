@@ -143,7 +143,7 @@ def test_gramian_equivalence_autograd_autogram(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_IWRM_steps_with_autogram(
+def test_iwrm_steps_with_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
 ):
