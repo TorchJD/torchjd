@@ -158,20 +158,20 @@ def test_iwrm_steps_with_autogram(
 
     weighting = UPGradWeighting()
 
-    model_autogram = architecture().to(device=DEVICE)
+    model = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules())
-    optimizer_autogram = SGD(model_autogram.parameters(), lr=1e-7)
+    engine = Engine(model.modules())
+    optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
         inputs = make_tensors(batch_size, input_shapes)
         targets = make_tensors(batch_size, output_shapes)
         loss_fn = make_mse_loss_fn(targets)
 
-        autogram_forward_backward(model_autogram, engine, weighting, inputs, loss_fn)
+        autogram_forward_backward(model, engine, weighting, inputs, loss_fn)
 
-        optimizer_autogram.step()
-        model_autogram.zero_grad()
+        optimizer.step()
+        model.zero_grad()
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
