@@ -52,7 +52,6 @@ from utils.architectures import (
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
-    autograd_gramian_forward_backward,
     autogram_forward_backward,
     compute_gramian_with_autograd,
     make_mse_loss_fn,
@@ -173,56 +172,45 @@ def test_iwrm_steps_with_autogram(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_autograd_while_modules_are_hooked(architecture: type[ShapedModule], batch_size: int):
+@mark.parametrize("compute_gramian", [False, True])
+def test_autograd_while_modules_are_hooked(
+    architecture: type[ShapedModule], batch_size: int, compute_gramian: bool
+):
     """
     Tests that the hooks added when constructing the engine do not interfere with a simple autograd
     call.
     """
 
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
-
-    W = UPGradWeighting()
-    input = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    input = make_tensors(batch_size, architecture.INPUT_SHAPES)
+    targets = make_tensors(batch_size, architecture.OUTPUT_SHAPES)
     loss_fn = make_mse_loss_fn(targets)
 
     torch.manual_seed(0)
     model = architecture().to(device=DEVICE)
-
-    torch.manual_seed(0)  # Fix randomness for random models
-    autograd_gramian_forward_backward(model, input, list(model.parameters()), loss_fn, W)
-    autograd_gramian_grads = {
-        name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
-    }
-    model.zero_grad()
-
-    torch.manual_seed(0)  # Fix randomness for random models
-    autograd_forward_backward(model, input, loss_fn)
-    autograd_grads = {
-        name: p.grad.clone() for name, p in model.named_parameters() if p.grad is not None
-    }
-
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    # Hook modules and verify that we're equivalent to autograd when using the engine
-    engine = Engine(model_autogram.modules())
     torch.manual_seed(0)  # Fix randomness for random models
-    autogram_forward_backward(model_autogram, engine, W, input, loss_fn)
-    grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
-    assert_tensor_dicts_are_close(grads, autograd_gramian_grads)
-    model_autogram.zero_grad()
+    autograd_forward_backward(model, input, loss_fn)
+    autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
+
+    # Hook modules and optionally compute the Gramian
+    engine = Engine(model_autogram.modules())
+    if compute_gramian:
+        torch.manual_seed(0)  # Fix randomness for random models
+        output = model_autogram(input)
+        losses = loss_fn(output)
+        _ = engine.compute_gramian(losses)
 
     # Verify that even with the hooked modules, autograd works normally when not using the engine.
     # Results should be the same as a normal call to autograd, and no time should be spent computing
     # the gramian at all.
     torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
-    assert engine._gramian_accumulator.gramian is None
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
+
     assert_tensor_dicts_are_close(grads, autograd_grads)
-    model_autogram.zero_grad()
+    assert engine._gramian_accumulator.gramian is None
 
 
 def _non_empty_subsets(elements: set) -> list[set]:
