@@ -18,7 +18,7 @@ def test_engine():
 
     criterion = MSELoss(reduction="none")
     weighting = UPGradWeighting()
-    engine = Engine(model.modules(), batched_dim=0)
+    engine = Engine(model.modules(), batch_dim=0)
 
     for input, target in zip(inputs, targets):
         output = model(input).squeeze(dim=1)  # shape: [16]

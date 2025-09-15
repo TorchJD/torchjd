@@ -58,10 +58,10 @@ class Engine:
 
     :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
         to the Gramian of the Jacobian.
-    :param batched_dim: If the modules work with batches and process each batch element
-        independently, then many intermediary jacobians are sparse (block-diagonal), which allows
-        for a substancial memory optimization by backpropagating a squashed Jacobian instead. This
-        parameter indicates the batch dimension, if any. Defaults to None.
+    :param batch_dim: If the modules work with batches and process each batch element independently,
+        then many intermediary jacobians are sparse (block-diagonal), which allows for a substancial
+        memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
+        the batch dimension, if any. Defaults to None.
 
     .. admonition::
         Example
@@ -84,7 +84,7 @@ class Engine:
             >>>
             >>> criterion = MSELoss(reduction="none")
             >>> weighting = UPGradWeighting()
-            >>> engine = Engine(model.modules(), batched_dim=0)
+            >>> engine = Engine(model.modules(), batch_dim=0)
             >>>
             >>> for input, target in zip(inputs, targets):
             >>>     output = model(input).squeeze(dim=1)  # shape: [16]
@@ -135,13 +135,13 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        batched_dim: int | None = None,
+        batch_dim: int | None = None,
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._batched_dim = batched_dim
+        self._batch_dim = batch_dim
         self._module_hook_manager = ModuleHookManager(
-            self._target_edges, self._gramian_accumulator, batched_dim is not None
+            self._target_edges, self._gramian_accumulator, batch_dim is not None
         )
 
         self._hook_modules(modules)
@@ -156,10 +156,10 @@ class Engine:
                 self._module_hook_manager.hook_module(module)
 
     def _check_module_is_compatible(self, module: nn.Module) -> None:
-        if self._batched_dim is not None and isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
+        if self._batch_dim is not None and isinstance(module, _INCOMPATIBLE_MODULE_TYPES):
             raise ValueError(
                 f"Found a module of type {type(module)}, which is incompatible with the autogram "
-                f"engine when `batched_dim` is not `None`. The incompatible module types are "
+                f"engine when `batch_dim` is not `None`. The incompatible module types are "
                 f"{_INCOMPATIBLE_MODULE_TYPES} (and their subclasses). The recommended fix is to "
                 f"replace incompatible layers by something else (e.g. BatchNorm by InstanceNorm), "
                 f"but if you really can't and performance not a priority, you may also just set"
@@ -203,20 +203,20 @@ class Engine:
             Gramian depends on the shape of this output, as explained in the note above.
         """
 
-        if self._batched_dim is not None:
+        if self._batch_dim is not None:
             # move batched dim to the end
-            ordered_output = output.movedim(self._batched_dim, -1)
+            ordered_output = output.movedim(self._batch_dim, -1)
             ordered_shape = list(ordered_output.shape)
             batch_size = ordered_shape[-1]
-            has_non_batched_dim = len(ordered_shape) > 1
+            has_non_batch_dim = len(ordered_shape) > 1
             target_shape = [batch_size]
         else:
             ordered_output = output
             ordered_shape = list(ordered_output.shape)
-            has_non_batched_dim = len(ordered_shape) > 0
+            has_non_batch_dim = len(ordered_shape) > 0
             target_shape = []
 
-        if has_non_batched_dim:
+        if has_non_batch_dim:
             target_shape = [-1] + target_shape
 
         reshaped_output = ordered_output.reshape(target_shape)
@@ -229,7 +229,7 @@ class Engine:
         self._module_hook_manager.gramian_accumulation_phase = True
 
         try:
-            square_gramian = self._compute_square_gramian(reshaped_output, has_non_batched_dim)
+            square_gramian = self._compute_square_gramian(reshaped_output, has_non_batch_dim)
         finally:
             # Reset everything that has a state, even if the previous call raised an exception
             self._module_hook_manager.gramian_accumulation_phase = False
@@ -238,14 +238,14 @@ class Engine:
 
         unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
 
-        if self._batched_dim is not None:
-            gramian = movedim_gramian(unordered_gramian, [-1], [self._batched_dim])
+        if self._batch_dim is not None:
+            gramian = movedim_gramian(unordered_gramian, [-1], [self._batch_dim])
         else:
             gramian = unordered_gramian
 
         return gramian
 
-    def _compute_square_gramian(self, output: Tensor, has_non_batched_dim: bool) -> Tensor:
+    def _compute_square_gramian(self, output: Tensor, has_non_batch_dim: bool) -> Tensor:
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
 
         def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
@@ -256,14 +256,14 @@ class Engine:
                 retain_graph=True,
             )
 
-        if has_non_batched_dim:
+        if has_non_batch_dim:
             # There is one non-batched dimension, it is the first one
-            non_batched_dim_len = output.shape[0]
+            non_batch_dim_len = output.shape[0]
             jac_output_shape = [output.shape[0]] + list(output.shape)
 
             # Need to batch `grad_output` over the first dimension
             jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
-            for i in range(non_batched_dim_len):
+            for i in range(non_batch_dim_len):
                 jac_output[i, i, ...] = 1
 
             _ = vmap(differentiation)(jac_output)
