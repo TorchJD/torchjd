@@ -239,9 +239,6 @@ def test_partial_autogram(gramian_module_names: set[str]):
     """
     Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
     the autograd engine.
-
-    Note that this test is a bit redundant now that we have the Engine interface, because it now
-    just compares two ways of computing the Gramian, which is independant of the idea of partial JD.
     """
 
     architecture = SimpleBranched
