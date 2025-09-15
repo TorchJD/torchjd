@@ -8,9 +8,7 @@ from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
 
 
 def _compute_gramian(matrix: Tensor) -> Tensor:
-    """
-    Contracts the last dimension of matrix to make it into a Gramian.
-    """
+    """Contracts the last dimension of matrix to make it into a Gramian."""
 
     indices = list(range(matrix.ndim))
     transposed_matrix = matrix.movedim(indices, indices[::-1])
@@ -36,7 +34,9 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
         ([6, 7, 9], [6, 7, 9]),
     ],
 )
-def test_gramian_equivariance_reshape(original_shape: list[int], target_shape: list[int]):
+def test_reshape_gramian(original_shape: list[int], target_shape: list[int]):
+    """Tests that reshape_gramian is such that _compute_gramian is equivariant to a reshape."""
+
     original_matrix = randn_(original_shape + [2])
     target_matrix = original_matrix.reshape(target_shape + [2])
 
@@ -66,7 +66,9 @@ def test_gramian_equivariance_reshape(original_shape: list[int], target_shape: l
         ([2, 2, 3], [0, 2, 1], [1, 0, 2]),
     ],
 )
-def test_gramian_equivariance_movedim(shape: list[int], source: list[int], destination: list[int]):
+def test_movedim_gramian(shape: list[int], source: list[int], destination: list[int]):
+    """Tests that movedim_gramian is such that _compute_gramian is equivariant to a movedim."""
+
     original_matrix = randn_(shape + [2])
     target_matrix = original_matrix.movedim(source, destination)
 
