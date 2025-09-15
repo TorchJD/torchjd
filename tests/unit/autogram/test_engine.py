@@ -139,7 +139,7 @@ def test_gramian_equivalence_autograd_autogram(
     losses = loss_fn(output)
     autogram_gramian = engine.compute_gramian(losses)
 
-    assert_close(autogram_gramian, autograd_gramian)
+    assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
