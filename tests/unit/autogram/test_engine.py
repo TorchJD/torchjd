@@ -129,12 +129,12 @@ def test_gramian_equivalence_autograd_autogram(
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    torch.random.manual_seed(0)  # Fix randomness for random aggregators and random models
+    torch.random.manual_seed(0)  # Fix randomness for random models
     output = model_autograd(inputs)
     losses = loss_fn(output)
     autograd_gramian = compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
 
-    torch.random.manual_seed(0)  # Fix randomness for random weightings and random models
+    torch.random.manual_seed(0)  # Fix randomness for random models
     output = model_autogram(inputs)
     losses = loss_fn(output)
     autogram_gramian = engine.compute_gramian(losses)
