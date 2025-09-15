@@ -453,7 +453,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
 def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     """
     Tests that for a vector with some batched dimensions, the gramian is the same if we use the
-    appropriate `batch_dims` or if we don't use any.
+    appropriate `batch_dim` or if we don't use any.
     """
 
     non_batched_shape = [shape[i] for i in range(len(shape)) if i != batch_dim]
