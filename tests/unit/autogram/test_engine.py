@@ -106,13 +106,8 @@ PARAMETRIZATIONS = [
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_gramian_equivalence_autograd_autogram(
-    architecture: type[ShapedModule],
-    batch_size: int,
-):
-    """
-    Tests that the autograd and the autogram engines compute the same gramian.
-    """
+def test_compute_gramian(architecture: type[ShapedModule], batch_size: int):
+    """Tests that the autograd and the autogram engines compute the same gramian."""
 
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
@@ -141,11 +136,55 @@ def test_gramian_equivalence_autograd_autogram(
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
 
 
+def _non_empty_subsets(elements: set) -> list[set]:
+    """
+    Generates the list of subsets of the given set, excluding the empty set.
+    """
+    return [set(c) for r in range(1, len(elements) + 1) for c in combinations(elements, r)]
+
+
+@mark.parametrize("gramian_module_names", _non_empty_subsets({"fc0", "fc1", "fc2", "fc3", "fc4"}))
+def test_compute_partial_gramian(gramian_module_names: set[str]):
+    """
+    Tests that the autograd and the autogram engines compute the same gramian when only a subset of
+    the model parameters is specified.
+    """
+
+    architecture = SimpleBranched
+    batch_size = 64
+
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
+
+    input = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.manual_seed(0)
+    model = architecture().to(device=DEVICE)
+
+    output = model(input)
+    losses = loss_fn(output)
+
+    gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
+    gramian_params = []
+    for m in gramian_modules:
+        gramian_params += list(m.parameters())
+
+    autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
+    torch.manual_seed(0)
+
+    engine = Engine(gramian_modules)
+
+    output = model(input)
+    losses = loss_fn(output)
+    gramian = engine.compute_gramian(losses)
+
+    assert_close(gramian, autograd_gramian)
+
+
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_iwrm_steps_with_autogram(
-    architecture: type[ShapedModule],
-    batch_size: int,
-):
+def test_iwrm_steps_with_autogram(architecture: type[ShapedModule], batch_size: int):
     """Tests that the autogram engine doesn't raise any error during several IWRM iterations."""
 
     n_iter = 3
@@ -211,53 +250,6 @@ def test_autograd_while_modules_are_hooked(
 
     assert_tensor_dicts_are_close(grads, autograd_grads)
     assert engine._gramian_accumulator.gramian is None
-
-
-def _non_empty_subsets(elements: set) -> list[set]:
-    """
-    Generates the list of subsets of the given set, excluding the empty set.
-    """
-    return [set(c) for r in range(1, len(elements) + 1) for c in combinations(elements, r)]
-
-
-@mark.parametrize("gramian_module_names", _non_empty_subsets({"fc0", "fc1", "fc2", "fc3", "fc4"}))
-def test_partial_autogram(gramian_module_names: set[str]):
-    """
-    Tests that partial JD via the autogram engine works similarly as if the gramian was computed via
-    the autograd engine.
-    """
-
-    architecture = SimpleBranched
-    batch_size = 64
-
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
-
-    input = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
-    loss_fn = make_mse_loss_fn(targets)
-
-    torch.manual_seed(0)
-    model = architecture().to(device=DEVICE)
-
-    output = model(input)
-    losses = loss_fn(output)
-
-    gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
-    gramian_params = []
-    for m in gramian_modules:
-        gramian_params += list(m.parameters())
-
-    autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
-    torch.manual_seed(0)
-
-    engine = Engine(gramian_modules)
-
-    output = model(input)
-    losses = loss_fn(output)
-    gramian = engine.compute_gramian(losses)
-
-    assert_close(gramian, autograd_gramian)
 
 
 @mark.parametrize("architecture", [WithRNN, WithModuleTrackingRunningStats])
