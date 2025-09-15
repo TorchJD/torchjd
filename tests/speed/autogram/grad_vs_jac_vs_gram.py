@@ -1,3 +1,4 @@
+import gc
 import time
 
 import torch
@@ -15,6 +16,7 @@ from utils.architectures import (
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
+    autograd_gramian_forward_backward,
     autogram_forward_backward,
     autojac_forward_backward,
     make_mse_loss_fn,
@@ -31,8 +33,8 @@ PARAMETRIZATIONS = [
     (AlexNet, 8),
     (InstanceNormResNet18, 16),
     (GroupNormMobileNetV3Small, 16),
-    (SqueezeNet, 16),
-    (InstanceNormMobileNetV2, 8),
+    (SqueezeNet, 4),
+    (InstanceNormMobileNetV2, 2),
 ]
 
 
@@ -58,13 +60,23 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
 
     def init_fn_autograd():
         torch.cuda.empty_cache()
+        gc.collect()
         fn_autograd()
+
+    def fn_autograd_gramian():
+        autograd_gramian_forward_backward(model, inputs, list(model.parameters()), loss_fn, W)
+
+    def init_fn_autograd_gramian():
+        torch.cuda.empty_cache()
+        gc.collect()
+        fn_autograd_gramian()
 
     def fn_autojac():
         autojac_forward_backward(model, inputs, loss_fn, A)
 
     def init_fn_autojac():
         torch.cuda.empty_cache()
+        gc.collect()
         fn_autojac()
 
     def fn_autogram():
@@ -72,6 +84,7 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
+        gc.collect()
         fn_autogram()
 
     def optionally_cuda_sync():
@@ -89,6 +102,16 @@ def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule]
     autograd_times = torch.tensor(time_call(fn_autograd, init_fn_autograd, pre_fn, post_fn, n_runs))
     print(f"autograd times (avg = {autograd_times.mean():.5f}, std = {autograd_times.std():.5f}")
     print(autograd_times)
+    print()
+
+    autograd_gramian_times = torch.tensor(
+        time_call(fn_autograd_gramian, init_fn_autograd_gramian, pre_fn, post_fn, n_runs)
+    )
+    print(
+        f"autograd gramian times (avg = {autograd_gramian_times.mean():.5f}, std = "
+        f"{autograd_gramian_times.std():.5f}"
+    )
+    print(autograd_gramian_times)
     print()
 
     autojac_times = torch.tensor(time_call(fn_autojac, init_fn_autojac, pre_fn, post_fn, n_runs))
