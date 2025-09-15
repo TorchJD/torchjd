@@ -147,9 +147,7 @@ def test_iwrm_steps_with_autogram(
     architecture: type[ShapedModule],
     batch_size: int,
 ):
-    """
-    Tests that the autogram engine doesn't yield any error during several IWRM iterations.
-    """
+    """Tests that the autogram engine doesn't raise any error during several IWRM iterations."""
 
     n_iter = 3
 
