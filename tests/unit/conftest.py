@@ -1,4 +1,3 @@
-import gc
 import os
 import random as rand
 
@@ -32,28 +31,12 @@ def fix_randomness() -> None:
         torch.use_deterministic_algorithms(True)
 
 
-@fixture(autouse=True)
-def garbage_collect_if_marked(request):
-    """
-    Since garbage collection takes some time, we only do it when needed (when the test or the
-    parametrization of the test is marked with mark.garbage_collect). This is currently useful for
-    freeing CUDA memory after a lot has been allocated.
-    """
-
-    yield
-    if request.node.get_closest_marker("garbage_collect"):
-        if DEVICE.type == "cuda":
-            torch.cuda.empty_cache()
-        gc.collect()
-
-
 def pytest_addoption(parser):
     parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: mark test as slow to run")
-    config.addinivalue_line("markers", "garbage_collect: do garbage collection after test")
 
 
 def pytest_collection_modifyitems(config, items):
