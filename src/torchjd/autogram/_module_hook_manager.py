@@ -1,3 +1,4 @@
+import weakref
 from typing import cast
 
 import torch
@@ -48,6 +49,16 @@ class ModuleHookManager:
         self.gramian_accumulation_phase = BoolRef(False)
         self._handles: list[TorchRemovableHandle] = []
 
+        # When the ModuleHookManager is not referenced anymore, there is no reason to keep the hooks
+        # alive. In fact, keeping the hooks alive would also keep the target edges alive, which
+        # would keep the graph or part of the graph alive. Since the graph contains nodes that store
+        # the module in their context, which themselves reference their hooks, the hooks will be
+        # caught in a reference cycle and will not be freed by the garbage collector. It is thus
+        # important to remove the hooks whenever we're sure we won't need them anymore.
+        # We could have used a __del__ method here, with the same effects, but weakref.finalize
+        # seems to be a better practice (and it only works if the function to call is static).
+        self._finalizer = weakref.finalize(self, ModuleHookManager.remove_hooks, self._handles)
+
     def hook_module(self, module: nn.Module) -> None:
         """
         Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
@@ -58,6 +69,16 @@ class ModuleHookManager:
 
         hook = Hook(self.gramian_accumulation_phase, self._target_edges, self._gramian_accumulator)
         self._handles.append(module.register_forward_hook(hook))
+
+    @staticmethod
+    def remove_hooks(handles: list[TorchRemovableHandle]) -> None:
+        """
+        Remove all registered hooks. This method is deliberately static so that it can be called by
+        weakref.finalize.
+        """
+
+        for handle in handles:
+            handle.remove()
 
 
 class AccumulateJacobian(torch.autograd.Function):
