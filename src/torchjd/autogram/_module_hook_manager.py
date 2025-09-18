@@ -3,7 +3,7 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
-from torch.utils._pytree import PyTree, tree_flatten, tree_unflatten
+from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_unflatten
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
@@ -60,6 +60,69 @@ class ModuleHookManager:
         self._handles.append(module.register_forward_hook(hook))
 
 
+class AccumulateJacobian(torch.autograd.Function):
+
+    @staticmethod
+    def forward(
+        ctx, tree_spec: TreeSpec, vjp, args, gramian_accumulator, module, *flat_grad_outputs: Tensor
+    ) -> None:
+        grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
+        jacobians = vjp(grad_outputs, args)
+        gramian_accumulator.accumulate_path_jacobians(
+            {
+                module.get_parameter(param_name): jacobian
+                for param_name, jacobian in jacobians.items()
+            }
+        )
+
+
+class JacobianAccumulator(torch.autograd.Function):
+    """
+    Autograd function that accumulates Jacobian Gramians during the first backward pass.
+
+    Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
+    of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
+    toggle mechanism to activate only during the Gramian accumulation phase.
+    """
+
+    generate_vmap_rule = True
+
+    @staticmethod
+    def forward(
+        ctx,
+        gramian_accumulation_phase: BoolRef,
+        tree_spec,
+        vjp,
+        args,
+        gramian_accumulator,
+        module,
+        *xs: Tensor,
+    ) -> tuple[Tensor, ...]:
+        ctx.gramian_accumulation_phase = gramian_accumulation_phase
+        ctx.tree_spec = tree_spec
+        ctx.vjp = vjp
+        ctx.args = args
+        ctx.gramian_accumulator = gramian_accumulator
+        ctx.module = module
+        return tuple([x.detach() for x in xs])
+
+    @staticmethod
+    def backward(ctx, *flat_grad_outputs: Tensor):
+        if not ctx.gramian_accumulation_phase:
+            return None, None, None, None, None, None, *flat_grad_outputs
+
+        AccumulateJacobian.apply(
+            ctx.tree_spec,
+            ctx.vjp,
+            ctx.args,
+            ctx.gramian_accumulator,
+            ctx.module,
+            *flat_grad_outputs,
+        )
+
+        return None, None, None, None, None, None, *flat_grad_outputs
+
+
 class Hook:
     def __init__(
         self,
@@ -95,49 +158,15 @@ class Hook:
 
         vjp = torch.vmap(get_functional_vjp(module))
 
-        class AccumulateJacobian(torch.autograd.Function):
-
-            @staticmethod
-            def forward(*flat_grad_outputs: Tensor) -> None:
-                grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
-                jacobians = vjp(grad_outputs, args)
-                self.gramian_accumulator.accumulate_path_jacobians(
-                    {
-                        module.get_parameter(param_name): jacobian
-                        for param_name, jacobian in jacobians.items()
-                    }
-                )
-
-            @staticmethod
-            def setup_context(*_):
-                pass
-
-        class JacobianAccumulator(torch.autograd.Function):
-            """
-            Autograd function that accumulates Jacobian Gramians during the first backward pass.
-
-            Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
-            of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
-            toggle mechanism to activate only during the Gramian accumulation phase.
-            """
-
-            generate_vmap_rule = True
-
-            @staticmethod
-            def forward(*xs: Tensor) -> tuple[Tensor, ...]:
-                return tuple([x.detach() for x in xs])
-
-            @staticmethod
-            def setup_context(*_):
-                pass
-
-            @staticmethod
-            def backward(ctx, *flat_grad_outputs: Tensor):
-                if not self.gramian_accumulation_phase:
-                    return flat_grad_outputs
-
-                AccumulateJacobian.apply(*flat_grad_outputs)
-
-                return flat_grad_outputs
-
-        return tree_unflatten(JacobianAccumulator.apply(*flat_outputs), tree_spec)
+        return tree_unflatten(
+            JacobianAccumulator.apply(
+                self.gramian_accumulation_phase,
+                tree_spec,
+                vjp,
+                args,
+                self.gramian_accumulator,
+                module,
+                *flat_outputs,
+            ),
+            tree_spec,
+        )
