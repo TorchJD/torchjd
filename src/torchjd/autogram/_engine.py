@@ -170,13 +170,13 @@ class Engine:
 
         reshaped_output = output.reshape([-1])
 
-        self._module_hook_manager.gramian_accumulation_phase = True
+        self._module_hook_manager.gramian_accumulation_phase.value = True
 
         try:
             square_gramian = self._compute_square_gramian(reshaped_output)
         finally:
             # Reset everything that has a state, even if the previous call raised an exception
-            self._module_hook_manager.gramian_accumulation_phase = False
+            self._module_hook_manager.gramian_accumulation_phase.value = False
             self._gramian_accumulator.reset()
             self._target_edges.reset()
 
