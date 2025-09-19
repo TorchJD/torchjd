@@ -1,4 +1,5 @@
 import weakref
+from collections.abc import Callable
 from typing import cast
 
 import torch
@@ -85,7 +86,13 @@ class AccumulateJacobian(torch.autograd.Function):
 
     @staticmethod
     def forward(
-        ctx, tree_spec: TreeSpec, vjp, args, gramian_accumulator, module, *flat_grad_outputs: Tensor
+        ctx,
+        tree_spec: TreeSpec,
+        vjp: Callable[[PyTree, PyTree], dict[str, Tensor]],
+        args: PyTree,
+        gramian_accumulator: GramianAccumulator,
+        module: nn.Module,
+        *flat_grad_outputs: Tensor,
     ) -> None:
         grad_outputs = tree_unflatten(flat_grad_outputs, tree_spec)
         jacobians = vjp(grad_outputs, args)
@@ -112,11 +119,11 @@ class JacobianAccumulator(torch.autograd.Function):
     def forward(
         ctx,
         gramian_accumulation_phase: BoolRef,
-        tree_spec,
-        vjp,
-        args,
-        gramian_accumulator,
-        module,
+        tree_spec: TreeSpec,
+        vjp: Callable[[PyTree, PyTree], dict[str, Tensor]],
+        args: PyTree,
+        gramian_accumulator: GramianAccumulator,
+        module: nn.Module,
         *xs: Tensor,
     ) -> tuple[Tensor, ...]:
         ctx.gramian_accumulation_phase = gramian_accumulation_phase
