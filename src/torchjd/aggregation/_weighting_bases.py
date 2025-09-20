@@ -52,3 +52,28 @@ class _Composition(Weighting[_T]):
 
     def forward(self, stat: _T) -> Tensor:
         return self.weighting(self.fn(stat))
+
+
+class GeneralizedWeighting(nn.Module, ABC):
+    r"""
+    Abstract base class for all weightings that operate on generalized Gramians. It has the role of
+    extracting a tensor of weights of dimension :math:`m_1 \times \dots \times m_k` from a
+    generalized Gramian of dimension
+    :math:`m_1 \times \dots \times m_k \times m_k \times \dots \times m_1`.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    @abstractmethod
+    def forward(self, generalized_gramian: Tensor) -> Tensor:
+        """Computes the vector of weights from the input generalized Gramian."""
+
+    # Override to make type hints and documentation more specific
+    def __call__(self, generalized_gramian: Tensor) -> Tensor:
+        """
+        Computes the tensor of weights from the input generalized Gramian and applies all registered
+        hooks.
+        """
+
+        return super().__call__(generalized_gramian)
