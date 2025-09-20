@@ -99,12 +99,12 @@ PARAMETRIZATIONS = [
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Randomness, 32, marks=mark.xfail),
-    param(Cifar10Model, 16, marks=[mark.slow, mark.garbage_collect]),
-    param(AlexNet, 2, marks=[mark.slow, mark.garbage_collect]),
-    param(InstanceNormResNet18, 4, marks=[mark.slow, mark.garbage_collect]),
-    param(GroupNormMobileNetV3Small, 3, marks=[mark.slow, mark.garbage_collect]),
-    param(SqueezeNet, 8, marks=[mark.slow, mark.garbage_collect]),
-    param(InstanceNormMobileNetV2, 2, marks=[mark.slow, mark.garbage_collect]),
+    param(Cifar10Model, 16, marks=[mark.slow]),
+    param(AlexNet, 2, marks=[mark.slow]),
+    param(InstanceNormResNet18, 4, marks=[mark.slow]),
+    param(GroupNormMobileNetV3Small, 3, marks=[mark.slow]),
+    param(SqueezeNet, 8, marks=[mark.slow]),
+    param(InstanceNormMobileNetV2, 2, marks=[mark.slow]),
 ]
 
 

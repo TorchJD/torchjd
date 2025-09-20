@@ -15,6 +15,9 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
+VJPType = Callable[[PyTree, PyTree], dict[str, Tensor]]
+
+
 class VJP(ABC):
     """
     Represents an abstract VJP function for a module's forward pass with respect to its parameters.
