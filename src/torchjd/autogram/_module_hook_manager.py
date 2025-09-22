@@ -165,10 +165,12 @@ class JacobianAccumulator(torch.autograd.Function):
     ) -> tuple[Tensor, ...]:
         return tuple([x.detach() for x in xs])
 
+    # For Python version > 3.10, the type of `inputs` should become
+    # tuple[BoolRef, TreeSpec, VJPType, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
-        inputs: tuple[BoolRef, TreeSpec, VJPType, PyTree, GramianAccumulator, nn.Module],
+        inputs: tuple,
         _,
     ):
         ctx.gramian_accumulation_phase = inputs[0]
