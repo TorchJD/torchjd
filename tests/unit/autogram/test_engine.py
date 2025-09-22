@@ -110,7 +110,8 @@ PARAMETRIZATIONS = [
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_compute_gramian(architecture: type[ShapedModule], batch_size: int):
+@mark.parametrize("batch_dim", [0, None])
+def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batch_dim: int | None):
     """Tests that the autograd and the autogram engines compute the same gramian."""
 
     input_shapes = architecture.INPUT_SHAPES
@@ -121,7 +122,7 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int):
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules())
+    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
 
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
@@ -148,7 +149,8 @@ def _non_empty_subsets(elements: set) -> list[set]:
 
 
 @mark.parametrize("gramian_module_names", _non_empty_subsets({"fc0", "fc1", "fc2", "fc3", "fc4"}))
-def test_compute_partial_gramian(gramian_module_names: set[str]):
+@mark.parametrize("batch_dim", [0, None])
+def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int | None):
     """
     Tests that the autograd and the autogram engines compute the same gramian when only a subset of
     the model parameters is specified.
@@ -178,7 +180,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str]):
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
     torch.manual_seed(0)
 
-    engine = Engine(gramian_modules, batch_dim=0)
+    engine = Engine(gramian_modules, batch_dim=batch_dim)
 
     output = model(input)
     losses = loss_fn(output)
@@ -188,7 +190,10 @@ def test_compute_partial_gramian(gramian_module_names: set[str]):
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-def test_iwrm_steps_with_autogram(architecture: type[ShapedModule], batch_size: int):
+@mark.parametrize("batch_dim", [0, None])
+def test_iwrm_steps_with_autogram(
+    architecture: type[ShapedModule], batch_size: int, batch_dim: int | None
+):
     """Tests that the autogram engine doesn't raise any error during several IWRM iterations."""
 
     n_iter = 3
@@ -200,7 +205,7 @@ def test_iwrm_steps_with_autogram(architecture: type[ShapedModule], batch_size: 
 
     model = architecture().to(device=DEVICE)
 
-    engine = Engine(model.modules())
+    engine = Engine(model.modules(), batch_dim=batch_dim)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
@@ -216,8 +221,9 @@ def test_iwrm_steps_with_autogram(architecture: type[ShapedModule], batch_size: 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
 @mark.parametrize("compute_gramian", [False, True])
+@mark.parametrize("batch_dim", [0, None])
 def test_autograd_while_modules_are_hooked(
-    architecture: type[ShapedModule], batch_size: int, compute_gramian: bool
+    architecture: type[ShapedModule], batch_size: int, compute_gramian: bool, batch_dim: int | None
 ):
     """
     Tests that the hooks added when constructing the engine do not interfere with a simple autograd
@@ -238,7 +244,7 @@ def test_autograd_while_modules_are_hooked(
     autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
 
     # Hook modules and optionally compute the Gramian
-    engine = Engine(model_autogram.modules())
+    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
     if compute_gramian:
         torch.manual_seed(0)  # Fix randomness for random models
         output = model_autogram(input)
@@ -377,7 +383,8 @@ def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_outp
         [1],
     ],
 )
-def test_reshape_equivariance(shape: list[int]):
+@mark.parametrize("batch_dim", [0, None])
+def test_reshape_equivariance(shape: list[int], batch_dim: int | None):
     """
     Test equivariance of `compute_gramian` under reshape operation. More precisely, if we reshape
     the `output` to some `shape`, then the result is the same as reshaping the Gramian to the
@@ -472,7 +479,7 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
 
     model = Linear(input_size, output_size).to(device=DEVICE)
     engine1 = Engine([model], batch_dim=batch_dim)
-    engine2 = Engine([model])
+    engine2 = Engine([model], batch_dim=None)
 
     input = randn_([batch_size, input_size])
     output = model(input)
