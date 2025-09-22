@@ -44,6 +44,7 @@ from utils.architectures import (
     SomeUnusedOutput,
     SomeUnusedParam,
     SqueezeNet,
+    WithBatchNorm,
     WithBuffered,
     WithModuleTrackingRunningStats,
     WithNoTensorOutput,
@@ -255,14 +256,22 @@ def test_autograd_while_modules_are_hooked(
     assert engine._gramian_accumulator.gramian is None
 
 
-@mark.parametrize("architecture", [WithRNN, WithModuleTrackingRunningStats])
-def test_incompatible_modules(architecture: type[nn.Module]):
+@mark.parametrize(
+    ["architecture", "batch_dim"],
+    [
+        (WithModuleTrackingRunningStats, 0),
+        (WithModuleTrackingRunningStats, None),
+        (WithRNN, 0),
+        (WithBatchNorm, 0),
+    ],
+)
+def test_incompatible_modules(architecture: type[nn.Module], batch_dim: int | None):
     """Tests that the engine cannot be constructed with incompatible modules."""
 
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
-        _ = Engine(model.modules(), batch_dim=0)
+        _ = Engine(model.modules(), batch_dim=batch_dim)
 
 
 @mark.parametrize("shape", [(1, 3), (7, 15), (27, 15)])
