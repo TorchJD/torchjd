@@ -61,7 +61,7 @@ class Engine:
     :param batch_dim: If the modules work with batches and process each batch element independently,
         then many intermediary jacobians are sparse (block-diagonal), which allows for a substancial
         memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
-        the batch dimension, if any. Defaults to None.
+        the batch dimension of the output tensor, if any. Defaults to None.
 
     .. admonition::
         Example
