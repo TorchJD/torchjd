@@ -130,3 +130,11 @@ def compute_gramian_with_autograd(
     gramian = sum([jacobian @ jacobian.T for jacobian in jacobian_matrices])
 
     return gramian
+
+
+def compute_gramian(matrix: Tensor) -> Tensor:
+    """Contracts the last dimension of matrix to make it into a Gramian."""
+
+    indices = list(range(matrix.ndim))
+    transposed_matrix = matrix.movedim(indices, indices[::-1])
+    return torch.tensordot(matrix, transposed_matrix, dims=([-1], [0]))

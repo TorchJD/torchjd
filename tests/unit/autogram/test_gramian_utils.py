@@ -1,18 +1,9 @@
-import torch
 from pytest import mark
-from torch import Tensor
 from torch.testing import assert_close
+from utils.forward_backwards import compute_gramian
 from utils.tensors import randn_
 
 from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
-
-
-def _compute_gramian(matrix: Tensor) -> Tensor:
-    """Contracts the last dimension of matrix to make it into a Gramian."""
-
-    indices = list(range(matrix.ndim))
-    transposed_matrix = matrix.movedim(indices, indices[::-1])
-    return torch.tensordot(matrix, transposed_matrix, dims=([-1], [0]))
 
 
 @mark.parametrize(
@@ -35,13 +26,13 @@ def _compute_gramian(matrix: Tensor) -> Tensor:
     ],
 )
 def test_reshape_gramian(original_shape: list[int], target_shape: list[int]):
-    """Tests that reshape_gramian is such that _compute_gramian is equivariant to a reshape."""
+    """Tests that reshape_gramian is such that compute_gramian is equivariant to a reshape."""
 
     original_matrix = randn_(original_shape + [2])
     target_matrix = original_matrix.reshape(target_shape + [2])
 
-    original_gramian = _compute_gramian(original_matrix)
-    target_gramian = _compute_gramian(target_matrix)
+    original_gramian = compute_gramian(original_matrix)
+    target_gramian = compute_gramian(target_matrix)
 
     reshaped_gramian = reshape_gramian(original_gramian, target_shape)
 
@@ -67,13 +58,13 @@ def test_reshape_gramian(original_shape: list[int], target_shape: list[int]):
     ],
 )
 def test_movedim_gramian(shape: list[int], source: list[int], destination: list[int]):
-    """Tests that movedim_gramian is such that _compute_gramian is equivariant to a movedim."""
+    """Tests that movedim_gramian is such that compute_gramian is equivariant to a movedim."""
 
     original_matrix = randn_(shape + [2])
     target_matrix = original_matrix.movedim(source, destination)
 
-    original_gramian = _compute_gramian(original_matrix)
-    target_gramian = _compute_gramian(target_matrix)
+    original_gramian = compute_gramian(original_matrix)
+    target_gramian = compute_gramian(target_matrix)
 
     moveddim_gramian = movedim_gramian(original_gramian, source, destination)
 
