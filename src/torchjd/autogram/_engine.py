@@ -183,7 +183,7 @@ class Engine:
             This function doesn't require ``output`` to be a vector. For example, if ``output`` is
             a matrix of shape :math:`[m_1, m_2]`, its Jacobian :math:`J` with respect to the
             parameters will be of shape :math:`[m_1, m_2, n]`, where :math:`n` is the number of
-            parameters in the model. This is what we call a generalized Jacobian. The
+            parameters in the model. This is what we call a `generalized Jacobian`. The
             corresponding Gramian :math:`G = J J^\top` will be of shape
             :math:`[m_1, m_2, m_2, m_1]`. This is what we call a `generalized Gramian`. The number
             of dimensions of the returned generalized Gramian will always be twice that of the
