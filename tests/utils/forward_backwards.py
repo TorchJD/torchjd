@@ -13,7 +13,7 @@ from torchjd.autojac import backward
 def autograd_forward_backward(
     model: nn.Module,
     inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
+    loss_fn: Callable[[PyTree], list[Tensor]],
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
     losses.sum().backward()
@@ -22,7 +22,7 @@ def autograd_forward_backward(
 def autojac_forward_backward(
     model: nn.Module,
     inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
+    loss_fn: Callable[[PyTree], list[Tensor]],
     aggregator: Aggregator,
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
@@ -33,7 +33,7 @@ def autograd_gramian_forward_backward(
     model: nn.Module,
     inputs: PyTree,
     params: list[nn.Parameter],
-    loss_fn: Callable[[PyTree], Tensor],
+    loss_fn: Callable[[PyTree], list[Tensor]],
     weighting: Weighting,
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
@@ -46,43 +46,54 @@ def autogram_forward_backward(
     engine: Engine,
     weighting: Weighting,
     inputs: PyTree,
-    loss_fn: Callable[[PyTree], Tensor],
+    loss_fn: Callable[[PyTree], list[Tensor]],
 ) -> None:
     losses = _forward_pass(model, inputs, loss_fn)
     gramian = engine.compute_gramian(losses)
     losses.backward(weighting(gramian))
 
 
-def _forward_pass(model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], Tensor]) -> PyTree:
+def _forward_pass(
+    model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], list[Tensor]]
+) -> PyTree:
     output = model(inputs)
 
     assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SHAPES
 
-    losses = loss_fn(output)
+    loss_tensors = loss_fn(output)
+    losses = reduce_to_vector(loss_tensors)
     return losses
 
 
-def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], Tensor]:
-    def mse_loss_fn(outputs: PyTree) -> Tensor:
+def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], list[Tensor]]:
+    def mse_loss_fn(outputs: PyTree) -> list[Tensor]:
         flat_outputs, _ = tree_flatten(outputs)
         flat_targets, _ = tree_flatten(targets)
 
-        # For each (output_i, target_i) pair, compute the MSE at each coordinate and store it in
-        # a matrix of shape [batch_size, dim_i], where dim_i is the number of elements of
-        # output_i and target_i. Concatenate them along dim=1 to obtain a matrix of MSEs of
-        # shape [batch_size, dim], where dim is the total number of elements of the outputs.
-        # Then, reduce this into a vector of losses of size [batch_size], by applying the mean
-        # along dim=1.
-        losses = torch.concatenate(
-            [
-                reshape_raw_losses(mse_loss(output, target, reduction="none"))
-                for output, target in zip(flat_outputs, flat_targets)
-            ],
-            dim=1,
-        ).mean(dim=1)
-        return losses
+        loss_tensors = [
+            mse_loss(output, target, reduction="none")
+            for output, target in zip(flat_outputs, flat_targets)
+        ]
+
+        return loss_tensors
 
     return mse_loss_fn
+
+
+def reduce_to_first_tensor(loss_tensors: list[Tensor]) -> Tensor:
+    return loss_tensors[0]
+
+
+def reduce_to_matrix(loss_tensors: list[Tensor]) -> Tensor:
+    return torch.concat([reshape_raw_losses(t) for t in loss_tensors], dim=1)
+
+
+def reduce_to_vector(loss_tensors: list[Tensor]) -> Tensor:
+    return reduce_to_matrix(loss_tensors).mean(dim=1)
+
+
+def reduce_to_scalar(loss_tensors: list[Tensor]) -> Tensor:
+    return reduce_to_matrix(loss_tensors).mean()
 
 
 def reshape_raw_losses(raw_losses: Tensor) -> Tensor:

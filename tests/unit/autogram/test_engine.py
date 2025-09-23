@@ -58,6 +58,7 @@ from utils.forward_backwards import (
     autogram_forward_backward,
     compute_gramian_with_autograd,
     make_mse_loss_fn,
+    reduce_to_vector,
 )
 from utils.tensors import make_tensors, ones_, randn_, zeros_
 
@@ -130,12 +131,12 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
 
     torch.random.manual_seed(0)  # Fix randomness for random models
     output = model_autograd(inputs)
-    losses = loss_fn(output)
+    losses = reduce_to_vector(loss_fn(output))
     autograd_gramian = compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
 
     torch.random.manual_seed(0)  # Fix randomness for random models
     output = model_autogram(inputs)
-    losses = loss_fn(output)
+    losses = reduce_to_vector(loss_fn(output))
     autogram_gramian = engine.compute_gramian(losses)
 
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
@@ -170,7 +171,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     model = architecture().to(device=DEVICE)
 
     output = model(input)
-    losses = loss_fn(output)
+    losses = reduce_to_vector(loss_fn(output))
 
     gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
     gramian_params = []
@@ -183,7 +184,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     engine = Engine(gramian_modules, batch_dim=batch_dim)
 
     output = model(input)
-    losses = loss_fn(output)
+    losses = reduce_to_vector(loss_fn(output))
     gramian = engine.compute_gramian(losses)
 
     assert_close(gramian, autograd_gramian)
@@ -248,7 +249,7 @@ def test_autograd_while_modules_are_hooked(
     if compute_gramian:
         torch.manual_seed(0)  # Fix randomness for random models
         output = model_autogram(input)
-        losses = loss_fn(output)
+        losses = reduce_to_vector(loss_fn(output))
         _ = engine.compute_gramian(losses)
 
     # Verify that even with the hooked modules, autograd works normally when not using the engine.
