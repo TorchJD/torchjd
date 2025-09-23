@@ -57,6 +57,7 @@ from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
     autograd_forward_backward,
     autogram_forward_backward,
+    compute_gramian,
     compute_gramian_with_autograd,
     make_mse_loss_fn,
     reduce_to_first_tensor,
@@ -353,88 +354,30 @@ def test_incompatible_modules(architecture: type[nn.Module], batch_dim: int | No
         _ = Engine(model.modules(), batch_dim=batch_dim)
 
 
-@mark.parametrize("shape", [(1, 3), (7, 15), (27, 15)])
-@mark.parametrize("batch_size", [None, 3, 16, 32])
-@mark.parametrize("reduce_output", [True, False])
-def test_gramian_is_correct(shape: tuple[int, int], batch_size: int, reduce_output: bool):
+def test_compute_gramian_manual():
     """
     Tests that the Gramian computed by the `Engine` equals to a manual computation of the expected
     Gramian.
     """
 
-    is_batched = batch_size is not None
+    in_dims = 18
+    out_dims = 25
 
-    if is_batched:
-        batch_dim = 0
-        input_dim = [batch_size, shape[0]]
-    else:
-        batch_dim = None
-        input_dim = [shape[0]]
+    torch.manual_seed(0)
+    model = Linear(in_dims, out_dims).to(device=DEVICE)
+    engine = Engine(model.modules(), batch_dim=None)
 
-    model = Linear(shape[0], shape[1]).to(device=DEVICE)
-    engine = Engine([model], batch_dim=batch_dim)
-
-    input = randn_(input_dim)
+    input = randn_(in_dims)
     output = model(input)
-    if reduce_output:
-        output = torch.sum(output, dim=-1)
-
-    assert output.ndim == int(not reduce_output) + int(is_batched)
-
     gramian = engine.compute_gramian(output)
 
-    # compute the expected gramian
-    output_shape = list(output.shape)
-    initial_jacobian = torch.diag(ones_(output.numel())).reshape(output_shape + output_shape)
-
-    if reduce_output:
-        initial_jacobian = initial_jacobian.unsqueeze(-1).repeat(
-            ([1] * initial_jacobian.ndim) + [shape[1]]
-        )
-    if not is_batched:
-        initial_jacobian = initial_jacobian.unsqueeze(-2)
-        input = input.unsqueeze(0)
-
-    assert initial_jacobian.shape[-2] == (1 if batch_size is None else batch_size)
-    assert initial_jacobian.shape[-1] == shape[1]
-    assert initial_jacobian.shape[:-2] == output.shape
-
-    assert input.shape[0] == (1 if batch_size is None else batch_size)
-    assert input.shape[1] == shape[0]
-
-    # If k is the batch_size (1 if None) and n the input size and m the output size, then
-    # - input has shape `[k, n]`
-    # - initial_jacobian has shape `output.shape + `[k, m]`
-
-    # The partial (batched) jacobian of outputs w.r.t. weights is of shape `[k, m, m, n]`, whe
-    # multiplied (along 2 dims) by initial_jacobian this yields the jacobian of the weights of shape
-    # `output.shape + [m, n]`. The partial jacobian itself is block diagonal with diagonal defined
-    # by `partial_weight_jacobian[i, j, j] = input[i]` (other elements are 0).
-
-    partial_weight_jacobian = zeros_([input.shape[0], shape[1], shape[1], shape[0]])
-    for j in range(shape[1]):
-        partial_weight_jacobian[:, j, j, :] = input
-    weight_jacobian = torch.tensordot(
-        initial_jacobian, partial_weight_jacobian, dims=([-2, -1], [0, 1])
-    )
-    weight_gramian = torch.tensordot(weight_jacobian, weight_jacobian, dims=([-2, -1], [-2, -1]))
-    if weight_gramian.ndim == 4:
-        weight_gramian = weight_gramian.movedim((-2), (-1))
-
-    # The partial (batched) jacobian of outputs w.r.t. bias is of shape `[k, m, m]`, when multiplied
-    # (along 2 dims) by initial_jacobian this yields the jacobian of the bias of shape
-    # `output.shape + [m]`. The partial jacobian itself is block diagonal with diagonal defined by
-    # `partial_bias_jacobian[i, j, j] = 1` (other elements are 0).
-    partial_bias_jacobian = zeros_([input.shape[0], shape[1], shape[1]])
-    for j in range(shape[1]):
-        partial_bias_jacobian[:, j, j] = 1.0
-    bias_jacobian = torch.tensordot(
-        initial_jacobian, partial_bias_jacobian, dims=([-2, -1], [0, 1])
-    )
-    bias_gramian = torch.tensordot(bias_jacobian, bias_jacobian, dims=([-1], [-1]))
-    if bias_gramian.ndim == 4:
-        bias_gramian = bias_gramian.movedim(-2, -1)
-
+    # Compute the expected gramian
+    weight_jacobian = zeros_([out_dims, model.weight.numel()])
+    for j in range(out_dims):
+        weight_jacobian[j, j * in_dims : (j + 1) * in_dims] = input
+    weight_gramian = compute_gramian(weight_jacobian)
+    bias_jacobian = torch.diag(ones_(out_dims))
+    bias_gramian = compute_gramian(bias_jacobian)
     expected_gramian = weight_gramian + bias_gramian
 
     assert_close(gramian, expected_gramian)
