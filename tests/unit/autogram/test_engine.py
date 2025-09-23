@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from itertools import combinations
 from math import prod
 
 import pytest
 import torch
 from pytest import mark, param
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import Linear
 from torch.optim import SGD
 from torch.testing import assert_close
@@ -58,6 +59,9 @@ from utils.forward_backwards import (
     autogram_forward_backward,
     compute_gramian_with_autograd,
     make_mse_loss_fn,
+    reduce_to_first_tensor,
+    reduce_to_matrix,
+    reduce_to_scalar,
     reduce_to_vector,
 )
 from utils.tensors import make_tensors, ones_, randn_, zeros_
@@ -140,6 +144,74 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
     autogram_gramian = engine.compute_gramian(losses)
 
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
+
+
+@mark.parametrize("batch_size", [1, 3, 16])
+@mark.parametrize(
+    ["reduction", "movedim_source", "movedim_destination", "batch_dim"],
+    [
+        # 0D
+        (reduce_to_scalar, [], [], None),  # ()
+        # 1D
+        (reduce_to_vector, [], [], 0),  # (batch_size,)
+        (reduce_to_vector, [], [], None),  # (batch_size,)
+        # 2D
+        (reduce_to_matrix, [], [], 0),  # (batch_size, d1 * d2)
+        (reduce_to_matrix, [], [], None),  # (batch_size, d1 * d2)
+        (reduce_to_matrix, [0], [1], 1),  # (d1 * d2, batch_size)
+        (reduce_to_matrix, [0], [1], None),  # (d1 * d2, batch_size)
+        # 3D
+        (reduce_to_first_tensor, [], [], 0),  # (batch_size, d1, d2)
+        (reduce_to_first_tensor, [], [], None),  # (batch_size, d1, d2)
+        (reduce_to_first_tensor, [0], [1], 1),  # (d1, batch_size, d2)
+        (reduce_to_first_tensor, [0], [1], None),  # (d1, batch_size, d2)
+        (reduce_to_first_tensor, [0], [2], 2),  # (d2, d1, batch_size)
+        (reduce_to_first_tensor, [0], [2], None),  # (d2, d1, batch_size)
+    ],
+)
+def test_compute_gramian_various_output_shapes(
+    batch_size: int | None,
+    reduction: Callable[[list[Tensor]], Tensor],
+    batch_dim: int | None,
+    movedim_source: list[int],
+    movedim_destination: list[int],
+):
+    """
+    Tests that the autograd and the autogram engines compute the same gramian when the output can
+    have various different shapes, and can be batched in any of its dimensions.
+    """
+
+    architecture = Ndim2Output
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
+
+    torch.manual_seed(0)
+    model_autograd = architecture().to(device=DEVICE)
+    torch.manual_seed(0)
+    model_autogram = architecture().to(device=DEVICE)
+
+    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
+
+    inputs = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.random.manual_seed(0)  # Fix randomness for random models
+    output = model_autograd(inputs)
+    losses = reduction(loss_fn(output))
+    reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
+    # Go back to a vector so that compute_gramian_with_autograd works
+    loss_vector = reshaped_losses.reshape([-1])
+    autograd_gramian = compute_gramian_with_autograd(loss_vector, list(model_autograd.parameters()))
+    expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
+
+    torch.random.manual_seed(0)  # Fix randomness for random models
+    output = model_autogram(inputs)
+    losses = reduction(loss_fn(output))
+    reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
+    autogram_gramian = engine.compute_gramian(reshaped_losses)
+
+    assert_close(autogram_gramian, expected_gramian, rtol=1e-4, atol=1e-5)
 
 
 def _non_empty_subsets(elements: set) -> list[set]:
