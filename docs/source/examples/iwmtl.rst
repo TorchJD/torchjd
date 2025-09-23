@@ -55,3 +55,11 @@ The following example shows how to do that.
         # Do the standard backward pass, but weighted using the obtained weights
         losses.backward(weights)
         optimizer.step()
+
+.. note::
+    In this example, the tensor of losses is a matrix rather than a vector. The gramian is thus a
+    4D tensor rather than a matrix, and a
+    :class:`~torchjd.aggregation._weighting_bases.GeneralizedWeighting`, such as
+    :class:`~torchjd.aggregation._flattening.Flattening`, has to be used to extract a matrix of
+    weights from it. More information about ``GeneralizedWeighting`` can be found in the
+    :doc:`../../docs/aggregation/index` page.
