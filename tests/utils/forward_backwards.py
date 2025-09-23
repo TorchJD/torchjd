@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 import torch
 from torch import Tensor, nn, vmap
