@@ -43,8 +43,9 @@ will be called a `generalized Gramian`, of shape ``[m_1, ..., m_k, m_k, ..., m_1
 a tensor of weights (of shape ``[m_1, ..., m_k]``) from such a generalized Gramian. The simplest
 :class:`GeneralizedWeighting<torchjd.aggregation._weighting_bases.GeneralizedWeighting>` is
 :class:`Flattening<torchjd.aggregation._flattening.Flattening>`: it simply "flattens" the
-generalized Gramian into a square matrix, applies a normal weighting to it to obtain a vector of
-weights, and returns the reshaped tensor of weights.
+generalized Gramian into a square Gramian matrix (of shape ``[m_1 * ... * m_k, m_1 * ... * m_k]``),
+applies a normal weighting to it to obtain a vector of weights, and returns the reshaped tensor of
+weights.
 
 >>> from torch import ones
 >>> from torchjd.aggregation import Flattening, UPGradWeighting
