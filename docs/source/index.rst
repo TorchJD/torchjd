@@ -48,7 +48,7 @@ Algorithm 3 of
 documentation and usage example of this algorithm is provided in
 :doc:`autogram.Engine <docs/autogram/engine>`.
 
-The primary usage of the autogram engine is to compute the Gramian of the Jacobian very efficiently
+The original usage of the autogram engine is to compute the Gramian of the Jacobian very efficiently
 for :doc:`IWRM <examples/iwrm>`. It can also be used when considering one loss per element of the
 batch and per task, in the context of multi-task learning. We call this :doc:`Instance-Wise Risk
 Multi-Task Learning <examples/iwmtl>` (IWMTL).
