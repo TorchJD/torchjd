@@ -151,7 +151,9 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
     _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
 
 
-@mark.parametrize("architecture", [WithBatchNorm, WithSideEffect, Randomness])
+@mark.parametrize(
+    "architecture", [WithBatchNorm, WithSideEffect, Randomness, WithModuleTrackingRunningStats]
+)
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [param(0, marks=mark.xfail), None])
 def test_compute_gramian_with_weird_modules(
