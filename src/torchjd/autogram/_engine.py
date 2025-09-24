@@ -272,7 +272,7 @@ class Engine:
             # Need to batch `grad_output` over the first dimension
             jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
             for i in range(non_batch_dim_len):
-                jac_output[i, i, ...] = 1
+                jac_output[i, i, ...] = 1.0
 
             _ = vmap(differentiation)(jac_output)
         else:
