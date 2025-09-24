@@ -27,9 +27,14 @@ class VJP(ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        named_parameters = dict(module.named_parameters(recurse=False))
-        self.trainable_params = {k: v for k, v in named_parameters.items() if v.requires_grad}
-        self.frozen_params = {k: v for k, v in named_parameters.items() if not v.requires_grad}
+        self.trainable_params = dict[str, Parameter]()
+        self.frozen_params = dict[str, Parameter]()
+
+        for name, param in module.named_parameters(recurse=False):
+            if param.requires_grad:
+                self.trainable_params[name] = param
+            else:
+                self.frozen_params[name] = param
 
     @abstractmethod
     def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
