@@ -187,6 +187,9 @@ class Engine:
         Computes the Gramian of the Jacobian of ``output`` with respect to the direct parameters of
         all ``modules``.
 
+        :param output: The tensor of arbitrary shape to differentiate. The shape of the returned
+            Gramian depends on the shape of this output.
+
         .. note::
             This function doesn't require ``output`` to be a vector. For example, if ``output`` is
             a matrix of shape :math:`[m_1, m_2]`, its Jacobian :math:`J` with respect to the
@@ -206,9 +209,6 @@ class Engine:
                   Multi-Task Learning (IWMTL) <../../examples/iwmtl>`, as each sample in the batch
                   has one loss per task).
                 - etc.
-
-        :param output: The tensor of arbitrary shape to differentiate. The shape of the returned
-            Gramian depends on the shape of this output, as explained in the note above.
         """
 
         if self._batch_dim is not None:
