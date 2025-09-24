@@ -294,10 +294,10 @@ def test_iwrm_steps_with_autogram(
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-@mark.parametrize("compute_gramian", [False, True])
+@mark.parametrize("use_engine", [False, True])
 @mark.parametrize("batch_dim", [0, None])
 def test_autograd_while_modules_are_hooked(
-    architecture: type[ShapedModule], batch_size: int, compute_gramian: bool, batch_dim: int | None
+    architecture: type[ShapedModule], batch_size: int, use_engine: bool, batch_dim: int | None
 ):
     """
     Tests that the hooks added when constructing the engine do not interfere with a simple autograd
@@ -319,7 +319,7 @@ def test_autograd_while_modules_are_hooked(
 
     # Hook modules and optionally compute the Gramian
     engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
-    if compute_gramian:
+    if use_engine:
         torch.manual_seed(0)  # Fix randomness for random models
         output = model_autogram(input)
         losses = reduce_to_vector(loss_fn(output))
