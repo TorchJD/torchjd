@@ -430,8 +430,8 @@ def test_reshape_equivariance(shape: list[int], batch_dim: int | None):
     output_size = prod(shape[1:])
 
     model = Linear(input_size, output_size).to(device=DEVICE)
-    engine1 = Engine([model])
-    engine2 = Engine([model])
+    engine1 = Engine([model], batch_dim=None)
+    engine2 = Engine([model], batch_dim=None)
 
     input = randn_([input_size])
     output = model(input)
@@ -470,8 +470,8 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     output_size = prod(shape[1:])
 
     model = Linear(input_size, output_size).to(device=DEVICE)
-    engine1 = Engine([model])
-    engine2 = Engine([model])
+    engine1 = Engine([model], batch_dim=None)
+    engine2 = Engine([model], batch_dim=None)
 
     input = randn_([input_size])
     output = model(input).reshape(shape[1:])
