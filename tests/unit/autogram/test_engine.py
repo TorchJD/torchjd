@@ -96,7 +96,6 @@ PARAMETRIZATIONS = [
     (SomeFrozenParam, 32),
     (MultiOutputWithFrozenBranch, 32),
     (WithSomeFrozenModule, 32),
-    param(WithSideEffect, 32, marks=mark.xfail),
     (SomeUnusedOutput, 32),
     (Ndim0Output, 32),
     (Ndim1Output, 32),
@@ -105,21 +104,18 @@ PARAMETRIZATIONS = [
     (Ndim4Output, 32),
     (FreeParam, 32),
     (NoFreeParam, 32),
-    param(Randomness, 32, marks=mark.xfail),
-    param(Cifar10Model, 16, marks=[mark.slow]),
-    param(AlexNet, 2, marks=[mark.slow]),
-    param(InstanceNormResNet18, 4, marks=[mark.slow]),
-    param(GroupNormMobileNetV3Small, 3, marks=[mark.slow]),
-    param(SqueezeNet, 8, marks=[mark.slow]),
-    param(InstanceNormMobileNetV2, 2, marks=[mark.slow]),
+    param(Cifar10Model, 16, marks=mark.slow),
+    param(AlexNet, 2, marks=mark.slow),
+    param(InstanceNormResNet18, 4, marks=mark.slow),
+    param(GroupNormMobileNetV3Small, 3, marks=mark.slow),
+    param(SqueezeNet, 8, marks=mark.slow),
+    param(InstanceNormMobileNetV2, 2, marks=mark.slow),
 ]
 
 
-@mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
-@mark.parametrize("batch_dim", [0, None])
-def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batch_dim: int | None):
-    """Tests that the autograd and the autogram engines compute the same gramian."""
-
+def _assert_gramian_is_equivalent_to_autograd(
+    architecture: type[ShapedModule], batch_size: int, batch_dim: int | None
+):
     input_shapes = architecture.INPUT_SHAPES
     output_shapes = architecture.OUTPUT_SHAPES
 
@@ -145,6 +141,28 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
     autogram_gramian = engine.compute_gramian(losses)
 
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
+
+
+@mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
+@mark.parametrize("batch_dim", [0, None])
+def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batch_dim: int | None):
+    """Tests that the autograd and the autogram engines compute the same gramian."""
+
+    _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
+
+
+@mark.parametrize("architecture", [WithBatchNorm, WithSideEffect, Randomness])
+@mark.parametrize("batch_size", [1, 3, 32])
+@mark.parametrize("batch_dim", [param(0, marks=mark.xfail), None])
+def test_compute_gramian_with_weird_modules(
+    architecture: type[ShapedModule], batch_size: int, batch_dim: int | None
+):
+    """
+    Tests that compute_gramian works even with some problematic modules when batch_dim is None. It
+    is expected to fail on those when the engine uses the batched optimization (when batch_dim=0).
+    """
+
+    _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
 
 
 @mark.parametrize("batch_size", [1, 3, 16])
