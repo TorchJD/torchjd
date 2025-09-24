@@ -129,7 +129,7 @@ class Engine:
         <https://docs.pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html>`_ layers.
 
         The alternative is to use ``batch_dim=None``, but it's not recommended since it will
-        increase computation time, often by a lot.
+        increase memory usage by a lot and thus typically slow down computation.
 
     .. note::
           For maximum efficiency, modules should ideally not contain both direct trainable
