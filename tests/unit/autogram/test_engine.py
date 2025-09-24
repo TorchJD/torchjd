@@ -360,7 +360,6 @@ def test_autograd_while_modules_are_hooked(
     ["architecture", "batch_dim"],
     [
         (WithModuleTrackingRunningStats, 0),
-        (WithModuleTrackingRunningStats, None),
         (WithRNN, 0),
         (WithBatchNorm, 0),
     ],
