@@ -3,9 +3,8 @@ from torch import Tensor
 
 def reshape_gramian(gramian: Tensor, half_shape: list[int]) -> Tensor:
     """
-    Reshapes a Gramian to a provided shape. As a Gramian is quadratic form, the reshape of the first
-    half of the target dimensions must be done from the left, while the reshape of the second half
-    must be done from the right.
+    Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions must
+    be done from the left, while the reshape of the second half must be done from the right.
 
     :param gramian: Gramian to reshape. Can be a generalized Gramian.
     :param half_shape: First half of the target shape, the shape of the output is therefore
