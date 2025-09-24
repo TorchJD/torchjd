@@ -97,7 +97,8 @@ class Engine:
             >>>     optimizer.step()
 
     .. warning::
-        To use this engine, the modules should respect a few conditions:
+        When providing an non-None ``batch_dim``, all provided modules must respect a few
+        conditions:
 
         * They should treat the elements of the batch independently. Most common layers respect
           this, but for example `BatchNorm
@@ -118,10 +119,6 @@ class Engine:
           trainable parameters. It is, however, perfectly fine for random modules to have child
           modules that have trainable parameters, so if you have a random module with some direct
           parameters, a simple fix is to wrap these parameters into a child module.
-        * For maximum efficiency, they should ideally not contain both direct trainable parameters
-          and child modules, especially if those direct trainable parameters are used before the
-          child modules. You can always wrap those direct trainable parameters into another child
-          module to avoid the slow-down.
 
         If you're building your own architecture, respecting those criterions should be quite easy.
         However, if you're using an existing architecture, you may have to modify it to make it
@@ -130,6 +127,15 @@ class Engine:
         `GroupNorm <https://docs.pytorch.org/docs/stable/generated/torch.nn.GroupNorm.html>`_ or
         `InstanceNorm2d
         <https://docs.pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html>`_ layers.
+
+        The alternative is to use ``batch_dim=None``, but it's not recommended since it will
+        increase computation time, often by a lot.
+
+    .. note::
+          For maximum efficiency, modules should ideally not contain both direct trainable
+          parameters and child modules, especially if those direct trainable parameters are used
+          before the child modules. You can always wrap those direct trainable parameters into
+          another child module to avoid the slow-down.
     """
 
     def __init__(
