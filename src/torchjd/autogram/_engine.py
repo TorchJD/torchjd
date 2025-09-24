@@ -45,56 +45,72 @@ _TRACK_RUNNING_STATS_MODULE_TYPES = (
 
 class Engine:
     """
-    Used for computing the Gramian of the Jacobian of some vector with respect to the direct
-    parameters of all provided modules.
+    Engine to compute the Gramian of the Jacobian of some tensor with respect to the direct
+    parameters of all provided modules. It is based on Algorithm 3 of `Jacobian Descent For
+    Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_ but goes even further:
 
-    After this object is constructed, the outputs of the provided modules will have an extended
-    computation graph that allows to compute efficiently the Gramian of the Jacobian of the
-    per-sample losses with respect to the model parameters.
+    * It works for any computation graph (not just sequential models).
+    * It is optimized for batched computations (as long as ``batch_dim`` is specified).
+    * It supports any shape of tensor to differentiate (not just a vector of losses). For more
+      details about this, look at :meth:`Engine.compute_gramian`.
 
-    This Gramian can then be used to extract weights from this Gramian using the provided
-    ``weighting`` which in turn can be backpropagated for a normal backward pass. This is the
-    reverse Gramian accumulation algorithm.
+    As explained in Section 6 of `Jacobian Descent For Multi-Objective Optimization
+    <https://arxiv.org/pdf/2406.16232>`_, most :class:`Aggregators
+    <torchjd.aggregation._aggregator_bases.Aggregator>` combine the rows of the Jacobian using some
+    weights that depend only on the Gramian of the Jacobian. Because of that, the typical usage of
+    the autogram engine is to directly compute this Gramian, extract weights from it (with a
+    :class:`~torchjd.aggregation._weighting_bases.Weighting`), and use those weights to
+    backpropagate the losses. This is equivalent to doing a step of standard Jacobian descent using
+    :func:`torchjd.autojac.backward`.
 
     :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
         to the Gramian of the Jacobian.
     :param batch_dim: If the modules work with batches and process each batch element independently,
         then many intermediary jacobians are sparse (block-diagonal), which allows for a substancial
         memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
-        the batch dimension of the output tensor, if any. Defaults to None.
+        the batch dimension of the output tensor, if any. Defaults to ``None``.
 
     .. admonition::
         Example
 
         Train a model using Gramian-based Jacobian descent.
 
-            >>> import torch
-            >>> from torch.nn import Linear, MSELoss, ReLU, Sequential
-            >>> from torch.optim import SGD
-            >>>
-            >>> from torchjd.aggregation import UPGradWeighting
-            >>> from torchjd.autogram import Engine
-            >>>
-            >>> # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
-            >>> inputs = torch.randn(8, 16, 5)
-            >>> targets = torch.randn(8, 16)
-            >>>
-            >>> model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
-            >>> optimizer = SGD(model.parameters())
-            >>>
-            >>> criterion = MSELoss(reduction="none")
-            >>> weighting = UPGradWeighting()
-            >>> engine = Engine(model.modules(), batch_dim=0)
-            >>>
-            >>> for input, target in zip(inputs, targets):
-            >>>     output = model(input).squeeze(dim=1)  # shape: [16]
-            >>>     losses = criterion(output, target)  # shape: [16]
-            >>>
-            >>>     optimizer.zero_grad()
-            >>>     gramian = engine.compute_gramian(losses)  # shape: [16, 16]
-            >>>     weights = weighting(gramian)  # shape: [16]
-            >>>     losses.backward(weights)
-            >>>     optimizer.step()
+        .. code-block:: python
+            :emphasize-lines: 5-6, 15-16, 18-19, 26-28
+
+            import torch
+            from torch.nn import Linear, MSELoss, ReLU, Sequential
+            from torch.optim import SGD
+
+            from torchjd.aggregation import UPGradWeighting
+            from torchjd.autogram import Engine
+
+            # Generate data (8 batches of 16 examples of dim 5) for the sake of the example
+            inputs = torch.randn(8, 16, 5)
+            targets = torch.randn(8, 16)
+
+            model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
+            optimizer = SGD(model.parameters())
+
+            criterion = MSELoss(reduction="none")  # Important to use reduction="none"
+            weighting = UPGradWeighting()
+
+            # Create the engine before the backward pass, and only once.
+            engine = Engine(model.modules(), batch_dim=0)
+
+            for input, target in zip(inputs, targets):
+                output = model(input).squeeze(dim=1)  # shape: [16]
+                losses = criterion(output, target)  # shape: [16]
+
+                optimizer.zero_grad()
+                gramian = engine.compute_gramian(losses)  # shape: [16, 16]
+                weights = weighting(gramian)  # shape: [16]
+                losses.backward(weights)
+                optimizer.step()
+
+        This is equivalent to just calling ``torchjd.autojac.backward(losses)``. However, since the
+        Jacobian never has to be entirely in memory, it is often much more memory-efficient, and
+        thus typically faster, to use the Gramian-based approach.
 
     .. warning::
         When providing an non-None ``batch_dim``, all provided modules must respect a few

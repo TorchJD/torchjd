@@ -16,8 +16,10 @@ def test_engine():
     model = Sequential(Linear(5, 4), ReLU(), Linear(4, 1))
     optimizer = SGD(model.parameters())
 
-    criterion = MSELoss(reduction="none")
+    criterion = MSELoss(reduction="none")  # Important to use reduction="none"
     weighting = UPGradWeighting()
+
+    # Create the engine before the backward pass, and only once.
     engine = Engine(model.modules(), batch_dim=0)
 
     for input, target in zip(inputs, targets):
