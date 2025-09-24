@@ -38,8 +38,8 @@ per-task losses has to be minimized. To start using TorchJD for multi-task learn
 Another more interesting application is to consider separately the loss of each element in the
 batch. This is what we define as :doc:`Instance-Wise Risk Minimization <examples/iwrm>` (IWRM).
 
-There exists an algorithm that is in many cases equivalent to Jacobian descent, and much more
-efficient. This algorithm, called Gramian-based Jacobian descent, consists in computing
+The Gramian-based Jacobian descent algorithm provides a very efficient alternative way of
+performing Jacobian descent. It consists in computing
 the Gramian of the Jacobian iteratively during the backward pass (without ever storing the full
 Jacobian in memory), weighting the losses using the information of the Gramian, and then computing
 the gradient of the obtained weighted loss. The iterative computation of the Gramian corresponds to
