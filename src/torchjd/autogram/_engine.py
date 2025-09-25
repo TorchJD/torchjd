@@ -68,7 +68,7 @@ class Engine:
     :param batch_dim: If the modules work with batches and process each batch element independently,
         then many intermediary Jacobians are sparse (block-diagonal), which allows for a substantial
         memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
-        the batch dimension of the output tensor, if any. Defaults to 0.
+        the batch dimension of the output tensor, if any.
 
     .. admonition::
         Example
@@ -157,7 +157,7 @@ class Engine:
     def __init__(
         self,
         modules: Iterable[nn.Module],
-        batch_dim: int | None = 0,
+        batch_dim: int | None,
     ):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
