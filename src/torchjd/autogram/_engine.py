@@ -185,7 +185,7 @@ class Engine:
                     f"autogram engine when `batch_dim` is not `None`. The incompatible module types"
                     f" are {_MODULES_INCOMPATIBLE_WITH_BATCHED} (and their subclasses). The "
                     f"recommended fix is to replace incompatible layers by something else (e.g. "
-                    f"BatchNorm by InstanceNorm). If you really can't and performance not a "
+                    f"BatchNorm by InstanceNorm). If you really can't and performance is not a "
                     f"priority, you may also just set `batch_dim=None` when creating the engine."
                 )
             if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
@@ -194,8 +194,8 @@ class Engine:
                     f" is incompatible with the autogram engine when `batch_dim` is not `None`, due"
                     f" to performing in-place operations on tensors and having side-effects during "
                     f"the forward pass. Try setting `track_running_stats` to `False`. If you really"
-                    f" can't and performance not a priority, you may also just set `batch_dim=None`"
-                    f" when creating the engine."
+                    f" can't and performance is not a priority, you may also just set "
+                    f"`batch_dim=None` when creating the engine."
                 )
 
     def compute_gramian(self, output: Tensor) -> Tensor:
