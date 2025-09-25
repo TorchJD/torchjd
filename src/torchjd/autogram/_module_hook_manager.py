@@ -216,9 +216,9 @@ class Hook:
 
         flat_outputs, output_spec = tree_flatten(output)
 
-        if not any(isinstance(t, Tensor) for t in flat_outputs):
-            # This can happen only if a module returns no Tensor, for instance some niche usage
-            # such as a module that prints something.
+        if not any(isinstance(t, Tensor) for t in flat_outputs if t.requires_grad):
+            # This can happen only if a module returns no Tensor with a graph, for instance some
+            # niche usage such as a module that prints something.
             return output
 
         requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
