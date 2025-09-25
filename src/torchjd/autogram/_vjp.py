@@ -48,7 +48,7 @@ class VJP(ABC):
 class FunctionalVJP(VJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
-    func api. The __call__ function takes both the inputs and the cotangents that can be vmaped
+    func api. The __call__ function takes both the inputs and the cotangents that can be vmapped
     jointly in both terms to avoid providing to block diagonal jacobians. The disadvantage of using
     this method is that it computes the forward phase.
 

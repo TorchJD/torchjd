@@ -225,7 +225,7 @@ class Hook:
         self.gramian_accumulator.track_parameter_paths(requires_grad_params)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
-        # edges (the edges of the original ouputs of the model) as target. For memory
+        # edges (the edges of the original outputs of the model) as target. For memory
         # efficiency, we select the smallest one (that requires grad).
         inf = float("inf")
         preference = torch.tensor([t.numel() if t.requires_grad else inf for t in flat_outputs])
