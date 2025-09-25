@@ -15,6 +15,7 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
+# This includes vmapped VJPs, which are not of type VJP.
 VJPType = Callable[[PyTree, PyTree], dict[str, Tensor]]
 
 
