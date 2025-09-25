@@ -498,22 +498,38 @@ class WithSomeFrozenModule(ShapedModule):
         return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)
 
 
-class SomeFrozenParamAndUnusedTrainableParam(ShapedModule):
+class RequiresGradOfSchrodinger(ShapedModule):
     """
-    Module that has a frozen param (requires_grad=False) and a non-frozen param (requires_grad=
-    True), but the non-frozen param is also unused.
+    Wtf?
     """
 
     INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES = (10,)
+    OUTPUT_SHAPES = (3,)
+
+    class SomeFrozenParamAndUnusedTrainableParam(ShapedModule):
+        """
+        Module that has a frozen param (requires_grad=False) and a non-frozen param (requires_grad=
+        True), but the non-frozen param is also unused.
+        """
+
+        INPUT_SHAPES = (50,)
+        OUTPUT_SHAPES = (10,)
+
+        def __init__(self):
+            super().__init__()
+            self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
+            self.non_frozen_param = nn.Parameter(torch.randn(50, 10))
+
+        def forward(self, input: Tensor):
+            return input @ self.frozen_param
 
     def __init__(self):
         super().__init__()
-        self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
-        self.non_frozen_param = nn.Parameter(torch.randn(50, 10))
+        self.weird_module = self.SomeFrozenParamAndUnusedTrainableParam()
+        self.normal_module = nn.Linear(10, 3)
 
     def forward(self, input: Tensor):
-        return input @ self.frozen_param
+        return self.normal_module(self.weird_module(input))
 
 
 class MultiOutputWithFrozenBranch(ShapedModule):
