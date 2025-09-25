@@ -40,9 +40,8 @@ class VJP(ABC):
     @abstractmethod
     def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
         """
-        VJP function that takes cotangents and inputs and returns dictionary of names of
-        parameters (as given by `module.named_parameters.keys()`) to gradients of the parameters
-        for the given cotangents at the given inputs.
+        Computes and returns the dictionary of parameter names to their gradients for the given
+        grad_outputs (cotangents) and at the given inputs.
         """
 
 
@@ -51,7 +50,7 @@ class FunctionalVJP(VJP):
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     func api. The __call__ function takes both the inputs and the cotangents that can be vmapped
     jointly in both terms to avoid providing to block diagonal jacobians. The disadvantage of using
-    this method is that it computes the forward phase.
+    this method is that it makes an extra forward pass.
 
     :params module: The module to differentiate.
     """
@@ -100,8 +99,8 @@ class AutogradVJP(VJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
-    inputs. The main advantage of using this method is that it doesn't require computing the forward
-    phase.
+    inputs. The main advantage of using this method is that it doesn't require making an extra
+    forward pass.
     """
 
     def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
