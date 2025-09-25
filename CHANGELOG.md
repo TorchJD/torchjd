@@ -12,7 +12,8 @@ changes that do not affect the user.
 
 - Added the `autogram` package, with the `autogram.Engine`. This is an implementation of Algorithm 3
   from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232),
-  optimized for batched computations, as in IWRM.
+  optimized for batched computations, as in IWRM. Generalized Gramians can also be obtained by using
+  the autogram engine on a tensor of losses of arbitrary shape.
 - For all `Aggregator`s based on the weighting of the Gramian of the Jacobian, made their
   `Weighting` class public. It can be used directly on a Gramian (computed via the
   `autogram.Engine`) to extract some weights. The list of new public classes is:
@@ -29,8 +30,11 @@ changes that do not affect the user.
   - `PCGradWeighting`
   - `RandomWeighting`
   - `SumWeighting`
+- Added `GeneralizedWeighting` (base class) and `Flattening` (implementation) to extract tensors of
+  weights from generalized Gramians.
 - Added usage example for IWRM with autogram.
 - Added usage example for IWRM with partial autogram.
+- Added usage example for IWMTL with autogram.
 
 ### Changed
 

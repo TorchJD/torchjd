@@ -19,7 +19,8 @@ of weights from the Gramian of the Jacobian. The
 :class:`Aggregators <torchjd.aggregation._aggregator_bases.Aggregator>` and :class:`Weightings
 <torchjd.aggregation._weighting_bases.Weighting>` are callables that take a Jacobian matrix or a
 Gramian matrix as inputs, respectively. The following example shows how to use UPGrad to either
-aggregate a Jacobian or obtain the weights from the Gramian of the Jacobian.
+aggregate a Jacobian (of shape ``[m, n]``, where ``m`` is the number of objectives and ``n`` is the
+number of parameters), or obtain the weights from the Gramian of the Jacobian (of shape ``[m, m]``).
 
 >>> from torch import tensor
 >>> from torchjd.aggregation import UPGrad, UPGradWeighting
@@ -34,6 +35,28 @@ tensor([0.2929, 1.9004, 1.9004])
 >>> weights = weighting(gramian)
 >>> weights
 tensor([1.1109, 0.7894])
+
+When dealing with a more general tensor of objectives, of shape ``[m_1, ..., m_k]`` (i.e. not
+necessarily a simple vector), the Jacobian will be of shape ``[m_1, ..., m_k, n]``, and its Gramian
+will be called a `generalized Gramian`, of shape ``[m_1, ..., m_k, m_k, ..., m_1]``. One can use a
+:class:`GeneralizedWeighting<torchjd.aggregation._weighting_bases.GeneralizedWeighting>` to extract
+a tensor of weights (of shape ``[m_1, ..., m_k]``) from such a generalized Gramian. The simplest
+:class:`GeneralizedWeighting<torchjd.aggregation._weighting_bases.GeneralizedWeighting>` is
+:class:`Flattening<torchjd.aggregation._flattening.Flattening>`: it simply "flattens" the
+generalized Gramian into a square Gramian matrix (of shape ``[m_1 * ... * m_k, m_1 * ... * m_k]``),
+applies a normal weighting to it to obtain a vector of weights, and returns the reshaped tensor of
+weights.
+
+>>> from torch import ones
+>>> from torchjd.aggregation import Flattening, UPGradWeighting
+>>>
+>>> weighting = Flattening(UPGradWeighting())
+>>> # Generate a generalized Gramian filled with ones, for the sake of the example
+>>> generalized_gramian = ones((2, 3, 3, 2))
+>>> weights = weighting(generalized_gramian)
+>>> weights
+tensor([[0.1667, 0.1667, 0.1667],
+        [0.1667, 0.1667, 0.1667]])
 """
 
 from ._aggregator_bases import Aggregator
@@ -41,6 +64,7 @@ from ._aligned_mtl import AlignedMTL, AlignedMTLWeighting
 from ._config import ConFIG
 from ._constant import Constant, ConstantWeighting
 from ._dualproj import DualProj, DualProjWeighting
+from ._flattening import Flattening
 from ._graddrop import GradDrop
 from ._imtl_g import IMTLG, IMTLGWeighting
 from ._krum import Krum, KrumWeighting
@@ -54,7 +78,7 @@ from ._upgrad import UPGrad, UPGradWeighting
 from ._utils.check_dependencies import (
     OptionalDepsNotInstalledError as _OptionalDepsNotInstalledError,
 )
-from ._weighting_bases import Weighting
+from ._weighting_bases import GeneralizedWeighting, Weighting
 
 try:
     from ._cagrad import CAGrad, CAGradWeighting
