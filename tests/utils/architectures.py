@@ -500,7 +500,9 @@ class WithSomeFrozenModule(ShapedModule):
 
 class RequiresGradOfSchrodinger(ShapedModule):
     """
-    Wtf?
+    Model that contains a module whose output will not require grad despite containing a param that
+    requires grad (so it will be hooked). The final output of the model will require grad, though,
+    because another normal module is used on the output of the first module.
     """
 
     INPUT_SHAPES = (50,)
