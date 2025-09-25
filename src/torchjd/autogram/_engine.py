@@ -113,7 +113,7 @@ class Engine:
         memory-efficient, and thus typically faster, to use the Gramian-based approach.
 
     .. warning::
-        When providing an non-None ``batch_dim``, all provided modules must respect a few
+        When providing a non-None ``batch_dim``, all provided modules must respect a few
         conditions:
 
         * They should treat the elements of the batch independently. Most common layers respect
@@ -129,14 +129,14 @@ class Engine:
           open an issue if you need extra focus on this).
         * They should not perform in-place operations on tensors (for instance you should not use
           ``track_running_stats=True`` in normalization layers).
-        * They should not have side-effects during the forward pass (since their forward pass will
-          be called twice, the side-effects could be different from what's expected).
+        * They should not have side effects during the forward pass (since their forward pass will
+          be called twice, the side effects could be different from what's expected).
         * If they have some randomness during the forward pass, they should not have direct
           trainable parameters. It is, however, perfectly fine for random modules to have child
           modules that have trainable parameters, so if you have a random module with some direct
           parameters, a simple fix is to wrap these parameters into a child module.
 
-        If you're building your own architecture, respecting those criterions should be quite easy.
+        If you're building your own architecture, respecting those criteria should be quite easy.
         However, if you're using an existing architecture, you may have to modify it to make it
         compatible with the autogram engine. For instance, you may want to replace `BatchNorm2d
         <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ layers by
