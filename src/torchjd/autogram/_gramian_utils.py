@@ -24,7 +24,7 @@ def reshape_gramian(gramian: Tensor, half_shape: list[int]) -> Tensor:
 def _revert_last_dims(gramian: Tensor) -> Tensor:
     """Inverts the order of the last half of the dimensions of the input generalized Gramian."""
 
-    half_ndim = len(gramian.shape) // 2
+    half_ndim = gramian.ndim // 2
     last_dims = [half_ndim + i for i in range(half_ndim)]
     return gramian.movedim(last_dims, last_dims[::-1])
 
