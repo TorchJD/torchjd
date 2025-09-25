@@ -163,7 +163,7 @@ class JacobianAccumulator(torch.autograd.Function):
         module: nn.Module,
         *xs: Tensor,
     ) -> tuple[Tensor, ...]:
-        return tuple([x.detach() for x in xs])
+        return tuple(x.detach() for x in xs)
 
     # For Python version > 3.10, the type of `inputs` should become
     # tuple[BoolRef, TreeSpec, VJPType, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
