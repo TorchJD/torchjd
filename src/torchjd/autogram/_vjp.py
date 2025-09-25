@@ -111,10 +111,19 @@ class AutogradVJP(VJP):
 
     def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
         flat_grad_outputs = tree_flatten(grad_outputs)[0]
+
+        # Only differentiate outputs that require grad. We only need their grad_outputs.
+        outputs_ = list[Tensor]()
+        grad_outputs_ = list[Tensor]()
+        for output, grad_output, requires_grad in zip(self.outputs, flat_grad_outputs, self.mask):
+            if requires_grad:
+                outputs_.append(output)
+                grad_outputs_.append(grad_output)
+
         grads = torch.autograd.grad(
-            [t for t, requires_grad in zip(self.outputs, self.mask) if requires_grad],
+            outputs_,
             self.flat_trainable_params,
-            [t for t, requires_grad in zip(flat_grad_outputs, self.mask) if requires_grad],
+            grad_outputs_,
             retain_graph=True,
             allow_unused=True,
             materialize_grads=True,
