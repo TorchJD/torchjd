@@ -108,9 +108,9 @@ class Engine:
                 losses.backward(weights)
                 optimizer.step()
 
-        This is equivalent to just calling ``torchjd.autojac.backward(losses)``. However, since the
-        Jacobian never has to be entirely in memory, it is often much more memory-efficient, and
-        thus typically faster, to use the Gramian-based approach.
+        This is equivalent to just calling ``torchjd.autojac.backward(losses, UPGrad())``. However,
+        since the Jacobian never has to be entirely in memory, it is often much more
+        memory-efficient, and thus typically faster, to use the Gramian-based approach.
 
     .. warning::
         When providing an non-None ``batch_dim``, all provided modules must respect a few
