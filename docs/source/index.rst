@@ -49,9 +49,9 @@ documentation and usage example of this algorithm is provided in
 :doc:`autogram.Engine <docs/autogram/engine>`.
 
 The original usage of the autogram engine is to compute the Gramian of the Jacobian very efficiently
-for :doc:`IWRM <examples/iwrm>`. It can also be used when considering one loss per element of the
-batch and per task, in the context of multi-task learning. We call this :doc:`Instance-Wise Risk
-Multi-Task Learning <examples/iwmtl>` (IWMTL).
+for :doc:`IWRM <examples/iwrm>`. Another direct application is when considering one loss per element
+of the batch and per task, in the context of multi-task learning. We call this
+:doc:`Instance-Wise Risk Multi-Task Learning <examples/iwmtl>` (IWMTL).
 
 TorchJD is open-source, under MIT License. The source code is available on
 `GitHub <https://github.com/TorchJD/torchjd>`_.
