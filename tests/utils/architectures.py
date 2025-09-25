@@ -498,6 +498,42 @@ class WithSomeFrozenModule(ShapedModule):
         return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)
 
 
+class RequiresGradOfSchrodinger(ShapedModule):
+    """
+    Model that contains a module whose output will not require grad despite containing a param that
+    requires grad (so it will be hooked). The final output of the model will require grad, though,
+    because another normal module is used on the output of the first module.
+    """
+
+    INPUT_SHAPES = (50,)
+    OUTPUT_SHAPES = (3,)
+
+    class SomeFrozenParamAndUnusedTrainableParam(ShapedModule):
+        """
+        Module that has a frozen param (requires_grad=False) and a non-frozen param (requires_grad=
+        True), but the non-frozen param is also unused.
+        """
+
+        INPUT_SHAPES = (50,)
+        OUTPUT_SHAPES = (10,)
+
+        def __init__(self):
+            super().__init__()
+            self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
+            self.non_frozen_param = nn.Parameter(torch.randn(50, 10))
+
+        def forward(self, input: Tensor):
+            return input @ self.frozen_param
+
+    def __init__(self):
+        super().__init__()
+        self.weird_module = self.SomeFrozenParamAndUnusedTrainableParam()
+        self.normal_module = nn.Linear(10, 3)
+
+    def forward(self, input: Tensor):
+        return self.normal_module(self.weird_module(input))
+
+
 class MultiOutputWithFrozenBranch(ShapedModule):
     """
     Module that has two outputs: one comes from a frozen parameter, so it will only require grad
@@ -685,6 +721,20 @@ class WithModuleTrackingRunningStats(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         return self.instance_norm(input)
+
+
+class WithBatchNorm(ShapedModule):
+    """Simple model containing a BatchNorm layer."""
+
+    INPUT_SHAPES = (3, 6, 6)
+    OUTPUT_SHAPES = (3, 6, 6)
+
+    def __init__(self):
+        super().__init__()
+        self.batch_norm = nn.BatchNorm2d(3, affine=True, track_running_stats=False)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.batch_norm(input)
 
 
 class FreeParam(ShapedModule):

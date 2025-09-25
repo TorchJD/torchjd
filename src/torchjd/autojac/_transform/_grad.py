@@ -4,7 +4,6 @@ import torch
 from torch import Tensor
 
 from ._differentiate import Differentiate
-from ._materialize import materialize
 from ._ordered_set import OrderedSet
 
 
@@ -52,15 +51,7 @@ class Grad(Differentiate):
             return tuple()
 
         if len(self.outputs) == 0:
-            return tuple([torch.zeros_like(input) for input in self.inputs])
+            return tuple(torch.zeros_like(input) for input in self.inputs)
 
-        optional_grads = torch.autograd.grad(
-            self.outputs,
-            self.inputs,
-            grad_outputs=grad_outputs,
-            retain_graph=self.retain_graph,
-            create_graph=self.create_graph,
-            allow_unused=True,
-        )
-        grads = materialize(optional_grads, self.inputs)
+        grads = self._get_vjp(grad_outputs, self.retain_graph)
         return grads

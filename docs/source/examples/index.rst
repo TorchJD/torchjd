@@ -18,6 +18,10 @@ This section contains some usage examples for TorchJD.
 - :doc:`Multi-Task Learning (MTL) <mtl>` provides an example of multi-task learning where Jacobian
   descent is used to optimize the vector of per-task losses of a multi-task model, using the
   dedicated backpropagation function :doc:`mtl_backward <../docs/autojac/mtl_backward>`.
+- :doc:`Instance-Wise Multi-Task Learning (IWMTL) <iwmtl>` shows how to combine multi-task learning
+  with instance-wise risk minimization: one loss per task and per element of the batch, using the
+  :doc:`autogram.Engine <../docs/autogram/engine>` and a :doc:`GeneralizedWeighting
+  <../docs/aggregation/index>`.
 - :doc:`Recurrent Neural Network (RNN) <rnn>` shows how to apply Jacobian descent to RNN training,
   with one loss per output sequence element.
 - :doc:`Monitoring Aggregations <monitoring>` shows how to monitor the aggregation performed by the
@@ -34,6 +38,7 @@ This section contains some usage examples for TorchJD.
     iwrm.rst
     partial_jd.rst
     mtl.rst
+    iwmtl.rst
     rnn.rst
     monitoring.rst
     lightning_integration.rst
