@@ -740,6 +740,21 @@ class WithBatchNorm(ShapedModule):
         return self.batch_norm(input)
 
 
+class WithDropout(ShapedModule):
+    """Simple model containing Dropout layers."""
+
+    INPUT_SHAPES = (3, 6, 6)
+    OUTPUT_SHAPES = (3, 4, 4)
+
+    def __init__(self):
+        super().__init__()
+        self.conv2d = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)
+        self.dropout = nn.Dropout2d(p=0.5)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.dropout(self.conv2d(self.dropout(input)))
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
