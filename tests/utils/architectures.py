@@ -698,15 +698,18 @@ class Ndim4Output(ShapedModule):
         return torch.einsum("bi,icdef->bcdef", input, self.tensor)
 
 
-class WithRNN(nn.Module):
-    """Simple model containing an RNN module (that is not even used)."""
+class WithRNN(ShapedModule):
+    """Simple model containing an RNN module."""
+
+    INPUT_SHAPES = (20, 8)  # Size 20, dim input_size (8)
+    OUTPUT_SHAPES = (20, 5)  # Size 20, dim hidden_size (5)
 
     def __init__(self):
         super().__init__()
-        self.rnn = nn.RNN(input_size=10, hidden_size=5)
+        self.rnn = nn.RNN(input_size=8, hidden_size=5, batch_first=True)
 
-    def forward(self, input: Tensor) -> None:
-        pass
+    def forward(self, input: Tensor) -> Tensor:
+        return self.rnn(input)
 
 
 class WithModuleTrackingRunningStats(ShapedModule):
