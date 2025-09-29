@@ -20,6 +20,7 @@ from utils.architectures import (
     InterModuleParamReuse,
     MIMOBranched,
     MISOBranched,
+    ModelUsingSubmoduleParamsDirectly,
     ModuleReuse,
     MultiInputMultiOutput,
     MultiInputSingleOutput,
@@ -173,6 +174,21 @@ def test_compute_gramian_with_weird_modules(
     """
     Tests that compute_gramian works even with some problematic modules when batch_dim is None. It
     is expected to fail on those when the engine uses the batched optimization (when batch_dim=0).
+    """
+
+    _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
+
+
+@mark.xfail
+@mark.parametrize("architecture", [ModelUsingSubmoduleParamsDirectly])
+@mark.parametrize("batch_size", [1, 3, 32])
+@mark.parametrize("batch_dim", [0, None])
+def test_compute_gramian_unsupported_architectures(
+    architecture: type[ShapedModule], batch_size: int, batch_dim: int | None
+):
+    """
+    Tests compute_gramian on some architectures that are known to be unsupported. It is expected to
+    fail.
     """
 
     _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
