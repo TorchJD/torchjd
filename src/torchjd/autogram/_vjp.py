@@ -68,9 +68,9 @@ class FunctionalVJP(ModuleVJP):
         inputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), inputs_j)
         grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
 
-        def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
+        def functional_model_call(trainable_params: dict[str, Parameter]) -> Tensor:
             all_state = {
-                **primals,
+                **trainable_params,
                 **dict(self.module.named_buffers()),
                 **self.frozen_params,
             }
