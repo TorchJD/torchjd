@@ -755,6 +755,23 @@ class WithDropout(ShapedModule):
         return self.dropout(self.conv2d(self.dropout(input)))
 
 
+class ModelUsingSubmoduleParamsDirectly(ShapedModule):
+    """
+    Model that uses its submodule's parameters directly and that does not call its submodule's
+    forward.
+    """
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(2, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return input @ self.linear.weight.T + self.linear.bias
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
