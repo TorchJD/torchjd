@@ -9,7 +9,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import VJP, AutogradVJP, FunctionalVJP, Vmapped
+from ._vjp import VJP, AutogradVJP, FunctionalVJP
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -232,11 +232,7 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(flat_outputs[index]))
 
-        vjp: VJP
-        if self.has_batch_dim:
-            vjp = Vmapped(FunctionalVJP(module))
-        else:
-            vjp = AutogradVJP(module, flat_outputs)
+        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, flat_outputs)
 
         autograd_fn_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
