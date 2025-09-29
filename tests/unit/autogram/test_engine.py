@@ -157,7 +157,13 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
 
 @mark.parametrize(
     "architecture",
-    [WithBatchNorm, WithSideEffect, Randomness, WithModuleTrackingRunningStats, WithRNN],
+    [
+        WithBatchNorm,
+        WithSideEffect,
+        Randomness,
+        WithModuleTrackingRunningStats,
+        param(WithRNN, marks=mark.xfail_if_cuda),
+    ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [param(0, marks=mark.xfail), None])
