@@ -147,6 +147,20 @@ class Engine:
         The alternative is to use ``batch_dim=None``, but it's not recommended since it will
         increase memory usage by a lot and thus typically slow down computation.
 
+    .. warning::
+        Parent modules should call their child modules directly rather than using their child
+        modules' parameters themselves. For instance, the following model is not supported:
+
+        >>> class Model(nn.Module):
+        >>>     def __init__(self):
+        >>>         super().__init__()
+        >>>         self.linear = nn.Linear(2, 3)  # Child module
+        >>>
+        >>>     def forward(self, input: Tensor) -> Tensor:
+        >>>         # Incorrect: Use the child module's parameters directly without calling it.
+        >>>         return input @ self.linear.weight.T + self.linear.bias
+        >>>         # Correct alternative: return self.linear(input)
+
     .. note::
           For maximum efficiency, modules should ideally not contain both direct trainable
           parameters and child modules, especially if those direct trainable parameters are used
