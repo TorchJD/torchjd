@@ -49,7 +49,7 @@ class FunctionalVJP(ModuleVJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     functional differentiation API. This requires to use vmap, so it's not compatible with
-    everything, and it requires to have an extra forward pass to create the vjp function.
+    every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
     def __init__(self, module: nn.Module):
