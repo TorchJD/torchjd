@@ -9,7 +9,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import AutogradVJP, FunctionalVJP, VJPType
+from ._vjp import VJP, AutogradVJP, FunctionalVJP, Vmapped
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -93,7 +93,7 @@ class AccumulateJacobian(torch.autograd.Function):
     @staticmethod
     def forward(
         output_spec: TreeSpec,
-        vjp: VJPType,
+        vjp: VJP,
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
@@ -110,7 +110,7 @@ class AccumulateJacobian(torch.autograd.Function):
         _,
         in_dims: PyTree,
         output_spec: TreeSpec,
-        vjp: VJPType,
+        vjp: VJP,
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
@@ -157,7 +157,7 @@ class JacobianAccumulator(torch.autograd.Function):
     def forward(
         gramian_accumulation_phase: BoolRef,
         output_spec: TreeSpec,
-        vjp: VJPType,
+        vjp: VJP,
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
@@ -166,7 +166,7 @@ class JacobianAccumulator(torch.autograd.Function):
         return tuple(x.detach() for x in xs)
 
     # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, TreeSpec, VJPType, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
+    # tuple[BoolRef, TreeSpec, VJP, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
@@ -232,8 +232,9 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(flat_outputs[index]))
 
+        vjp: VJP
         if self.has_batch_dim:
-            vjp = torch.vmap(FunctionalVJP(module))
+            vjp = Vmapped(FunctionalVJP(module))
         else:
             vjp = AutogradVJP(module, flat_outputs)
 

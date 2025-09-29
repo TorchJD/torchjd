@@ -15,11 +15,18 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
-# This includes vmapped VJPs, which are not of type VJP.
-VJPType = Callable[[PyTree, PyTree], dict[str, Tensor]]
-
-
 class VJP(ABC):
+    """Represents an abstract VJP function."""
+
+    @abstractmethod
+    def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
+        """
+        Computes and returns the dictionary of parameter names to their gradients for the given
+        grad_outputs (cotangents) and at the given inputs.
+        """
+
+
+class ModuleVJP(VJP, ABC):
     """
     Represents an abstract VJP function for a module's forward pass with respect to its parameters.
 
@@ -37,15 +44,19 @@ class VJP(ABC):
             else:
                 self.frozen_params[name] = param
 
-    @abstractmethod
+
+class Vmapped(VJP):
+    """VJP wrapper that applies the wrapped VJP, vmapped on the first dimension."""
+
+    def __init__(self, vjp: VJP):
+        super().__init__()
+        self.vmapped_vjp = torch.vmap(vjp)
+
     def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
-        """
-        Computes and returns the dictionary of parameter names to their gradients for the given
-        grad_outputs (cotangents) and at the given inputs.
-        """
+        return self.vmapped_vjp(grad_outputs, inputs)
 
 
-class FunctionalVJP(VJP):
+class FunctionalVJP(ModuleVJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     func api. The __call__ function takes both the inputs and the cotangents that can be vmapped
@@ -95,7 +106,7 @@ class FunctionalVJP(VJP):
         return torch.func.vjp(functional_model_call, self.trainable_params)[1]
 
 
-class AutogradVJP(VJP):
+class AutogradVJP(ModuleVJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
