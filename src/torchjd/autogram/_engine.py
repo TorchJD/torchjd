@@ -149,7 +149,7 @@ class Engine:
 
     .. warning::
         Parent modules should call their child modules directly rather than using their child
-        modules' parameters themselves. For instance, the following model is not be supported:
+        modules' parameters themselves. For instance, the following model is not supported:
 
         >>> class Model(nn.Module):
         >>>     def __init__(self):
