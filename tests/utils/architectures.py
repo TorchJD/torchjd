@@ -772,6 +772,31 @@ class ModelUsingSubmoduleParamsDirectly(ShapedModule):
         return input @ self.linear.weight.T + self.linear.bias
 
 
+class WithModuleWithStringArg(ShapedModule):
+    """Model containing a module that has a string argument."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    class WithStringArg(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(2, 3))
+
+        def forward(self, input: Tensor, s: str) -> Tensor:
+            if s == "two":
+                return input @ self.matrix * 2.0
+            else:
+                return input @ self.matrix
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = self.WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg(input, "two")
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
