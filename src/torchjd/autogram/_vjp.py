@@ -4,7 +4,7 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
+from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map_only, tree_unflatten
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -19,7 +19,9 @@ class VJP(ABC):
     """Represents an abstract VJP function."""
 
     @abstractmethod
-    def __call__(self, grad_outputs: PyTree, args: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, flat_grad_outputs: tuple[Tensor | None, ...], args: PyTree
+    ) -> dict[str, Tensor]:
         """
         Computes and returns the dictionary of parameter names to their gradients for the given
         grad_outputs (cotangents) and at the given inputs.
@@ -52,20 +54,26 @@ class FunctionalVJP(ModuleVJP):
     every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: nn.Module, output_spec: TreeSpec):
         super().__init__(module)
+        self.output_spec = output_spec
         self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
 
-    def __call__(self, grad_outputs: PyTree, args: PyTree) -> dict[str, Tensor]:
-        return self.vmapped_vjp(grad_outputs, args)
+    def __call__(
+        self, flat_grad_outputs: tuple[Tensor | None, ...], args: PyTree
+    ) -> dict[str, Tensor]:
+        return self.vmapped_vjp(flat_grad_outputs, args)
 
-    def _call_on_one_instance(self, grad_outputs_j: PyTree, args_j: PyTree) -> dict[str, Tensor]:
+    def _call_on_one_instance(
+        self, flat_grad_outputs_j: tuple[Tensor | None, ...], args_j: PyTree
+    ) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
         # an element of a batch. We thus always provide them with batches, just of a
         # different size.
         args_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), args_j)
+        grad_outputs_j = tree_unflatten(flat_grad_outputs_j, self.output_spec)
         grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
 
         def functional_model_call(trainable_params: dict[str, Parameter]) -> Tensor:
@@ -105,8 +113,9 @@ class AutogradVJP(ModuleVJP):
 
         self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
-    def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
-        flat_grad_outputs = tree_flatten(grad_outputs)[0]
+    def __call__(
+        self, flat_grad_outputs: tuple[Tensor | None, ...], _: PyTree
+    ) -> dict[str, Tensor]:
 
         # Only keep the grad_outputs corresponding to outputs that require grad.
         grad_outputs_ = [grad_output for grad_output, rg in zip(flat_grad_outputs, self.mask) if rg]
