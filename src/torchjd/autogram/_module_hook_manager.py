@@ -164,7 +164,7 @@ class JacobianAccumulator(torch.autograd.Function):
         return tuple(x.detach() for x in xs)
 
     # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, TreeSpec, VJP, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
+    # tuple[BoolRef, VJP, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
