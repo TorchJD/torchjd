@@ -797,6 +797,29 @@ class WithModuleWithStringArg(ShapedModule):
         return self.with_string_arg("two", input)
 
 
+class WithModuleWithStringOutput(ShapedModule):
+    """Model containing a module that has a string output."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    class WithStringOutput(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(2, 3))
+
+        def forward(self, input: Tensor) -> tuple[str, Tensor]:
+            return "test", input @ self.matrix
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_output = self.WithStringOutput()
+
+    def forward(self, input: Tensor) -> Tensor:
+        _, output = self.with_string_output(input)
+        return output
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
