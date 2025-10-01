@@ -797,6 +797,53 @@ class WithModuleWithStringArg(ShapedModule):
         return self.with_string_arg("two", input)
 
 
+class WithModuleWithHybridPyTreeArg(ShapedModule):
+    """
+    Model containing a module that has a PyTree argument containing a mix of tensor and non-tensor
+    leaves.
+    """
+
+    INPUT_SHAPES = (18,)
+    OUTPUT_SHAPES = (3,)
+
+    class WithHybridPyTreeArg(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.m0 = nn.Parameter(torch.randn(3, 3))
+            self.m1 = nn.Parameter(torch.randn(4, 3))
+            self.m2 = nn.Parameter(torch.randn(5, 3))
+            self.m3 = nn.Parameter(torch.randn(6, 3))
+
+        def forward(self, input: PyTree) -> Tensor:
+            t0 = input["one"][0][0]
+            t1 = input["one"][0][1]
+            t2 = input["one"][1]
+            t3 = input["two"]
+
+            c0 = input["one"][0][3]
+            c1 = input["one"][0][4][0]
+            c2 = input["one"][2]
+            c3 = input["three"]
+
+            return c0 * t0 @ self.m0 + c1 * t1 @ self.m1 + c2 * t2 @ self.m2 + c3 * t3 @ self.m3
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = self.WithHybridPyTreeArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
+
+        tree = {
+            "zero": "unused",
+            "one": [(t0, t1, "unused", 0.2, [0.3, "unused"]), t2, 0.4, "unused"],
+            "two": t3,
+            "three": 0.5,
+        }
+
+        return self.with_string_arg(tree)
+
+
 class WithModuleWithStringOutput(ShapedModule):
     """Model containing a module that has a string output."""
 
