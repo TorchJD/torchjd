@@ -68,9 +68,7 @@ class FunctionalVJP(ModuleVJP):
         # an element of a batch. We thus always provide them with batches, just of a
         # different size.
         args_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), args_j)
-        flat_grad_outputs_j = tree_map_only(
-            torch.Tensor, lambda x: x.unsqueeze(0), flat_grad_outputs_j
-        )
+        flat_grad_outputs_j_ = [x.unsqueeze(0) for x in flat_grad_outputs_j]
 
         def flat_functional_model_call(trainable_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = {
@@ -86,7 +84,7 @@ class FunctionalVJP(ModuleVJP):
         # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
         # the 0'th element to obtain the dict of gradients w.r.t. the module's named_parameters.
-        return vjp_func(flat_grad_outputs_j)[0]
+        return vjp_func(flat_grad_outputs_j_)[0]
 
 
 class AutogradVJP(ModuleVJP):
