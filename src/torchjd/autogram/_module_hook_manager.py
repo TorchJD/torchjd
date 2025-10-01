@@ -123,11 +123,7 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(flat_outputs[index]))
 
-        vjp = (
-            FunctionalVJP(module, output_spec)
-            if self.has_batch_dim
-            else AutogradVJP(module, flat_outputs)
-        )
+        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, flat_outputs)
 
         autograd_fn_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,

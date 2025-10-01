@@ -4,7 +4,7 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map_only, tree_unflatten
+from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -54,9 +54,8 @@ class FunctionalVJP(ModuleVJP):
     every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
-    def __init__(self, module: nn.Module, output_spec: TreeSpec):
+    def __init__(self, module: nn.Module):
         super().__init__(module)
-        self.output_spec = output_spec
         self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
 
     def __call__(
@@ -73,23 +72,25 @@ class FunctionalVJP(ModuleVJP):
         # an element of a batch. We thus always provide them with batches, just of a
         # different size.
         args_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), args_j)
-        grad_outputs_j = tree_unflatten(flat_grad_outputs_j, self.output_spec)
-        grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
+        flat_grad_outputs_j = tree_map_only(
+            torch.Tensor, lambda x: x.unsqueeze(0), flat_grad_outputs_j
+        )
 
-        def functional_model_call(trainable_params: dict[str, Parameter]) -> Tensor:
+        def flat_functional_model_call(trainable_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = {
                 **trainable_params,
                 **dict(self.module.named_buffers()),
                 **self.frozen_params,
             }
-            return torch.func.functional_call(self.module, all_state, args_j)
+            output = torch.func.functional_call(self.module, all_state, args_j)
+            return tree_flatten(output)[0]
 
-        vjp_func = torch.func.vjp(functional_model_call, self.trainable_params)[1]
+        vjp_func = torch.func.vjp(flat_functional_model_call, self.trainable_params)[1]
 
         # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
         # the 0'th element to obtain the dict of gradients w.r.t. the module's named_parameters.
-        return vjp_func(grad_outputs_j)[0]
+        return vjp_func(flat_grad_outputs_j)[0]
 
 
 class AutogradVJP(ModuleVJP):
