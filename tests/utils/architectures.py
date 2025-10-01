@@ -783,7 +783,7 @@ class WithModuleWithStringArg(ShapedModule):
             super().__init__()
             self.matrix = nn.Parameter(torch.randn(2, 3))
 
-        def forward(self, input: Tensor, s: str) -> Tensor:
+        def forward(self, s: str, input: Tensor) -> Tensor:
             if s == "two":
                 return input @ self.matrix * 2.0
             else:
@@ -794,7 +794,7 @@ class WithModuleWithStringArg(ShapedModule):
         self.with_string_arg = self.WithStringArg()
 
     def forward(self, input: Tensor) -> Tensor:
-        return self.with_string_arg(input, "two")
+        return self.with_string_arg("two", input)
 
 
 class FreeParam(ShapedModule):
