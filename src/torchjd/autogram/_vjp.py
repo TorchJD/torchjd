@@ -107,7 +107,9 @@ class AutogradVJP(ModuleVJP):
         self.rg_outputs = rg_outputs
         self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
-    def __call__(self, grad_outputs: tuple[Tensor, ...], _: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
             self.rg_outputs,
             self.flat_trainable_params,
