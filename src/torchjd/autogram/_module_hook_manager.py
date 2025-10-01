@@ -213,7 +213,7 @@ class AccumulateJacobian(torch.autograd.Function):
     @staticmethod
     def vmap(
         _,
-        in_dims: PyTree,
+        in_dims: tuple[PyTree, ...],
         output_spec: TreeSpec,
         vjp: VJP,
         args: tuple[PyTree, ...],
