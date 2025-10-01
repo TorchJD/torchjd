@@ -19,9 +19,7 @@ class VJP(ABC):
     """Represents an abstract VJP function."""
 
     @abstractmethod
-    def __call__(
-        self, flat_grad_outputs: tuple[Tensor | None, ...], args: PyTree
-    ) -> dict[str, Tensor]:
+    def __call__(self, flat_grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
         """
         Computes and returns the dictionary of parameter names to their gradients for the given
         grad_outputs (cotangents) and at the given inputs.
@@ -58,13 +56,11 @@ class FunctionalVJP(ModuleVJP):
         super().__init__(module)
         self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
 
-    def __call__(
-        self, flat_grad_outputs: tuple[Tensor | None, ...], args: PyTree
-    ) -> dict[str, Tensor]:
+    def __call__(self, flat_grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
         return self.vmapped_vjp(flat_grad_outputs, args)
 
     def _call_on_one_instance(
-        self, flat_grad_outputs_j: tuple[Tensor | None, ...], args_j: PyTree
+        self, flat_grad_outputs_j: tuple[Tensor, ...], args_j: PyTree
     ) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
@@ -114,9 +110,7 @@ class AutogradVJP(ModuleVJP):
 
         self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
-    def __call__(
-        self, flat_grad_outputs: tuple[Tensor | None, ...], _: PyTree
-    ) -> dict[str, Tensor]:
+    def __call__(self, flat_grad_outputs: tuple[Tensor, ...], _: PyTree) -> dict[str, Tensor]:
 
         # Only keep the grad_outputs corresponding to outputs that require grad.
         grad_outputs_ = [grad_output for grad_output, rg in zip(flat_grad_outputs, self.mask) if rg]
