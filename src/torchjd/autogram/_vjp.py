@@ -19,7 +19,9 @@ class VJP(ABC):
     """Represents an abstract VJP function."""
 
     @abstractmethod
-    def __call__(self, grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         """
         Computes and returns the dictionary of parameter names to their gradients for the given
         grad_outputs (cotangents) and at the given inputs.
@@ -56,11 +58,13 @@ class FunctionalVJP(ModuleVJP):
         super().__init__(module)
         self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
 
-    def __call__(self, grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         return self.vmapped_vjp(grad_outputs, args)
 
     def _call_on_one_instance(
-        self, grad_outputs_j: tuple[Tensor, ...], args_j: PyTree
+        self, grad_outputs_j: tuple[Tensor, ...], args_j: tuple[PyTree, ...]
     ) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
