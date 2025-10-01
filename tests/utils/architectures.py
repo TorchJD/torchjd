@@ -803,7 +803,7 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
     leaves.
     """
 
-    INPUT_SHAPES = (18,)
+    INPUT_SHAPES = (10,)
     OUTPUT_SHAPES = (3,)
 
     class WithHybridPyTreeArg(nn.Module):
@@ -829,9 +829,12 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
 
     def __init__(self):
         super().__init__()
+        self.linear = nn.Linear(10, 18)
         self.with_string_arg = self.WithHybridPyTreeArg()
 
     def forward(self, input: Tensor) -> Tensor:
+        input = self.linear(input)
+
         t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
 
         tree = {
