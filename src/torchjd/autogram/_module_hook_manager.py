@@ -173,8 +173,10 @@ class JacobianAccumulator(torch.autograd.Function):
         ctx.gramian_accumulator = inputs[3]
         ctx.module = inputs[4]
 
+    # For Python version > 3.10, the return type should become
+    # tuple[None, None, None, None, None, *tuple[Tensor | None, ...]]
     @staticmethod
-    def backward(ctx, *flat_grad_outputs: Tensor):
+    def backward(ctx, *flat_grad_outputs: Tensor | None) -> tuple:
         if not ctx.gramian_accumulation_phase:
             return None, None, None, None, None, *flat_grad_outputs
 
@@ -197,7 +199,7 @@ class AccumulateJacobian(torch.autograd.Function):
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_grad_outputs: Tensor,
+        *flat_grad_outputs: Tensor | None,
     ) -> None:
         # There is no non-batched dimension
         generalized_jacobians = vjp(flat_grad_outputs, args)
@@ -212,7 +214,7 @@ class AccumulateJacobian(torch.autograd.Function):
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_jac_outputs: Tensor,
+        *flat_jac_outputs: Tensor | None,
     ) -> tuple[None, None]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
