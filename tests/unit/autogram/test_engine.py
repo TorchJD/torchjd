@@ -109,6 +109,7 @@ PARAMETRIZATIONS = [
     (Ndim3Output, 32),
     (Ndim4Output, 32),
     (WithDropout, 32),
+    (WithModuleWithStringOutput, 32),
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Cifar10Model, 16, marks=mark.slow),
@@ -167,7 +168,6 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
         WithModuleTrackingRunningStats,
         param(WithRNN, marks=mark.xfail_if_cuda),
         WithModuleWithStringArg,
-        param(WithModuleWithStringOutput, marks=mark.xfail),
     ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
