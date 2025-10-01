@@ -70,16 +70,18 @@ class FunctionalVJP(ModuleVJP):
         args_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), args_j)
         grad_outputs_j_ = [x.unsqueeze(0) for x in grad_outputs_j]
 
-        def flat_functional_model_call(trainable_params: dict[str, Parameter]) -> list[Tensor]:
+        def functional_model_call(trainable_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = {
                 **trainable_params,
                 **dict(self.module.named_buffers()),
                 **self.frozen_params,
             }
             output = torch.func.functional_call(self.module, all_state, args_j)
-            return tree_flatten(output)[0]
+            flat_outputs = tree_flatten(output)[0]
+            rg_outputs = [t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad]
+            return rg_outputs
 
-        vjp_func = torch.func.vjp(flat_functional_model_call, self.trainable_params)[1]
+        vjp_func = torch.func.vjp(functional_model_call, self.trainable_params)[1]
 
         # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
@@ -95,28 +97,17 @@ class AutogradVJP(ModuleVJP):
     forward pass.
     """
 
-    def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
+    def __init__(self, module: nn.Module, rg_outputs: Sequence[Tensor]):
         super().__init__(module)
 
-        self.outputs_that_require_grad = list[Tensor]()
-        self.mask = list[bool]()
-        for output in outputs:
-            requires_grad = output.requires_grad
-            if requires_grad:
-                self.outputs_that_require_grad.append(output)
-            self.mask.append(requires_grad)
-
+        self.rg_outputs = rg_outputs
         self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
     def __call__(self, grad_outputs: tuple[Tensor, ...], _: PyTree) -> dict[str, Tensor]:
-
-        # Only keep the grad_outputs corresponding to outputs that require grad.
-        grad_outputs_ = [grad_output for grad_output, rg in zip(grad_outputs, self.mask) if rg]
-
         grads = torch.autograd.grad(
-            self.outputs_that_require_grad,
+            self.rg_outputs,
             self.flat_trainable_params,
-            grad_outputs_,
+            grad_outputs,
             retain_graph=True,
             allow_unused=True,
             materialize_grads=True,
