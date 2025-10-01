@@ -101,16 +101,23 @@ class Hook:
         self.gramian_accumulator = gramian_accumulator
         self.has_batch_dim = has_batch_dim
 
-    def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
+    def __call__(self, module: nn.Module, args: PyTree, outputs: PyTree) -> PyTree:
         if self.gramian_accumulation_phase:
-            return output
+            return outputs
 
-        flat_outputs, output_spec = tree_flatten(output)
+        flat_outputs, output_spec = tree_flatten(outputs)
 
-        if not any(isinstance(t, Tensor) and t.requires_grad for t in flat_outputs):
+        rg_outputs = list[Tensor]()
+        rg_output_indices = list[int]()
+        for idx, output in enumerate(flat_outputs):
+            if isinstance(output, Tensor) and output.requires_grad:
+                rg_outputs.append(output)
+                rg_output_indices.append(idx)
+
+        if len(rg_outputs) == 0:
             # This can happen only if a module has a trainable param but outputs no tensor that
             # require grad
-            return output
+            return outputs
 
         requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
         self.gramian_accumulator.track_parameter_paths(requires_grad_params)
@@ -118,23 +125,25 @@ class Hook:
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
         # efficiency, we select the smallest one (that requires grad).
-        inf = float("inf")
-        preference = torch.tensor([t.numel() if t.requires_grad else inf for t in flat_outputs])
+        preference = torch.tensor([t.numel() for t in rg_outputs])
         index = cast(int, preference.argmin().item())
-        self.target_edges.register(get_gradient_edge(flat_outputs[index]))
+        self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, flat_outputs)
+        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, rg_outputs)
 
-        autograd_fn_outputs = JacobianAccumulator.apply(
+        autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
             vjp,
             args,
             self.gramian_accumulator,
             module,
-            *flat_outputs,
+            *rg_outputs,
         )
 
-        return tree_unflatten(autograd_fn_outputs, output_spec)
+        for idx, output in zip(rg_output_indices, autograd_fn_rg_outputs):
+            flat_outputs[idx] = output
+
+        return tree_unflatten(flat_outputs, output_spec)
 
 
 class JacobianAccumulator(torch.autograd.Function):
