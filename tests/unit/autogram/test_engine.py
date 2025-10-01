@@ -51,6 +51,8 @@ from utils.architectures import (
     WithBuffered,
     WithDropout,
     WithModuleTrackingRunningStats,
+    WithModuleWithStringArg,
+    WithModuleWithStringOutput,
     WithNoTensorOutput,
     WithRNN,
     WithSideEffect,
@@ -164,6 +166,8 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
         Randomness,
         WithModuleTrackingRunningStats,
         param(WithRNN, marks=mark.xfail_if_cuda),
+        WithModuleWithStringArg,
+        param(WithModuleWithStringOutput, marks=mark.xfail),
     ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
