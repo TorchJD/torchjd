@@ -847,6 +847,31 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
         return self.with_string_arg(tree)
 
 
+class WithModuleWithHybridKwargs(ShapedModule):
+    """Model containing a module that has a string keyword argument."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    class WithStringArg(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(2, 3))
+
+        def forward(self, s: str, input: Tensor) -> Tensor:
+            if s == "two":
+                return input @ self.matrix * 2.0
+            else:
+                return input @ self.matrix
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = self.WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg(s="two", input=input)
+
+
 class WithModuleWithStringOutput(ShapedModule):
     """Model containing a module that has a string output."""
 
