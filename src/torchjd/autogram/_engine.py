@@ -120,9 +120,8 @@ class Engine:
           this, but for example `BatchNorm
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ does not (it
           computes some average and standard deviation over the elements of the batch).
-        * Their inputs and outputs can be any PyTree (tensor, tuple or list of tensors, dict of
-          tensors, or any nesting of those structures), but each of these tensors must be batched on
-          its first dimension. `Transformers
+        * Their inputs and outputs can be anything, but each input tensor and each output tensor
+          must be batched on its first dimension. `Transformers
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_ and `RNNs
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ are thus not
           supported yet. This is only an implementation issue, so it should be fixed soon (please
