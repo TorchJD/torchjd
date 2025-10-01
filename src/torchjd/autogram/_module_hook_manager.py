@@ -101,7 +101,7 @@ class Hook:
         self.gramian_accumulator = gramian_accumulator
         self.has_batch_dim = has_batch_dim
 
-    def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
+    def __call__(self, module: nn.Module, args: tuple[PyTree, ...], output: PyTree) -> PyTree:
         if self.gramian_accumulation_phase:
             return output
 
@@ -154,7 +154,7 @@ class JacobianAccumulator(torch.autograd.Function):
         gramian_accumulation_phase: BoolRef,
         output_spec: TreeSpec,
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *xs: Tensor,
@@ -199,7 +199,7 @@ class AccumulateJacobian(torch.autograd.Function):
     def forward(
         output_spec: TreeSpec,
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *flat_grad_outputs: Tensor,
@@ -216,7 +216,7 @@ class AccumulateJacobian(torch.autograd.Function):
         in_dims: PyTree,
         output_spec: TreeSpec,
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *flat_jac_outputs: Tensor,
