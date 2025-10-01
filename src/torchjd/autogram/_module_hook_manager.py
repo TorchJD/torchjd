@@ -129,7 +129,15 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, rg_outputs)
+        rg_output_in_dims = (0,) * len(rg_outputs)
+        arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+        in_dims = (rg_output_in_dims, arg_in_dims)
+
+        vjp = (
+            FunctionalVJP(module, in_dims)
+            if self.has_batch_dim
+            else AutogradVJP(module, rg_outputs)
+        )
 
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,

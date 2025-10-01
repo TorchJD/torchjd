@@ -54,9 +54,9 @@ class FunctionalVJP(ModuleVJP):
     every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: nn.Module, in_dims: tuple[PyTree, ...]):
         super().__init__(module)
-        self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
+        self.vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
 
     def __call__(
         self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...]
