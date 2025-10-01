@@ -174,19 +174,19 @@ class JacobianAccumulator(torch.autograd.Function):
         ctx.module = inputs[4]
 
     @staticmethod
-    def backward(ctx, *flat_grad_outputs: Tensor):
+    def backward(ctx, *grad_outputs: Tensor):
         if not ctx.gramian_accumulation_phase:
-            return None, None, None, None, None, *flat_grad_outputs
+            return None, None, None, None, None, *grad_outputs
 
         AccumulateJacobian.apply(
             ctx.vjp,
             ctx.args,
             ctx.gramian_accumulator,
             ctx.module,
-            *flat_grad_outputs,
+            *grad_outputs,
         )
 
-        return None, None, None, None, None, *flat_grad_outputs
+        return None, None, None, None, None, *grad_outputs
 
 
 class AccumulateJacobian(torch.autograd.Function):
@@ -197,10 +197,10 @@ class AccumulateJacobian(torch.autograd.Function):
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_grad_outputs: Tensor,
+        *grad_outputs: Tensor,
     ) -> None:
         # There is no non-batched dimension
-        generalized_jacobians = vjp(flat_grad_outputs, args)
+        generalized_jacobians = vjp(grad_outputs, args)
         path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
         gramian_accumulator.accumulate_path_jacobians(path_jacobians)
 
@@ -212,12 +212,12 @@ class AccumulateJacobian(torch.autograd.Function):
         args: PyTree,
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_jac_outputs: Tensor,
+        *jac_outputs: Tensor,
     ) -> tuple[None, None]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
         in_dims = (in_dims[4:], tree_map(lambda _: None, args))
-        generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(flat_jac_outputs, args)
+        generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
         path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
         gramian_accumulator.accumulate_path_jacobians(path_jacobians)
         return None, None
