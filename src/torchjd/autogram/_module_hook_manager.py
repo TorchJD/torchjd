@@ -131,9 +131,9 @@ class Hook:
 
         vjp: VJP
         if self.has_batch_dim:
-            rg_output_in_dims = (0,) * len(rg_outputs)
-            arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
-            in_dims = (rg_output_in_dims, arg_in_dims)
+            rg_outputs_in_dims = (0,) * len(rg_outputs)
+            args_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+            in_dims = (rg_outputs_in_dims, args_in_dims)
             vjp = FunctionalVJP(module, in_dims)
         else:
             vjp = AutogradVJP(module, rg_outputs)
