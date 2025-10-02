@@ -772,29 +772,66 @@ class ModelUsingSubmoduleParamsDirectly(ShapedModule):
         return input @ self.linear.weight.T + self.linear.bias
 
 
+class _WithStringArg(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(2, 3))
+
+    def forward(self, s: str, input: Tensor) -> Tensor:
+        if s == "two":
+            return input @ self.matrix * 2.0
+        else:
+            return input @ self.matrix
+
+
 class WithModuleWithStringArg(ShapedModule):
     """Model containing a module that has a string argument."""
 
     INPUT_SHAPES = (2,)
     OUTPUT_SHAPES = (3,)
 
-    class WithStringArg(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.matrix = nn.Parameter(torch.randn(2, 3))
-
-        def forward(self, s: str, input: Tensor) -> Tensor:
-            if s == "two":
-                return input @ self.matrix * 2.0
-            else:
-                return input @ self.matrix
-
     def __init__(self):
         super().__init__()
-        self.with_string_arg = self.WithStringArg()
+        self.with_string_arg = _WithStringArg()
 
     def forward(self, input: Tensor) -> Tensor:
         return self.with_string_arg("two", input)
+
+
+class WithModuleWithStringKwarg(ShapedModule):
+    """Model calling its submodule's forward with a string and a tensor as keyword arguments."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = _WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg(s="two", input=input)
+
+
+class _WithHybridPyTreeArg(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.m0 = nn.Parameter(torch.randn(3, 3))
+        self.m1 = nn.Parameter(torch.randn(4, 3))
+        self.m2 = nn.Parameter(torch.randn(5, 3))
+        self.m3 = nn.Parameter(torch.randn(6, 3))
+
+    def forward(self, input: PyTree) -> Tensor:
+        t0 = input["one"][0][0]
+        t1 = input["one"][0][1]
+        t2 = input["one"][1]
+        t3 = input["two"]
+
+        c0 = input["one"][0][3]
+        c1 = input["one"][0][4][0]
+        c2 = input["one"][2]
+        c3 = input["three"]
+
+        return c0 * t0 @ self.m0 + c1 * t1 @ self.m1 + c2 * t2 @ self.m2 + c3 * t3 @ self.m3
 
 
 class WithModuleWithHybridPyTreeArg(ShapedModule):
@@ -806,31 +843,10 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
     INPUT_SHAPES = (10,)
     OUTPUT_SHAPES = (3,)
 
-    class WithHybridPyTreeArg(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.m0 = nn.Parameter(torch.randn(3, 3))
-            self.m1 = nn.Parameter(torch.randn(4, 3))
-            self.m2 = nn.Parameter(torch.randn(5, 3))
-            self.m3 = nn.Parameter(torch.randn(6, 3))
-
-        def forward(self, input: PyTree) -> Tensor:
-            t0 = input["one"][0][0]
-            t1 = input["one"][0][1]
-            t2 = input["one"][1]
-            t3 = input["two"]
-
-            c0 = input["one"][0][3]
-            c1 = input["one"][0][4][0]
-            c2 = input["one"][2]
-            c3 = input["three"]
-
-            return c0 * t0 @ self.m0 + c1 * t1 @ self.m1 + c2 * t2 @ self.m2 + c3 * t3 @ self.m3
-
     def __init__(self):
         super().__init__()
         self.linear = nn.Linear(10, 18)
-        self.with_string_arg = self.WithHybridPyTreeArg()
+        self.with_string_arg = _WithHybridPyTreeArg()
 
     def forward(self, input: Tensor) -> Tensor:
         input = self.linear(input)
@@ -845,6 +861,35 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
         }
 
         return self.with_string_arg(tree)
+
+
+class WithModuleWithHybridPyTreeKwarg(ShapedModule):
+    """
+    Model calling its submodule's forward with a PyTree keyword argument containing a mix of tensors
+    and non-tensor values.
+    """
+
+    INPUT_SHAPES = (10,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(10, 18)
+        self.with_string_arg = _WithHybridPyTreeArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        input = self.linear(input)
+
+        t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
+
+        tree = {
+            "zero": "unused",
+            "one": [(t0, t1, "unused", 0.2, [0.3, "unused"]), t2, 0.4, "unused"],
+            "two": t3,
+            "three": 0.5,
+        }
+
+        return self.with_string_arg(input=tree)
 
 
 class WithModuleWithStringOutput(ShapedModule):
@@ -1067,11 +1112,11 @@ class InstanceNormMobileNetV2(ShapedModule):
 
 
 # Other torchvision.models were not added for the following reasons:
-# - VGG16: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - VGG16: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
 # - DenseNet: no way to easily replace the BatchNorms (no norm_layer param)
 # - InceptionV3: no way to easily replace the BatchNorms (no norm_layer param)
 # - GoogleNet: no way to easily replace the BatchNorms (no norm_layer param)
 # - ShuffleNetV2: no way to easily replace the BatchNorms (no norm_layer param)
-# - ResNeXt: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
-# - WideResNet50: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - ResNeXt: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
+# - WideResNet50: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
 # - MNASNet: no way to easily replace the BatchNorms (no norm_layer param)
