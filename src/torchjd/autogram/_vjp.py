@@ -19,7 +19,9 @@ class VJP(ABC):
     """Represents an abstract VJP function."""
 
     @abstractmethod
-    def __call__(self, grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         """
         Computes and returns the dictionary of parameter names to their gradients for the given
         grad_outputs (cotangents) and at the given inputs.
@@ -52,15 +54,17 @@ class FunctionalVJP(ModuleVJP):
     every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: nn.Module, in_dims: tuple[PyTree, ...]):
         super().__init__(module)
-        self.vmapped_vjp = torch.vmap(self._call_on_one_instance)
+        self.vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
 
-    def __call__(self, grad_outputs: tuple[Tensor, ...], args: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         return self.vmapped_vjp(grad_outputs, args)
 
     def _call_on_one_instance(
-        self, grad_outputs_j: tuple[Tensor, ...], args_j: PyTree
+        self, grad_outputs_j: tuple[Tensor, ...], args_j: tuple[PyTree, ...]
     ) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
@@ -103,7 +107,9 @@ class AutogradVJP(ModuleVJP):
         self.rg_outputs = rg_outputs
         self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
 
-    def __call__(self, grad_outputs: tuple[Tensor, ...], _: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...]
+    ) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
             self.rg_outputs,
             self.flat_trainable_params,

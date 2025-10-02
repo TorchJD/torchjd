@@ -101,7 +101,7 @@ class Hook:
         self.gramian_accumulator = gramian_accumulator
         self.has_batch_dim = has_batch_dim
 
-    def __call__(self, module: nn.Module, args: PyTree, outputs: PyTree) -> PyTree:
+    def __call__(self, module: nn.Module, args: tuple[PyTree, ...], outputs: PyTree) -> PyTree:
         if self.gramian_accumulation_phase:
             return outputs
 
@@ -129,7 +129,14 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        vjp = FunctionalVJP(module) if self.has_batch_dim else AutogradVJP(module, rg_outputs)
+        vjp: VJP
+        if self.has_batch_dim:
+            rg_outputs_in_dims = (0,) * len(rg_outputs)
+            args_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+            in_dims = (rg_outputs_in_dims, args_in_dims)
+            vjp = FunctionalVJP(module, in_dims)
+        else:
+            vjp = AutogradVJP(module, rg_outputs)
 
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
@@ -161,7 +168,7 @@ class JacobianAccumulator(torch.autograd.Function):
     def forward(
         gramian_accumulation_phase: BoolRef,
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *rg_tensors: Tensor,
@@ -169,7 +176,7 @@ class JacobianAccumulator(torch.autograd.Function):
         return tuple(t.detach() for t in rg_tensors)
 
     # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, VJP, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
+    # tuple[BoolRef, VJP, tuple[PyTree, ...], GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
@@ -183,7 +190,9 @@ class JacobianAccumulator(torch.autograd.Function):
         ctx.module = inputs[4]
 
     @staticmethod
-    def backward(ctx, *grad_outputs: Tensor):
+    def backward(ctx, *grad_outputs: Tensor) -> tuple:
+        # Return type for python > 3.10: # tuple[None, None, None, None, None, *tuple[Tensor, ...]]
+
         if not ctx.gramian_accumulation_phase:
             return None, None, None, None, None, *grad_outputs
 
@@ -203,7 +212,7 @@ class AccumulateJacobian(torch.autograd.Function):
     @staticmethod
     def forward(
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *grad_outputs: Tensor,
@@ -216,9 +225,9 @@ class AccumulateJacobian(torch.autograd.Function):
     @staticmethod
     def vmap(
         _,
-        in_dims: PyTree,
+        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], None, None, *tuple[int | None, ...]]
         vjp: VJP,
-        args: PyTree,
+        args: tuple[PyTree, ...],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *jac_outputs: Tensor,
@@ -244,5 +253,5 @@ class AccumulateJacobian(torch.autograd.Function):
         return path_jacobians
 
     @staticmethod
-    def setup_context(*_):
+    def setup_context(*_) -> None:
         pass
