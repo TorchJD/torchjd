@@ -61,6 +61,7 @@ from utils.architectures import (
     WithRNN,
     WithSideEffect,
     WithSomeFrozenModule,
+    WithTransformer,
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
@@ -118,6 +119,7 @@ PARAMETRIZATIONS = [
     (WithModuleWithStringOutput, 32),
     (WithModuleWithStringKwarg, 32),
     (WithModuleWithHybridPyTreeKwarg, 32),
+    (WithTransformer, 32),
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Cifar10Model, 16, marks=mark.slow),

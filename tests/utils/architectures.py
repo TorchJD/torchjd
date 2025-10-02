@@ -931,6 +931,29 @@ class WithModuleWithStringOutput(ShapedModule):
         return output
 
 
+class WithTransformer(ShapedModule):
+    """Module containing a single Transformer."""
+
+    INPUT_SHAPES = ((10, 8), (20, 8))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            d_model=8,
+            nhead=2,
+            num_encoder_layers=2,
+            num_decoder_layers=2,
+            dim_feedforward=32,
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
