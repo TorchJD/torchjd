@@ -798,6 +798,20 @@ class WithModuleWithStringArg(ShapedModule):
         return self.with_string_arg("two", input)
 
 
+class WithModuleWithStringKwarg(ShapedModule):
+    """Model calling its submodule's forward with a string and a tensor as keyword arguments."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = _WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg(s="two", input=input)
+
+
 class _WithHybridPyTreeArg(nn.Module):
     def __init__(self):
         super().__init__()
@@ -849,18 +863,33 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
         return self.with_string_arg(tree)
 
 
-class WithKwargs(ShapedModule):
-    """Model calling its submodule's forward with a string and a tensor as keyword arguments."""
+class WithModuleWithHybridPyTreeKwarg(ShapedModule):
+    """
+    Model calling its submodule's forward with a PyTree keyword argument containing a mix of tensors
+    and non-tensor values.
+    """
 
-    INPUT_SHAPES = (2,)
+    INPUT_SHAPES = (10,)
     OUTPUT_SHAPES = (3,)
 
     def __init__(self):
         super().__init__()
-        self.with_string_arg = _WithStringArg()
+        self.linear = nn.Linear(10, 18)
+        self.with_string_arg = _WithHybridPyTreeArg()
 
     def forward(self, input: Tensor) -> Tensor:
-        return self.with_string_arg(s="two", input=input)
+        input = self.linear(input)
+
+        t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
+
+        tree = {
+            "zero": "unused",
+            "one": [(t0, t1, "unused", 0.2, [0.3, "unused"]), t2, 0.4, "unused"],
+            "two": t3,
+            "three": 0.5,
+        }
+
+        return self.with_string_arg(input=tree)
 
 
 class WithModuleWithStringOutput(ShapedModule):
