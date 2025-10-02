@@ -848,7 +848,7 @@ class WithModuleWithHybridPyTreeArg(ShapedModule):
 
 
 class WithModuleWithHybridKwargs(ShapedModule):
-    """Model containing a module that has a string keyword argument."""
+    """Model calling its submodule's forward with a string and a tensor as keyword arguments."""
 
     INPUT_SHAPES = (2,)
     OUTPUT_SHAPES = (3,)
