@@ -20,6 +20,7 @@ from utils.architectures import (
     InterModuleParamReuse,
     MIMOBranched,
     MISOBranched,
+    ModelAlsoUsingSubmoduleParamsDirectly,
     ModelUsingSubmoduleParamsDirectly,
     ModuleReuse,
     MultiInputMultiOutput,
@@ -190,7 +191,9 @@ def test_compute_gramian_with_weird_modules(
 
 
 @mark.xfail
-@mark.parametrize("architecture", [ModelUsingSubmoduleParamsDirectly])
+@mark.parametrize(
+    "architecture", [ModelUsingSubmoduleParamsDirectly, ModelAlsoUsingSubmoduleParamsDirectly]
+)
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [0, None])
 def test_compute_gramian_unsupported_architectures(

@@ -772,6 +772,22 @@ class ModelUsingSubmoduleParamsDirectly(ShapedModule):
         return input @ self.linear.weight.T + self.linear.bias
 
 
+class ModelAlsoUsingSubmoduleParamsDirectly(ShapedModule):
+    """
+    Model that uses its submodule's parameters directly but that also calls its submodule's forward.
+    """
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(2, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return input @ self.linear.weight.T + self.linear.bias + self.linear(input)
+
+
 class _WithStringArg(nn.Module):
     def __init__(self):
         super().__init__()
