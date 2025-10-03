@@ -4,6 +4,7 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
+from torch.nn import MultiheadAttention
 from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
@@ -126,6 +127,14 @@ class Hook:
             return outputs
 
         requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
+
+        # Quickfix to handle Transformers.
+        if isinstance(module, MultiheadAttention):
+            if module.out_proj.weight is not None and module.out_proj.weight.requires_grad:
+                requires_grad_params.append(module.out_proj.weight)
+            if module.out_proj.bias is not None and module.out_proj.bias.requires_grad:
+                requires_grad_params.append(module.out_proj.bias)
+
         self.gramian_accumulator.track_parameter_paths(requires_grad_params)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
@@ -260,7 +269,11 @@ class AccumulateJacobian(torch.autograd.Function):
     ) -> dict[Tensor, Tensor]:
         path_jacobians: dict[Tensor, Tensor] = {}
         for param_name, generalized_jacobian in generalized_jacobians.items():
-            key = module.get_parameter(param_name)
+            # Quickfix to handle Transformers.
+            if isinstance(module, MultiheadAttention) and param_name.startswith("out_proj."):
+                key = module.out_proj.get_parameter(param_name[9:])
+            else:
+                key = module.get_parameter(param_name)
             jacobian = generalized_jacobian.reshape([-1] + list(key.shape))
             path_jacobians[key] = jacobian
         return path_jacobians

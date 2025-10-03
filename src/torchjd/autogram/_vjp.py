@@ -46,6 +46,15 @@ class ModuleVJP(VJP, ABC):
             else:
                 self.frozen_params[name] = param
 
+        # Quickfix to handle Transformers.
+        if isinstance(module, nn.MultiheadAttention):
+            submodule = module.out_proj
+            for name, param in submodule.named_parameters(recurse=False):
+                if param.requires_grad:
+                    self.trainable_params["out_proj." + name] = param
+                else:
+                    self.frozen_params["out_proj." + name] = param
+
 
 class FunctionalVJP(ModuleVJP):
     """
