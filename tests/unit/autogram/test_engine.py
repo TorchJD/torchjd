@@ -119,7 +119,7 @@ PARAMETRIZATIONS = [
     (WithModuleWithStringOutput, 32),
     (WithModuleWithStringKwarg, 32),
     (WithModuleWithHybridPyTreeKwarg, 32),
-    (WithTransformer, 32),
+    param(WithTransformer, 32, marks=mark.filterwarnings("ignore:There is a performance drop")),
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Cifar10Model, 16, marks=mark.slow),
