@@ -40,20 +40,28 @@ class ModuleVJP(VJP, ABC):
         self.trainable_params = dict[str, Parameter]()
         self.frozen_params = dict[str, Parameter]()
 
+        self._save_direct_params(module)
+        self._save_indirectly_used_params(module)
+
+    def _save_direct_params(self, module: nn.Module, prefix: str = "") -> None:
         for name, param in module.named_parameters(recurse=False):
             if param.requires_grad:
-                self.trainable_params[name] = param
+                self.trainable_params[prefix + name] = param
             else:
-                self.frozen_params[name] = param
+                self.frozen_params[prefix + name] = param
 
-        # Quickfix to handle Transformers.
-        if isinstance(module, nn.MultiheadAttention):
-            submodule = module.out_proj
-            for name, param in submodule.named_parameters(recurse=False):
-                if param.requires_grad:
-                    self.trainable_params["out_proj." + name] = param
-                else:
-                    self.frozen_params["out_proj." + name] = param
+    def _save_indirectly_used_params(self, module: nn.Module) -> None:
+        """
+        Save the parameters that are used by module but that are not its direct params. This is a
+        fairly unusual setup that has to be handled on a case-by-case basis.
+        """
+
+        # MHA uses its out_proj child params itself. Note that we also check that the MHA still has
+        # an out_proj attribute because it might change in the future (which will remove the
+        # necessity of custom code for MHA entirely). See the status of
+        # https://github.com/pytorch/pytorch/pull/126568
+        if isinstance(module, nn.MultiheadAttention) and hasattr(module, "out_proj"):
+            self._save_direct_params(module.out_proj, "out_proj.")
 
 
 class FunctionalVJP(ModuleVJP):

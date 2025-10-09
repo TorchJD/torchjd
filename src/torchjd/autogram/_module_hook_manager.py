@@ -4,7 +4,6 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
-from torch.nn import MultiheadAttention
 from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
@@ -126,16 +125,8 @@ class Hook:
             # require grad
             return outputs
 
-        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-
-        # Quickfix to handle Transformers.
-        if isinstance(module, MultiheadAttention):
-            if module.out_proj.weight is not None and module.out_proj.weight.requires_grad:
-                requires_grad_params.append(module.out_proj.weight)
-            if module.out_proj.bias is not None and module.out_proj.bias.requires_grad:
-                requires_grad_params.append(module.out_proj.bias)
-
-        self.gramian_accumulator.track_parameter_paths(requires_grad_params)
+        rg_params = _get_direct_rg_params(module) + _get_indirectly_used_rg_params(module)
+        self.gramian_accumulator.track_parameter_paths(rg_params)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
@@ -168,6 +159,26 @@ class Hook:
             flat_outputs[idx] = output
 
         return tree_unflatten(flat_outputs, output_spec)
+
+
+def _get_direct_rg_params(module: nn.Module) -> list[nn.Parameter]:
+    return [p for p in module.parameters(recurse=False) if p.requires_grad]
+
+
+def _get_indirectly_used_rg_params(module: nn.Module) -> list[nn.Parameter]:
+    """
+    Get the parameters that are used by module but that are not its direct params. This is a fairly
+    unusual setup that has to be handled on a case-by-case basis.
+    """
+
+    # MHA uses its out_proj child params itself. Note that we also check that the MHA still has
+    # an out_proj attribute because it might change in the future (which will remove the
+    # necessity of custom code for MHA entirely). See the status of
+    # https://github.com/pytorch/pytorch/pull/126568
+    if isinstance(module, nn.MultiheadAttention) and hasattr(module, "out_proj"):
+        return _get_direct_rg_params(module.out_proj)
+    else:
+        return []
 
 
 class JacobianAccumulator(torch.autograd.Function):
