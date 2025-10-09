@@ -4,6 +4,8 @@ of the documentation. When there are multiple examples within a single `.rst` fi
 functions here to test them.
 """
 
+from pytest import mark
+
 
 def test_amp():
     import torch
@@ -198,12 +200,13 @@ def test_iwrm():
     test_autogram()
 
 
+@mark.filterwarnings(
+    "ignore::DeprecationWarning", "ignore::lightning.fabric.utilities.warnings.PossibleUserWarning"
+)
 def test_lightning_integration():
     # Extra ----------------------------------------------------------------------------------------
     import logging
-    import warnings
 
-    warnings.filterwarnings("ignore")
     logging.disable(logging.INFO)
     # ----------------------------------------------------------------------------------------------
 
