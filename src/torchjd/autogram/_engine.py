@@ -113,19 +113,16 @@ class Engine:
         memory-efficient, and thus typically faster, to use the Gramian-based approach.
 
     .. warning::
-        When providing a non-None ``batch_dim``, all provided modules must respect a few
-        conditions:
+        When providing a non-None ``batch_dim``, all provided modules must respect a few conditions:
 
         * They should treat the elements of the batch independently. Most common layers respect
           this, but for example `BatchNorm
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ does not (it
           computes some average and standard deviation over the elements of the batch).
         * Their inputs and outputs can be anything, but each input tensor and each output tensor
-          must be batched on its first dimension. `Transformers
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_ and `RNNs
+          must be batched on its first dimension. `RNNs
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ are thus not
-          supported yet. This is only an implementation issue, so it should be fixed soon (please
-          open an issue if you need extra focus on this).
+          supported yet.
         * They should not perform in-place operations on tensors (for instance you should not use
           ``track_running_stats=True`` in normalization layers).
         * They should not have side effects during the forward pass (since their forward pass will
@@ -133,7 +130,9 @@ class Engine:
         * If they have some randomness during the forward pass, they should not have direct
           trainable parameters. It is, however, perfectly fine for random modules to have child
           modules that have trainable parameters, so if you have a random module with some direct
-          parameters, a simple fix is to wrap these parameters into a child module.
+          parameters, a simple fix is to wrap these parameters into a child module. For this reason,
+          `Transformers <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_
+          should be used with `dropout=0.0`.
 
         If you're building your own architecture, respecting those criteria should be quite easy.
         However, if you're using an existing architecture, you may have to modify it to make it
