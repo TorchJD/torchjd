@@ -269,11 +269,7 @@ class AccumulateJacobian(torch.autograd.Function):
     ) -> dict[Tensor, Tensor]:
         path_jacobians: dict[Tensor, Tensor] = {}
         for param_name, generalized_jacobian in generalized_jacobians.items():
-            # Quickfix to handle Transformers.
-            if isinstance(module, MultiheadAttention) and param_name.startswith("out_proj."):
-                key = module.out_proj.get_parameter(param_name[9:])
-            else:
-                key = module.get_parameter(param_name)
+            key = module.get_parameter(param_name)
             jacobian = generalized_jacobian.reshape([-1] + list(key.shape))
             path_jacobians[key] = jacobian
         return path_jacobians
