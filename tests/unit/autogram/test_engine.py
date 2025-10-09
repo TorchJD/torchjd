@@ -63,6 +63,7 @@ from utils.architectures import (
     WithSideEffect,
     WithSomeFrozenModule,
     WithTransformer,
+    WithTransformerLarge,
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
@@ -130,6 +131,11 @@ PARAMETRIZATIONS = [
     param(GroupNormMobileNetV3Small, 3, marks=mark.slow),
     param(SqueezeNet, 8, marks=mark.slow),
     param(InstanceNormMobileNetV2, 2, marks=mark.slow),
+    param(
+        WithTransformerLarge,
+        8,
+        marks=[mark.slow, mark.filterwarnings("ignore:There is a performance drop")],
+    ),
 ]
 
 

@@ -977,6 +977,24 @@ class WithTransformer(ShapedModule):
         return self.transformer(src, tgt)
 
 
+class WithTransformerLarge(ShapedModule):
+    """Module containing a large Transformer."""
+
+    INPUT_SHAPES = ((10, 512), (20, 512))
+    OUTPUT_SHAPES = (20, 512)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
