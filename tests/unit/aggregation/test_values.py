@@ -1,6 +1,4 @@
-import warnings
-
-from pytest import mark
+from pytest import mark, param
 from torch import Tensor, tensor
 from torch.testing import assert_close
 
@@ -98,7 +96,12 @@ try:
     from torchjd.aggregation import NashMTL
 
     AGGREGATOR_PARAMETRIZATIONS.append(
-        (NashMTL(n_tasks=2), J_base, tensor([0.0542, 0.7061, 0.7061]))
+        param(
+            NashMTL(n_tasks=2),
+            J_base,
+            tensor([0.0542, 0.7061, 0.7061]),
+            marks=mark.filterwarnings("ignore::UserWarning"),
+        )
     )
 
 except ImportError:
@@ -108,9 +111,6 @@ except ImportError:
 @mark.parametrize(["A", "J", "expected_output"], AGGREGATOR_PARAMETRIZATIONS)
 def test_aggregator_output(A: Aggregator, J: Tensor, expected_output: Tensor):
     """Test that the output values of an aggregator are fixed (on cpu)."""
-
-    if str(A).startswith("NashMTL"):
-        warnings.filterwarnings("ignore")
 
     assert_close(A(J), expected_output, rtol=0, atol=1e-4)
 
