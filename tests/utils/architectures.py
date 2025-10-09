@@ -931,8 +931,31 @@ class WithModuleWithStringOutput(ShapedModule):
         return output
 
 
+class WithMultiHeadAttention(ShapedModule):
+    """Module containing a MultiheadAttention layer."""
+
+    INPUT_SHAPES = ((20, 8), (10, 9), (10, 11))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(
+            embed_dim=8,
+            num_heads=2,
+            dropout=0.0,
+            batch_first=True,
+            kdim=9,
+            vdim=11,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        query, key, value = input
+        attn_output, _ = self.mha(query, key, value)
+        return attn_output
+
+
 class WithTransformer(ShapedModule):
-    """Module containing a single Transformer."""
+    """Module containing a Transformer."""
 
     INPUT_SHAPES = ((10, 8), (20, 8))
     OUTPUT_SHAPES = (20, 8)
