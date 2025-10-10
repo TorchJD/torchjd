@@ -127,7 +127,7 @@ class Hook:
             return outputs
 
         rg_params, _ = get_used_params(module)
-        self.gramian_accumulator.track_parameter_paths(list(rg_params.values()))
+        self.gramian_accumulator.track_parameter_paths(rg_params.values())
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
