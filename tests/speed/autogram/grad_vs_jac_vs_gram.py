@@ -13,6 +13,7 @@ from utils.architectures import (
     NoFreeParam,
     ShapedModule,
     SqueezeNet,
+    WithTransformerLarge,
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
@@ -27,6 +28,7 @@ from torchjd.aggregation import Mean
 from torchjd.autogram import Engine
 
 PARAMETRIZATIONS = [
+    (WithTransformerLarge, 8),
     (FreeParam, 64),
     (NoFreeParam, 64),
     (Cifar10Model, 64),

@@ -9,6 +9,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._module_utils import get_used_params
 from ._vjp import VJP, AutogradVJP, FunctionalVJP
 
 # Note about import from protected _pytree module:
@@ -125,8 +126,8 @@ class Hook:
             # require grad
             return outputs
 
-        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-        self.gramian_accumulator.track_parameter_paths(requires_grad_params)
+        rg_params, _ = get_used_params(module)
+        self.gramian_accumulator.track_parameter_paths(rg_params.values())
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory

@@ -931,6 +931,70 @@ class WithModuleWithStringOutput(ShapedModule):
         return output
 
 
+class WithMultiHeadAttention(ShapedModule):
+    """Module containing a MultiheadAttention layer."""
+
+    INPUT_SHAPES = ((20, 8), (10, 9), (10, 11))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(
+            embed_dim=8,
+            num_heads=2,
+            dropout=0.0,
+            batch_first=True,
+            kdim=9,
+            vdim=11,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        query, key, value = input
+        attn_output, _ = self.mha(query, key, value)
+        return attn_output
+
+
+class WithTransformer(ShapedModule):
+    """Module containing a Transformer."""
+
+    INPUT_SHAPES = ((10, 8), (20, 8))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            d_model=8,
+            nhead=2,
+            num_encoder_layers=2,
+            num_decoder_layers=2,
+            dim_feedforward=32,
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
+class WithTransformerLarge(ShapedModule):
+    """Module containing a large Transformer."""
+
+    INPUT_SHAPES = ((10, 512), (20, 512))
+    OUTPUT_SHAPES = (20, 512)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
