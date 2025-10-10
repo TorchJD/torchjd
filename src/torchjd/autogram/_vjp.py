@@ -39,7 +39,7 @@ class ModuleVJP(VJP, ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        self.trainable_params, self.frozen_params = get_used_params(module)
+        self.rg_params, self.frozen_params = get_used_params(module)
 
 
 class FunctionalVJP(ModuleVJP):
@@ -73,9 +73,9 @@ class FunctionalVJP(ModuleVJP):
         kwargs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), kwargs_j)
         grad_outputs_j_ = [x.unsqueeze(0) for x in grad_outputs_j]
 
-        def functional_model_call(trainable_params: dict[str, Parameter]) -> list[Tensor]:
+        def functional_model_call(rg_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = {
-                **trainable_params,
+                **rg_params,
                 **dict(self.module.named_buffers()),
                 **self.frozen_params,
             }
@@ -84,7 +84,7 @@ class FunctionalVJP(ModuleVJP):
             rg_outputs = [t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad]
             return rg_outputs
 
-        vjp_func = torch.func.vjp(functional_model_call, self.trainable_params)[1]
+        vjp_func = torch.func.vjp(functional_model_call, self.rg_params)[1]
 
         # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
@@ -104,14 +104,14 @@ class AutogradVJP(ModuleVJP):
         super().__init__(module)
 
         self.rg_outputs = rg_outputs
-        self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
+        self.flat_rg_params, self.param_spec = tree_flatten(self.rg_params)
 
     def __call__(
         self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...], __: dict[str, PyTree]
     ) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
             self.rg_outputs,
-            self.flat_trainable_params,
+            self.flat_rg_params,
             grad_outputs,
             retain_graph=True,
             allow_unused=True,
