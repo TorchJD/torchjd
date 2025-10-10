@@ -582,6 +582,9 @@ def test_batched_non_batched_equivalence_2(architecture: ShapedModule, batch_siz
     """
     Same as test_batched_non_batched_equivalence but on real architectures, and thus only between
     batch_size=0 and batch_size=None.
+
+    If for some architecture this test passes but the test_compute_gramian doesn't pass, it could be
+    that the get_used_params does not work for some module of the architecture.
     """
 
     input_shapes = architecture.INPUT_SHAPES
