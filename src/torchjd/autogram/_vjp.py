@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
+
+from torchjd.autogram._module_utils import get_used_params
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -15,11 +17,20 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
-# This includes vmapped VJPs, which are not of type VJP.
-VJPType = Callable[[PyTree, PyTree], dict[str, Tensor]]
-
-
 class VJP(ABC):
+    """Represents an abstract VJP function."""
+
+    @abstractmethod
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
+    ) -> dict[str, Tensor]:
+        """
+        Computes and returns the dictionary of parameter names to their gradients for the given
+        grad_outputs (cotangents) and at the given inputs.
+        """
+
+
+class ModuleVJP(VJP, ABC):
     """
     Represents an abstract VJP function for a module's forward pass with respect to its parameters.
 
@@ -28,74 +39,60 @@ class VJP(ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        self.trainable_params = dict[str, Parameter]()
-        self.frozen_params = dict[str, Parameter]()
-
-        for name, param in module.named_parameters(recurse=False):
-            if param.requires_grad:
-                self.trainable_params[name] = param
-            else:
-                self.frozen_params[name] = param
-
-    @abstractmethod
-    def __call__(self, grad_outputs: PyTree, inputs: PyTree) -> dict[str, Tensor]:
-        """
-        Computes and returns the dictionary of parameter names to their gradients for the given
-        grad_outputs (cotangents) and at the given inputs.
-        """
+        self.rg_params, self.frozen_params = get_used_params(module)
 
 
-class FunctionalVJP(VJP):
+class FunctionalVJP(ModuleVJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
-    func api. The __call__ function takes both the inputs and the cotangents that can be vmapped
-    jointly in both terms to avoid providing to block diagonal jacobians. The disadvantage of using
-    this method is that it makes an extra forward pass.
-
-    :params module: The module to differentiate.
+    functional differentiation API. This requires to use vmap, so it's not compatible with
+    every module, and it requires to have an extra forward pass to create the vjp function.
     """
 
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: nn.Module, in_dims: tuple[PyTree, ...]):
         super().__init__(module)
+        self.vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
 
-    def __call__(self, grad_outputs_j: PyTree, inputs_j: PyTree) -> dict[str, Tensor]:
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
+    ) -> dict[str, Tensor]:
+        return self.vmapped_vjp(grad_outputs, args, kwargs)
+
+    def _call_on_one_instance(
+        self,
+        grad_outputs_j: tuple[Tensor, ...],
+        args_j: tuple[PyTree, ...],
+        kwargs_j: dict[str, PyTree],
+    ) -> dict[str, Tensor]:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
         # an element of a batch. We thus always provide them with batches, just of a
         # different size.
-        inputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), inputs_j)
-        grad_outputs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), grad_outputs_j)
+        args_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), args_j)
+        kwargs_j = tree_map_only(torch.Tensor, lambda x: x.unsqueeze(0), kwargs_j)
+        grad_outputs_j_ = [x.unsqueeze(0) for x in grad_outputs_j]
 
-        # _vjp_from_module returns a function that computes the vjp w.r.t. to the
-        # primals (tuple), here the functional has a single primal which is
-        # dict(module.named_parameters()). We therefore take the 0'th element to obtain
-        # the dict of gradients w.r.t. the module's named_parameters.
-        return self._vjp_from_module(inputs_j)(grad_outputs_j)[0]
-
-    def _vjp_from_module(self, inputs: PyTree) -> Callable[[PyTree], tuple[dict[str, Tensor]]]:
-        """
-        Create a VJP function for a module's forward pass with respect to its parameters.
-
-        Returns a function that computes vector-Jacobian products for the module's parameters given
-        fixed inputs. Only parameters with requires_grad=True are included in the differentiation.
-
-        :param inputs: Fixed inputs to the module for the VJP computation.
-        :returns: VJP function that takes cotangents and returns parameter gradients.
-        """
-
-        def functional_model_call(primals: dict[str, Parameter]) -> Tensor:
+        def functional_model_call(rg_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = {
-                **primals,
+                **rg_params,
                 **dict(self.module.named_buffers()),
                 **self.frozen_params,
             }
-            return torch.func.functional_call(self.module, all_state, inputs)
+            output = torch.func.functional_call(self.module, all_state, args_j, kwargs_j)
+            flat_outputs = tree_flatten(output)[0]
+            rg_outputs = [t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad]
+            return rg_outputs
 
-        return torch.func.vjp(functional_model_call, self.trainable_params)[1]
+        vjp_func = torch.func.vjp(functional_model_call, self.rg_params)[1]
+
+        # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
+        # functional has a single primal which is dict(module.named_parameters()). We therefore take
+        # the 0'th element to obtain the dict of gradients w.r.t. the module's named_parameters.
+        return vjp_func(grad_outputs_j_)[0]
 
 
-class AutogradVJP(VJP):
+class AutogradVJP(ModuleVJP):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
@@ -103,29 +100,19 @@ class AutogradVJP(VJP):
     forward pass.
     """
 
-    def __init__(self, module: nn.Module, outputs: Sequence[Tensor]):
+    def __init__(self, module: nn.Module, rg_outputs: Sequence[Tensor]):
         super().__init__(module)
 
-        self.outputs_that_require_grad = list[Tensor]()
-        self.mask = list[bool]()
-        for output in outputs:
-            requires_grad = output.requires_grad
-            if requires_grad:
-                self.outputs_that_require_grad.append(output)
-            self.mask.append(requires_grad)
+        self.rg_outputs = rg_outputs
+        self.flat_rg_params, self.param_spec = tree_flatten(self.rg_params)
 
-        self.flat_trainable_params, self.param_spec = tree_flatten(self.trainable_params)
-
-    def __call__(self, grad_outputs: PyTree, _: PyTree) -> dict[str, Tensor]:
-        flat_grad_outputs = tree_flatten(grad_outputs)[0]
-
-        # Only keep the grad_outputs corresponding to outputs that require grad.
-        grad_outputs_ = [grad_output for grad_output, rg in zip(flat_grad_outputs, self.mask) if rg]
-
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...], __: dict[str, PyTree]
+    ) -> dict[str, Tensor]:
         grads = torch.autograd.grad(
-            self.outputs_that_require_grad,
-            self.flat_trainable_params,
-            grad_outputs_,
+            self.rg_outputs,
+            self.flat_rg_params,
+            grad_outputs,
             retain_graph=True,
             allow_unused=True,
             materialize_grads=True,

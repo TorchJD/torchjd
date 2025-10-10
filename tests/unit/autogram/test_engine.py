@@ -20,6 +20,8 @@ from utils.architectures import (
     InterModuleParamReuse,
     MIMOBranched,
     MISOBranched,
+    ModelAlsoUsingSubmoduleParamsDirectly,
+    ModelUsingSubmoduleParamsDirectly,
     ModuleReuse,
     MultiInputMultiOutput,
     MultiInputSingleOutput,
@@ -48,11 +50,20 @@ from utils.architectures import (
     SqueezeNet,
     WithBatchNorm,
     WithBuffered,
+    WithDropout,
     WithModuleTrackingRunningStats,
+    WithModuleWithHybridPyTreeArg,
+    WithModuleWithHybridPyTreeKwarg,
+    WithModuleWithStringArg,
+    WithModuleWithStringKwarg,
+    WithModuleWithStringOutput,
+    WithMultiHeadAttention,
     WithNoTensorOutput,
     WithRNN,
     WithSideEffect,
     WithSomeFrozenModule,
+    WithTransformer,
+    WithTransformerLarge,
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
@@ -104,6 +115,14 @@ PARAMETRIZATIONS = [
     (Ndim2Output, 32),
     (Ndim3Output, 32),
     (Ndim4Output, 32),
+    (WithDropout, 32),
+    (WithModuleWithStringArg, 32),
+    (WithModuleWithHybridPyTreeArg, 32),
+    (WithModuleWithStringOutput, 32),
+    (WithModuleWithStringKwarg, 32),
+    (WithModuleWithHybridPyTreeKwarg, 32),
+    (WithMultiHeadAttention, 32),
+    param(WithTransformer, 32, marks=mark.filterwarnings("ignore:There is a performance drop")),
     (FreeParam, 32),
     (NoFreeParam, 32),
     param(Cifar10Model, 16, marks=mark.slow),
@@ -112,6 +131,11 @@ PARAMETRIZATIONS = [
     param(GroupNormMobileNetV3Small, 3, marks=mark.slow),
     param(SqueezeNet, 8, marks=mark.slow),
     param(InstanceNormMobileNetV2, 2, marks=mark.slow),
+    param(
+        WithTransformerLarge,
+        8,
+        marks=[mark.slow, mark.filterwarnings("ignore:There is a performance drop")],
+    ),
 ]
 
 
@@ -154,7 +178,14 @@ def test_compute_gramian(architecture: type[ShapedModule], batch_size: int, batc
 
 
 @mark.parametrize(
-    "architecture", [WithBatchNorm, WithSideEffect, Randomness, WithModuleTrackingRunningStats]
+    "architecture",
+    [
+        WithBatchNorm,
+        WithSideEffect,
+        Randomness,
+        WithModuleTrackingRunningStats,
+        param(WithRNN, marks=mark.xfail_if_cuda),
+    ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [param(0, marks=mark.xfail), None])
@@ -164,6 +195,23 @@ def test_compute_gramian_with_weird_modules(
     """
     Tests that compute_gramian works even with some problematic modules when batch_dim is None. It
     is expected to fail on those when the engine uses the batched optimization (when batch_dim=0).
+    """
+
+    _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
+
+
+@mark.xfail
+@mark.parametrize(
+    "architecture", [ModelUsingSubmoduleParamsDirectly, ModelAlsoUsingSubmoduleParamsDirectly]
+)
+@mark.parametrize("batch_size", [1, 3, 32])
+@mark.parametrize("batch_dim", [0, None])
+def test_compute_gramian_unsupported_architectures(
+    architecture: type[ShapedModule], batch_size: int, batch_dim: int | None
+):
+    """
+    Tests compute_gramian on some architectures that are known to be unsupported. It is expected to
+    fail.
     """
 
     _assert_gramian_is_equivalent_to_autograd(architecture, batch_size, batch_dim)
@@ -527,3 +575,42 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     gramian2 = engine2.compute_gramian(output)
 
     assert_close(gramian1, gramian2)
+
+
+@mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
+def test_batched_non_batched_equivalence_2(architecture: ShapedModule, batch_size: int):
+    """
+    Same as test_batched_non_batched_equivalence but on real architectures, and thus only between
+    batch_size=0 and batch_size=None.
+
+    If for some architecture this test passes but the test_compute_gramian doesn't pass, it could be
+    that the get_used_params does not work for some module of the architecture.
+    """
+
+    input_shapes = architecture.INPUT_SHAPES
+    output_shapes = architecture.OUTPUT_SHAPES
+
+    torch.manual_seed(0)
+    model_0 = architecture().to(device=DEVICE)
+    torch.manual_seed(0)
+    model_none = architecture().to(device=DEVICE)
+
+    engine_0 = Engine(model_0.modules(), batch_dim=0)
+    engine_none = Engine(model_none.modules(), batch_dim=None)
+
+    inputs = make_tensors(batch_size, input_shapes)
+    targets = make_tensors(batch_size, output_shapes)
+    loss_fn = make_mse_loss_fn(targets)
+
+    torch.random.manual_seed(0)  # Fix randomness for random models
+    output = model_0(inputs)
+    losses_0 = reduce_to_vector(loss_fn(output))
+
+    torch.random.manual_seed(0)  # Fix randomness for random models
+    output = model_none(inputs)
+    losses_none = reduce_to_vector(loss_fn(output))
+
+    gramian_0 = engine_0.compute_gramian(losses_0)
+    gramian_none = engine_none.compute_gramian(losses_none)
+
+    assert_close(gramian_0, gramian_none, rtol=1e-4, atol=1e-5)

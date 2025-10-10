@@ -19,11 +19,6 @@ _MODULES_INCOMPATIBLE_WITH_BATCHED = (
     nn.LazyBatchNorm3d,
     nn.SyncBatchNorm,
     nn.RNNBase,
-    nn.Transformer,
-    nn.TransformerEncoder,
-    nn.TransformerDecoder,
-    nn.TransformerEncoderLayer,
-    nn.TransformerDecoderLayer,
 )
 
 _TRACK_RUNNING_STATS_MODULE_TYPES = (
@@ -113,28 +108,36 @@ class Engine:
         memory-efficient, and thus typically faster, to use the Gramian-based approach.
 
     .. warning::
-        When providing a non-None ``batch_dim``, all provided modules must respect a few
-        conditions:
+        When providing a non-None ``batch_dim``, all provided modules must respect a few conditions:
 
         * They should treat the elements of the batch independently. Most common layers respect
           this, but for example `BatchNorm
           <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ does not (it
           computes some average and standard deviation over the elements of the batch).
-        * Their inputs and outputs can be any PyTree (tensor, tuple or list of tensors, dict of
-          tensors, or any nesting of those structures), but each of these tensors must be batched on
-          its first dimension. `Transformers
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_ and `RNNs
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ are thus not
-          supported yet. This is only an implementation issue, so it should be fixed soon (please
-          open an issue if you need extra focus on this).
+        * Their inputs and outputs can be anything, but each input tensor and each output tensor
+          must be batched on its first dimension. When available (e.g. in `Transformers
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_,
+          `MultiheadAttention
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html>`_,
+          etc.), the ``batch_first`` parameter has to be set to ``True``. Also, this makes `RNNs
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ not supported yet
+          because their hidden state is batched on dimension 1 even if ``batch_first`` is ``True``.
         * They should not perform in-place operations on tensors (for instance you should not use
           ``track_running_stats=True`` in normalization layers).
         * They should not have side effects during the forward pass (since their forward pass will
           be called twice, the side effects could be different from what's expected).
         * If they have some randomness during the forward pass, they should not have direct
-          trainable parameters. It is, however, perfectly fine for random modules to have child
-          modules that have trainable parameters, so if you have a random module with some direct
-          parameters, a simple fix is to wrap these parameters into a child module.
+          trainable parameters. For this reason,
+          `Transformers
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_, which use a
+          dropout function (rather than a `Dropout
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html>`_ layer) in a
+          module with some trainable parameters, has to be used with
+          ``dropout=0.0``. Note that a `Dropout
+          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html>`_ layers are
+          entirely supported and should be preferred. It is also perfectly fine for random modules
+          to have child modules that have trainable parameters, so if you have a random module with
+          some direct parameters, a simple fix is to wrap these parameters into a child module.
 
         If you're building your own architecture, respecting those criteria should be quite easy.
         However, if you're using an existing architecture, you may have to modify it to make it
@@ -146,6 +149,20 @@ class Engine:
 
         The alternative is to use ``batch_dim=None``, but it's not recommended since it will
         increase memory usage by a lot and thus typically slow down computation.
+
+    .. warning::
+        Parent modules should call their child modules directly rather than using their child
+        modules' parameters themselves. For instance, the following model is not supported:
+
+        >>> class Model(nn.Module):
+        >>>     def __init__(self):
+        >>>         super().__init__()
+        >>>         self.linear = nn.Linear(2, 3)  # Child module
+        >>>
+        >>>     def forward(self, input: Tensor) -> Tensor:
+        >>>         # Incorrect: Use the child module's parameters directly without calling it.
+        >>>         return input @ self.linear.weight.T + self.linear.bias
+        >>>         # Correct alternative: return self.linear(input)
 
     .. note::
           For maximum efficiency, modules should ideally not contain both direct trainable

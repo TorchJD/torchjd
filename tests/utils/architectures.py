@@ -49,7 +49,7 @@ class OverlyNested(ShapedModule):
             nn.Linear(13, 14),
         )
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.seq(input)
 
 
@@ -64,7 +64,7 @@ class MultiInputSingleOutput(ShapedModule):
         self.matrix1 = nn.Parameter(torch.randn(50, 60))
         self.matrix2 = nn.Parameter(torch.randn(50, 60))
 
-    def forward(self, inputs: tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
+    def forward(self, inputs: tuple[Tensor, Tensor]) -> Tensor:
         input1, input2 = inputs
         output = input1 @ self.matrix1 + input2 @ self.matrix2
         return output
@@ -133,7 +133,7 @@ class PyTreeInputSingleOutput(ShapedModule):
         self.matrix4 = nn.Parameter(torch.randn(12, 80))
         self.matrix5 = nn.Parameter(torch.randn(14, 90))
 
-    def forward(self, inputs: PyTree) -> PyTree:
+    def forward(self, inputs: PyTree) -> Tensor:
         input1 = inputs["one"][0][0]
         input2 = inputs["one"][0][1][0]
         input3 = inputs["one"][0][1][1]
@@ -259,7 +259,7 @@ class SIPOBranched(ShapedModule):
         super().__init__()
         self.sipo = SingleInputPyTreeOutput()
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         first, second, third = self.sipo(input).values()
         output1, output23 = first
         output2, output3 = output23
@@ -282,7 +282,7 @@ class PISOBranched(ShapedModule):
         super().__init__()
         self.piso = PyTreeInputSingleOutput()
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         input1 = input[:, 0:10]
         input2 = input[:, 10:30]
         input3 = input[:, 30:60]
@@ -363,7 +363,7 @@ class WithNoTensorOutput(ShapedModule):
             super().__init__()
             self.matrix = nn.Parameter(torch.randn(shape))
 
-        def forward(self, _: PyTree) -> PyTree:
+        def forward(self, _: PyTree) -> tuple:
             return tuple()
 
     class _EmptyPytreeOutput(nn.Module):
@@ -382,7 +382,7 @@ class WithNoTensorOutput(ShapedModule):
         self.empty_pytree_output = self._EmptyPytreeOutput((27, 10))
         self.linear = nn.Linear(27, 10)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         _ = self.none_output(input)
         _ = self.none_pytree_output(input)
         _ = self.empty_tuple_output(input)
@@ -400,7 +400,7 @@ class SimpleParamReuse(ShapedModule):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return input @ self.matrix + (input**2 / 5.0) @ self.matrix
 
 
@@ -429,7 +429,7 @@ class InterModuleParamReuse(ShapedModule):
         self.module1 = self._MatMulModule(matrix)
         self.module2 = self._MatMulModule(matrix)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.module1(input) + self.module2(input**2 / 5.0)
 
 
@@ -443,7 +443,7 @@ class ModuleReuse(ShapedModule):
         super().__init__()
         self.module = nn.Linear(50, 10)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.module(input) + self.module(input**2 / 5.0)
 
 
@@ -458,7 +458,7 @@ class SomeUnusedParam(ShapedModule):
         self.unused_param = nn.Parameter(torch.randn(50, 10))
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return input @ self.matrix
 
 
@@ -476,7 +476,7 @@ class SomeFrozenParam(ShapedModule):
         self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return input @ self.matrix + (input**2 / 5.0) @ self.frozen_param
 
 
@@ -494,7 +494,7 @@ class WithSomeFrozenModule(ShapedModule):
         self.all_frozen = nn.Linear(50, 10)
         self.all_frozen.requires_grad_(False)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)
 
 
@@ -522,7 +522,7 @@ class RequiresGradOfSchrodinger(ShapedModule):
             self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
             self.non_frozen_param = nn.Parameter(torch.randn(50, 10))
 
-        def forward(self, input: Tensor):
+        def forward(self, input: Tensor) -> Tensor:
             return input @ self.frozen_param
 
     def __init__(self):
@@ -530,7 +530,7 @@ class RequiresGradOfSchrodinger(ShapedModule):
         self.weird_module = self.SomeFrozenParamAndUnusedTrainableParam()
         self.normal_module = nn.Linear(10, 3)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.normal_module(self.weird_module(input))
 
 
@@ -548,7 +548,7 @@ class MultiOutputWithFrozenBranch(ShapedModule):
         self.frozen_param = nn.Parameter(torch.randn(50, 10), requires_grad=False)
         self.matrix = nn.Parameter(torch.randn(50, 10))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> tuple[Tensor, Tensor]:
         return (input**2 / 5.0) @ self.frozen_param, input @ self.matrix
 
 
@@ -563,7 +563,7 @@ class WithBuffered(ShapedModule):
             super().__init__()
             self.buffer = nn.Buffer(torch.tensor(1.5))
 
-        def forward(self, input: Tensor):
+        def forward(self, input: Tensor) -> Tensor:
             return input * self.buffer
 
     def __init__(self):
@@ -571,7 +571,7 @@ class WithBuffered(ShapedModule):
         self.module_with_buffer = self._Buffered()
         self.linear = nn.Linear(27, 10)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.linear(self.module_with_buffer(input))
 
 
@@ -585,7 +585,7 @@ class Randomness(ShapedModule):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(9, 10))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         noise = torch.zeros_like(input)
         noise.normal_()
         return (input * noise) @ self.matrix
@@ -602,7 +602,7 @@ class WithSideEffect(ShapedModule):
         self.matrix = nn.Parameter(torch.randn(9, 10))
         self.buffer = nn.Buffer(torch.zeros((9,)))
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         self.buffer = self.buffer + 1.0
         return (input + self.buffer) @ self.matrix
 
@@ -621,7 +621,7 @@ class SomeUnusedOutput(ShapedModule):
         self.linear1 = nn.Linear(9, 12)
         self.linear2 = nn.Linear(9, 10)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         _ = self.linear1(input)
         output = self.linear2(input)
         return output
@@ -698,15 +698,18 @@ class Ndim4Output(ShapedModule):
         return torch.einsum("bi,icdef->bcdef", input, self.tensor)
 
 
-class WithRNN(nn.Module):
-    """Simple model containing an RNN module (that is not even used)."""
+class WithRNN(ShapedModule):
+    """Simple model containing an RNN module."""
+
+    INPUT_SHAPES = (20, 8)  # Size 20, dim input_size (8)
+    OUTPUT_SHAPES = (20, 5)  # Size 20, dim hidden_size (5)
 
     def __init__(self):
         super().__init__()
-        self.rnn = nn.RNN(input_size=10, hidden_size=5)
+        self.rnn = nn.RNN(input_size=8, hidden_size=5, batch_first=True)
 
     def forward(self, input: Tensor) -> Tensor:
-        pass
+        return self.rnn(input)
 
 
 class WithModuleTrackingRunningStats(ShapedModule):
@@ -737,6 +740,261 @@ class WithBatchNorm(ShapedModule):
         return self.batch_norm(input)
 
 
+class WithDropout(ShapedModule):
+    """Simple model containing Dropout layers."""
+
+    INPUT_SHAPES = (3, 6, 6)
+    OUTPUT_SHAPES = (3, 4, 4)
+
+    def __init__(self):
+        super().__init__()
+        self.conv2d = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)
+        self.dropout = nn.Dropout2d(p=0.5)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.dropout(self.conv2d(self.dropout(input)))
+
+
+class ModelUsingSubmoduleParamsDirectly(ShapedModule):
+    """
+    Model that uses its submodule's parameters directly and that does not call its submodule's
+    forward.
+    """
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(2, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return input @ self.linear.weight.T + self.linear.bias
+
+
+class ModelAlsoUsingSubmoduleParamsDirectly(ShapedModule):
+    """
+    Model that uses its submodule's parameters directly but that also calls its submodule's forward.
+    """
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(2, 3)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return input @ self.linear.weight.T + self.linear.bias + self.linear(input)
+
+
+class _WithStringArg(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.matrix = nn.Parameter(torch.randn(2, 3))
+
+    def forward(self, s: str, input: Tensor) -> Tensor:
+        if s == "two":
+            return input @ self.matrix * 2.0
+        else:
+            return input @ self.matrix
+
+
+class WithModuleWithStringArg(ShapedModule):
+    """Model containing a module that has a string argument."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = _WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg("two", input)
+
+
+class WithModuleWithStringKwarg(ShapedModule):
+    """Model calling its submodule's forward with a string and a tensor as keyword arguments."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_arg = _WithStringArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        return self.with_string_arg(s="two", input=input)
+
+
+class _WithHybridPyTreeArg(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.m0 = nn.Parameter(torch.randn(3, 3))
+        self.m1 = nn.Parameter(torch.randn(4, 3))
+        self.m2 = nn.Parameter(torch.randn(5, 3))
+        self.m3 = nn.Parameter(torch.randn(6, 3))
+
+    def forward(self, input: PyTree) -> Tensor:
+        t0 = input["one"][0][0]
+        t1 = input["one"][0][1]
+        t2 = input["one"][1]
+        t3 = input["two"]
+
+        c0 = input["one"][0][3]
+        c1 = input["one"][0][4][0]
+        c2 = input["one"][2]
+        c3 = input["three"]
+
+        return c0 * t0 @ self.m0 + c1 * t1 @ self.m1 + c2 * t2 @ self.m2 + c3 * t3 @ self.m3
+
+
+class WithModuleWithHybridPyTreeArg(ShapedModule):
+    """
+    Model containing a module that has a PyTree argument containing a mix of tensor and non-tensor
+    leaves.
+    """
+
+    INPUT_SHAPES = (10,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(10, 18)
+        self.with_string_arg = _WithHybridPyTreeArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        input = self.linear(input)
+
+        t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
+
+        tree = {
+            "zero": "unused",
+            "one": [(t0, t1, "unused", 0.2, [0.3, "unused"]), t2, 0.4, "unused"],
+            "two": t3,
+            "three": 0.5,
+        }
+
+        return self.with_string_arg(tree)
+
+
+class WithModuleWithHybridPyTreeKwarg(ShapedModule):
+    """
+    Model calling its submodule's forward with a PyTree keyword argument containing a mix of tensors
+    and non-tensor values.
+    """
+
+    INPUT_SHAPES = (10,)
+    OUTPUT_SHAPES = (3,)
+
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(10, 18)
+        self.with_string_arg = _WithHybridPyTreeArg()
+
+    def forward(self, input: Tensor) -> Tensor:
+        input = self.linear(input)
+
+        t0, t1, t2, t3 = input[:, 0:3], input[:, 3:7], input[:, 7:12], input[:, 12:18]
+
+        tree = {
+            "zero": "unused",
+            "one": [(t0, t1, "unused", 0.2, [0.3, "unused"]), t2, 0.4, "unused"],
+            "two": t3,
+            "three": 0.5,
+        }
+
+        return self.with_string_arg(input=tree)
+
+
+class WithModuleWithStringOutput(ShapedModule):
+    """Model containing a module that has a string output."""
+
+    INPUT_SHAPES = (2,)
+    OUTPUT_SHAPES = (3,)
+
+    class WithStringOutput(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.matrix = nn.Parameter(torch.randn(2, 3))
+
+        def forward(self, input: Tensor) -> tuple[str, Tensor]:
+            return "test", input @ self.matrix
+
+    def __init__(self):
+        super().__init__()
+        self.with_string_output = self.WithStringOutput()
+
+    def forward(self, input: Tensor) -> Tensor:
+        _, output = self.with_string_output(input)
+        return output
+
+
+class WithMultiHeadAttention(ShapedModule):
+    """Module containing a MultiheadAttention layer."""
+
+    INPUT_SHAPES = ((20, 8), (10, 9), (10, 11))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(
+            embed_dim=8,
+            num_heads=2,
+            dropout=0.0,
+            batch_first=True,
+            kdim=9,
+            vdim=11,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        query, key, value = input
+        attn_output, _ = self.mha(query, key, value)
+        return attn_output
+
+
+class WithTransformer(ShapedModule):
+    """Module containing a Transformer."""
+
+    INPUT_SHAPES = ((10, 8), (20, 8))
+    OUTPUT_SHAPES = (20, 8)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            d_model=8,
+            nhead=2,
+            num_encoder_layers=2,
+            num_decoder_layers=2,
+            dim_feedforward=32,
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
+class WithTransformerLarge(ShapedModule):
+    """Module containing a large Transformer."""
+
+    INPUT_SHAPES = ((10, 512), (20, 512))
+    OUTPUT_SHAPES = (20, 512)
+
+    def __init__(self):
+        super().__init__()
+        self.transformer = nn.Transformer(
+            batch_first=True,
+            dropout=0.0,
+        )
+
+    def forward(self, input: tuple[Tensor, Tensor]) -> Tensor:
+        src, tgt = input
+        return self.transformer(src, tgt)
+
+
 class FreeParam(ShapedModule):
     """
     Model that contains a free (i.e. not contained in a submodule) parameter, that is used at the
@@ -755,7 +1013,7 @@ class FreeParam(ShapedModule):
         self.linear3 = nn.Linear(60, 70)
         self.linear4 = nn.Linear(70, 80)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         output = self.relu(input @ self.matrix)
         output = self.relu(self.linear1(output))
         output = self.relu(self.linear2(output))
@@ -782,7 +1040,7 @@ class NoFreeParam(ShapedModule):
         self.linear3 = nn.Linear(60, 70)
         self.linear4 = nn.Linear(70, 80)
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         output = self.relu(self.linear0(input))
         output = self.relu(self.linear1(output))
         output = self.relu(self.linear2(output))
@@ -864,7 +1122,7 @@ class AlexNet(ShapedModule):
         super().__init__()
         self.alexnet = torchvision.models.alexnet()
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.alexnet(input)
 
 
@@ -883,7 +1141,7 @@ class InstanceNormResNet18(ShapedModule):
             norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
         )
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.resnet18(input) / 5.0
 
 
@@ -899,7 +1157,7 @@ class GroupNormMobileNetV3Small(ShapedModule):
             norm_layer=partial(nn.GroupNorm, 2, affine=True)
         )
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.mobile_net(input)
 
 
@@ -913,7 +1171,7 @@ class SqueezeNet(ShapedModule):
         super().__init__()
         self.squeezenet = torchvision.models.squeezenet1_0()
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.squeezenet(input)
 
 
@@ -929,16 +1187,16 @@ class InstanceNormMobileNetV2(ShapedModule):
             norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
         )
 
-    def forward(self, input: Tensor):
+    def forward(self, input: Tensor) -> Tensor:
         return self.mobilenet(input) / 10.0
 
 
 # Other torchvision.models were not added for the following reasons:
-# - VGG16: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - VGG16: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
 # - DenseNet: no way to easily replace the BatchNorms (no norm_layer param)
 # - InceptionV3: no way to easily replace the BatchNorms (no norm_layer param)
 # - GoogleNet: no way to easily replace the BatchNorms (no norm_layer param)
 # - ShuffleNetV2: no way to easily replace the BatchNorms (no norm_layer param)
-# - ResNeXt: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
-# - WideResNet50: Sometimes takes to much memory on autojac even with bs=2, nut autogram seems ok.
+# - ResNeXt: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
+# - WideResNet50: Sometimes takes to much memory on autojac even with bs=2, but autogram seems ok.
 # - MNASNet: no way to easily replace the BatchNorms (no norm_layer param)

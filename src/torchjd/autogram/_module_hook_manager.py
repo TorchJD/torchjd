@@ -4,12 +4,13 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
-from torch.utils._pytree import PyTree, TreeSpec, tree_flatten, tree_map, tree_unflatten
+from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import AutogradVJP, FunctionalVJP, VJPType
+from ._module_utils import get_used_params
+from ._vjp import VJP, AutogradVJP, FunctionalVJP
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -18,16 +19,6 @@ from ._vjp import AutogradVJP, FunctionalVJP, VJPType
 # https://github.com/pytorch/pytorch/issues/65761#issue-1010116111.
 # When pytree becomes public, this import will have to be changed with a conditional import (to
 # still support older versions of PyTorch where pytree is protected).
-
-
-class BoolRef:
-    """Class wrapping a boolean value, acting as a reference to this boolean value."""
-
-    def __init__(self, value: bool):
-        self.value = value
-
-    def __bool__(self) -> bool:
-        return self.value
 
 
 class ModuleHookManager:
@@ -75,7 +66,7 @@ class ModuleHookManager:
             self._gramian_accumulator,
             self._has_batch_dim,
         )
-        self._handles.append(module.register_forward_hook(hook))
+        self._handles.append(module.register_forward_hook(hook, with_kwargs=True))
 
     @staticmethod
     def remove_hooks(handles: list[TorchRemovableHandle]) -> None:
@@ -88,39 +79,177 @@ class ModuleHookManager:
             handle.remove()
 
 
+class BoolRef:
+    """Class wrapping a boolean value, acting as a reference to this boolean value."""
+
+    def __init__(self, value: bool):
+        self.value = value
+
+    def __bool__(self) -> bool:
+        return self.value
+
+
+class Hook:
+    def __init__(
+        self,
+        gramian_accumulation_phase: BoolRef,
+        target_edges: EdgeRegistry,
+        gramian_accumulator: GramianAccumulator,
+        has_batch_dim: bool,
+    ):
+        self.gramian_accumulation_phase = gramian_accumulation_phase
+        self.target_edges = target_edges
+        self.gramian_accumulator = gramian_accumulator
+        self.has_batch_dim = has_batch_dim
+
+    def __call__(
+        self,
+        module: nn.Module,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        outputs: PyTree,
+    ) -> PyTree:
+        if self.gramian_accumulation_phase:
+            return outputs
+
+        flat_outputs, output_spec = tree_flatten(outputs)
+
+        rg_outputs = list[Tensor]()
+        rg_output_indices = list[int]()
+        for idx, output in enumerate(flat_outputs):
+            if isinstance(output, Tensor) and output.requires_grad:
+                rg_outputs.append(output)
+                rg_output_indices.append(idx)
+
+        if len(rg_outputs) == 0:
+            # This can happen only if a module has a trainable param but outputs no tensor that
+            # require grad
+            return outputs
+
+        rg_params, _ = get_used_params(module)
+        self.gramian_accumulator.track_parameter_paths(rg_params.values())
+
+        # We only care about running the JacobianAccumulator node, so we need one of its child
+        # edges (the edges of the original outputs of the model) as target. For memory
+        # efficiency, we select the smallest one (that requires grad).
+        preference = torch.tensor([t.numel() for t in rg_outputs])
+        index = cast(int, preference.argmin().item())
+        self.target_edges.register(get_gradient_edge(rg_outputs[index]))
+
+        vjp: VJP
+        if self.has_batch_dim:
+            rg_output_in_dims = (0,) * len(rg_outputs)
+            arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+            kwargs_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, kwargs)
+            in_dims = (rg_output_in_dims, arg_in_dims, kwargs_in_dims)
+            vjp = FunctionalVJP(module, in_dims)
+        else:
+            vjp = AutogradVJP(module, rg_outputs)
+
+        autograd_fn_rg_outputs = JacobianAccumulator.apply(
+            self.gramian_accumulation_phase,
+            vjp,
+            args,
+            kwargs,
+            self.gramian_accumulator,
+            module,
+            *rg_outputs,
+        )
+
+        for idx, output in zip(rg_output_indices, autograd_fn_rg_outputs):
+            flat_outputs[idx] = output
+
+        return tree_unflatten(flat_outputs, output_spec)
+
+
+class JacobianAccumulator(torch.autograd.Function):
+    """
+    Autograd function that accumulates Jacobian Gramians during the first backward pass.
+
+    Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
+    of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
+    toggle mechanism to activate only during the Gramian accumulation phase.
+    """
+
+    generate_vmap_rule = True
+
+    @staticmethod
+    def forward(
+        gramian_accumulation_phase: BoolRef,
+        vjp: VJP,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        gramian_accumulator: GramianAccumulator,
+        module: nn.Module,
+        *rg_tensors: Tensor,
+    ) -> tuple[Tensor, ...]:
+        return tuple(t.detach() for t in rg_tensors)
+
+    # For Python version > 3.10, the type of `inputs` should become
+    # tuple[BoolRef, VJP, tuple[PyTree, ...], dict[str, PyTree], GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
+    @staticmethod
+    def setup_context(
+        ctx,
+        inputs: tuple,
+        _,
+    ):
+        ctx.gramian_accumulation_phase = inputs[0]
+        ctx.vjp = inputs[1]
+        ctx.args = inputs[2]
+        ctx.kwargs = inputs[3]
+        ctx.gramian_accumulator = inputs[4]
+        ctx.module = inputs[5]
+
+    @staticmethod
+    def backward(ctx, *grad_outputs: Tensor) -> tuple:
+        # For python > 3.10: -> tuple[None, None, None, None, None, None, *tuple[Tensor, ...]]
+
+        if not ctx.gramian_accumulation_phase:
+            return None, None, None, None, None, None, *grad_outputs
+
+        AccumulateJacobian.apply(
+            ctx.vjp,
+            ctx.args,
+            ctx.kwargs,
+            ctx.gramian_accumulator,
+            ctx.module,
+            *grad_outputs,
+        )
+
+        return None, None, None, None, None, None, *grad_outputs
+
+
 class AccumulateJacobian(torch.autograd.Function):
 
     @staticmethod
     def forward(
-        output_spec: TreeSpec,
-        vjp: VJPType,
-        args: PyTree,
+        vjp: VJP,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_grad_outputs: Tensor,
+        *grad_outputs: Tensor,
     ) -> None:
         # There is no non-batched dimension
-        grad_outputs = tree_unflatten(flat_grad_outputs, output_spec)
-        generalized_jacobians = vjp(grad_outputs, args)
+        generalized_jacobians = vjp(grad_outputs, args, kwargs)
         path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
         gramian_accumulator.accumulate_path_jacobians(path_jacobians)
 
     @staticmethod
     def vmap(
         _,
-        in_dims: PyTree,
-        output_spec: TreeSpec,
-        vjp: VJPType,
-        args: PyTree,
+        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], None, None, *tuple[int | None, ...]]
+        vjp: VJP,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
         gramian_accumulator: GramianAccumulator,
         module: nn.Module,
-        *flat_jac_outputs: Tensor,
+        *jac_outputs: Tensor,
     ) -> tuple[None, None]:
         # There is a non-batched dimension
-        jac_outputs = tree_unflatten(flat_jac_outputs, output_spec)
         # We do not vmap over the args for the non-batched dimension
-        in_dims = (tree_unflatten(in_dims[5:], output_spec), tree_map(lambda _: None, args))
-        generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args)
+        in_dims = (in_dims[5:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
+        generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args, kwargs)
         path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
         gramian_accumulator.accumulate_path_jacobians(path_jacobians)
         return None, None
@@ -138,113 +267,5 @@ class AccumulateJacobian(torch.autograd.Function):
         return path_jacobians
 
     @staticmethod
-    def setup_context(*_):
+    def setup_context(*_) -> None:
         pass
-
-
-class JacobianAccumulator(torch.autograd.Function):
-    """
-    Autograd function that accumulates Jacobian Gramians during the first backward pass.
-
-    Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
-    of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
-    toggle mechanism to activate only during the Gramian accumulation phase.
-    """
-
-    generate_vmap_rule = True
-
-    @staticmethod
-    def forward(
-        gramian_accumulation_phase: BoolRef,
-        output_spec: TreeSpec,
-        vjp: VJPType,
-        args: PyTree,
-        gramian_accumulator: GramianAccumulator,
-        module: nn.Module,
-        *xs: Tensor,
-    ) -> tuple[Tensor, ...]:
-        return tuple(x.detach() for x in xs)
-
-    # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, TreeSpec, VJPType, PyTree, GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
-    @staticmethod
-    def setup_context(
-        ctx,
-        inputs: tuple,
-        _,
-    ):
-        ctx.gramian_accumulation_phase = inputs[0]
-        ctx.output_spec = inputs[1]
-        ctx.vjp = inputs[2]
-        ctx.args = inputs[3]
-        ctx.gramian_accumulator = inputs[4]
-        ctx.module = inputs[5]
-
-    @staticmethod
-    def backward(ctx, *flat_grad_outputs: Tensor):
-        if not ctx.gramian_accumulation_phase:
-            return None, None, None, None, None, None, *flat_grad_outputs
-
-        AccumulateJacobian.apply(
-            ctx.output_spec,
-            ctx.vjp,
-            ctx.args,
-            ctx.gramian_accumulator,
-            ctx.module,
-            *flat_grad_outputs,
-        )
-
-        return None, None, None, None, None, None, *flat_grad_outputs
-
-
-class Hook:
-    def __init__(
-        self,
-        gramian_accumulation_phase: BoolRef,
-        target_edges: EdgeRegistry,
-        gramian_accumulator: GramianAccumulator,
-        has_batch_dim: bool,
-    ):
-        self.gramian_accumulation_phase = gramian_accumulation_phase
-        self.target_edges = target_edges
-        self.gramian_accumulator = gramian_accumulator
-        self.has_batch_dim = has_batch_dim
-
-    def __call__(self, module: nn.Module, args: PyTree, output: PyTree) -> PyTree:
-        if self.gramian_accumulation_phase:
-            return output
-
-        flat_outputs, output_spec = tree_flatten(output)
-
-        if not any(isinstance(t, Tensor) and t.requires_grad for t in flat_outputs):
-            # This can happen only if a module has a trainable param but outputs no tensor that
-            # require grad
-            return output
-
-        requires_grad_params = [p for p in module.parameters(recurse=False) if p.requires_grad]
-        self.gramian_accumulator.track_parameter_paths(requires_grad_params)
-
-        # We only care about running the JacobianAccumulator node, so we need one of its child
-        # edges (the edges of the original outputs of the model) as target. For memory
-        # efficiency, we select the smallest one (that requires grad).
-        inf = float("inf")
-        preference = torch.tensor([t.numel() if t.requires_grad else inf for t in flat_outputs])
-        index = cast(int, preference.argmin().item())
-        self.target_edges.register(get_gradient_edge(flat_outputs[index]))
-
-        if self.has_batch_dim:
-            vjp = torch.vmap(FunctionalVJP(module))
-        else:
-            vjp = AutogradVJP(module, flat_outputs)
-
-        autograd_fn_outputs = JacobianAccumulator.apply(
-            self.gramian_accumulation_phase,
-            output_spec,
-            vjp,
-            args,
-            self.gramian_accumulator,
-            module,
-            *flat_outputs,
-        )
-
-        return tree_unflatten(autograd_fn_outputs, output_spec)
