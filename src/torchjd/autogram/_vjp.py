@@ -6,6 +6,8 @@ from torch import Tensor, nn
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
 
+from torchjd.autogram._module_utils import get_used_params
+
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
 # https://github.com/pytorch/pytorch/issues/65761, https://github.com/pytorch/pytorch/pull/137400).
@@ -37,31 +39,7 @@ class ModuleVJP(VJP, ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        self.trainable_params = dict[str, Parameter]()
-        self.frozen_params = dict[str, Parameter]()
-
-        self._save_direct_params(module)
-        self._save_indirectly_used_params(module)
-
-    def _save_direct_params(self, module: nn.Module, prefix: str = "") -> None:
-        for name, param in module.named_parameters(recurse=False):
-            if param.requires_grad:
-                self.trainable_params[prefix + name] = param
-            else:
-                self.frozen_params[prefix + name] = param
-
-    def _save_indirectly_used_params(self, module: nn.Module) -> None:
-        """
-        Save the parameters that are used by module but that are not its direct params. This is a
-        fairly unusual setup that has to be handled on a case-by-case basis.
-        """
-
-        # MHA uses its out_proj child params itself. Note that we also check that the MHA still has
-        # an out_proj attribute because it might change in the future (which will remove the
-        # necessity of custom code for MHA entirely). See the status of
-        # https://github.com/pytorch/pytorch/pull/126568
-        if isinstance(module, nn.MultiheadAttention) and hasattr(module, "out_proj"):
-            self._save_direct_params(module.out_proj, "out_proj.")
+        self.trainable_params, self.frozen_params = get_used_params(module)
 
 
 class FunctionalVJP(ModuleVJP):

@@ -9,6 +9,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._module_utils import get_used_params
 from ._vjp import VJP, AutogradVJP, FunctionalVJP
 
 # Note about import from protected _pytree module:
@@ -125,8 +126,8 @@ class Hook:
             # require grad
             return outputs
 
-        rg_params = _get_direct_rg_params(module) + _get_indirectly_used_rg_params(module)
-        self.gramian_accumulator.track_parameter_paths(rg_params)
+        rg_params, _ = get_used_params(module)
+        self.gramian_accumulator.track_parameter_paths(list(rg_params.values()))
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
@@ -159,26 +160,6 @@ class Hook:
             flat_outputs[idx] = output
 
         return tree_unflatten(flat_outputs, output_spec)
-
-
-def _get_direct_rg_params(module: nn.Module) -> list[nn.Parameter]:
-    return [p for p in module.parameters(recurse=False) if p.requires_grad]
-
-
-def _get_indirectly_used_rg_params(module: nn.Module) -> list[nn.Parameter]:
-    """
-    Get the parameters that are used by module but that are not its direct params. This is a fairly
-    unusual setup that has to be handled on a case-by-case basis.
-    """
-
-    # MHA uses its out_proj child params itself. Note that we also check that the MHA still has
-    # an out_proj attribute because it might change in the future (which will remove the
-    # necessity of custom code for MHA entirely). See the status of
-    # https://github.com/pytorch/pytorch/pull/126568
-    if isinstance(module, nn.MultiheadAttention) and hasattr(module, "out_proj"):
-        return _get_direct_rg_params(module.out_proj)
-    else:
-        return []
 
 
 class JacobianAccumulator(torch.autograd.Function):
