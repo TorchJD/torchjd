@@ -19,11 +19,6 @@ _MODULES_INCOMPATIBLE_WITH_BATCHED = (
     nn.LazyBatchNorm3d,
     nn.SyncBatchNorm,
     nn.RNNBase,
-    nn.Transformer,
-    nn.TransformerEncoder,
-    nn.TransformerDecoder,
-    nn.TransformerEncoderLayer,
-    nn.TransformerDecoderLayer,
 )
 
 _TRACK_RUNNING_STATS_MODULE_TYPES = (
