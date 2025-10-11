@@ -6,8 +6,6 @@ from torch import Tensor, nn
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
 
-from torchjd.autogram._module_utils import get_used_params
-
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
 # https://github.com/pytorch/pytorch/issues/65761, https://github.com/pytorch/pytorch/pull/137400).
@@ -39,7 +37,15 @@ class ModuleVJP(VJP, ABC):
 
     def __init__(self, module: nn.Module):
         self.module = module
-        self.rg_params, self.frozen_params = get_used_params(module)
+
+        self.rg_params = dict[str, Parameter]()
+        self.frozen_params = dict[str, Parameter]()
+
+        for name, param in module.named_parameters(recurse=True):
+            if param.requires_grad:
+                self.rg_params[name] = param
+            else:
+                self.frozen_params[name] = param
 
 
 class FunctionalVJP(ModuleVJP):

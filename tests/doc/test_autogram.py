@@ -20,7 +20,7 @@ def test_engine():
     weighting = UPGradWeighting()
 
     # Create the engine before the backward pass, and only once.
-    engine = Engine(model.modules(), batch_dim=0)
+    engine = Engine(model, batch_dim=0)
 
     for input, target in zip(inputs, targets):
         output = model(input).squeeze(dim=1)  # shape: [16]
