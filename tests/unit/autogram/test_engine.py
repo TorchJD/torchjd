@@ -150,7 +150,7 @@ def _assert_gramian_is_equivalent_to_autograd(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
+    engine = Engine(model_autogram, batch_dim=batch_dim)
 
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
@@ -261,7 +261,7 @@ def test_compute_gramian_various_output_shapes(
     torch.manual_seed(0)
     model_autogram = architecture().to(device=DEVICE)
 
-    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
+    engine = Engine(model_autogram, batch_dim=batch_dim)
 
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
@@ -324,7 +324,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
     torch.manual_seed(0)
 
-    engine = Engine(gramian_modules, batch_dim=batch_dim)
+    engine = Engine(*gramian_modules, batch_dim=batch_dim)
 
     output = model(input)
     losses = reduce_to_vector(loss_fn(output))
@@ -349,7 +349,7 @@ def test_iwrm_steps_with_autogram(
 
     model = architecture().to(device=DEVICE)
 
-    engine = Engine(model.modules(), batch_dim=batch_dim)
+    engine = Engine(model, batch_dim=batch_dim)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
@@ -388,7 +388,7 @@ def test_autograd_while_modules_are_hooked(
     autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
 
     # Hook modules and optionally compute the Gramian
-    engine = Engine(model_autogram.modules(), batch_dim=batch_dim)
+    engine = Engine(model_autogram, batch_dim=batch_dim)
     if use_engine:
         torch.manual_seed(0)  # Fix randomness for random models
         output = model_autogram(input)
@@ -420,7 +420,7 @@ def test_incompatible_modules(architecture: type[nn.Module], batch_dim: int | No
     model = architecture().to(device=DEVICE)
 
     with pytest.raises(ValueError):
-        _ = Engine(model.modules(), batch_dim=batch_dim)
+        _ = Engine(model, batch_dim=batch_dim)
 
 
 def test_compute_gramian_manual():
@@ -434,7 +434,7 @@ def test_compute_gramian_manual():
 
     torch.manual_seed(0)
     model = Linear(in_dims, out_dims).to(device=DEVICE)
-    engine = Engine(model.modules(), batch_dim=None)
+    engine = Engine(model, batch_dim=None)
 
     input = randn_(in_dims)
     output = model(input)
@@ -480,8 +480,8 @@ def test_reshape_equivariance(shape: list[int], batch_dim: int | None):
     output_size = prod(shape[1:])
 
     model = Linear(input_size, output_size).to(device=DEVICE)
-    engine1 = Engine([model], batch_dim=None)
-    engine2 = Engine([model], batch_dim=None)
+    engine1 = Engine(model, batch_dim=None)
+    engine2 = Engine(model, batch_dim=None)
 
     input = randn_([input_size])
     output = model(input)
@@ -520,8 +520,8 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     output_size = prod(shape[1:])
 
     model = Linear(input_size, output_size).to(device=DEVICE)
-    engine1 = Engine([model], batch_dim=None)
-    engine2 = Engine([model], batch_dim=None)
+    engine1 = Engine(model, batch_dim=None)
+    engine2 = Engine(model, batch_dim=None)
 
     input = randn_([input_size])
     output = model(input).reshape(shape[1:])
@@ -563,8 +563,8 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     output_size = input_size
 
     model = Linear(input_size, output_size).to(device=DEVICE)
-    engine1 = Engine([model], batch_dim=batch_dim)
-    engine2 = Engine([model], batch_dim=None)
+    engine1 = Engine(model, batch_dim=batch_dim)
+    engine2 = Engine(model, batch_dim=None)
 
     input = randn_([batch_size, input_size])
     output = model(input)
@@ -595,8 +595,8 @@ def test_batched_non_batched_equivalence_2(architecture: ShapedModule, batch_siz
     torch.manual_seed(0)
     model_none = architecture().to(device=DEVICE)
 
-    engine_0 = Engine(model_0.modules(), batch_dim=0)
-    engine_none = Engine(model_none.modules(), batch_dim=None)
+    engine_0 = Engine(model_0, batch_dim=0)
+    engine_none = Engine(model_none, batch_dim=None)
 
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)

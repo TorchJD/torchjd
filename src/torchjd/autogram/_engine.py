@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from typing import cast
 
 import torch
@@ -58,8 +57,9 @@ class Engine:
     backpropagate the losses. This is equivalent to doing a step of standard Jacobian descent using
     :func:`torchjd.autojac.backward`.
 
-    :param modules: A collection of modules whose direct (non-recursive) parameters will contribute
-        to the Gramian of the Jacobian.
+    :param modules: The modules whose parameters will contribute to the Gramian of the Jacobian.
+        Several modules can be provided, but it's important that none of them is a child module of
+        another of them.
     :param batch_dim: If the modules work with batches and process each batch element independently,
         then many intermediary Jacobians are sparse (block-diagonal), which allows for a substantial
         memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
@@ -91,7 +91,7 @@ class Engine:
             weighting = UPGradWeighting()
 
             # Create the engine before the backward pass, and only once.
-            engine = Engine(model.modules(), batch_dim=0)
+            engine = Engine(model, batch_dim=0)
 
             for input, target in zip(inputs, targets):
                 output = model(input).squeeze(dim=1)  # shape: [16]
@@ -173,7 +173,7 @@ class Engine:
 
     def __init__(
         self,
-        modules: Iterable[nn.Module],
+        *modules: nn.Module,
         batch_dim: int | None,
     ):
         self._gramian_accumulator = GramianAccumulator()
@@ -183,16 +183,16 @@ class Engine:
             self._target_edges, self._gramian_accumulator, batch_dim is not None
         )
 
-        self._hook_modules(modules)
+        for module in modules:
+            self._hook_module_recursively(module)
 
-    def _hook_modules(self, modules: Iterable[nn.Module]) -> None:
-        _modules = set(modules)
-
-        # Add module forward hooks to compute jacobians
-        for module in _modules:
-            if any(p.requires_grad for p in module.parameters(recurse=False)):
-                self._check_module_is_compatible(module)
-                self._module_hook_manager.hook_module(module)
+    def _hook_module_recursively(self, module: nn.Module) -> None:
+        if any(p.requires_grad for p in module.parameters(recurse=False)):
+            self._check_module_is_compatible(module)
+            self._module_hook_manager.hook_module(module)
+        else:
+            for child in module.children():
+                self._hook_module_recursively(child)
 
     def _check_module_is_compatible(self, module: nn.Module) -> None:
         if self._batch_dim is not None:
