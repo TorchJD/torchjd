@@ -204,9 +204,10 @@ for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
     optimizer.step()
 ```
 
-Note that here,  because the losses are a matrix instead of a simple vector, we compute a
-*generalized Gramian* and we extract weights from it using a
-[GeneralizedWeighting](https://torchjd.org/docs/aggregation/index.html#torchjd.aggregation.GeneralizedWeighting).
+> [!NOTE]
+> Here,  because the losses are a matrix instead of a simple vector, we compute a *generalized
+> Gramian* and we extract weights from it using a
+> [GeneralizedWeighting](https://torchjd.org/docs/aggregation/index.html#torchjd.aggregation.GeneralizedWeighting).
 
 More usage examples can be found [here](https://torchjd.org/stable/examples/).
 
