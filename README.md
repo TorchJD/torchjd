@@ -137,7 +137,7 @@ Jacobian descent using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgr
   optimizer = SGD(model.parameters(), lr=0.1)
 
 + weighting = UPGradWeighting()
-+ engine = Engine(model.modules())
++ engine = Engine(model, batch_dim=0)
 
   inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
   targets = torch.randn(8, 16)  # 8 batches of 16 targets for the first task
