@@ -94,7 +94,7 @@ def test_iwmtl():
     optimizer = SGD(params, lr=0.1)
     mse = MSELoss(reduction="none")
     weighting = Flattening(UPGradWeighting())
-    engine = Engine(shared_module.modules(), batch_dim=0)
+    engine = Engine(shared_module, batch_dim=0)
 
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
     task1_targets = torch.randn(8, 16)  # 8 batches of 16 targets for the first task
@@ -184,7 +184,7 @@ def test_iwrm():
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)
         weighting = UPGradWeighting()
-        engine = Engine(model.modules(), batch_dim=0)
+        engine = Engine(model, batch_dim=0)
 
         for x, y in zip(X, Y):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
@@ -374,7 +374,7 @@ def test_partial_jd():
 
     # Create the autogram engine that will compute the Gramian of the
     # Jacobian with respect to the two last Linear layers' parameters.
-    engine = Engine(model[2:].modules(), batch_dim=0)
+    engine = Engine(model[2:], batch_dim=0)
 
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)

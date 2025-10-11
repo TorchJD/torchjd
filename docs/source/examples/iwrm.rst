@@ -129,7 +129,7 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
             params = model.parameters()
             optimizer = SGD(params, lr=0.1)
             weighting = UPGradWeighting()
-            engine = Engine(model.modules(), batch_dim=0)
+            engine = Engine(model, batch_dim=0)
 
             for x, y in zip(X, Y):
                 y_hat = model(x).squeeze(dim=1)  # shape: [16]
