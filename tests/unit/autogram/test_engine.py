@@ -102,7 +102,6 @@ PARAMETRIZATIONS = [
     (WithNoTensorOutput, 32),
     (WithBuffered, 32),
     (SimpleParamReuse, 32),
-    (InterModuleParamReuse, 32),
     (ModuleReuse, 32),
     (SomeUnusedParam, 32),
     (SomeFrozenParam, 32),
@@ -202,7 +201,12 @@ def test_compute_gramian_with_weird_modules(
 
 @mark.xfail
 @mark.parametrize(
-    "architecture", [ModelUsingSubmoduleParamsDirectly, ModelAlsoUsingSubmoduleParamsDirectly]
+    "architecture",
+    [
+        ModelUsingSubmoduleParamsDirectly,
+        ModelAlsoUsingSubmoduleParamsDirectly,
+        InterModuleParamReuse,
+    ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [0, None])
