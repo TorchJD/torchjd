@@ -242,14 +242,13 @@ class ComputeModuleJacobians(torch.autograd.Function):
         kwargs: dict[str, PyTree],
         module: nn.Module,
         *jac_outputs: Tensor,
-    ) -> tuple[dict[Tensor, Tensor], dict[Tensor, None]]:
+    ) -> tuple[dict[Tensor, Tensor], None]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
         in_dims = (in_dims[4:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
         generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args, kwargs)
         path_jacobians = ComputeModuleJacobians._make_path_jacobians(module, generalized_jacobians)
-        out_dims = tree_map(lambda _: None, path_jacobians)
-        return path_jacobians, out_dims
+        return path_jacobians, None
 
     @staticmethod
     def _make_path_jacobians(
