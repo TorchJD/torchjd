@@ -236,7 +236,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
     @staticmethod
     def vmap(
         _,
-        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], None, None, *tuple[int | None, ...]]
+        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], None, *tuple[int | None, ...]]
         vjp: VJP,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
