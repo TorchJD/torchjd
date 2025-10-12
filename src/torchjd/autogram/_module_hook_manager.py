@@ -125,8 +125,7 @@ class Hook:
             # require grad
             return outputs
 
-        rg_params = [p for p in module.parameters(recurse=True) if p.requires_grad]
-        self.gramian_accumulator.track_parameter_paths(rg_params)
+        self.gramian_accumulator.track_module_paths(module)
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
@@ -213,7 +212,7 @@ class JacobianAccumulator(torch.autograd.Function):
             ctx.module,
             *grad_outputs,
         )
-        ctx.gramian_accumulator.accumulate_path_jacobians(path_jacobians)
+        ctx.gramian_accumulator.accumulate_path_jacobians(ctx.module, path_jacobians)
 
         return None, None, None, None, None, None, *grad_outputs
 

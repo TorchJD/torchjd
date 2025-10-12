@@ -1,9 +1,9 @@
 from collections import Counter
-from collections.abc import Iterable
 from typing import Optional
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torch.utils._pytree import PyTree, tree_flatten
 
 
 class GramianAccumulator:
@@ -17,56 +17,50 @@ class GramianAccumulator:
 
     def __init__(self) -> None:
         self._gramian: Optional[Tensor] = None
-        self._summed_jacobians = dict[Tensor, Tensor]()
-        self._path_counter = Counter[Tensor]()
+        self._summed_jacobians = dict[nn.Module, list[Tensor]]()
+        self._path_counter = Counter[nn.Module]()
 
     def reset(self) -> None:
         self._gramian = None
         self._summed_jacobians = {}
         self._path_counter = Counter()
 
-    def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
+    def track_module_paths(self, module: nn.Module) -> None:
         """
-        Register parameters and count their paths in the computational graph.
+        Register module and count its paths in the computational graph.
 
-        :param parameters: Parameter tensors to track. Duplicates increase path count.
+        :param module: Module to track. Duplicates increase path count.
         """
-        self._path_counter.update(parameters)
+        self._path_counter.update([module])
 
-    def accumulate_path_jacobians(self, path_jacobians: dict[Tensor, Tensor]) -> None:
+    def accumulate_path_jacobians(self, module: nn.Module, jacobians: PyTree) -> None:
         """
-        Add path Jacobians for multiple parameters.
+        Add Jacobians corresponding to a module.
 
-        :param path_jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
+        :param module: The module.
+        :param jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
         """
-        for parameter, jacobian in path_jacobians.items():
-            self._accumulate_path_jacobian(parameter, jacobian)
-
-    def _accumulate_path_jacobian(self, parameter: Tensor, jacobian: Tensor) -> None:
-        """
-        Add path Jacobian for a parameter. In case the full Jacobian is computed, accumulate its
-        Gramian.
-
-        :param parameter: The parameter.
-        :param jacobian: path Jacobian with respect to the parameter.
-        """
-        if parameter in self._summed_jacobians:
-            self._summed_jacobians[parameter] += jacobian
+        flat_jacobians = tree_flatten(jacobians)[0]
+        if module in self._summed_jacobians:
+            self._summed_jacobians[module] = [
+                a + b for a, b in zip(self._summed_jacobians[module], flat_jacobians)
+            ]
         else:
-            self._summed_jacobians[parameter] = jacobian
-        self._path_counter.subtract([parameter])
-        if self._path_counter[parameter] == 0:
-            self._accumulate_gramian(parameter)
-            del self._path_counter[parameter]
-            del self._summed_jacobians[parameter]
+            self._summed_jacobians[module] = flat_jacobians
+        self._path_counter.subtract([module])
+        if self._path_counter[module] == 0:
+            for jacobian in self._summed_jacobians[module]:
+                self._accumulate_one_jacobian_in_gramian(jacobian)
+            del self._path_counter[module]
+            del self._summed_jacobians[module]
 
-    def _accumulate_gramian(self, parameter: Tensor) -> None:
+    def _accumulate_one_jacobian_in_gramian(self, jacobian: Tensor) -> None:
         """
-        Compute the Gramian of the full Jacobian and accumulate it.
+        Compute the Gramian of a Jacobian and accumulate it.
 
-        :param parameter: Parameter whose full Jacobian is available.
+        :param jacobian: the Jacobian.
         """
-        full_jacobian_matrix = torch.flatten(self._summed_jacobians[parameter], start_dim=1)
+        full_jacobian_matrix = torch.flatten(jacobian, start_dim=1)
         if self._gramian is not None:
             self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
         else:
