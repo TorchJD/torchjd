@@ -26,16 +26,16 @@ class GramianAccumulator:
         self._path_counter = Counter()
 
     def track_module_paths(self, module: nn.Module) -> None:
-        """
-        Register module and count its paths in the computational graph.
+        """Increment the usage count of the provided module.
 
-        :param module: Module to track. Duplicates increase path count.
+        :param module: The module.
         """
+
         self._path_counter.update([module])
 
     def accumulate_path_jacobians(self, module: nn.Module, jacobians: PyTree) -> None:
         """
-        Add Jacobians corresponding to a module.
+        Add the Jacobians corresponding to all usages of a module.
 
         :param module: The module.
         :param jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
