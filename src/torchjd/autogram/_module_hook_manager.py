@@ -248,7 +248,8 @@ class ComputeModuleJacobians(torch.autograd.Function):
         in_dims = (in_dims[4:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
         generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args, kwargs)
         path_jacobians = ComputeModuleJacobians._make_path_jacobians(module, generalized_jacobians)
-        return path_jacobians, tree_map(lambda _: None, path_jacobians)
+        out_dims = tree_map(lambda _: None, path_jacobians)
+        return path_jacobians, out_dims
 
     @staticmethod
     def _make_path_jacobians(
