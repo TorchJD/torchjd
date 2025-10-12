@@ -206,33 +206,32 @@ class JacobianAccumulator(torch.autograd.Function):
         if not ctx.gramian_accumulation_phase:
             return None, None, None, None, None, None, *grad_outputs
 
-        AccumulateJacobian.apply(
+        path_jacobians = ComputeModuleJacobians.apply(
             ctx.vjp,
             ctx.args,
             ctx.kwargs,
-            ctx.gramian_accumulator,
             ctx.module,
             *grad_outputs,
         )
+        ctx.gramian_accumulator.accumulate_path_jacobians(path_jacobians)
 
         return None, None, None, None, None, None, *grad_outputs
 
 
-class AccumulateJacobian(torch.autograd.Function):
+class ComputeModuleJacobians(torch.autograd.Function):
 
     @staticmethod
     def forward(
         vjp: VJP,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-        gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *grad_outputs: Tensor,
-    ) -> None:
+    ) -> dict[Tensor, Tensor]:
         # There is no non-batched dimension
         generalized_jacobians = vjp(grad_outputs, args, kwargs)
-        path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
-        gramian_accumulator.accumulate_path_jacobians(path_jacobians)
+        path_jacobians = ComputeModuleJacobians._make_path_jacobians(module, generalized_jacobians)
+        return path_jacobians
 
     @staticmethod
     def vmap(
@@ -241,17 +240,15 @@ class AccumulateJacobian(torch.autograd.Function):
         vjp: VJP,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-        gramian_accumulator: GramianAccumulator,
         module: nn.Module,
         *jac_outputs: Tensor,
-    ) -> tuple[None, None]:
+    ) -> tuple[dict[Tensor, Tensor], dict[Tensor, None]]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
-        in_dims = (in_dims[5:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
+        in_dims = (in_dims[4:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
         generalized_jacobians = torch.vmap(vjp, in_dims=in_dims)(jac_outputs, args, kwargs)
-        path_jacobians = AccumulateJacobian._make_path_jacobians(module, generalized_jacobians)
-        gramian_accumulator.accumulate_path_jacobians(path_jacobians)
-        return None, None
+        path_jacobians = ComputeModuleJacobians._make_path_jacobians(module, generalized_jacobians)
+        return path_jacobians, tree_map(lambda _: None, path_jacobians)
 
     @staticmethod
     def _make_path_jacobians(
