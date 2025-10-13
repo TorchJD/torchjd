@@ -72,12 +72,12 @@ class FunctionalJacobianComputer(JacobianComputer):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
+        _: Sequence[Tensor],
     ) -> Tensor:
-        rg_output_in_dims = (0,) * len(rg_outputs)
-        arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+        grad_outputs_in_dims = (0,) * len(grad_outputs)
+        args_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
         kwargs_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, kwargs)
-        in_dims = (rg_output_in_dims, arg_in_dims, kwargs_in_dims)
+        in_dims = (grad_outputs_in_dims, args_in_dims, kwargs_in_dims)
         vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
 
         return vmapped_vjp(grad_outputs, args, kwargs)
