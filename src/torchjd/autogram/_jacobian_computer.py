@@ -82,7 +82,7 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
         def functional_model_call(rg_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = [
                 rg_params,
-                dict(self.module.named_buffers()),
+                dict[str, Tensor](self.module.named_buffers()),
                 self.frozen_params,
             ]
             output = torch.func.functional_call(self.module, all_state, args_j, kwargs_j)
