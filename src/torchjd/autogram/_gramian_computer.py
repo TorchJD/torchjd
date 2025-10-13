@@ -37,7 +37,10 @@ class JacobianBasedGramianComputer(GramianComputer, ABC):
 
 class JacobianBasedGramianComputerWithoutCrossTerms(JacobianBasedGramianComputer):
     """
-    Stateful GramianComputer that waits for all usages to be counted before returning the gramian.
+    Stateless JacobianBasedGramianComputer that always returns the gramian when computing it.
+
+    This has the effect of ignoring potential conflict from between the different usages of a same
+    module.
     """
 
     def __call__(
@@ -54,7 +57,8 @@ class JacobianBasedGramianComputerWithoutCrossTerms(JacobianBasedGramianComputer
 
 class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     """
-    Stateful GramianComputer that waits for all usages to be counted before returning the gramian.
+    Stateful JacobianBasedGramianComputer that waits for all usages to be counted before returning
+    the gramian.
     """
 
     def __init__(self, jacobian_computer: JacobianComputer):
