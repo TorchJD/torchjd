@@ -1,5 +1,4 @@
 import weakref
-from collections.abc import Sequence
 from typing import cast
 
 import torch
@@ -10,7 +9,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._jacobian_computer import JacobianComputer
+from ._gramian_computer import GramianComputer
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -50,7 +49,7 @@ class ModuleHookManager:
         # seems to be a better practice (and it only works if the function to call is static).
         self._finalizer = weakref.finalize(self, ModuleHookManager.remove_hooks, self._handles)
 
-    def hook_module(self, module: nn.Module, jacobian_computer: JacobianComputer) -> None:
+    def hook_module(self, module: nn.Module, gramian_computer: GramianComputer) -> None:
         """
         Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
 
@@ -62,7 +61,7 @@ class ModuleHookManager:
             self.gramian_accumulation_phase,
             self._target_edges,
             self._gramian_accumulator,
-            jacobian_computer,
+            gramian_computer,
         )
         self._handles.append(module.register_forward_hook(hook, with_kwargs=True))
 
@@ -93,12 +92,12 @@ class Hook:
         gramian_accumulation_phase: BoolRef,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        jacobian_computer: JacobianComputer,
+        gramian_computer: GramianComputer,
     ):
         self.gramian_accumulation_phase = gramian_accumulation_phase
         self.target_edges = target_edges
         self.gramian_accumulator = gramian_accumulator
-        self.jacobian_computer = jacobian_computer
+        self.gramian_computer = gramian_computer
 
     def __call__(
         self,
@@ -124,7 +123,7 @@ class Hook:
             # require grad
             return outputs
 
-        self.gramian_accumulator.track_module_paths(module)
+        self.gramian_computer.track_forward_call()
 
         # We only care about running the JacobianAccumulator node, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
@@ -135,11 +134,10 @@ class Hook:
 
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
-            self.jacobian_computer,
+            self.gramian_computer,
             args,
             kwargs,
             self.gramian_accumulator,
-            module,
             *rg_outputs,
         )
 
@@ -163,17 +161,16 @@ class JacobianAccumulator(torch.autograd.Function):
     @staticmethod
     def forward(
         gramian_accumulation_phase: BoolRef,
-        jacobian_computer: JacobianComputer,
+        gramian_computer: GramianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
         gramian_accumulator: GramianAccumulator,
-        module: nn.Module,
         *rg_tensors: Tensor,
     ) -> tuple[Tensor, ...]:
         return tuple(t.detach() for t in rg_tensors)
 
     # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, JacobianComputer, tuple[PyTree, ...], dict[str, PyTree], GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
+    # tuple[BoolRef, GramianComputer, tuple[PyTree, ...], dict[str, PyTree], GramianAccumulator, nn.Module, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
@@ -181,69 +178,21 @@ class JacobianAccumulator(torch.autograd.Function):
         _,
     ):
         ctx.gramian_accumulation_phase = inputs[0]
-        ctx.jacobian_computer = inputs[1]
+        ctx.gramian_computer = inputs[1]
         ctx.args = inputs[2]
         ctx.kwargs = inputs[3]
         ctx.gramian_accumulator = inputs[4]
-        ctx.module = inputs[5]
-        ctx.rg_outputs = inputs[6:]
+        ctx.rg_outputs = inputs[5:]
 
     @staticmethod
     def backward(ctx, *grad_outputs: Tensor) -> tuple:
-        # For python > 3.10: -> tuple[None, None, None, None, None, None, *tuple[Tensor, ...]]
+        # For python > 3.10: -> tuple[None, None, None, None, None, *tuple[Tensor, ...]]
 
         if not ctx.gramian_accumulation_phase:
-            return None, None, None, None, None, None, *grad_outputs
+            return None, None, None, None, None, *grad_outputs
 
-        path_jacobian = ComputeModuleJacobians.apply(
-            ctx.jacobian_computer,
-            ctx.args,
-            ctx.kwargs,
-            ctx.rg_outputs,
-            ctx.module,
-            *grad_outputs,
-        )
-        ctx.gramian_accumulator.accumulate_path_jacobian(ctx.module, path_jacobian)
+        optional_gramian = ctx.gramian_computer(grad_outputs, ctx.args, ctx.kwargs, ctx.rg_outputs)
+        if optional_gramian is not None:
+            ctx.gramian_accumulator.accumulate_gramian(optional_gramian)
 
-        return None, None, None, None, None, None, *grad_outputs
-
-
-class ComputeModuleJacobians(torch.autograd.Function):
-
-    @staticmethod
-    def forward(
-        jacobian_computer: JacobianComputer,
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
-        module: nn.Module,
-        *grad_outputs: Tensor,
-    ) -> Tensor:
-        # There is no non-batched dimension
-        jacobian = jacobian_computer(grad_outputs, args, kwargs, rg_outputs)
-        return jacobian
-
-    @staticmethod
-    def vmap(
-        _,
-        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], Sequence[int], None, *tuple[int | None, ...]]
-        jacobian_computer: JacobianComputer,
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
-        module: nn.Module,
-        *jac_outputs: Tensor,
-    ) -> tuple[Tensor, None]:
-        # There is a non-batched dimension
-        # We do not vmap over the args for the non-batched dimension
-        in_dims = (in_dims[5:], None, None, None)
-        generalized_jacobian = torch.vmap(jacobian_computer, in_dims=in_dims)(
-            jac_outputs, args, kwargs, rg_outputs
-        )
-        shape = generalized_jacobian.shape
-        jacobian = generalized_jacobian.reshape([shape[0] * shape[1], -1])
-        return jacobian, None
-
-    @staticmethod
-    def setup_context(*_) -> None:
-        pass
+        return None, None, None, None, None, *grad_outputs

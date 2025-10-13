@@ -6,6 +6,7 @@ from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
+from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
 from ._gramian_utils import movedim_gramian, reshape_gramian
 from ._jacobian_computer import (
     AutogradJacobianComputer,
@@ -185,6 +186,7 @@ class Engine:
         self._target_edges = EdgeRegistry()
         self._batch_dim = batch_dim
         self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
+        self._gramian_computers = dict[nn.Module, GramianComputer]()
 
         for module in modules:
             self._hook_module_recursively(module)
@@ -192,20 +194,22 @@ class Engine:
     def _hook_module_recursively(self, module: nn.Module) -> None:
         if any(p.requires_grad for p in module.parameters(recurse=False)):
             self._check_module_is_compatible(module)
-            jacobian_computer = self.make_jacobian_computer(module)
-            self._module_hook_manager.hook_module(module, jacobian_computer)
+            gramian_computer = self.make_gramian_computer(module)
+            self._gramian_computers[module] = gramian_computer
+            self._module_hook_manager.hook_module(module, gramian_computer)
         else:
             for child in module.children():
                 self._hook_module_recursively(child)
 
-    def make_jacobian_computer(self, module: nn.Module) -> JacobianComputer:
+    def make_gramian_computer(self, module: nn.Module) -> GramianComputer:
         jacobian_computer: JacobianComputer
         if self._batch_dim is not None:
             jacobian_computer = FunctionalJacobianComputer(module)
         else:
             jacobian_computer = AutogradJacobianComputer(module)
+        gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
 
-        return jacobian_computer
+        return gramian_computer
 
     def _check_module_is_compatible(self, module: nn.Module) -> None:
         if self._batch_dim is not None:
@@ -289,6 +293,8 @@ class Engine:
             self._module_hook_manager.gramian_accumulation_phase.value = False
             self._gramian_accumulator.reset()
             self._target_edges.reset()
+            for gramian_computer in self._gramian_computers.values():
+                gramian_computer.reset()
 
         unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
 
