@@ -7,6 +7,11 @@ from torch.autograd.graph import get_gradient_edge
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._gramian_utils import movedim_gramian, reshape_gramian
+from ._jacobian_computer import (
+    AutogradJacobianComputer,
+    FunctionalJacobianComputer,
+    JacobianComputer,
+)
 from ._module_hook_manager import ModuleHookManager
 
 _MODULES_INCOMPATIBLE_WITH_BATCHED = (
@@ -179,9 +184,7 @@ class Engine:
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
         self._batch_dim = batch_dim
-        self._module_hook_manager = ModuleHookManager(
-            self._target_edges, self._gramian_accumulator, batch_dim is not None
-        )
+        self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
 
         for module in modules:
             self._hook_module_recursively(module)
@@ -189,10 +192,20 @@ class Engine:
     def _hook_module_recursively(self, module: nn.Module) -> None:
         if any(p.requires_grad for p in module.parameters(recurse=False)):
             self._check_module_is_compatible(module)
-            self._module_hook_manager.hook_module(module)
+            jacobian_computer = self.make_jacobian_computer(module)
+            self._module_hook_manager.hook_module(module, jacobian_computer)
         else:
             for child in module.children():
                 self._hook_module_recursively(child)
+
+    def make_jacobian_computer(self, module: nn.Module) -> JacobianComputer:
+        jacobian_computer: JacobianComputer
+        if self._batch_dim is not None:
+            jacobian_computer = FunctionalJacobianComputer(module)
+        else:
+            jacobian_computer = AutogradJacobianComputer(module)
+
+        return jacobian_computer
 
     def _check_module_is_compatible(self, module: nn.Module) -> None:
         if self._batch_dim is not None:

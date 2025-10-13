@@ -10,11 +10,7 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._jacobian_computer import (
-    AutogradJacobianComputer,
-    FunctionalJacobianComputer,
-    JacobianComputer,
-)
+from ._jacobian_computer import JacobianComputer
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -38,11 +34,9 @@ class ModuleHookManager:
         self,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        has_batch_dim: bool,
     ):
         self._target_edges = target_edges
         self._gramian_accumulator = gramian_accumulator
-        self._has_batch_dim = has_batch_dim
         self.gramian_accumulation_phase = BoolRef(False)
         self._handles: list[TorchRemovableHandle] = []
 
@@ -56,7 +50,7 @@ class ModuleHookManager:
         # seems to be a better practice (and it only works if the function to call is static).
         self._finalizer = weakref.finalize(self, ModuleHookManager.remove_hooks, self._handles)
 
-    def hook_module(self, module: nn.Module) -> None:
+    def hook_module(self, module: nn.Module, jacobian_computer: JacobianComputer) -> None:
         """
         Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
 
@@ -68,7 +62,7 @@ class ModuleHookManager:
             self.gramian_accumulation_phase,
             self._target_edges,
             self._gramian_accumulator,
-            self._has_batch_dim,
+            jacobian_computer,
         )
         self._handles.append(module.register_forward_hook(hook, with_kwargs=True))
 
@@ -99,12 +93,12 @@ class Hook:
         gramian_accumulation_phase: BoolRef,
         target_edges: EdgeRegistry,
         gramian_accumulator: GramianAccumulator,
-        has_batch_dim: bool,
+        jacobian_computer: JacobianComputer,
     ):
         self.gramian_accumulation_phase = gramian_accumulation_phase
         self.target_edges = target_edges
         self.gramian_accumulator = gramian_accumulator
-        self.has_batch_dim = has_batch_dim
+        self.jacobian_computer = jacobian_computer
 
     def __call__(
         self,
@@ -139,15 +133,9 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        jacobian_computer: JacobianComputer
-        if self.has_batch_dim:
-            jacobian_computer = FunctionalJacobianComputer(module)
-        else:
-            jacobian_computer = AutogradJacobianComputer(module)
-
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
-            jacobian_computer,
+            self.jacobian_computer,
             args,
             kwargs,
             self.gramian_accumulator,
