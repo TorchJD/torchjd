@@ -1,10 +1,11 @@
 import weakref
+from collections.abc import Sequence
 from typing import cast
 
 import torch
 from torch import Tensor, nn
 from torch.autograd.graph import get_gradient_edge
-from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_unflatten
+from torch.utils._pytree import PyTree, tree_flatten, tree_unflatten
 from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
@@ -140,13 +141,9 @@ class Hook:
 
         jacobian_computer: JacobianComputer
         if self.has_batch_dim:
-            rg_output_in_dims = (0,) * len(rg_outputs)
-            arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
-            kwargs_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, kwargs)
-            in_dims = (rg_output_in_dims, arg_in_dims, kwargs_in_dims)
-            jacobian_computer = FunctionalJacobianComputer(module, in_dims)
+            jacobian_computer = FunctionalJacobianComputer(module)
         else:
-            jacobian_computer = AutogradJacobianComputer(module, rg_outputs)
+            jacobian_computer = AutogradJacobianComputer(module)
 
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
@@ -201,6 +198,7 @@ class JacobianAccumulator(torch.autograd.Function):
         ctx.kwargs = inputs[3]
         ctx.gramian_accumulator = inputs[4]
         ctx.module = inputs[5]
+        ctx.rg_outputs = inputs[6:]
 
     @staticmethod
     def backward(ctx, *grad_outputs: Tensor) -> tuple:
@@ -213,6 +211,7 @@ class JacobianAccumulator(torch.autograd.Function):
             ctx.jacobian_computer,
             ctx.args,
             ctx.kwargs,
+            ctx.rg_outputs,
             ctx.module,
             *grad_outputs,
         )
@@ -228,28 +227,30 @@ class ComputeModuleJacobians(torch.autograd.Function):
         jacobian_computer: JacobianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
         module: nn.Module,
         *grad_outputs: Tensor,
     ) -> Tensor:
         # There is no non-batched dimension
-        jacobian = jacobian_computer(grad_outputs, args, kwargs)
+        jacobian = jacobian_computer(grad_outputs, args, kwargs, rg_outputs)
         return jacobian
 
     @staticmethod
     def vmap(
         _,
-        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], None, *tuple[int | None, ...]]
+        in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], Sequence[int], None, *tuple[int | None, ...]]
         jacobian_computer: JacobianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
         module: nn.Module,
         *jac_outputs: Tensor,
     ) -> tuple[Tensor, None]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
-        in_dims = (in_dims[4:], None, None)
+        in_dims = (in_dims[5:], None, None, None)
         generalized_jacobian = torch.vmap(jacobian_computer, in_dims=in_dims)(
-            jac_outputs, args, kwargs
+            jac_outputs, args, kwargs, rg_outputs
         )
         shape = generalized_jacobian.shape
         jacobian = generalized_jacobian.reshape([shape[0] * shape[1], -1])

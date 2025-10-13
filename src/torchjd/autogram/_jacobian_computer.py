@@ -5,7 +5,7 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_flatten, tree_map_only
+from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_map_only
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -37,7 +37,11 @@ class JacobianComputer(ABC):
 
     @abstractmethod
     def __call__(
-        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
+        self,
+        grad_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
     ) -> Tensor:
         """
         Computes and returns the Jacobian. The output must be a matrix (2D Tensor).
@@ -52,14 +56,20 @@ class FunctionalJacobianComputer(JacobianComputer):
     function.
     """
 
-    def __init__(self, module: nn.Module, in_dims: tuple[PyTree, ...]):
-        super().__init__(module)
-        self.vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
-
     def __call__(
-        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
+        self,
+        grad_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
     ) -> Tensor:
-        return self.vmapped_vjp(grad_outputs, args, kwargs)
+        rg_output_in_dims = (0,) * len(rg_outputs)
+        arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
+        kwargs_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, kwargs)
+        in_dims = (rg_output_in_dims, arg_in_dims, kwargs_in_dims)
+        vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
+
+        return vmapped_vjp(grad_outputs, args, kwargs)
 
     def _call_on_one_instance(
         self,
@@ -105,18 +115,17 @@ class AutogradJacobianComputer(JacobianComputer):
     require making an extra forward pass.
     """
 
-    def __init__(self, module: nn.Module, rg_outputs: Sequence[Tensor]):
-        super().__init__(module)
-
-        self.rg_outputs = rg_outputs
-        self.flat_rg_params, _ = tree_flatten(self.rg_params)
-
     def __call__(
-        self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...], __: dict[str, PyTree]
+        self,
+        grad_outputs: tuple[Tensor, ...],
+        _: tuple[PyTree, ...],
+        __: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
     ) -> Tensor:
+        flat_rg_params, _ = tree_flatten(self.rg_params)
         grads = torch.autograd.grad(
-            self.rg_outputs,
-            self.flat_rg_params,
+            rg_outputs,
+            flat_rg_params,
             grad_outputs,
             retain_graph=True,
             allow_unused=True,
