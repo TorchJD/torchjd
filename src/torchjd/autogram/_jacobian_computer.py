@@ -80,11 +80,11 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
         grad_outputs_j_ = [x.unsqueeze(0) for x in grad_outputs_j]
 
         def functional_model_call(rg_params: dict[str, Parameter]) -> list[Tensor]:
-            all_state = {
-                **rg_params,
-                **dict(self.module.named_buffers()),
-                **self.frozen_params,
-            }
+            all_state = [
+                rg_params,
+                dict(self.module.named_buffers()),
+                self.frozen_params,
+            ]
             output = torch.func.functional_call(self.module, all_state, args_j, kwargs_j)
             flat_outputs = tree_flatten(output)[0]
             rg_outputs = [t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad]
