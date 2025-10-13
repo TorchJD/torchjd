@@ -5,7 +5,7 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 from torch.nn import Parameter
-from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflatten
+from torch.utils._pytree import PyTree, tree_flatten, tree_map_only
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -17,21 +17,21 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 
 
 class JacobianComputer(ABC):
-    """Represents an abstract VJP function."""
+    """Represents an abstract function that computes Jacobians."""
 
     @abstractmethod
     def __call__(
         self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
-    ) -> dict[str, Tensor]:
+    ) -> Tensor:
         """
-        Computes and returns the dictionary of parameter names to their gradients for the given
-        grad_outputs (cotangents) and at the given inputs.
+        Computes and returns the Jacobian. The output must be a matrix (2D Tensor).
         """
 
 
 class ModuleJacobianComputer(JacobianComputer, ABC):
     """
-    Represents an abstract VJP function for a module's forward pass with respect to its parameters.
+    Represents an abstract function that computes Jacobians for a module's forward pass with respect
+    to its parameters.
 
     :params module: The module to differentiate.
     """
@@ -51,9 +51,10 @@ class ModuleJacobianComputer(JacobianComputer, ABC):
 
 class FunctionalJacobianComputer(ModuleJacobianComputer):
     """
-    Represents a VJP function for a module's forward pass with respect to its parameters using the
-    functional differentiation API. This requires to use vmap, so it's not compatible with
-    every module, and it requires to have an extra forward pass to create the vjp function.
+    Represents a function that computes Jacobians for a module's forward pass with respect to its
+    parameters using the functional differentiation API. This requires to use vmap, so it's not
+    compatible with every module, and it requires to have an extra forward pass to create the vjp
+    function.
     """
 
     def __init__(self, module: nn.Module, in_dims: tuple[PyTree, ...]):
@@ -62,7 +63,7 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
 
     def __call__(
         self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
-    ) -> dict[str, Tensor]:
+    ) -> Tensor:
         return self.vmapped_vjp(grad_outputs, args, kwargs)
 
     def _call_on_one_instance(
@@ -70,7 +71,7 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
         grad_outputs_j: tuple[Tensor, ...],
         args_j: tuple[PyTree, ...],
         kwargs_j: dict[str, PyTree],
-    ) -> dict[str, Tensor]:
+    ) -> Tensor:
         # Note: we use unsqueeze(0) to turn a single activation (or grad_output) into a
         # "batch" of 1 activation (or grad_output). This is because some layers (e.g.
         # nn.Flatten) do not work equivalently if they're provided with a batch or with
@@ -96,26 +97,28 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
         # vjp_func is a function that computes the vjp w.r.t. to the primals (tuple). Here the
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
         # the 0'th element to obtain the dict of gradients w.r.t. the module's named_parameters.
-        return vjp_func(grad_outputs_j_)[0]
+        gradients = vjp_func(grad_outputs_j_)[0]
+        gradient = torch.cat([t.reshape(-1) for t in gradients.values()])
+        return gradient
 
 
 class AutogradJacobianComputer(ModuleJacobianComputer):
     """
-    Represents a VJP function for a module's forward pass with respect to its parameters using the
-    autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
-    inputs. The main advantage of using this method is that it doesn't require making an extra
-    forward pass.
+    Represents a function that computes Jacobians for a module's forward pass with respect to its
+    parameters using the autograd engine. The __call__ function takes both the inputs and the
+    cotangents but ignores the inputs. The main advantage of using this method is that it doesn't
+    require making an extra forward pass.
     """
 
     def __init__(self, module: nn.Module, rg_outputs: Sequence[Tensor]):
         super().__init__(module)
 
         self.rg_outputs = rg_outputs
-        self.flat_rg_params, self.param_spec = tree_flatten(self.rg_params)
+        self.flat_rg_params, _ = tree_flatten(self.rg_params)
 
     def __call__(
         self, grad_outputs: tuple[Tensor, ...], _: tuple[PyTree, ...], __: dict[str, PyTree]
-    ) -> dict[str, Tensor]:
+    ) -> Tensor:
         grads = torch.autograd.grad(
             self.rg_outputs,
             self.flat_rg_params,
@@ -124,4 +127,6 @@ class AutogradJacobianComputer(ModuleJacobianComputer):
             allow_unused=True,
             materialize_grads=True,
         )
-        return tree_unflatten(grads, self.param_spec)
+        flattened_grads = torch.cat([g.reshape(-1) for g in grads])
+        jacobian = flattened_grads.unsqueeze(0)
+        return jacobian

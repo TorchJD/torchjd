@@ -16,7 +16,7 @@ class GramianAccumulator:
 
     def __init__(self) -> None:
         self._gramian: Optional[Tensor] = None
-        self._summed_jacobians = dict[nn.Module, list[Tensor]]()
+        self._summed_jacobians = dict[nn.Module, Tensor]()
         self._path_counter = Counter[nn.Module]()
 
     def reset(self) -> None:
@@ -32,37 +32,33 @@ class GramianAccumulator:
 
         self._path_counter.update([module])
 
-    def accumulate_path_jacobians(self, module: nn.Module, jacobians: list[Tensor]) -> None:
+    def accumulate_path_jacobian(self, module: nn.Module, jacobian_matrix: Tensor) -> None:
         """
         Add the Jacobians corresponding to all usages of a module.
 
         :param module: The module.
-        :param jacobians: List of Jacobian tensors of a single path.
+        :param jacobian_matrix: Jacobian tensors of a single path.
         """
         if module in self._summed_jacobians:
-            self._summed_jacobians[module] = [
-                a + b for a, b in zip(self._summed_jacobians[module], jacobians)
-            ]
+            self._summed_jacobians[module] += jacobian_matrix
         else:
-            self._summed_jacobians[module] = jacobians
+            self._summed_jacobians[module] = jacobian_matrix
         self._path_counter.subtract([module])
         if self._path_counter[module] == 0:
-            for jacobian in self._summed_jacobians[module]:
-                self._accumulate_one_jacobian_in_gramian(jacobian)
+            self._accumulate_one_jacobian_in_gramian(self._summed_jacobians[module])
             del self._path_counter[module]
             del self._summed_jacobians[module]
 
-    def _accumulate_one_jacobian_in_gramian(self, jacobian: Tensor) -> None:
+    def _accumulate_one_jacobian_in_gramian(self, jacobian_matrix: Tensor) -> None:
         """
         Compute the Gramian of a Jacobian and accumulate it.
 
-        :param jacobian: the Jacobian.
+        :param jacobian_matrix: the Jacobian.
         """
-        full_jacobian_matrix = torch.flatten(jacobian, start_dim=1)
         if self._gramian is not None:
-            self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
+            self._gramian.addmm_(jacobian_matrix, jacobian_matrix.T)
         else:
-            self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
+            self._gramian = torch.mm(jacobian_matrix, jacobian_matrix.T)
 
     @property
     def gramian(self) -> Optional[Tensor]:
