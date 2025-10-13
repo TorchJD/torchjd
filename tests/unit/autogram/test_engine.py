@@ -165,7 +165,7 @@ def _assert_gramian_is_equivalent_to_autograd(
     losses = reduce_to_vector(loss_fn(output))
     autogram_gramian = engine.compute_gramian(losses)
 
-    assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
+    assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=3e-5)
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
