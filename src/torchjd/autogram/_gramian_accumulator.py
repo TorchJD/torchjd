@@ -34,7 +34,7 @@ class GramianAccumulator:
 
     def accumulate_path_jacobian(self, module: nn.Module, jacobian_matrix: Tensor) -> None:
         """
-        Add the Jacobians corresponding to all usages of a module.
+        Add the Jacobian corresponding to a call to a module.
 
         :param module: The module.
         :param jacobian_matrix: Jacobian tensors of a single path.
