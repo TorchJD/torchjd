@@ -17,21 +17,8 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only
 
 
 class JacobianComputer(ABC):
-    """Represents an abstract function that computes Jacobians."""
-
-    @abstractmethod
-    def __call__(
-        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
-    ) -> Tensor:
-        """
-        Computes and returns the Jacobian. The output must be a matrix (2D Tensor).
-        """
-
-
-class ModuleJacobianComputer(JacobianComputer, ABC):
     """
-    Represents an abstract function that computes Jacobians for a module's forward pass with respect
-    to its parameters.
+    Abstract class to computes Jacobians for a module's forward pass with respect to its parameters.
 
     :params module: The module to differentiate.
     """
@@ -48,8 +35,16 @@ class ModuleJacobianComputer(JacobianComputer, ABC):
             else:
                 self.frozen_params[name] = param
 
+    @abstractmethod
+    def __call__(
+        self, grad_outputs: tuple[Tensor, ...], args: tuple[PyTree, ...], kwargs: dict[str, PyTree]
+    ) -> Tensor:
+        """
+        Computes and returns the Jacobian. The output must be a matrix (2D Tensor).
+        """
 
-class FunctionalJacobianComputer(ModuleJacobianComputer):
+
+class FunctionalJacobianComputer(JacobianComputer):
     """
     Represents a function that computes Jacobians for a module's forward pass with respect to its
     parameters using the functional differentiation API. This requires to use vmap, so it's not
@@ -102,7 +97,7 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
         return gradient
 
 
-class AutogradJacobianComputer(ModuleJacobianComputer):
+class AutogradJacobianComputer(JacobianComputer):
     """
     Represents a function that computes Jacobians for a module's forward pass with respect to its
     parameters using the autograd engine. The __call__ function takes both the inputs and the
