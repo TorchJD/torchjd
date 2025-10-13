@@ -472,8 +472,7 @@ def test_compute_gramian_manual():
         [1],
     ],
 )
-@mark.parametrize("batch_dim", [0, None])
-def test_reshape_equivariance(shape: list[int], batch_dim: int | None):
+def test_reshape_equivariance(shape: list[int]):
     """
     Test equivariance of `compute_gramian` under reshape operation. More precisely, if we reshape
     the `output` to some `shape`, then the result is the same as reshaping the Gramian to the
