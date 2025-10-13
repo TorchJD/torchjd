@@ -9,7 +9,11 @@ from torch.utils.hooks import RemovableHandle as TorchRemovableHandle
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._vjp import VJP, AutogradVJP, FunctionalVJP
+from ._jacobian_computer import (
+    AutogradJacobianComputer,
+    FunctionalJacobianComputer,
+    JacobianComputer,
+)
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -134,15 +138,15 @@ class Hook:
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        vjp: VJP
+        vjp: JacobianComputer
         if self.has_batch_dim:
             rg_output_in_dims = (0,) * len(rg_outputs)
             arg_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
             kwargs_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, kwargs)
             in_dims = (rg_output_in_dims, arg_in_dims, kwargs_in_dims)
-            vjp = FunctionalVJP(module, in_dims)
+            vjp = FunctionalJacobianComputer(module, in_dims)
         else:
-            vjp = AutogradVJP(module, rg_outputs)
+            vjp = AutogradJacobianComputer(module, rg_outputs)
 
         autograd_fn_rg_outputs = JacobianAccumulator.apply(
             self.gramian_accumulation_phase,
@@ -174,7 +178,7 @@ class JacobianAccumulator(torch.autograd.Function):
     @staticmethod
     def forward(
         gramian_accumulation_phase: BoolRef,
-        vjp: VJP,
+        vjp: JacobianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
         gramian_accumulator: GramianAccumulator,
@@ -221,7 +225,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
 
     @staticmethod
     def forward(
-        vjp: VJP,
+        vjp: JacobianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
         module: nn.Module,
@@ -236,7 +240,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
     def vmap(
         _,
         in_dims: tuple,  # tuple[None, tuple[PyTree, ...], dict[str, PyTree], None, *tuple[int | None, ...]]
-        vjp: VJP,
+        vjp: JacobianComputer,
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
         module: nn.Module,

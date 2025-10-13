@@ -15,7 +15,7 @@ from torch.utils._pytree import PyTree, tree_flatten, tree_map_only, tree_unflat
 # still support older versions of PyTorch where pytree is protected).
 
 
-class VJP(ABC):
+class JacobianComputer(ABC):
     """Represents an abstract VJP function."""
 
     @abstractmethod
@@ -28,7 +28,7 @@ class VJP(ABC):
         """
 
 
-class ModuleVJP(VJP, ABC):
+class ModuleJacobianComputer(JacobianComputer, ABC):
     """
     Represents an abstract VJP function for a module's forward pass with respect to its parameters.
 
@@ -48,7 +48,7 @@ class ModuleVJP(VJP, ABC):
                 self.frozen_params[name] = param
 
 
-class FunctionalVJP(ModuleVJP):
+class FunctionalJacobianComputer(ModuleJacobianComputer):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     functional differentiation API. This requires to use vmap, so it's not compatible with
@@ -98,7 +98,7 @@ class FunctionalVJP(ModuleVJP):
         return vjp_func(grad_outputs_j_)[0]
 
 
-class AutogradVJP(ModuleVJP):
+class AutogradJacobianComputer(ModuleJacobianComputer):
     """
     Represents a VJP function for a module's forward pass with respect to its parameters using the
     autograd engine. The __call__ function takes both the inputs and the cotangents but ignores the
