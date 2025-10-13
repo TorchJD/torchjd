@@ -3,7 +3,6 @@ from typing import Optional
 
 import torch
 from torch import Tensor, nn
-from torch.utils._pytree import PyTree, tree_flatten
 
 
 class GramianAccumulator:
@@ -33,20 +32,19 @@ class GramianAccumulator:
 
         self._path_counter.update([module])
 
-    def accumulate_path_jacobians(self, module: nn.Module, jacobians: PyTree) -> None:
+    def accumulate_path_jacobians(self, module: nn.Module, jacobians: list[Tensor]) -> None:
         """
         Add the Jacobians corresponding to all usages of a module.
 
         :param module: The module.
-        :param jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
+        :param jacobians: List of Jacobian tensors of a single path.
         """
-        flat_jacobians = tree_flatten(jacobians)[0]
         if module in self._summed_jacobians:
             self._summed_jacobians[module] = [
-                a + b for a, b in zip(self._summed_jacobians[module], flat_jacobians)
+                a + b for a, b in zip(self._summed_jacobians[module], jacobians)
             ]
         else:
-            self._summed_jacobians[module] = flat_jacobians
+            self._summed_jacobians[module] = jacobians
         self._path_counter.subtract([module])
         if self._path_counter[module] == 0:
             for jacobian in self._summed_jacobians[module]:
