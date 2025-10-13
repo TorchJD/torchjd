@@ -92,7 +92,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         self.remaining_counter -= 1
 
         if self.remaining_counter == 0:
-            gramian = self.summed_jacobian @ self.summed_jacobian.T
+            gramian = self._to_gramian(self.summed_jacobian)
             del self.summed_jacobian
             return gramian
         else:
