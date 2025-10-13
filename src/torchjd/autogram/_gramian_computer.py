@@ -35,26 +35,6 @@ class JacobianBasedGramianComputer(GramianComputer, ABC):
         return jacobian @ jacobian.T
 
 
-class JacobianBasedGramianComputerWithoutCrossTerms(JacobianBasedGramianComputer):
-    """
-    Stateless JacobianBasedGramianComputer that always returns the gramian when computing it.
-
-    This has the effect of ignoring potential conflict from between the different usages of a same
-    module.
-    """
-
-    def __call__(
-        self,
-        grad_outputs: tuple[Tensor, ...],
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
-    ) -> Tensor:
-        """Compute what we can for a module and optionally return the gramian if it's ready."""
-
-        return self._to_gramian(self.jacobian_computer(grad_outputs, args, kwargs, rg_outputs))
-
-
 class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     """
     Stateful JacobianBasedGramianComputer that waits for all usages to be counted before returning
