@@ -247,7 +247,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
     ) -> tuple[Tensor, None]:
         # There is a non-batched dimension
         # We do not vmap over the args for the non-batched dimension
-        in_dims = (in_dims[4:], tree_map(lambda _: None, args), tree_map(lambda _: None, kwargs))
+        in_dims = (in_dims[4:], None, None)
         generalized_jacobian = torch.vmap(jacobian_computer, in_dims=in_dims)(
             jac_outputs, args, kwargs
         )
