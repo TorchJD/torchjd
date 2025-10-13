@@ -188,11 +188,11 @@ class JacobianAccumulator(torch.autograd.Function):
     def backward(ctx, *grad_outputs: Tensor) -> tuple:
         # For python > 3.10: -> tuple[None, None, None, None, None, *tuple[Tensor, ...]]
 
-        if not ctx.gramian_accumulation_phase:
-            return None, None, None, None, None, *grad_outputs
-
-        optional_gramian = ctx.gramian_computer(grad_outputs, ctx.args, ctx.kwargs, ctx.rg_outputs)
-        if optional_gramian is not None:
-            ctx.gramian_accumulator.accumulate_gramian(optional_gramian)
+        if ctx.gramian_accumulation_phase:
+            optional_gramian = ctx.gramian_computer(
+                grad_outputs, ctx.args, ctx.kwargs, ctx.rg_outputs
+            )
+            if optional_gramian is not None:
+                ctx.gramian_accumulator.accumulate_gramian(optional_gramian)
 
         return None, None, None, None, None, *grad_outputs
