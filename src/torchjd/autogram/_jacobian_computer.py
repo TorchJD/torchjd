@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import cast
 
 import torch
@@ -35,8 +35,19 @@ class JacobianComputer(ABC):
             else:
                 self.frozen_params[name] = param
 
-    @abstractmethod
     def __call__(
+        self,
+        grad_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
+    ) -> Tensor:
+        return ComputeModuleJacobians.apply(
+            self._compute_jacobian, args, kwargs, rg_outputs, *grad_outputs
+        )
+
+    @abstractmethod
+    def _compute_jacobian(
         self,
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
@@ -56,7 +67,7 @@ class FunctionalJacobianComputer(JacobianComputer):
     function.
     """
 
-    def __call__(
+    def _compute_jacobian(
         self,
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
@@ -115,7 +126,7 @@ class AutogradJacobianComputer(JacobianComputer):
     require making an extra forward pass.
     """
 
-    def __call__(
+    def _compute_jacobian(
         self,
         grad_outputs: tuple[Tensor, ...],
         _: tuple[PyTree, ...],
@@ -134,3 +145,42 @@ class AutogradJacobianComputer(JacobianComputer):
         flattened_grads = torch.cat([g.reshape(-1) for g in grads])
         jacobian = flattened_grads.unsqueeze(0)
         return jacobian
+
+
+class ComputeModuleJacobians(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        compute_jacobian_fn: Callable,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
+        *grad_outputs: Tensor,
+    ) -> Tensor:
+        # There is no non-batched dimension
+        jacobian = compute_jacobian_fn(grad_outputs, args, kwargs, rg_outputs)
+        return jacobian
+
+    @staticmethod
+    def vmap(
+        _,
+        in_dims: tuple,
+        # tuple[None, tuple[PyTree, ...], dict[str, PyTree], Sequence[int], *tuple[int | None, ...]]
+        compute_jacobian_fn: Callable,
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+        rg_outputs: Sequence[Tensor],
+        *jac_outputs: Tensor,
+    ) -> tuple[Tensor, None]:
+        # There is a non-batched dimension
+        # We do not vmap over the args for the non-batched dimension
+        in_dims = (in_dims[4:], None, None, None)
+        generalized_jacobian = torch.vmap(compute_jacobian_fn, in_dims=in_dims)(
+            jac_outputs, args, kwargs, rg_outputs
+        )
+        shape = generalized_jacobian.shape
+        jacobian = generalized_jacobian.reshape([shape[0] * shape[1], -1])
+        return jacobian, None
+
+    @staticmethod
+    def setup_context(*_) -> None:
+        pass
