@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from typing import cast
 
 import torch
 from torch import Tensor, nn
@@ -81,9 +82,9 @@ class FunctionalJacobianComputer(ModuleJacobianComputer):
 
         def functional_model_call(rg_params: dict[str, Parameter]) -> list[Tensor]:
             all_state = [
-                rg_params,
-                dict[str, Tensor](self.module.named_buffers()),
-                self.frozen_params,
+                cast(dict[str, Tensor], rg_params),
+                dict(self.module.named_buffers()),
+                cast(dict[str, Tensor], self.frozen_params),
             ]
             output = torch.func.functional_call(self.module, all_state, args_j, kwargs_j)
             flat_outputs = tree_flatten(output)[0]
