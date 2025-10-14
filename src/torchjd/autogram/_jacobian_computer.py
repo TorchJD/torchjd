@@ -42,6 +42,7 @@ class JacobianComputer(ABC):
         kwargs: dict[str, PyTree],
         rg_outputs: Sequence[Tensor],
     ) -> Tensor:
+        # This makes __call__ vmappable.
         return ComputeModuleJacobians.apply(
             self._compute_jacobian, args, kwargs, rg_outputs, *grad_outputs
         )
