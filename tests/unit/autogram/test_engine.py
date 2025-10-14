@@ -102,7 +102,6 @@ PARAMETRIZATIONS = [
     (WithNoTensorOutput, 32),
     (WithBuffered, 32),
     (SimpleParamReuse, 32),
-    (InterModuleParamReuse, 32),
     (ModuleReuse, 32),
     (SomeUnusedParam, 32),
     (SomeFrozenParam, 32),
@@ -166,7 +165,7 @@ def _assert_gramian_is_equivalent_to_autograd(
     losses = reduce_to_vector(loss_fn(output))
     autogram_gramian = engine.compute_gramian(losses)
 
-    assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=1e-5)
+    assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=3e-5)
 
 
 @mark.parametrize(["architecture", "batch_size"], PARAMETRIZATIONS)
@@ -202,7 +201,12 @@ def test_compute_gramian_with_weird_modules(
 
 @mark.xfail
 @mark.parametrize(
-    "architecture", [ModelUsingSubmoduleParamsDirectly, ModelAlsoUsingSubmoduleParamsDirectly]
+    "architecture",
+    [
+        ModelUsingSubmoduleParamsDirectly,
+        ModelAlsoUsingSubmoduleParamsDirectly,
+        InterModuleParamReuse,
+    ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [0, None])

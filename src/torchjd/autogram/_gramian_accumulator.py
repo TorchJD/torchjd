@@ -1,8 +1,5 @@
-from collections import Counter
-from collections.abc import Iterable
 from typing import Optional
 
-import torch
 from torch import Tensor
 
 
@@ -17,60 +14,15 @@ class GramianAccumulator:
 
     def __init__(self) -> None:
         self._gramian: Optional[Tensor] = None
-        self._summed_jacobians = dict[Tensor, Tensor]()
-        self._path_counter = Counter[Tensor]()
 
     def reset(self) -> None:
         self._gramian = None
-        self._summed_jacobians = {}
-        self._path_counter = Counter()
 
-    def track_parameter_paths(self, parameters: Iterable[Tensor]) -> None:
-        """
-        Register parameters and count their paths in the computational graph.
-
-        :param parameters: Parameter tensors to track. Duplicates increase path count.
-        """
-        self._path_counter.update(parameters)
-
-    def accumulate_path_jacobians(self, path_jacobians: dict[Tensor, Tensor]) -> None:
-        """
-        Add path Jacobians for multiple parameters.
-
-        :param path_jacobians: Dictionary mapping parameters to Jacobian tensors of a single path.
-        """
-        for parameter, jacobian in path_jacobians.items():
-            self._accumulate_path_jacobian(parameter, jacobian)
-
-    def _accumulate_path_jacobian(self, parameter: Tensor, jacobian: Tensor) -> None:
-        """
-        Add path Jacobian for a parameter. In case the full Jacobian is computed, accumulate its
-        Gramian.
-
-        :param parameter: The parameter.
-        :param jacobian: path Jacobian with respect to the parameter.
-        """
-        if parameter in self._summed_jacobians:
-            self._summed_jacobians[parameter] += jacobian
-        else:
-            self._summed_jacobians[parameter] = jacobian
-        self._path_counter.subtract([parameter])
-        if self._path_counter[parameter] == 0:
-            self._accumulate_gramian(parameter)
-            del self._path_counter[parameter]
-            del self._summed_jacobians[parameter]
-
-    def _accumulate_gramian(self, parameter: Tensor) -> None:
-        """
-        Compute the Gramian of the full Jacobian and accumulate it.
-
-        :param parameter: Parameter whose full Jacobian is available.
-        """
-        full_jacobian_matrix = torch.flatten(self._summed_jacobians[parameter], start_dim=1)
+    def accumulate_gramian(self, gramian: Tensor) -> None:
         if self._gramian is not None:
-            self._gramian.addmm_(full_jacobian_matrix, full_jacobian_matrix.T)
+            self._gramian.add_(gramian)
         else:
-            self._gramian = torch.mm(full_jacobian_matrix, full_jacobian_matrix.T)
+            self._gramian = gramian
 
     @property
     def gramian(self) -> Optional[Tensor]:
