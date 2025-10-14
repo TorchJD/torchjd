@@ -194,14 +194,14 @@ class Engine:
     def _hook_module_recursively(self, module: nn.Module) -> None:
         if any(p.requires_grad for p in module.parameters(recurse=False)):
             self._check_module_is_compatible(module)
-            gramian_computer = self.make_gramian_computer(module)
+            gramian_computer = self._make_gramian_computer(module)
             self._gramian_computers[module] = gramian_computer
             self._module_hook_manager.hook_module(module, gramian_computer)
         else:
             for child in module.children():
                 self._hook_module_recursively(child)
 
-    def make_gramian_computer(self, module: nn.Module) -> GramianComputer:
+    def _make_gramian_computer(self, module: nn.Module) -> GramianComputer:
         jacobian_computer: JacobianComputer
         if self._batch_dim is not None:
             jacobian_computer = FunctionalJacobianComputer(module)
