@@ -62,10 +62,9 @@ class JacobianComputer(ABC):
 
 class FunctionalJacobianComputer(JacobianComputer):
     """
-    Represents a function that computes Jacobians for a module's forward pass with respect to its
-    parameters using the functional differentiation API. This requires to use vmap, so it's not
-    compatible with every module, and it requires to have an extra forward pass to create the vjp
-    function.
+    JacobianComputer using the functional differentiation API. This requires to use vmap, so it's
+    not compatible with every module, and it requires to have an extra forward pass to create the
+    vjp function.
     """
 
     def _compute_jacobian(
@@ -121,10 +120,8 @@ class FunctionalJacobianComputer(JacobianComputer):
 
 class AutogradJacobianComputer(JacobianComputer):
     """
-    Represents a function that computes Jacobians for a module's forward pass with respect to its
-    parameters using the autograd engine. The __call__ function takes both the inputs and the
-    cotangents but ignores the inputs. The main advantage of using this method is that it doesn't
-    require making an extra forward pass.
+    JacobianComputer using the autograd engine. The main advantage of using this method is that it
+    doesn't require making an extra forward pass.
     """
 
     def _compute_jacobian(
