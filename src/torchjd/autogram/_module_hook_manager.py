@@ -190,7 +190,10 @@ class JacobianAccumulator(torch.autograd.Function):
 
         if ctx.gramian_accumulation_phase:
             optional_gramian = ctx.gramian_computer(
-                grad_outputs, ctx.args, ctx.kwargs, ctx.rg_outputs
+                ctx.rg_outputs,
+                grad_outputs,
+                ctx.args,
+                ctx.kwargs,
             )
             if optional_gramian is not None:
                 ctx.gramian_accumulator.accumulate_gramian(optional_gramian)

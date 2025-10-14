@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from typing import Optional
 
 from torch import Tensor
@@ -12,10 +11,10 @@ class GramianComputer(ABC):
     @abstractmethod
     def __call__(
         self,
+        rg_outputs: tuple[Tensor, ...],
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
     ) -> Optional[Tensor]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
@@ -55,14 +54,14 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
 
     def __call__(
         self,
+        rg_outputs: tuple[Tensor, ...],
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-        rg_outputs: Sequence[Tensor],
     ) -> Optional[Tensor]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
-        jacobian_matrix = self.jacobian_computer(grad_outputs, args, kwargs, rg_outputs)
+        jacobian_matrix = self.jacobian_computer(rg_outputs, grad_outputs, args, kwargs)
 
         if self.summed_jacobian is None:
             self.summed_jacobian = jacobian_matrix
