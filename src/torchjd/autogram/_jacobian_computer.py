@@ -133,7 +133,7 @@ class AutogradJacobianComputer(JacobianComputer):
         __: dict[str, PyTree],
         rg_outputs: Sequence[Tensor],
     ) -> Tensor:
-        flat_rg_params, _ = tree_flatten(self.rg_params)
+        flat_rg_params = tree_flatten(self.rg_params)[0]
         grads = torch.autograd.grad(
             rg_outputs,
             flat_rg_params,

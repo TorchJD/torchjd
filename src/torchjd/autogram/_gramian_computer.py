@@ -44,7 +44,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     def __init__(self, jacobian_computer: JacobianComputer):
         super().__init__(jacobian_computer)
         self.remaining_counter = 0
-        self.summed_jacobian = None
+        self.summed_jacobian: Optional[Tensor] = None
 
     def reset(self) -> None:
         self.remaining_counter = 0
