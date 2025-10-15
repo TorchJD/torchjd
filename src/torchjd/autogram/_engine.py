@@ -319,11 +319,9 @@ class Engine:
         if has_non_batch_dim:
             # There is one non-batched dimension, it is the first one
             non_batch_dim_len = output.shape[0]
-            jac_output_shape = [output.shape[0]] + list(output.shape)
-
-            jac_output = torch.zeros(jac_output_shape, device=output.device, dtype=output.dtype)
-            for i in range(non_batch_dim_len):
-                jac_output[i, i, ...] = 1.0
+            identity_matrix = torch.eye(non_batch_dim_len, device=output.device, dtype=output.dtype)
+            ones = torch.ones_like(output[0])
+            jac_output = torch.einsum("ij, ... -> ij...", identity_matrix, ones)
 
             _ = vmap(differentiation)(jac_output)
         else:
