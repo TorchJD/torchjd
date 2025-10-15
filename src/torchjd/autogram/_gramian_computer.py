@@ -106,8 +106,19 @@ class LinearBasedGramianComputer(GramianComputer):
         to the module params.
         """
 
-        G_b = torch.einsum("ik,jk->ij", dY1, dY2)
-        G_W = torch.einsum("ik,il,jl,jk->ij", dY1, X, X, dY2)
+        # TODO: add support for ndim==4 or find solution that works for any ndim.
+        if dY1.ndim == 1:
+            # TODO: not sure that this even works
+            G_b = torch.einsum("k,k->", dY1, dY2)
+            G_W = torch.einsum("k,l,l,k->", dY1, X, X, dY2)
+        if dY1.ndim == 2:
+            G_b = torch.einsum("ak,ik->ai", dY1, dY2)
+            G_W = torch.einsum("ak,al,il,ik->ai", dY1, X, X, dY2)
+        elif dY1.ndim == 3:  # Typical in transformers
+            G_b = torch.einsum("abk,ijk->ai", dY1, dY2)
+            G_W = torch.einsum("abk,abl,ijl,ijk->ai", dY1, X, X, dY2)
+        else:
+            raise ValueError("Higher dimensions not supported. Open an issue if needed.")
 
         return G_b + G_W
 
