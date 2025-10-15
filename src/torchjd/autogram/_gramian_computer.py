@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import Optional
 
-from torch import Tensor
+import torch
+from torch import Tensor, nn
 from torch.utils._pytree import PyTree
 
+from torchjd.autogram._gramian_utils import reshape_gramian
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
 
@@ -76,3 +79,72 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
             return gramian
         else:
             return None
+
+
+class LinearBasedGramianComputer(GramianComputer):
+    def __init__(self, module: nn.Linear):
+        self.module = module
+
+    def __call__(
+        self,
+        _: tuple[Tensor, ...],
+        grad_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        __: dict[str, PyTree],
+    ) -> Optional[Tensor]:
+
+        X = args[0]
+        dY = grad_outputs[0]
+
+        gramian = ComputeLinearGramian.apply(self._compute_gramian, dY, X)
+        return gramian
+
+    def _compute_gramian(self, dY1: Tensor, dY2: Tensor, X: Tensor) -> Tensor:
+        """
+        X is a matrix of shape [k, n] and dY1, dY2 are matrices of shape [k, m].
+        Returns the dY1 @ G @ dY2 where G is the Gramian of the Jacobian of the module output w.r.t.
+        to the module params.
+        """
+
+        G_b = torch.einsum("ik,jk->ij", dY1, dY2)
+        G_W = torch.einsum("ik,il,jl,jk->ij", dY1, X, X, dY2)
+
+        return G_b + G_W
+
+
+class ComputeLinearGramian(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        compute_gramian_fn: Callable[[Tensor, Tensor, Tensor], Tensor],
+        dY: Tensor,
+        X: Tensor,
+    ) -> Tensor:
+        # There is no non-batched dimension
+        gramian = compute_gramian_fn(dY, dY, X)
+        return gramian
+
+    @staticmethod
+    def vmap(
+        _,
+        in_dims: tuple[None, tuple[int, ...], None],
+        compute_gramian_fn: Callable[[Tensor, Tensor, Tensor], Tensor],
+        dY: Tensor,
+        X: Tensor,
+    ) -> tuple[Tensor, None]:
+        # There is a non-batched dimension
+        generalized_gramian = torch.vmap(
+            torch.vmap(
+                compute_gramian_fn,
+                in_dims=(in_dims[1], None, None),
+                out_dims=0,
+            ),
+            in_dims=(None, in_dims[1], None),
+            out_dims=-1,
+        )(dY, dY, X)
+        shape = dY.shape
+        gramian = reshape_gramian(generalized_gramian, [shape[0] * shape[1]])
+        return gramian, None
+
+    @staticmethod
+    def setup_context(*_) -> None:
+        pass

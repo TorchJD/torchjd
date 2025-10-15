@@ -6,7 +6,11 @@ from torch.autograd.graph import get_gradient_edge
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
-from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
+from ._gramian_computer import (
+    GramianComputer,
+    JacobianBasedGramianComputerWithCrossTerms,
+    LinearBasedGramianComputer,
+)
 from ._gramian_utils import movedim_gramian, reshape_gramian
 from ._jacobian_computer import (
     AutogradJacobianComputer,
@@ -203,11 +207,16 @@ class Engine:
 
     def _make_gramian_computer(self, module: nn.Module) -> GramianComputer:
         jacobian_computer: JacobianComputer
+        gramian_computer: GramianComputer
         if self._batch_dim is not None:
-            jacobian_computer = FunctionalJacobianComputer(module)
+            if isinstance(module, nn.Linear):
+                gramian_computer = LinearBasedGramianComputer(module)
+            else:
+                jacobian_computer = FunctionalJacobianComputer(module)
+                gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
         else:
             jacobian_computer = AutogradJacobianComputer(module)
-        gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
+            gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
 
         return gramian_computer
 
