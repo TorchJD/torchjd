@@ -10,10 +10,11 @@ from utils.architectures import (
     GroupNormMobileNetV3Small,
     InstanceNormMobileNetV2,
     InstanceNormResNet18,
+    ModuleFactory,
     NoFreeParam,
-    ShapedModule,
     SqueezeNet,
     WithTransformerLarge,
+    get_in_out_shapes,
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
@@ -28,33 +29,30 @@ from torchjd.aggregation import Mean
 from torchjd.autogram import Engine
 
 PARAMETRIZATIONS = [
-    (WithTransformerLarge, 8),
-    (FreeParam, 64),
-    (NoFreeParam, 64),
-    (Cifar10Model, 64),
-    (AlexNet, 8),
-    (InstanceNormResNet18, 16),
-    (GroupNormMobileNetV3Small, 16),
-    (SqueezeNet, 4),
-    (InstanceNormMobileNetV2, 2),
+    (ModuleFactory(WithTransformerLarge), 8),
+    (ModuleFactory(FreeParam), 64),
+    (ModuleFactory(NoFreeParam), 64),
+    (ModuleFactory(Cifar10Model), 64),
+    (ModuleFactory(AlexNet), 8),
+    (ModuleFactory(InstanceNormResNet18), 16),
+    (ModuleFactory(GroupNormMobileNetV3Small), 16),
+    (ModuleFactory(SqueezeNet), 4),
+    (ModuleFactory(InstanceNormMobileNetV2), 2),
 ]
 
 
-def compare_autograd_autojac_and_autogram_speed(architecture: type[ShapedModule], batch_size: int):
-    input_shapes = architecture.INPUT_SHAPES
-    output_shapes = architecture.OUTPUT_SHAPES
+def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_size: int):
+    model = factory()
+    input_shapes, output_shapes = get_in_out_shapes(model)
     inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
-
-    model = architecture().to(device=DEVICE)
 
     A = Mean()
     W = A.weighting
 
     print(
-        f"\nTimes for forward + backward on {architecture.__name__} with BS={batch_size}, A={A}"
-        f" on {DEVICE}."
+        f"\nTimes for forward + backward on {factory} with BS={batch_size}, A={A}" f" on {DEVICE}."
     )
 
     def fn_autograd():
@@ -148,8 +146,8 @@ def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> 
 
 
 def main():
-    for architecture, batch_size in PARAMETRIZATIONS:
-        compare_autograd_autojac_and_autogram_speed(architecture, batch_size)
+    for factory, batch_size in PARAMETRIZATIONS:
+        compare_autograd_autojac_and_autogram_speed(factory, batch_size)
         print("\n")
 
 

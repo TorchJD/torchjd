@@ -5,6 +5,26 @@ import torchvision
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+from unit.conftest import DEVICE
+
+
+class ModuleFactory:
+    def __init__(self, architecture: type[nn.Module], *args, **kwargs):
+        self.architecture = architecture
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> nn.Module:
+        devices = [DEVICE] if DEVICE.type == "cuda" else []
+        with torch.random.fork_rng(devices=devices, device_type=DEVICE.type):
+            torch.random.manual_seed(0)
+            return self.architecture(*self.args, **self.kwargs).to(device=DEVICE)
+
+    def __str__(self) -> str:
+        args_string = ", ".join([str(arg) for arg in self.args])
+        kwargs_string = ", ".join([f"{key}={value}" for key, value in self.kwargs.items()])
+        optional_comma = "" if args_string == "" or kwargs_string == "" else ", "
+        return f"{self.architecture.__name__}({args_string}{optional_comma}{kwargs_string})"
 
 
 class ShapedModule(nn.Module):
@@ -19,6 +39,13 @@ class ShapedModule(nn.Module):
             raise TypeError(f"{cls.__name__} must define INPUT_SHAPES")
         if getattr(cls, "OUTPUT_SHAPES", None) is None:
             raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
+
+
+def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
+    if isinstance(module, ShapedModule):
+        return module.INPUT_SHAPES, module.OUTPUT_SHAPES
+    else:
+        raise ValueError("Unknown input / output shapes of module", module)
 
 
 class OverlyNested(ShapedModule):
