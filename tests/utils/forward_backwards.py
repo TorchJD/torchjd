@@ -4,6 +4,7 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
+from utils.architectures import get_in_out_shapes
 
 from torchjd.aggregation import Aggregator, Weighting
 from torchjd.autogram import Engine
@@ -58,7 +59,8 @@ def _forward_pass(
 ) -> PyTree:
     output = model(inputs)
 
-    assert tree_map(lambda t: t.shape[1:], output) == model.OUTPUT_SHAPES
+    _, expected_output_shapes = get_in_out_shapes(model)
+    assert tree_map(lambda t: t.shape[1:], output) == expected_output_shapes
 
     loss_tensors = loss_fn(output)
     losses = reduce_to_vector(loss_tensors)
