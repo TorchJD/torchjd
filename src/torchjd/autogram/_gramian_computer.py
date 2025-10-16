@@ -81,30 +81,54 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
             return None
 
 
-class LinearBasedGramianComputer(GramianComputer):
-    def __init__(self, module: nn.Linear):
+class ModuleBasedGramianComputer(GramianComputer, ABC):
+    def __init__(self, module: nn.Module):
         self.module = module
 
     def __call__(
         self,
-        _: tuple[Tensor, ...],
+        rg_outputs: tuple[Tensor, ...],
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
-        __: dict[str, PyTree],
-    ) -> Optional[Tensor]:
-
-        X = args[0]
-        dY = grad_outputs[0]
-
-        gramian = ComputeGramian.apply(self._compute_gramian, dY, X)
+        kwargs: dict[str, PyTree],
+    ) -> Tensor:
+        gramian = ComputeGramian.apply(
+            self._compute_gramian, rg_outputs, grad_outputs, args, kwargs
+        )
         return gramian
 
-    def _compute_gramian(self, dY1: Tensor, dY2: Tensor, X: Tensor) -> Tensor:
+    @abstractmethod
+    def _compute_gramian(
+        self,
+        rg_outputs: tuple[Tensor, ...],
+        jac_outputs1: tuple[Tensor, ...],
+        jac_outputs2: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
+    ) -> Tensor:
         """
-        X is a matrix of shape [k, n] and dY1, dY2 are matrices of shape [k, m].
-        Returns the dY1 @ G @ dY2 where G is the Gramian of the Jacobian of the module output w.r.t.
-        to the module params.
+        If G is the Gramian of the Jacobian of the model's output w.r.t. the parameters, and J1, J2
+        are the jac_outputs (Jacobian of losses w.r.t. outputs), then this should compute the matrix
+        J1 @ G @ J2.T
         """
+
+
+class LinearBasedGramianComputer(ModuleBasedGramianComputer):
+    def __init__(self, module: nn.Linear):
+        super().__init__(module)
+
+    def _compute_gramian(
+        self,
+        _: tuple[Tensor, ...],
+        jac_outputs1: tuple[Tensor, ...],
+        jac_outputs2: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        __: dict[str, PyTree],
+    ) -> Tensor:
+
+        X = args[0]
+        dY1 = jac_outputs1[0]
+        dY2 = jac_outputs2[0]
 
         # TODO: add support for ndim==4 or find solution that works for any ndim.
         if dY1.ndim == 2:
@@ -124,33 +148,46 @@ class LinearBasedGramianComputer(GramianComputer):
 class ComputeGramian(torch.autograd.Function):
     @staticmethod
     def forward(
-        compute_gramian_fn: Callable[[Tensor, Tensor, Tensor], Tensor],
-        dY: Tensor,
-        X: Tensor,
+        compute_gramian_fn: Callable[
+            [
+                tuple[Tensor, ...],
+                tuple[Tensor, ...],
+                tuple[Tensor, ...],
+                tuple[PyTree, ...],
+                dict[str, PyTree],
+            ],
+            Tensor,
+        ],
+        rg_outputs: tuple[Tensor, ...],
+        grad_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
     ) -> Tensor:
         # There is no non-batched dimension
-        gramian = compute_gramian_fn(dY, dY, X)
+        gramian = compute_gramian_fn(rg_outputs, grad_outputs, grad_outputs, args, kwargs)
         return gramian
 
     @staticmethod
     def vmap(
         _,
-        in_dims: tuple[None, tuple[int, ...], None],
-        compute_gramian_fn: Callable[[Tensor, Tensor, Tensor], Tensor],
-        dY: Tensor,
-        X: Tensor,
+        in_dims: tuple[None, None, tuple[int, ...], None, None],
+        compute_gramian_fn: Callable,
+        rg_outputs: tuple[Tensor, ...],
+        jac_outputs: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        kwargs: dict[str, PyTree],
     ) -> tuple[Tensor, None]:
         # There is a non-batched dimension
         generalized_gramian = torch.vmap(
             torch.vmap(
                 compute_gramian_fn,
-                in_dims=(in_dims[1], None, None),
+                in_dims=(None, in_dims[2], None, None, None),
                 out_dims=0,
             ),
-            in_dims=(None, in_dims[1], None),
+            in_dims=(None, None, in_dims[2], None, None),
             out_dims=-1,
-        )(dY, dY, X)
-        shape = dY.shape
+        )(rg_outputs, jac_outputs, jac_outputs, args, kwargs)
+        shape = generalized_gramian.shape
         gramian = reshape_gramian(generalized_gramian, [shape[0] * shape[1]])
         return gramian, None
 
