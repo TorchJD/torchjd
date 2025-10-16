@@ -108,15 +108,17 @@ class LinearBasedGramianComputer(GramianComputer):
 
         # TODO: add support for ndim==4 or find solution that works for any ndim.
         if dY1.ndim == 2:
-            G_b = torch.einsum(dY1, [0, 2], dY2, [1, 2], [0, 1])
-            G_W = torch.einsum(dY1, [0, 2], X, [0, 3], X, [1, 3], dY2, [1, 2], [0, 1])
+            G = torch.einsum(dY1, [0, 2], X, [0, 3], X, [1, 3], dY2, [1, 2], [0, 1])
+            if self.module.bias is not None:
+                G += torch.einsum(dY1, [0, 2], dY2, [1, 2], [0, 1])
         elif dY1.ndim == 3:  # Typical in transformers
-            G_b = torch.einsum(dY1, [0, 2, 4], dY2, [1, 3, 4], [0, 1])
-            G_W = torch.einsum(dY1, [0, 2, 4], X, [0, 2, 5], X, [1, 3, 5], dY2, [1, 3, 4], [0, 1])
+            G = torch.einsum(dY1, [0, 2, 4], X, [0, 2, 5], X, [1, 3, 5], dY2, [1, 3, 4], [0, 1])
+            if self.module.bias is not None:
+                G += torch.einsum(dY1, [0, 2, 4], dY2, [1, 3, 4], [0, 1])
         else:
             raise ValueError("Higher dimensions not supported. Open an issue if needed.")
 
-        return G_b + G_W
+        return G
 
 
 class ComputeLinearGramian(torch.autograd.Function):
