@@ -6,7 +6,7 @@ import pytest
 import torch
 from pytest import mark, param
 from torch import Tensor
-from torch.nn import Linear
+from torch.nn import RNN, BatchNorm2d, InstanceNorm2d, Linear
 from torch.optim import SGD
 from torch.testing import assert_close
 from utils.architectures import (
@@ -47,10 +47,8 @@ from utils.architectures import (
     SomeUnusedOutput,
     SomeUnusedParam,
     SqueezeNet,
-    WithBatchNorm,
     WithBuffered,
     WithDropout,
-    WithModuleTrackingRunningStats,
     WithModuleWithHybridPyTreeArg,
     WithModuleWithHybridPyTreeKwarg,
     WithModuleWithStringArg,
@@ -58,7 +56,6 @@ from utils.architectures import (
     WithModuleWithStringOutput,
     WithMultiHeadAttention,
     WithNoTensorOutput,
-    WithRNN,
     WithSideEffect,
     WithSomeFrozenModule,
     WithTransformer,
@@ -178,11 +175,14 @@ def test_compute_gramian(factory: ModuleFactory, batch_size: int, batch_dim: int
 @mark.parametrize(
     "factory",
     [
-        ModuleFactory(WithBatchNorm),
+        ModuleFactory(BatchNorm2d, num_features=3, affine=True, track_running_stats=False),
         ModuleFactory(WithSideEffect),
         ModuleFactory(Randomness),
-        ModuleFactory(WithModuleTrackingRunningStats),
-        param(ModuleFactory(WithRNN), marks=mark.xfail_if_cuda),
+        ModuleFactory(InstanceNorm2d, num_features=3, affine=True, track_running_stats=True),
+        param(
+            ModuleFactory(RNN, input_size=8, hidden_size=5, batch_first=True),
+            marks=mark.xfail_if_cuda,
+        ),
     ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
@@ -397,9 +397,9 @@ def test_autograd_while_modules_are_hooked(
 @mark.parametrize(
     ["factory", "batch_dim"],
     [
-        (ModuleFactory(WithModuleTrackingRunningStats), 0),
-        (ModuleFactory(WithRNN), 0),
-        (ModuleFactory(WithBatchNorm), 0),
+        (ModuleFactory(InstanceNorm2d, num_features=3, affine=True, track_running_stats=True), 0),
+        (ModuleFactory(RNN, input_size=8, hidden_size=5, batch_first=True), 0),
+        (ModuleFactory(BatchNorm2d, num_features=3, affine=True, track_running_stats=False), 0),
     ],
 )
 def test_incompatible_modules(factory: ModuleFactory, batch_dim: int | None):

@@ -44,6 +44,18 @@ class ShapedModule(nn.Module):
 def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
+
+    elif isinstance(module, nn.RNN):
+        assert module.batch_first
+        SEQ_LEN = 20  # Arbitrary choice
+        return (SEQ_LEN, module.input_size), (SEQ_LEN, module.hidden_size)
+
+    elif isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+        HEIGHT = 6  # Arbitrary choice
+        WIDTH = 6  # Arbitrary choice
+        shape = (module.num_features, HEIGHT, WIDTH)
+        return shape, shape
+
     else:
         raise ValueError("Unknown input / output shapes of module", module)
 
@@ -723,48 +735,6 @@ class Ndim4Output(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         return torch.einsum("bi,icdef->bcdef", input, self.tensor)
-
-
-class WithRNN(ShapedModule):
-    """Simple model containing an RNN module."""
-
-    INPUT_SHAPES = (20, 8)  # Size 20, dim input_size (8)
-    OUTPUT_SHAPES = (20, 5)  # Size 20, dim hidden_size (5)
-
-    def __init__(self):
-        super().__init__()
-        self.rnn = nn.RNN(input_size=8, hidden_size=5, batch_first=True)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.rnn(input)
-
-
-class WithModuleTrackingRunningStats(ShapedModule):
-    """Simple model containing a module that has side-effects and modifies tensors in-place."""
-
-    INPUT_SHAPES = (3, 6, 6)
-    OUTPUT_SHAPES = (3, 6, 6)
-
-    def __init__(self):
-        super().__init__()
-        self.instance_norm = nn.InstanceNorm2d(3, affine=True, track_running_stats=True)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.instance_norm(input)
-
-
-class WithBatchNorm(ShapedModule):
-    """Simple model containing a BatchNorm layer."""
-
-    INPUT_SHAPES = (3, 6, 6)
-    OUTPUT_SHAPES = (3, 6, 6)
-
-    def __init__(self):
-        super().__init__()
-        self.batch_norm = nn.BatchNorm2d(3, affine=True, track_running_stats=False)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.batch_norm(input)
 
 
 class WithDropout(ShapedModule):
