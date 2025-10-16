@@ -330,7 +330,7 @@ class Engine:
             non_batch_dim_len = output.shape[0]
             identity_matrix = torch.eye(non_batch_dim_len, device=output.device, dtype=output.dtype)
             ones = torch.ones_like(output[0])
-            jac_output = torch.einsum("ij, ... -> ij...", identity_matrix, ones)
+            jac_output = torch.einsum(identity_matrix, [0, 1], ones, [...], [0, 1, ...])
 
             _ = vmap(differentiation)(jac_output)
         else:
