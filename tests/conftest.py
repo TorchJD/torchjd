@@ -1,21 +1,13 @@
-import os
 import random as rand
+from contextlib import nullcontext
 
 import torch
-from pytest import fixture, mark
+from device import DEVICE
+from pytest import RaisesExc, fixture, mark
+from torch import Tensor
+from utils.architectures import ModuleFactory
 
-try:
-    _device_str = os.environ["PYTEST_TORCH_DEVICE"]
-except KeyError:
-    _device_str = "cpu"  # Default to cpu if environment variable not set
-
-if _device_str != "cuda:0" and _device_str != "cpu":
-    raise ValueError(f"Invalid value of environment variable PYTEST_TORCH_DEVICE: {_device_str}")
-
-if _device_str == "cuda:0" and not torch.cuda.is_available():
-    raise ValueError('Requested device "cuda:0" but cuda is not available.')
-
-DEVICE = torch.device(_device_str)
+from torchjd.aggregation import Aggregator, Weighting
 
 
 @fixture(autouse=True)
@@ -48,3 +40,24 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_slow)
         if "xfail_if_cuda" in item.keywords and str(DEVICE).startswith("cuda"):
             item.add_marker(xfail_cuda)
+
+
+def pytest_make_parametrize_id(config, val, argname):
+    MAX_SIZE = 40
+    optional_string = None  # Returning None means using pytest's way of making the string
+
+    if isinstance(val, (Aggregator, ModuleFactory, Weighting)):
+        optional_string = str(val)
+    elif isinstance(val, Tensor):
+        optional_string = "T" + str(list(val.shape))  # T to indicate that it's a tensor
+    elif isinstance(val, (tuple, list, set)) and len(val) < 20:
+        optional_string = str(val)
+    elif isinstance(val, RaisesExc):
+        optional_string = " or ".join([f"{exc.__name__}" for exc in val.expected_exceptions])
+    elif isinstance(val, nullcontext):
+        optional_string = "does_not_raise()"
+
+    if isinstance(optional_string, str) and len(optional_string) > MAX_SIZE:
+        optional_string = optional_string[: MAX_SIZE - 3] + "+++"  # Can't use dots with pytest
+
+    return optional_string

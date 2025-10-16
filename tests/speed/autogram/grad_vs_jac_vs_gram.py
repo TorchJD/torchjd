@@ -2,7 +2,7 @@ import gc
 import time
 
 import torch
-from unit.conftest import DEVICE
+from device import DEVICE
 from utils.architectures import (
     AlexNet,
     Cifar10Model,
