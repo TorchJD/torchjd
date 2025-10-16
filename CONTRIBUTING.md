@@ -130,18 +130,19 @@ from utils.tensors import ones_
 a = ones_(3, 4)
 ```
 
-This will automatically call `torch.ones` with `device=unit.conftest.DEVICE`.
+This will automatically call `torch.ones` with `device=DEVICE`.
 If the function you need does not exist yet as a partial function in `tensors.py`, add it.
 Lastly, when you create a model or a random generator, you have to move them manually to the right
-device (the `DEVICE` defined in `unit.conftest`):
+device (the `DEVICE` defined in `device.py`).
 ```python
 import torch
 from torch.nn import Linear
-from unit.conftest import DEVICE
+from device import DEVICE
 
 model = Linear(3, 4).to(device=DEVICE)
 rng = torch.Generator(device=DEVICE)
 ```
+You may also use a `ModuleFactory` to make the modules on `DEVICE` automatically.
 
 ### Coding
 

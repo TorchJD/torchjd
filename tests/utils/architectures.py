@@ -2,10 +2,10 @@ from functools import partial
 
 import torch
 import torchvision
+from device import DEVICE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
-from unit.conftest import DEVICE
 
 
 class ModuleFactory:
