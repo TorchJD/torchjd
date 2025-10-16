@@ -113,38 +113,6 @@ class ModuleBasedGramianComputer(GramianComputer, ABC):
         """
 
 
-class LinearBasedGramianComputer(ModuleBasedGramianComputer):
-    def __init__(self, module: nn.Linear):
-        super().__init__(module)
-
-    def _compute_gramian(
-        self,
-        _: tuple[Tensor, ...],
-        jac_outputs1: tuple[Tensor, ...],
-        jac_outputs2: tuple[Tensor, ...],
-        args: tuple[PyTree, ...],
-        __: dict[str, PyTree],
-    ) -> Tensor:
-
-        X = args[0]
-        dY1 = jac_outputs1[0]
-        dY2 = jac_outputs2[0]
-
-        # TODO: add support for ndim==4 or find solution that works for any ndim.
-        if dY1.ndim == 2:
-            G = torch.einsum(dY1, [0, 2], X, [0, 3], X, [1, 3], dY2, [1, 2], [0, 1])
-            if self.module.bias is not None:
-                G += torch.einsum(dY1, [0, 2], dY2, [1, 2], [0, 1])
-        elif dY1.ndim == 3:  # Typical in transformers
-            G = torch.einsum(dY1, [0, 2, 4], X, [0, 2, 5], X, [1, 3, 5], dY2, [1, 3, 4], [0, 1])
-            if self.module.bias is not None:
-                G += torch.einsum(dY1, [0, 2, 4], dY2, [1, 3, 4], [0, 1])
-        else:
-            raise ValueError("Higher dimensions not supported. Open an issue if needed.")
-
-        return G
-
-
 class ComputeGramian(torch.autograd.Function):
     @staticmethod
     def forward(
@@ -194,3 +162,35 @@ class ComputeGramian(torch.autograd.Function):
     @staticmethod
     def setup_context(*_) -> None:
         pass
+
+
+class LinearBasedGramianComputer(ModuleBasedGramianComputer):
+    def __init__(self, module: nn.Linear):
+        super().__init__(module)
+
+    def _compute_gramian(
+        self,
+        _: tuple[Tensor, ...],
+        jac_outputs1: tuple[Tensor, ...],
+        jac_outputs2: tuple[Tensor, ...],
+        args: tuple[PyTree, ...],
+        __: dict[str, PyTree],
+    ) -> Tensor:
+
+        X = args[0]
+        dY1 = jac_outputs1[0]
+        dY2 = jac_outputs2[0]
+
+        # TODO: add support for ndim==4 or find solution that works for any ndim.
+        if dY1.ndim == 2:
+            G = torch.einsum(dY1, [0, 2], X, [0, 3], X, [1, 3], dY2, [1, 2], [0, 1])
+            if self.module.bias is not None:
+                G += torch.einsum(dY1, [0, 2], dY2, [1, 2], [0, 1])
+        elif dY1.ndim == 3:  # Typical in transformers
+            G = torch.einsum(dY1, [0, 2, 4], X, [0, 2, 5], X, [1, 3, 5], dY2, [1, 3, 4], [0, 1])
+            if self.module.bias is not None:
+                G += torch.einsum(dY1, [0, 2, 4], dY2, [1, 3, 4], [0, 1])
+        else:
+            raise ValueError("Higher dimensions not supported. Open an issue if needed.")
+
+        return G
