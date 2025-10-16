@@ -96,7 +96,7 @@ class LinearBasedGramianComputer(GramianComputer):
         X = args[0]
         dY = grad_outputs[0]
 
-        gramian = ComputeLinearGramian.apply(self._compute_gramian, dY, X)
+        gramian = ComputeGramian.apply(self._compute_gramian, dY, X)
         return gramian
 
     def _compute_gramian(self, dY1: Tensor, dY2: Tensor, X: Tensor) -> Tensor:
@@ -121,7 +121,7 @@ class LinearBasedGramianComputer(GramianComputer):
         return G
 
 
-class ComputeLinearGramian(torch.autograd.Function):
+class ComputeGramian(torch.autograd.Function):
     @staticmethod
     def forward(
         compute_gramian_fn: Callable[[Tensor, Tensor, Tensor], Tensor],
