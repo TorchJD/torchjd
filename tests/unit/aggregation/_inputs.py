@@ -1,5 +1,5 @@
 import torch
-from unit.conftest import DEVICE
+from device import DEVICE
 from utils.tensors import zeros_
 
 from ._matrix_samplers import NonWeakSampler, NormalSampler, StrictlyWeakSampler, StrongSampler
