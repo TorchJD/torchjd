@@ -1,6 +1,6 @@
+from device import DEVICE
 from pytest import mark, raises
 from torch.nn import Linear, MSELoss, ReLU, Sequential
-from unit.conftest import DEVICE
 from utils.tensors import randn_, tensor_
 
 from torchjd.autojac._utils import get_leaf_tensors
