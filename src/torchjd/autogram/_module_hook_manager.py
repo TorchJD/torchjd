@@ -156,8 +156,6 @@ class JacobianAccumulator(torch.autograd.Function):
     toggle mechanism to activate only during the Gramian accumulation phase.
     """
 
-    generate_vmap_rule = True
-
     @staticmethod
     def forward(
         gramian_accumulation_phase: BoolRef,
