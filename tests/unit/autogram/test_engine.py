@@ -69,6 +69,7 @@ from utils.forward_backwards import (
     autogram_forward_backward,
     compute_gramian,
     compute_gramian_with_autograd,
+    forward_pass,
     make_mse_loss_fn,
     reduce_to_first_tensor,
     reduce_to_matrix,
@@ -152,14 +153,10 @@ def _assert_gramian_is_equivalent_to_autograd(
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_autograd(inputs)
-    losses = reduce_to_vector(loss_fn(output))
+    losses = forward_pass(model_autograd, inputs, loss_fn, reduce_to_vector)
     autograd_gramian = compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
 
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_autogram(inputs)
-    losses = reduce_to_vector(loss_fn(output))
+    losses = forward_pass(model_autogram, inputs, loss_fn, reduce_to_vector)
     autogram_gramian = engine.compute_gramian(losses)
 
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=3e-5)
@@ -263,18 +260,16 @@ def test_compute_gramian_various_output_shapes(
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_autograd(inputs)
-    losses = reduction(loss_fn(output))
+    losses = forward_pass(model_autograd, inputs, loss_fn, reduction)
+
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     # Go back to a vector so that compute_gramian_with_autograd works
     loss_vector = reshaped_losses.reshape([-1])
     autograd_gramian = compute_gramian_with_autograd(loss_vector, list(model_autograd.parameters()))
     expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
 
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_autogram(inputs)
-    losses = reduction(loss_fn(output))
+    losses = forward_pass(model_autogram, inputs, loss_fn, reduction)
+
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     autogram_gramian = engine.compute_gramian(reshaped_losses)
 
@@ -305,8 +300,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    output = model(input)
-    losses = reduce_to_vector(loss_fn(output))
+    losses = forward_pass(model, input, loss_fn, reduce_to_vector)
 
     gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
     gramian_params = []
@@ -314,12 +308,9 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
         gramian_params += list(m.parameters())
 
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
-    torch.manual_seed(0)
 
     engine = Engine(*gramian_modules, batch_dim=batch_dim)
-
-    output = model(input)
-    losses = reduce_to_vector(loss_fn(output))
+    losses = forward_pass(model, input, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)
 
     assert_close(gramian, autograd_gramian)
@@ -369,22 +360,18 @@ def test_autograd_while_modules_are_hooked(
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model, input, loss_fn)
     autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
 
     # Hook modules and optionally compute the Gramian
     engine = Engine(model_autogram, batch_dim=batch_dim)
     if use_engine:
-        torch.manual_seed(0)  # Fix randomness for random models
-        output = model_autogram(input)
-        losses = reduce_to_vector(loss_fn(output))
+        losses = forward_pass(model_autogram, input, loss_fn, reduce_to_vector)
         _ = engine.compute_gramian(losses)
 
     # Verify that even with the hooked modules, autograd works normally when not using the engine.
     # Results should be the same as a normal call to autograd, and no time should be spent computing
     # the gramian at all.
-    torch.manual_seed(0)  # Fix randomness for random models
     autograd_forward_backward(model_autogram, input, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
 
@@ -582,13 +569,8 @@ def test_batched_non_batched_equivalence_2(factory: ModuleFactory, batch_size: i
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_0(inputs)
-    losses_0 = reduce_to_vector(loss_fn(output))
-
-    torch.random.manual_seed(0)  # Fix randomness for random models
-    output = model_none(inputs)
-    losses_none = reduce_to_vector(loss_fn(output))
+    losses_0 = forward_pass(model_0, inputs, loss_fn, reduce_to_vector)
+    losses_none = forward_pass(model_none, inputs, loss_fn, reduce_to_vector)
 
     gramian_0 = engine_0.compute_gramian(losses_0)
     gramian_none = engine_none.compute_gramian(losses_none)
