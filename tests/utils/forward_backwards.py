@@ -5,6 +5,7 @@ from torch import Tensor, nn, vmap
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from utils.architectures import get_in_out_shapes
+from utils.contexts import fork_rng
 
 from torchjd.aggregation import Aggregator, Weighting
 from torchjd.autogram import Engine
@@ -57,7 +58,8 @@ def autogram_forward_backward(
 def _forward_pass(
     model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], list[Tensor]]
 ) -> PyTree:
-    output = model(inputs)
+    with fork_rng(seed=0):
+        output = model(inputs)
 
     _, expected_output_shapes = get_in_out_shapes(model)
     assert tree_map(lambda t: t.shape[1:], output) == expected_output_shapes
