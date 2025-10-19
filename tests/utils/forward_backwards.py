@@ -17,7 +17,7 @@ def autograd_forward_backward(
     inputs: PyTree,
     loss_fn: Callable[[PyTree], list[Tensor]],
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = _forward_pass(model, inputs, loss_fn, reduce_to_vector)
     losses.sum().backward()
 
 
@@ -27,7 +27,7 @@ def autojac_forward_backward(
     loss_fn: Callable[[PyTree], list[Tensor]],
     aggregator: Aggregator,
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = _forward_pass(model, inputs, loss_fn, reduce_to_vector)
     backward(losses, aggregator=aggregator)
 
 
@@ -38,7 +38,7 @@ def autograd_gramian_forward_backward(
     loss_fn: Callable[[PyTree], list[Tensor]],
     weighting: Weighting,
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = _forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = compute_gramian_with_autograd(losses, params, retain_graph=True)
     losses.backward(weighting(gramian))
 
@@ -50,13 +50,16 @@ def autogram_forward_backward(
     inputs: PyTree,
     loss_fn: Callable[[PyTree], list[Tensor]],
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = _forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)
     losses.backward(weighting(gramian))
 
 
 def _forward_pass(
-    model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], list[Tensor]]
+    model: nn.Module,
+    inputs: PyTree,
+    loss_fn: Callable[[PyTree], list[Tensor]],
+    reduction: Callable[[list[Tensor]], Tensor],
 ) -> PyTree:
     with fork_rng(seed=0):
         output = model(inputs)
@@ -65,7 +68,7 @@ def _forward_pass(
     assert tree_map(lambda t: t.shape[1:], output) == expected_output_shapes
 
     loss_tensors = loss_fn(output)
-    losses = reduce_to_vector(loss_tensors)
+    losses = reduction(loss_tensors)
     return losses
 
 
