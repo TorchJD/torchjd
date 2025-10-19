@@ -79,7 +79,7 @@ def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], list[Tensor]]:
 
         loss_tensors = [
             mse_loss(output, target, reduction="none")
-            for output, target in zip(flat_outputs, flat_targets)
+            for output, target in zip(flat_outputs, flat_targets, strict=True)
         ]
 
         return loss_tensors
