@@ -34,12 +34,11 @@ def autojac_forward_backward(
 def autograd_gramian_forward_backward(
     model: nn.Module,
     inputs: PyTree,
-    params: list[nn.Parameter],
     loss_fn: Callable[[PyTree], list[Tensor]],
     weighting: Weighting,
 ) -> None:
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
-    gramian = compute_gramian_with_autograd(losses, params, retain_graph=True)
+    gramian = compute_gramian_with_autograd(losses, list(model.parameters()), retain_graph=True)
     losses.backward(weighting(gramian))
 
 

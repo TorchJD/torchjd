@@ -64,7 +64,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
         fn_autograd()
 
     def fn_autograd_gramian():
-        autograd_gramian_forward_backward(model, inputs, list(model.parameters()), loss_fn, W)
+        autograd_gramian_forward_backward(model, inputs, loss_fn, W)
 
     def init_fn_autograd_gramian():
         torch.cuda.empty_cache()
