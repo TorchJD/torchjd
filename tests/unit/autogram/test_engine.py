@@ -247,22 +247,18 @@ def test_compute_gramian_various_output_shapes(
 
     factory = ModuleFactory(Ndim2Output)
     model_autograd, model_autogram = factory(), factory()
-
-    engine = Engine(model_autogram, batch_dim=batch_dim)
-
     inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     losses = forward_pass(model_autograd, inputs, loss_fn, reduction)
-
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     # Go back to a vector so that compute_gramian_with_autograd works
     loss_vector = reshaped_losses.reshape([-1])
     autograd_gramian = compute_gramian_with_autograd(loss_vector, list(model_autograd.parameters()))
     expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
 
+    engine = Engine(model_autogram, batch_dim=batch_dim)
     losses = forward_pass(model_autogram, inputs, loss_fn, reduction)
-
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     autogram_gramian = engine.compute_gramian(reshaped_losses)
 
@@ -284,21 +280,16 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     the model parameters is specified.
     """
 
-    factory = ModuleFactory(SimpleBranched)
-    model = factory()
-
+    model = SimpleBranched()
     batch_size = 64
-
     inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
-
-    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
-
     gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
     gramian_params = []
     for m in gramian_modules:
         gramian_params += list(m.parameters())
 
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
 
     engine = Engine(*gramian_modules, batch_dim=batch_dim)
@@ -314,20 +305,15 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
     """Tests that the autogram engine doesn't raise any error during several IWRM iterations."""
 
     n_iter = 3
-
     model = factory()
-
     weighting = UPGradWeighting()
-
     engine = Engine(model, batch_dim=batch_dim)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
         inputs, targets = make_inputs_and_targets(model, batch_size)
         loss_fn = make_mse_loss_fn(targets)
-
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
-
         optimizer.step()
         model.zero_grad()
 
@@ -390,12 +376,11 @@ def test_compute_gramian_manual():
 
     in_dims = 18
     out_dims = 25
-
     factory = ModuleFactory(Linear, in_dims, out_dims)
     model = factory()
-    engine = Engine(model, batch_dim=None)
-
     input = randn_(in_dims)
+
+    engine = Engine(model, batch_dim=None)
     output = model(input)
     gramian = engine.compute_gramian(output)
 
@@ -436,20 +421,18 @@ def test_reshape_equivariance(shape: list[int]):
 
     input_size = shape[0]
     output_size = prod(shape[1:])
-
     factory = ModuleFactory(Linear, input_size, output_size)
     model1, model2 = factory(), factory()
+    input = randn_([input_size])
 
     engine1 = Engine(model1, batch_dim=None)
-    engine2 = Engine(model2, batch_dim=None)
-
-    input = randn_([input_size])
     output = model1(input)
-    reshaped_output = model2(input).reshape(shape[1:])
-
     gramian = engine1.compute_gramian(output)
-    reshaped_gramian = engine2.compute_gramian(reshaped_output)
     expected_reshaped_gramian = reshape_gramian(gramian, shape[1:])
+
+    engine2 = Engine(model2, batch_dim=None)
+    reshaped_output = model2(input).reshape(shape[1:])
+    reshaped_gramian = engine2.compute_gramian(reshaped_output)
 
     assert_close(reshaped_gramian, expected_reshaped_gramian)
 
@@ -476,20 +459,18 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
 
     input_size = shape[0]
     output_size = prod(shape[1:])
-
     factory = ModuleFactory(Linear, input_size, output_size)
     model1, model2 = factory(), factory()
+    input = randn_([input_size])
 
     engine1 = Engine(model1, batch_dim=None)
-    engine2 = Engine(model2, batch_dim=None)
-
-    input = randn_([input_size])
     output = model1(input).reshape(shape[1:])
-    moved_output = model2(input).reshape(shape[1:]).movedim(source, destination)
-
     gramian = engine1.compute_gramian(output)
-    moved_gramian = engine2.compute_gramian(moved_output)
     expected_moved_gramian = movedim_gramian(gramian, source, destination)
+
+    engine2 = Engine(model2, batch_dim=None)
+    moved_output = model2(input).reshape(shape[1:]).movedim(source, destination)
+    moved_gramian = engine2.compute_gramian(moved_output)
 
     assert_close(moved_gramian, expected_moved_gramian)
 
@@ -519,18 +500,16 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     input_size = prod(non_batched_shape)
     batch_size = shape[batch_dim]
     output_size = input_size
-
     factory = ModuleFactory(Linear, input_size, output_size)
     model1, model2 = factory(), factory()
+    input = randn_([batch_size, input_size])
 
     engine1 = Engine(model1, batch_dim=batch_dim)
-    engine2 = Engine(model2, batch_dim=None)
-
-    input = randn_([batch_size, input_size])
     output1 = model1(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
-    output2 = model2(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
-
     gramian1 = engine1.compute_gramian(output1)
+
+    engine2 = Engine(model2, batch_dim=None)
+    output2 = model2(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
     gramian2 = engine2.compute_gramian(output2)
 
     assert_close(gramian1, gramian2)
@@ -547,17 +526,15 @@ def test_batched_non_batched_equivalence_2(factory: ModuleFactory, batch_size: i
     """
 
     model_0, model_none = factory(), factory()
-
-    engine_0 = Engine(model_0, batch_dim=0)
-    engine_none = Engine(model_none, batch_dim=None)
-
     inputs, targets = make_inputs_and_targets(model_0, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
+    engine_0 = Engine(model_0, batch_dim=0)
     losses_0 = forward_pass(model_0, inputs, loss_fn, reduce_to_vector)
-    losses_none = forward_pass(model_none, inputs, loss_fn, reduce_to_vector)
-
     gramian_0 = engine_0.compute_gramian(losses_0)
+
+    engine_none = Engine(model_none, batch_dim=None)
+    losses_none = forward_pass(model_none, inputs, loss_fn, reduce_to_vector)
     gramian_none = engine_none.compute_gramian(losses_none)
 
     assert_close(gramian_0, gramian_none, rtol=1e-4, atol=1e-5)
