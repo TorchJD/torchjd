@@ -336,7 +336,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
         targets = make_tensors(batch_size, output_shapes)
         loss_fn = make_mse_loss_fn(targets)
 
-        autogram_forward_backward(model, engine, weighting, inputs, loss_fn)
+        autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
 
         optimizer.step()
         model.zero_grad()

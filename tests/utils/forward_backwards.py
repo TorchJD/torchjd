@@ -44,10 +44,10 @@ def autograd_gramian_forward_backward(
 
 def autogram_forward_backward(
     model: nn.Module,
-    engine: Engine,
-    weighting: Weighting,
     inputs: PyTree,
     loss_fn: Callable[[PyTree], list[Tensor]],
+    engine: Engine,
+    weighting: Weighting,
 ) -> None:
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)

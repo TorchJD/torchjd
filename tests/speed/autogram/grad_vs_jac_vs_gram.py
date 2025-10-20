@@ -80,7 +80,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, engine, W, inputs, loss_fn)
+        autogram_forward_backward(model, inputs, loss_fn, engine, W)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
