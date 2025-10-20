@@ -5,6 +5,7 @@ from torch import Tensor, nn, vmap
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from utils.architectures import get_in_out_shapes
+from utils.contexts import fork_rng
 
 from torchjd.aggregation import Aggregator, Weighting
 from torchjd.autogram import Engine
@@ -16,7 +17,7 @@ def autograd_forward_backward(
     inputs: PyTree,
     loss_fn: Callable[[PyTree], list[Tensor]],
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     losses.sum().backward()
 
 
@@ -26,44 +27,47 @@ def autojac_forward_backward(
     loss_fn: Callable[[PyTree], list[Tensor]],
     aggregator: Aggregator,
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     backward(losses, aggregator=aggregator)
 
 
 def autograd_gramian_forward_backward(
     model: nn.Module,
     inputs: PyTree,
-    params: list[nn.Parameter],
     loss_fn: Callable[[PyTree], list[Tensor]],
     weighting: Weighting,
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
-    gramian = compute_gramian_with_autograd(losses, params, retain_graph=True)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
+    gramian = compute_gramian_with_autograd(losses, list(model.parameters()), retain_graph=True)
     losses.backward(weighting(gramian))
 
 
 def autogram_forward_backward(
     model: nn.Module,
-    engine: Engine,
-    weighting: Weighting,
     inputs: PyTree,
     loss_fn: Callable[[PyTree], list[Tensor]],
+    engine: Engine,
+    weighting: Weighting,
 ) -> None:
-    losses = _forward_pass(model, inputs, loss_fn)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)
     losses.backward(weighting(gramian))
 
 
-def _forward_pass(
-    model: nn.Module, inputs: PyTree, loss_fn: Callable[[PyTree], list[Tensor]]
+def forward_pass(
+    model: nn.Module,
+    inputs: PyTree,
+    loss_fn: Callable[[PyTree], list[Tensor]],
+    reduction: Callable[[list[Tensor]], Tensor],
 ) -> PyTree:
-    output = model(inputs)
+    with fork_rng(seed=0):
+        output = model(inputs)
 
     _, expected_output_shapes = get_in_out_shapes(model)
     assert tree_map(lambda t: t.shape[1:], output) == expected_output_shapes
 
     loss_tensors = loss_fn(output)
-    losses = reduce_to_vector(loss_tensors)
+    losses = reduction(loss_tensors)
     return losses
 
 
@@ -74,7 +78,7 @@ def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], list[Tensor]]:
 
         loss_tensors = [
             mse_loss(output, target, reduction="none")
-            for output, target in zip(flat_outputs, flat_targets)
+            for output, target in zip(flat_outputs, flat_targets, strict=True)
         ]
 
         return loss_tensors
@@ -108,19 +112,19 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
 
 def compute_gramian_with_autograd(
-    output: Tensor, inputs: list[nn.Parameter], retain_graph: bool = False
+    output: Tensor, params: list[nn.Parameter], retain_graph: bool = False
 ) -> Tensor:
     """
-    Computes the Gramian of the Jacobian of the outputs with respect to the inputs using vmapped
+    Computes the Gramian of the Jacobian of the outputs with respect to the params using vmapped
     calls to the autograd engine.
     """
 
-    filtered_inputs = [input for input in inputs if input.requires_grad]
+    rg_params = [p for p in params if p.requires_grad]
 
     def get_vjp(grad_outputs: Tensor) -> list[Tensor]:
         grads = torch.autograd.grad(
             output,
-            filtered_inputs,
+            rg_params,
             grad_outputs=grad_outputs,
             retain_graph=retain_graph,
             allow_unused=True,

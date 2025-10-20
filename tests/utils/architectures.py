@@ -6,6 +6,7 @@ from device import DEVICE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+from utils.contexts import fork_rng
 
 
 class ModuleFactory:
@@ -15,9 +16,7 @@ class ModuleFactory:
         self.kwargs = kwargs
 
     def __call__(self) -> nn.Module:
-        devices = [DEVICE] if DEVICE.type == "cuda" else []
-        with torch.random.fork_rng(devices=devices, device_type=DEVICE.type):
-            torch.random.manual_seed(0)
+        with fork_rng(seed=0):
             return self.architecture(*self.args, **self.kwargs).to(device=DEVICE)
 
     def __str__(self) -> str:
