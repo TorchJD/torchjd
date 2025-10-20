@@ -185,7 +185,7 @@ def _get_losses_and_params_without_cross_terms(
     return losses, params
 
 
-_get_losses_and_params = _get_losses_and_params_with_cross_terms
+_get_losses_and_params = _get_losses_and_params_without_cross_terms
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
