@@ -296,11 +296,11 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     input_shapes, output_shapes = get_in_out_shapes(model)
     batch_size = 64
 
-    input = make_tensors(batch_size, input_shapes)
+    inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    losses = forward_pass(model, input, loss_fn, reduce_to_vector)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
 
     gramian_modules = [model.get_submodule(name) for name in gramian_module_names]
     gramian_params = []
@@ -310,7 +310,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
 
     engine = Engine(*gramian_modules, batch_dim=batch_dim)
-    losses = forward_pass(model, input, loss_fn, reduce_to_vector)
+    losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)
 
     assert_close(gramian, autograd_gramian)
@@ -356,23 +356,23 @@ def test_autograd_while_modules_are_hooked(
     model, model_autogram = factory(), factory()
     input_shapes, output_shapes = get_in_out_shapes(model)
 
-    input = make_tensors(batch_size, input_shapes)
+    inputs = make_tensors(batch_size, input_shapes)
     targets = make_tensors(batch_size, output_shapes)
     loss_fn = make_mse_loss_fn(targets)
 
-    autograd_forward_backward(model, input, loss_fn)
+    autograd_forward_backward(model, inputs, loss_fn)
     autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
 
     # Hook modules and optionally compute the Gramian
     engine = Engine(model_autogram, batch_dim=batch_dim)
     if use_engine:
-        losses = forward_pass(model_autogram, input, loss_fn, reduce_to_vector)
+        losses = forward_pass(model_autogram, inputs, loss_fn, reduce_to_vector)
         _ = engine.compute_gramian(losses)
 
     # Verify that even with the hooked modules, autograd works normally when not using the engine.
     # Results should be the same as a normal call to autograd, and no time should be spent computing
     # the gramian at all.
-    autograd_forward_backward(model_autogram, input, loss_fn)
+    autograd_forward_backward(model_autogram, inputs, loss_fn)
     grads = {name: p.grad for name, p in model_autogram.named_parameters() if p.grad is not None}
 
     assert_tensor_dicts_are_close(grads, autograd_grads)
