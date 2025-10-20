@@ -4,6 +4,8 @@ from typing import Optional
 from torch import Tensor
 from torch.utils._pytree import PyTree
 
+from torchjd.autogram._jacobian_computer import JacobianComputer
+
 
 class GramianComputer(ABC):
     @abstractmethod
@@ -24,7 +26,7 @@ class GramianComputer(ABC):
 
 
 class JacobianBasedGramianComputer(GramianComputer, ABC):
-    def __init__(self, jacobian_computer):
+    def __init__(self, jacobian_computer: JacobianComputer):
         self.jacobian_computer = jacobian_computer
 
     @staticmethod
