@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 from torch import Tensor
 from torch.utils._pytree import tree_map
@@ -22,10 +24,12 @@ class DiagonalSparseTensor(torch.Tensor):
         assert not data.requires_grad or not torch.is_grad_enabled()
 
         shape = [data.shape[i] for i in v_to_p]
-        result = Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
-        result._data = data  # type: ignore
-        result._v_to_p = v_to_p  # type: ignore
-        result._v_shape = shape  # type: ignore
+        return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
+
+    def __init__(self, data: Tensor, v_to_p: list[int]):
+        self._data = data
+        self._v_to_p = v_to_p
+        self._v_shape = [data.shape[i] for i in v_to_p]
 
     def to_dense(self) -> Tensor:
         first_indices = dict[int, int]()
@@ -46,7 +50,9 @@ class DiagonalSparseTensor(torch.Tensor):
         return output
 
     @classmethod
-    def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
+    def __torch_dispatch__(
+        cls, func: {__name__}, types: Any, args: tuple[()] | Any = (), kwargs: Any = None
+    ):
         kwargs = kwargs if kwargs else {}
 
         # TODO: Handle batched operations (apply to self._data and wrap)
@@ -54,7 +60,7 @@ class DiagonalSparseTensor(torch.Tensor):
         #  to operations on self._data and wrapping accordingly.
 
         # --- Fallback: Fold to Dense Tensor ---
-        def unwrap_to_dense(t):
+        def unwrap_to_dense(t: Tensor):
             if isinstance(t, cls):
                 return t.to_dense()
             else:
