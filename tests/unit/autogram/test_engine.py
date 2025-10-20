@@ -61,7 +61,6 @@ from utils.architectures import (
     WithSomeFrozenModule,
     WithTransformer,
     WithTransformerLarge,
-    get_in_out_shapes,
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
@@ -76,7 +75,7 @@ from utils.forward_backwards import (
     reduce_to_scalar,
     reduce_to_vector,
 )
-from utils.tensors import make_tensors, ones_, randn_, zeros_
+from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
@@ -145,12 +144,8 @@ def _assert_gramian_is_equivalent_to_autograd(
     factory: ModuleFactory, batch_size: int, batch_dim: int | None
 ):
     model_autograd, model_autogram = factory(), factory()
-    input_shapes, output_shapes = get_in_out_shapes(model_autograd)
-
     engine = Engine(model_autogram, batch_dim=batch_dim)
-
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     losses = forward_pass(model_autograd, inputs, loss_fn, reduce_to_vector)
@@ -252,12 +247,10 @@ def test_compute_gramian_various_output_shapes(
 
     factory = ModuleFactory(Ndim2Output)
     model_autograd, model_autogram = factory(), factory()
-    input_shapes, output_shapes = get_in_out_shapes(model_autograd)
 
     engine = Engine(model_autogram, batch_dim=batch_dim)
 
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     losses = forward_pass(model_autograd, inputs, loss_fn, reduction)
@@ -293,11 +286,10 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
 
     factory = ModuleFactory(SimpleBranched)
     model = factory()
-    input_shapes, output_shapes = get_in_out_shapes(model)
+
     batch_size = 64
 
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
@@ -324,7 +316,6 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
     n_iter = 3
 
     model = factory()
-    input_shapes, output_shapes = get_in_out_shapes(model)
 
     weighting = UPGradWeighting()
 
@@ -332,8 +323,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
     optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
-        inputs = make_tensors(batch_size, input_shapes)
-        targets = make_tensors(batch_size, output_shapes)
+        inputs, targets = make_inputs_and_targets(model, batch_size)
         loss_fn = make_mse_loss_fn(targets)
 
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
@@ -354,10 +344,7 @@ def test_autograd_while_modules_are_hooked(
     """
 
     model, model_autogram = factory(), factory()
-    input_shapes, output_shapes = get_in_out_shapes(model)
-
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     autograd_forward_backward(model, inputs, loss_fn)
@@ -560,13 +547,11 @@ def test_batched_non_batched_equivalence_2(factory: ModuleFactory, batch_size: i
     """
 
     model_0, model_none = factory(), factory()
-    input_shapes, output_shapes = get_in_out_shapes(model_0)
 
     engine_0 = Engine(model_0, batch_dim=0)
     engine_none = Engine(model_none, batch_dim=None)
 
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model_0, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     losses_0 = forward_pass(model_0, inputs, loss_fn, reduce_to_vector)
