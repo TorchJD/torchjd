@@ -112,19 +112,19 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
 
 def compute_gramian_with_autograd(
-    output: Tensor, inputs: list[nn.Parameter], retain_graph: bool = False
+    output: Tensor, params: list[nn.Parameter], retain_graph: bool = False
 ) -> Tensor:
     """
-    Computes the Gramian of the Jacobian of the outputs with respect to the inputs using vmapped
+    Computes the Gramian of the Jacobian of the outputs with respect to the params using vmapped
     calls to the autograd engine.
     """
 
-    filtered_inputs = [input for input in inputs if input.requires_grad]
+    rg_params = [p for p in params if p.requires_grad]
 
     def get_vjp(grad_outputs: Tensor) -> list[Tensor]:
         grads = torch.autograd.grad(
             output,
-            filtered_inputs,
+            rg_params,
             grad_outputs=grad_outputs,
             retain_graph=retain_graph,
             allow_unused=True,
