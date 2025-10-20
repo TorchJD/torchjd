@@ -37,25 +37,11 @@ class DiagonalSparseTensor(torch.Tensor):
         # official API.  I am thinking that something that does the
         # assert above and this call could be made into a utility function
         # that is in the public API
-        return Tensor._make_wrapper_subclass(
-            cls, [data.shape[i] for i in v_to_p], dtype=data.dtype, device=data.device
-        )
-
-    def __init__(self, data: Tensor, v_to_p: list[int]):
-        """
-        Represent a diagonal sparse tensor.
-
-        :param data: The physical contiguous data.
-        :param v_to_p: Maps virtual dimensions to physical dimensions.
-
-        An example is `data` of shape `[d_1, d_2, d_3]` and `v_to_p` equal to `[0, 1, 0, 2, 1]`
-        means the virtual shape is `[d_1, d_2, d_1, d_3, d_2]` and the represented Tensor, indexed
-        at `[i, j, k, l, m]` is `0.` unless `i==k` and `j==m`.
-        """
-        # Deliberate omission of `super().__init__()` as we have an unfaithful data.
-        self._data = data
-        self._v_to_p = v_to_p
-        self._v_shape = tuple(data.shape[i] for i in v_to_p)
+        shape = [data.shape[i] for i in v_to_p]
+        result = Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
+        result._data = data  # type: ignore
+        result._v_to_p = v_to_p  # type: ignore
+        result._v_shape = shape  # type: ignore
 
     def to_dense(self) -> Tensor:
         first_indices = dict[int, int]()
