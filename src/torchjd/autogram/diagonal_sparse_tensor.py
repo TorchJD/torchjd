@@ -65,9 +65,6 @@ class DiagonalSparseTensor(torch.Tensor):
 
     def __repr__(self):
         return (
-            f"DiagonalSparseTensor(\n"
-            f"  data={self._data},\n"
-            f"  v_to_p_map={self._v_to_p},\n"
-            f"  shape={self._v_shape}\n"
-            f")"
+            f"DiagonalSparseTensor(data={self._data}, v_to_p_map={self._v_to_p}, shape="
+            f"{self._v_shape})"
         )
