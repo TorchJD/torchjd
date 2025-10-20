@@ -21,22 +21,6 @@ class DiagonalSparseTensor(torch.Tensor):
         # (which is bad!)
         assert not data.requires_grad or not torch.is_grad_enabled()
 
-        # There is something very subtle going on here.  In particular,
-        # suppose that elem is a view.  Does all of the view metadata
-        # (sizes, strides, storages) get propagated correctly?  Yes!
-        # Internally, the way _make_subclass works is it creates an
-        # alias (using Tensor.alias) of the original tensor, which
-        # means we replicate storage/strides, but with the Python object
-        # as an instance of your subclass.  In other words,
-        # _make_subclass is the "easy" case of metadata propagation,
-        # because anything that alias() propagates, you will get in
-        # your subclass.  It is _make_wrapper_subclass which is
-        # problematic...
-        #
-        # TODO: We need to think about how we want to turn this into
-        # official API.  I am thinking that something that does the
-        # assert above and this call could be made into a utility function
-        # that is in the public API
         shape = [data.shape[i] for i in v_to_p]
         result = Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
         result._data = data  # type: ignore
