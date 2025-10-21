@@ -2,7 +2,69 @@ from typing import Any
 
 import torch
 from torch import Tensor
+from torch.ops import aten
 from torch.utils._pytree import tree_map
+
+# pointwise functions applied to one Tensor with `0.0 → 0`
+_pointwise_functions = {
+    aten.abs.default,
+    aten.abs_.default,
+    aten.absolute.default,
+    aten.absolute_.default,
+    aten.neg.default,
+    aten.neg_.default,
+    aten.negative.default,
+    aten.negative_.default,
+    aten.sign.default,
+    aten.sign_.default,
+    aten.sgn.default,
+    aten.sgn_.default,
+    aten.square.default,
+    aten.square_.default,
+    aten.fix.default,
+    aten.fix_.default,
+    aten.floor.default,
+    aten.floor_.default,
+    aten.ceil.default,
+    aten.ceil_.default,
+    aten.trunc.default,
+    aten.trunc_.default,
+    aten.round.default,
+    aten.round_.default,
+    aten.positive.default,
+    aten.expm1.default,
+    aten.expm1_.default,
+    aten.log1p.default,
+    aten.log1p_.default,
+    aten.sqrt.default,
+    aten.sqrt_.default,
+    aten.sin.default,
+    aten.sin_.default,
+    aten.tan.default,
+    aten.tan_.default,
+    aten.sinh.default,
+    aten.sinh_.default,
+    aten.tanh.default,
+    aten.tanh_.default,
+    aten.asin.default,
+    aten.asin_.default,
+    aten.atan.default,
+    aten.atan_.default,
+    aten.asinh.default,
+    aten.asinh_.default,
+    aten.atanh.default,
+    aten.atanh_.default,
+    aten.erf.default,
+    aten.erf_.default,
+    aten.erfinv.default,
+    aten.erfinv_.default,
+    aten.relu.default,
+    aten.relu_.default,
+    aten.hardtanh.default,
+    aten.hardtanh_.default,
+    aten.leaky_relu.default,
+    aten.leaky_relu_.default,
+}
 
 
 class DiagonalSparseTensor(torch.Tensor):
@@ -50,10 +112,19 @@ class DiagonalSparseTensor(torch.Tensor):
         return output
 
     @classmethod
-    def __torch_dispatch__(
-        cls, func: {__name__}, types: Any, args: tuple[()] | Any = (), kwargs: Any = None
-    ):
-        kwargs = kwargs if kwargs else {}
+    def __torch_dispatch__(cls, func: {__name__}, types: Any, args: tuple = (), kwargs: Any = None):
+        kwargs = {} if kwargs is None else kwargs
+
+        # If `func` is a pointwise operator that applies to a single Tensor and such that func(0)=0
+        # Then we can apply the transformation to self._data and wrap the result.
+        if func in _pointwise_functions:
+            assert (
+                isinstance(args, tuple) and len(args) == 1 and func(torch.zeros([])).item() == 0.0
+            )
+            sparse_tensor = args[0]
+            assert isinstance(sparse_tensor, DiagonalSparseTensor)
+            new_data = func(sparse_tensor._data)
+            return DiagonalSparseTensor(new_data, sparse_tensor._v_to_p)
 
         # TODO: Handle batched operations (apply to self._data and wrap)
         # TODO: Handle all operations that can be represented with an einsum by translating them
