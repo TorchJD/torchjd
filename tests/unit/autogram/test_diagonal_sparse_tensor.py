@@ -67,5 +67,5 @@ def test_mean(func):
     b = DiagonalSparseTensor(a, [0, 0])
     c = b.to_dense()
 
-    mean = func(b)
-    assert_close(mean, func(c))
+    res = func(b)
+    assert_close(res, func(c))
