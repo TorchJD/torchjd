@@ -6,7 +6,7 @@ from torch.ops import aten
 from torch.utils._pytree import tree_map
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
-_pointwise_functions = {
+_POINTWISE_FUNCTIONS = {
     aten.abs.default,
     aten.abs_.default,
     aten.absolute.default,
@@ -65,6 +65,19 @@ _pointwise_functions = {
     aten.leaky_relu.default,
     aten.leaky_relu_.default,
 }
+_HANDLED_FUNCTIONS = dict()
+import functools
+
+
+def implements(torch_function):
+    """Register a torch function override for ScalarTensor"""
+
+    def decorator(func):
+        functools.update_wrapper(func, torch_function)
+        _HANDLED_FUNCTIONS[torch_function] = func
+        return func
+
+    return decorator
 
 
 class DiagonalSparseTensor(torch.Tensor):
@@ -84,6 +97,10 @@ class DiagonalSparseTensor(torch.Tensor):
         # and call that instead.  This assert helps prevent direct usage
         # (which is bad!)
         assert not data.requires_grad or not torch.is_grad_enabled()
+
+        # TODO: assert a minimal data, all of its dimensions must be used at least once
+        # TODO: If no repeat in v_to_p, return a view of data (non sparse tensor). If this cannot be
+        #  done in __new__, create a helper function for that, and use this one everywhere.
 
         shape = [data.shape[i] for i in v_to_p]
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
@@ -117,7 +134,7 @@ class DiagonalSparseTensor(torch.Tensor):
 
         # If `func` is a pointwise operator that applies to a single Tensor and such that func(0)=0
         # Then we can apply the transformation to self._data and wrap the result.
-        if func in _pointwise_functions:
+        if func in _POINTWISE_FUNCTIONS:
             assert (
                 isinstance(args, tuple) and len(args) == 1 and func(torch.zeros([])).item() == 0.0
             )
@@ -126,9 +143,8 @@ class DiagonalSparseTensor(torch.Tensor):
             new_data = func(sparse_tensor._data)
             return DiagonalSparseTensor(new_data, sparse_tensor._v_to_p)
 
-        # TODO: Handle batched operations (apply to self._data and wrap)
-        # TODO: Handle all operations that can be represented with an einsum by translating them
-        #  to operations on self._data and wrapping accordingly.
+        if func in _HANDLED_FUNCTIONS:
+            return _HANDLED_FUNCTIONS[func](*args, **kwargs)
 
         # --- Fallback: Fold to Dense Tensor ---
         def unwrap_to_dense(t: Tensor):
@@ -145,3 +161,15 @@ class DiagonalSparseTensor(torch.Tensor):
             f"DiagonalSparseTensor(data={self._data}, v_to_p_map={self._v_to_p}, shape="
             f"{self._v_shape})"
         )
+
+
+@implements(aten.mean.default)
+def mean_default(t: Tensor) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+    return aten.sum.default(t._data) / t.numel()
+
+
+@implements(aten.sum.default)
+def sum_default(t: Tensor) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+    return aten.sum.default(t._data)

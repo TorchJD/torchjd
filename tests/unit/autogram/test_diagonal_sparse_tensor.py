@@ -3,7 +3,7 @@ from pytest import mark
 from torch.testing import assert_close
 from utils.tensors import randn_, zeros_
 
-from torchjd.autogram.diagonal_sparse_tensor import DiagonalSparseTensor, _pointwise_functions
+from torchjd.autogram.diagonal_sparse_tensor import _POINTWISE_FUNCTIONS, DiagonalSparseTensor
 
 
 @mark.parametrize(
@@ -47,14 +47,25 @@ def test_three_virtual_single_physical():
     assert_close(b, expected)
 
 
-@mark.parametrize("func", _pointwise_functions)
+@mark.parametrize("func", _POINTWISE_FUNCTIONS)
 def test_pointwise(func):
-    dim = 100
+    dim = 10
     a = randn_([dim])
     b = DiagonalSparseTensor(a, [0, 0])
     c = b.to_dense()
-    d = func(b)
-    assert isinstance(d, DiagonalSparseTensor)
+    res = func(b)
+    assert isinstance(res, DiagonalSparseTensor)
 
     # need to be careful about nans
-    assert_close(d, func(c))
+    assert_close(res, func(c))
+
+
+@mark.parametrize("func", [torch.mean, torch.sum])
+def test_mean(func):
+    dim = 10
+    a = randn_([dim])
+    b = DiagonalSparseTensor(a, [0, 0])
+    c = b.to_dense()
+
+    mean = func(b)
+    assert_close(mean, func(c))
