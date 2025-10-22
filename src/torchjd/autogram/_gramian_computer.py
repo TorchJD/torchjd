@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import torch
 from torch import Tensor
-from torch.utils._pytree import PyTree
 
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
@@ -13,8 +13,6 @@ class GramianComputer(ABC):
         self,
         rg_outputs: tuple[Tensor, ...],
         grad_outputs: tuple[Tensor, ...],
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
     ) -> Optional[Tensor]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
@@ -30,8 +28,12 @@ class JacobianBasedGramianComputer(GramianComputer, ABC):
         self.jacobian_computer = jacobian_computer
 
     @staticmethod
-    def _to_gramian(jacobian: Tensor) -> Tensor:
-        return jacobian @ jacobian.T
+    def _to_gramian(matrix: Tensor) -> Tensor:
+        """Contracts the last dimension of matrix to make it into a Gramian."""
+
+        indices = list(range(matrix.ndim))
+        transposed_matrix = matrix.movedim(indices, indices[::-1])
+        return torch.tensordot(matrix, transposed_matrix, dims=([-1], [0]))
 
 
 class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
@@ -53,20 +55,17 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         self.remaining_counter += 1
 
     def __call__(
-        self,
-        rg_outputs: tuple[Tensor, ...],
-        grad_outputs: tuple[Tensor, ...],
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
+        self, rg_outputs: tuple[Tensor, ...], grad_outputs: tuple[Tensor, ...]
     ) -> Optional[Tensor]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
-        jacobian_matrix = self.jacobian_computer(rg_outputs, grad_outputs, args, kwargs)
+        batched_jacobian = self.jacobian_computer(rg_outputs, grad_outputs)
+        jacobian = torch.func.debug_unwrap(batched_jacobian, recurse=True)
 
         if self.summed_jacobian is None:
-            self.summed_jacobian = jacobian_matrix
+            self.summed_jacobian = jacobian
         else:
-            self.summed_jacobian += jacobian_matrix
+            self.summed_jacobian += jacobian
 
         self.remaining_counter -= 1
 

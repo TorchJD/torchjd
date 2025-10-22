@@ -7,40 +7,8 @@ from torch.autograd.graph import get_gradient_edge
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
-from ._gramian_utils import movedim_gramian, reshape_gramian
-from ._jacobian_computer import (
-    AutogradJacobianComputer,
-    FunctionalJacobianComputer,
-    JacobianComputer,
-)
+from ._jacobian_computer import AutogradJacobianComputer
 from ._module_hook_manager import ModuleHookManager
-
-_MODULES_INCOMPATIBLE_WITH_BATCHED = (
-    nn.BatchNorm1d,
-    nn.BatchNorm2d,
-    nn.BatchNorm3d,
-    nn.LazyBatchNorm1d,
-    nn.LazyBatchNorm2d,
-    nn.LazyBatchNorm3d,
-    nn.SyncBatchNorm,
-    nn.RNNBase,
-)
-
-_TRACK_RUNNING_STATS_MODULE_TYPES = (
-    nn.BatchNorm1d,
-    nn.BatchNorm2d,
-    nn.BatchNorm3d,
-    nn.LazyBatchNorm1d,
-    nn.LazyBatchNorm2d,
-    nn.LazyBatchNorm3d,
-    nn.SyncBatchNorm,
-    nn.InstanceNorm1d,
-    nn.InstanceNorm2d,
-    nn.InstanceNorm3d,
-    nn.LazyInstanceNorm1d,
-    nn.LazyInstanceNorm2d,
-    nn.LazyInstanceNorm3d,
-)
 
 
 class Engine:
@@ -113,48 +81,13 @@ class Engine:
         since the Jacobian never has to be entirely in memory, it is often much more
         memory-efficient, and thus typically faster, to use the Gramian-based approach.
 
+    .. warning:: For autogram to be fast and low-memory, it is very important to use only batched
+        modules (i.e. modules that treat each element of the batch independently). For instance,
+        BatchNorm is not a batched module because it computes some statistics over the batch.
+
     .. warning::
-        When providing a non-None ``batch_dim``, all provided modules must respect a few conditions:
-
-        * They should treat the elements of the batch independently. Most common layers respect
-          this, but for example `BatchNorm
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ does not (it
-          computes some average and standard deviation over the elements of the batch).
-        * Their inputs and outputs can be anything, but each input tensor and each output tensor
-          must be batched on its first dimension. When available (e.g. in `Transformers
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_,
-          `MultiheadAttention
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html>`_,
-          etc.), the ``batch_first`` parameter has to be set to ``True``. Also, this makes `RNNs
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ not supported yet
-          because their hidden state is batched on dimension 1 even if ``batch_first`` is ``True``.
-        * They should not perform in-place operations on tensors (for instance you should not use
-          ``track_running_stats=True`` in normalization layers).
-        * They should not have side effects during the forward pass (since their forward pass will
-          be called twice, the side effects could be different from what's expected).
-        * If they have some randomness during the forward pass, they should not have direct
-          trainable parameters. For this reason,
-          `Transformers
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Transformer.html>`_, which use a
-          dropout function (rather than a `Dropout
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html>`_ layer) in a
-          module with some trainable parameters, has to be used with
-          ``dropout=0.0``. Note that a `Dropout
-          <https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html>`_ layers are
-          entirely supported and should be preferred. It is also perfectly fine for random modules
-          to have child modules that have trainable parameters, so if you have a random module with
-          some direct parameters, a simple fix is to wrap these parameters into a child module.
-
-        If you're building your own architecture, respecting those criteria should be quite easy.
-        However, if you're using an existing architecture, you may have to modify it to make it
-        compatible with the autogram engine. For instance, you may want to replace `BatchNorm2d
-        <https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html>`_ layers by
-        `GroupNorm <https://docs.pytorch.org/docs/stable/generated/torch.nn.GroupNorm.html>`_ or
-        `InstanceNorm2d
-        <https://docs.pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html>`_ layers.
-
-        The alternative is to use ``batch_dim=None``, but it's not recommended since it will
-        increase memory usage by a lot and thus typically slow down computation.
+        `RNNs <https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html>`_ may not be
+        supported on cuda because vmap is not implemented for RNN on that device.
 
     .. warning::
         Parent modules should call their child modules directly rather than using their child
@@ -193,7 +126,6 @@ class Engine:
 
     def _hook_module_recursively(self, module: nn.Module) -> None:
         if any(p.requires_grad for p in module.parameters(recurse=False)):
-            self._check_module_is_compatible(module)
             gramian_computer = self._make_gramian_computer(module)
             self._gramian_computers[module] = gramian_computer
             self._module_hook_manager.hook_module(module, gramian_computer)
@@ -202,35 +134,10 @@ class Engine:
                 self._hook_module_recursively(child)
 
     def _make_gramian_computer(self, module: nn.Module) -> GramianComputer:
-        jacobian_computer: JacobianComputer
-        if self._batch_dim is not None:
-            jacobian_computer = FunctionalJacobianComputer(module)
-        else:
-            jacobian_computer = AutogradJacobianComputer(module)
+        jacobian_computer = AutogradJacobianComputer(module)
         gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
 
         return gramian_computer
-
-    def _check_module_is_compatible(self, module: nn.Module) -> None:
-        if self._batch_dim is not None:
-            if isinstance(module, _MODULES_INCOMPATIBLE_WITH_BATCHED):
-                raise ValueError(
-                    f"Found a module of type {type(module)}, which is incompatible with the "
-                    f"autogram engine when `batch_dim` is not `None`. The incompatible module types"
-                    f" are {_MODULES_INCOMPATIBLE_WITH_BATCHED} (and their subclasses). The "
-                    f"recommended fix is to replace incompatible layers by something else (e.g. "
-                    f"BatchNorm by InstanceNorm). If you really can't and performance is not a "
-                    f"priority, you may also just set `batch_dim=None` when creating the engine."
-                )
-            if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
-                raise ValueError(
-                    f"Found a module of type {type(module)}, with `track_running_stats=True`, which"
-                    f" is incompatible with the autogram engine when `batch_dim` is not `None`, due"
-                    f" to performing in-place operations on tensors and having side-effects during "
-                    f"the forward pass. Try setting `track_running_stats` to `False`. If you really"
-                    f" can't and performance is not a priority, you may also just set "
-                    f"`batch_dim=None` when creating the engine."
-                )
 
     def compute_gramian(self, output: Tensor) -> Tensor:
         r"""
@@ -261,33 +168,31 @@ class Engine:
                 - etc.
         """
 
-        if self._batch_dim is not None:
-            # move batched dim to the end
-            ordered_output = output.movedim(self._batch_dim, -1)
-            ordered_shape = list(ordered_output.shape)
-            batch_size = ordered_shape[-1]
-            has_non_batch_dim = len(ordered_shape) > 1
-            target_shape = [batch_size]
-        else:
-            ordered_output = output
-            ordered_shape = list(ordered_output.shape)
-            has_non_batch_dim = len(ordered_shape) > 0
-            target_shape = []
-
-        if has_non_batch_dim:
-            target_shape = [-1] + target_shape
-
-        reshaped_output = ordered_output.reshape(target_shape)
-        # There are four different cases for the shape of reshaped_output:
-        # - Not batched and not non-batched: scalar of shape []
-        # - Batched only: vector of shape [batch_size]
-        # - Non-batched only: vector of shape [dim]
-        # - Batched and non-batched: matrix of shape [dim, batch_size]
-
         self._module_hook_manager.gramian_accumulation_phase.value = True
 
         try:
-            square_gramian = self._compute_square_gramian(reshaped_output, has_non_batch_dim)
+            leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
+
+            def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
+                return torch.autograd.grad(
+                    outputs=output,
+                    inputs=leaf_targets,
+                    grad_outputs=_grad_output,
+                    retain_graph=True,
+                )
+
+            output_dims = list(range(output.ndim))
+            jac_output = _make_initial_jac_output(output)
+
+            vmapped_diff = differentiation
+            for _ in output_dims:
+                vmapped_diff = vmap(vmapped_diff)
+
+            _ = vmapped_diff(jac_output)
+
+            # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
+            # have failed. So gramian is necessarily a valid Tensor here.
+            gramian = cast(Tensor, self._gramian_accumulator.gramian)
         finally:
             # Reset everything that has a state, even if the previous call raised an exception
             self._module_hook_manager.gramian_accumulation_phase.value = False
@@ -296,40 +201,24 @@ class Engine:
             for gramian_computer in self._gramian_computers.values():
                 gramian_computer.reset()
 
-        unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
-
-        if self._batch_dim is not None:
-            gramian = movedim_gramian(unordered_gramian, [-1], [self._batch_dim])
-        else:
-            gramian = unordered_gramian
-
         return gramian
 
-    def _compute_square_gramian(self, output: Tensor, has_non_batch_dim: bool) -> Tensor:
-        leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
 
-        def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
-            return torch.autograd.grad(
-                outputs=output,
-                inputs=leaf_targets,
-                grad_outputs=_grad_output,
-                retain_graph=True,
-            )
+def _make_initial_jac_output(output: Tensor) -> Tensor:
+    # Unreviewed chatgpt code that will be removed when we use DiagonalSparseTensor anyway.
+    half_shape = output.shape
+    order = len(half_shape)
+    if order == 0:
+        return torch.tensor(1.0, device=output.device, dtype=output.dtype)
 
-        if has_non_batch_dim:
-            # There is one non-batched dimension, it is the first one
-            non_batch_dim_len = output.shape[0]
-            identity_matrix = torch.eye(non_batch_dim_len, device=output.device, dtype=output.dtype)
-            ones = torch.ones_like(output[0])
-            jac_output = torch.einsum("ij, ... -> ij...", identity_matrix, ones)
+    idx = [torch.arange(s, device=output.device) for s in half_shape]
+    grids = torch.meshgrid(*idx, indexing="ij")
 
-            _ = vmap(differentiation)(jac_output)
-        else:
-            grad_output = torch.ones_like(output)
-            _ = differentiation(grad_output)
+    eqs = []
+    for i, g in enumerate(grids):
+        gl = g.reshape(*half_shape, *([1] * order))
+        gr = g.reshape(*([1] * order), *half_shape)
+        eqs.append(gl == gr)
 
-        # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
-        # have failed. So gramian is necessarily a valid Tensor here.
-        gramian = cast(Tensor, self._gramian_accumulator.gramian)
-
-        return gramian
+    jac_output = torch.stack(eqs).all(0)
+    return jac_output
