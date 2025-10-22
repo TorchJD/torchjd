@@ -6,6 +6,7 @@ from device import DEVICE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+from utils.contexts import fork_rng
 
 
 class ModuleFactory:
@@ -15,9 +16,7 @@ class ModuleFactory:
         self.kwargs = kwargs
 
     def __call__(self) -> nn.Module:
-        devices = [DEVICE] if DEVICE.type == "cuda" else []
-        with torch.random.fork_rng(devices=devices, device_type=DEVICE.type):
-            torch.random.manual_seed(0)
+        with fork_rng(seed=0):
             return self.architecture(*self.args, **self.kwargs).to(device=DEVICE)
 
     def __str__(self) -> str:
@@ -44,11 +43,6 @@ class ShapedModule(nn.Module):
 def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
-
-    elif isinstance(module, nn.RNN):
-        assert module.batch_first
-        SEQ_LEN = 20  # Arbitrary choice
-        return (SEQ_LEN, module.input_size), (SEQ_LEN, module.hidden_size)
 
     elif isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
         HEIGHT = 6  # Arbitrary choice
@@ -429,7 +423,7 @@ class WithNoTensorOutput(ShapedModule):
         return self.linear(input)
 
 
-class SimpleParamReuse(ShapedModule):
+class IntraModuleParamReuse(ShapedModule):
     """Module that reuses the same nn.Parameter for two computations directly inside of it."""
 
     INPUT_SHAPES = (50,)
@@ -735,6 +729,21 @@ class Ndim4Output(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         return torch.einsum("bi,icdef->bcdef", input, self.tensor)
+
+
+class WithRNN(ShapedModule):
+    """Simple model containing an RNN module."""
+
+    INPUT_SHAPES = (20, 8)  # Size 20, dim input_size (8)
+    OUTPUT_SHAPES = (20, 5)  # Size 20, dim hidden_size (5)
+
+    def __init__(self):
+        super().__init__()
+        self.rnn = nn.RNN(input_size=8, hidden_size=5, batch_first=True)
+
+    def forward(self, input: Tensor) -> Tensor:
+        output, _ = self.rnn(input)
+        return output
 
 
 class WithDropout(ShapedModule):

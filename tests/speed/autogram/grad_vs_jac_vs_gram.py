@@ -14,7 +14,6 @@ from utils.architectures import (
     NoFreeParam,
     SqueezeNet,
     WithTransformerLarge,
-    get_in_out_shapes,
 )
 from utils.forward_backwards import (
     autograd_forward_backward,
@@ -23,7 +22,7 @@ from utils.forward_backwards import (
     autojac_forward_backward,
     make_mse_loss_fn,
 )
-from utils.tensors import make_tensors
+from utils.tensors import make_inputs_and_targets
 
 from torchjd.aggregation import Mean
 from torchjd.autogram import Engine
@@ -43,9 +42,7 @@ PARAMETRIZATIONS = [
 
 def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_size: int):
     model = factory()
-    input_shapes, output_shapes = get_in_out_shapes(model)
-    inputs = make_tensors(batch_size, input_shapes)
-    targets = make_tensors(batch_size, output_shapes)
+    inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
     A = Mean()
@@ -64,7 +61,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
         fn_autograd()
 
     def fn_autograd_gramian():
-        autograd_gramian_forward_backward(model, inputs, list(model.parameters()), loss_fn, W)
+        autograd_gramian_forward_backward(model, inputs, loss_fn, W)
 
     def init_fn_autograd_gramian():
         torch.cuda.empty_cache()
@@ -80,7 +77,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
         fn_autojac()
 
     def fn_autogram():
-        autogram_forward_backward(model, engine, W, inputs, loss_fn)
+        autogram_forward_backward(model, inputs, loss_fn, engine, W)
 
     def init_fn_autogram():
         torch.cuda.empty_cache()
