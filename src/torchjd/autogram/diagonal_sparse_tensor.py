@@ -125,6 +125,7 @@ class DiagonalSparseTensor(torch.Tensor):
                     identity_matrices[j] = torch.eye(self._v_shape[i], device=device, dtype=dtype)
                 einsum_args += [identity_matrices[j], [first_indices[j], i]]
 
+        # Need to be careful about nans, we would want to get identity times nan.
         output = torch.einsum(*einsum_args, output_indices)
         return output
 

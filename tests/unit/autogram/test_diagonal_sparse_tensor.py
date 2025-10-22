@@ -56,12 +56,11 @@ def test_pointwise(func):
     res = func(b)
     assert isinstance(res, DiagonalSparseTensor)
 
-    # need to be careful about nans
-    assert_close(res, func(c))
+    assert_close(res, func(c), equal_nan=True)
 
 
 @mark.parametrize("func", [torch.mean, torch.sum])
-def test_mean(func):
+def test_unary(func):
     dim = 10
     a = randn_([dim])
     b = DiagonalSparseTensor(a, [0, 0])
