@@ -53,7 +53,7 @@ class ModuleHookManager:
         """
         Add a module hook used to insert Jacobian accumulation nodes into the backward graph.
 
-        The hook injects a JacobianAccumulator function into the computation graph after the module,
+        The hook injects a AutogramNode function into the computation graph after the module,
         enabling Gramian computation.
         """
 
@@ -63,7 +63,7 @@ class ModuleHookManager:
             self._gramian_accumulator,
             gramian_computer,
         )
-        self._handles.append(module.register_forward_hook(hook, with_kwargs=True))
+        self._handles.append(module.register_forward_hook(hook))
 
     @staticmethod
     def remove_hooks(handles: list[TorchRemovableHandle]) -> None:
@@ -102,13 +102,9 @@ class Hook:
     def __call__(
         self,
         module: nn.Module,
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
+        _: tuple[PyTree, ...],
         outputs: PyTree,
     ) -> PyTree:
-        if self.gramian_accumulation_phase:
-            return outputs
-
         flat_outputs, output_spec = tree_flatten(outputs)
 
         rg_outputs = list[Tensor]()
@@ -125,18 +121,16 @@ class Hook:
 
         self.gramian_computer.track_forward_call()
 
-        # We only care about running the JacobianAccumulator node, so we need one of its child
+        # We only care about running the AutogramNode, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
         # efficiency, we select the smallest one (that requires grad).
         preference = torch.tensor([t.numel() for t in rg_outputs])
         index = cast(int, preference.argmin().item())
         self.target_edges.register(get_gradient_edge(rg_outputs[index]))
 
-        autograd_fn_rg_outputs = JacobianAccumulator.apply(
+        autograd_fn_rg_outputs = AutogramNode.apply(
             self.gramian_accumulation_phase,
             self.gramian_computer,
-            args,
-            kwargs,
             self.gramian_accumulator,
             *rg_outputs,
         )
@@ -147,13 +141,10 @@ class Hook:
         return tree_unflatten(flat_outputs, output_spec)
 
 
-class JacobianAccumulator(torch.autograd.Function):
+class AutogramNode(torch.autograd.Function):
     """
-    Autograd function that accumulates Jacobian Gramians during the first backward pass.
-
-    Acts as identity on forward pass. During the autogram algorithm, computes the Jacobian
-    of outputs w.r.t. module parameters and feeds it to the gramian accumulator. Uses a
-    toggle mechanism to activate only during the Gramian accumulation phase.
+    Autograd function that is identity on forward and that launches the computation and accumulation
+    of the gramian on backward.
     """
 
     generate_vmap_rule = True
@@ -162,15 +153,11 @@ class JacobianAccumulator(torch.autograd.Function):
     def forward(
         gramian_accumulation_phase: BoolRef,
         gramian_computer: GramianComputer,
-        args: tuple[PyTree, ...],
-        kwargs: dict[str, PyTree],
         gramian_accumulator: GramianAccumulator,
         *rg_tensors: Tensor,
     ) -> tuple[Tensor, ...]:
         return tuple(t.detach() for t in rg_tensors)
 
-    # For Python version > 3.10, the type of `inputs` should become
-    # tuple[BoolRef, GramianComputer, tuple[PyTree, ...], dict[str, PyTree], GramianAccumulator, *tuple[Tensor, ...]]
     @staticmethod
     def setup_context(
         ctx,
@@ -179,23 +166,16 @@ class JacobianAccumulator(torch.autograd.Function):
     ):
         ctx.gramian_accumulation_phase = inputs[0]
         ctx.gramian_computer = inputs[1]
-        ctx.args = inputs[2]
-        ctx.kwargs = inputs[3]
-        ctx.gramian_accumulator = inputs[4]
-        ctx.rg_outputs = inputs[5:]
+        ctx.gramian_accumulator = inputs[2]
+        ctx.rg_outputs = inputs[3:]
 
     @staticmethod
     def backward(ctx, *grad_outputs: Tensor) -> tuple:
-        # For python > 3.10: -> tuple[None, None, None, None, None, *tuple[Tensor, ...]]
+        # For python > 3.10: -> tuple[None, None, None, *tuple[Tensor, ...]]
 
         if ctx.gramian_accumulation_phase:
-            optional_gramian = ctx.gramian_computer(
-                ctx.rg_outputs,
-                grad_outputs,
-                ctx.args,
-                ctx.kwargs,
-            )
+            optional_gramian = ctx.gramian_computer(ctx.rg_outputs, grad_outputs)
             if optional_gramian is not None:
                 ctx.gramian_accumulator.accumulate_gramian(optional_gramian)
 
-        return None, None, None, None, None, *grad_outputs
+        return None, None, None, *grad_outputs
