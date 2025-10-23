@@ -70,15 +70,6 @@ class DiagonalSparseTensor(torch.Tensor):
         # (which is bad!)
         assert not data.requires_grad or not torch.is_grad_enabled()
 
-        # TODO: assert a minimal data, all of its dimensions must be used at least once
-        # TODO: If no repeat in v_to_p, return a view of data (non sparse tensor). If this cannot be
-        #  done in __new__, create a helper function for that, and use this one everywhere.
-
-        if not all(0 <= i < data.ndim for i in v_to_p):
-            raise ValueError(f"Elements in v_to_p map to dimensions in data. Found {v_to_p}.")
-        if len(set(v_to_p)) != data.ndim:
-            raise ValueError("Every dimension in data must appear at least once in v_to_p.")
-
         shape = [data.shape[i] for i in v_to_p]
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
@@ -111,7 +102,7 @@ class DiagonalSparseTensor(torch.Tensor):
             sparse_tensor = args[0]
             assert isinstance(sparse_tensor, DiagonalSparseTensor)
             new_data = func(sparse_tensor._data)
-            return DiagonalSparseTensor(new_data, sparse_tensor._v_to_p)
+            return diagonal_sparse_tensor(new_data, sparse_tensor._v_to_p)
 
         if func in _HANDLED_FUNCTIONS:
             return _HANDLED_FUNCTIONS[func](*args, **kwargs)
@@ -131,6 +122,17 @@ class DiagonalSparseTensor(torch.Tensor):
             f"DiagonalSparseTensor(data={self._data}, v_to_p_map={self._v_to_p}, shape="
             f"{self._v_shape})"
         )
+
+
+def diagonal_sparse_tensor(data: Tensor, v_to_p: list[int]) -> Tensor:
+    if not all(0 <= i < data.ndim for i in v_to_p):
+        raise ValueError(f"Elements in v_to_p map to dimensions in data. Found {v_to_p}.")
+    if len(set(v_to_p)) != data.ndim:
+        raise ValueError("Every dimension in data must appear at least once in v_to_p.")
+    if len(v_to_p) == data.ndim:
+        return torch.movedim(data, (list(range(data.ndim))), v_to_p)
+    else:
+        return DiagonalSparseTensor(data, v_to_p)
 
 
 @implements(aten.mean.default)
