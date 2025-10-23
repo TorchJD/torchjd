@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from torch import Tensor
 from torch.utils._pytree import PyTree
@@ -15,14 +14,8 @@ class GramianComputer(ABC):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[Tensor]:
+    ) -> Tensor:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
-
-    def track_forward_call(self) -> None:
-        """Track that the module's forward was called. Necessary in some implementations."""
-
-    def reset(self):
-        """Reset state if any. Necessary in some implementations."""
 
 
 class JacobianBasedGramianComputer(GramianComputer, ABC):
@@ -46,7 +39,7 @@ class JacobianBasedGramianComputerWithoutCrossTerms(JacobianBasedGramianComputer
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[Tensor]:
+    ) -> Tensor:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
         jacobian_matrix = self.jacobian_computer(rg_outputs, grad_outputs, args, kwargs)

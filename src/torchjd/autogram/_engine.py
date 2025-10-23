@@ -293,8 +293,6 @@ class Engine:
             self._module_hook_manager.gramian_accumulation_phase.value = False
             self._gramian_accumulator.reset()
             self._target_edges.reset()
-            for gramian_computer in self._gramian_computers.values():
-                gramian_computer.reset()
 
         unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
 
