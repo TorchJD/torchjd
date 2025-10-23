@@ -199,7 +199,7 @@ def _make_initial_jac_output(output: Tensor) -> Tensor:
     if output.ndim == 0:
         return torch.ones_like(output)
     p_index_ranges = [torch.arange(s, device=output.device) for s in output.shape]
-    p_indices_grid = torch.meshgrid(*p_index_ranges)
+    p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
     v_indices_grid = p_indices_grid + p_indices_grid
 
     res = torch.zeros(list(output.shape) * 2, device=output.device, dtype=output.dtype)
