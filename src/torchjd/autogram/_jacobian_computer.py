@@ -29,12 +29,16 @@ class JacobianComputer(ABC):
             if param.requires_grad:
                 self.rg_params[name] = param
 
-    @abstractmethod
     def __call__(self, rg_outputs: tuple[Tensor, ...], grad_outputs: tuple[Tensor, ...]) -> Tensor:
-        """
-        Computes and returns the Jacobian. The output must be a generalized Jacobian with param
-        dimensions grouped.
-        """
+        """Computes and returns the generalized Jacobian, with its parameter dimensions grouped"""
+
+        batched_jacobian = self.compute(rg_outputs, grad_outputs)
+        jacobian = torch.func.debug_unwrap(batched_jacobian, recurse=True)
+        return jacobian
+
+    @abstractmethod
+    def compute(self, rg_outputs: tuple[Tensor, ...], grad_outputs: tuple[Tensor, ...]) -> Tensor:
+        """Computes and returns the generalized Jacobian, possibly batched."""
 
 
 class AutogradJacobianComputer(JacobianComputer):
@@ -43,7 +47,7 @@ class AutogradJacobianComputer(JacobianComputer):
     doesn't require making an extra forward pass.
     """
 
-    def __call__(self, rg_outputs: tuple[Tensor, ...], grad_outputs: tuple[Tensor, ...]) -> Tensor:
+    def compute(self, rg_outputs: tuple[Tensor, ...], grad_outputs: tuple[Tensor, ...]) -> Tensor:
         flat_rg_params, ___ = tree_flatten(self.rg_params)
         grads = torch.autograd.grad(
             rg_outputs,

@@ -59,8 +59,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     ) -> Optional[Tensor]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
-        batched_jacobian = self.jacobian_computer(rg_outputs, grad_outputs)
-        jacobian = torch.func.debug_unwrap(batched_jacobian, recurse=True)
+        jacobian = self.jacobian_computer(rg_outputs, grad_outputs)
 
         if self.summed_jacobian is None:
             self.summed_jacobian = jacobian
