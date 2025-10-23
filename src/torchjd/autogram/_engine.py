@@ -196,20 +196,12 @@ class Engine:
 
 
 def _make_initial_jac_output(output: Tensor) -> Tensor:
-    # Unreviewed chatgpt code that will be removed when we use DiagonalSparseTensor anyway.
-    half_shape = output.shape
-    order = len(half_shape)
-    if order == 0:
-        return torch.tensor(1.0, device=output.device, dtype=output.dtype)
+    if output.ndim == 0:
+        return torch.ones_like(output)
+    p_index_ranges = [torch.arange(s, device=output.device) for s in output.shape]
+    p_indices_grid = torch.meshgrid(*p_index_ranges)
+    v_indices_grid = p_indices_grid + p_indices_grid
 
-    idx = [torch.arange(s, device=output.device) for s in half_shape]
-    grids = torch.meshgrid(*idx, indexing="ij")
-
-    eqs = []
-    for i, g in enumerate(grids):
-        gl = g.reshape(*half_shape, *([1] * order))
-        gr = g.reshape(*([1] * order), *half_shape)
-        eqs.append(gl == gr)
-
-    jac_output = torch.stack(eqs).all(0)
-    return jac_output
+    res = torch.zeros(list(output.shape) * 2, device=output.device, dtype=output.dtype)
+    res[v_indices_grid] = 1.0
+    return res
