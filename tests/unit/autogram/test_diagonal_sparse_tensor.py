@@ -15,6 +15,7 @@ from torchjd.autogram.diagonal_sparse_tensor import _POINTWISE_FUNCTIONS, Diagon
         [1, 1],
         [1, 4],
         [3, 1],
+        [3, 4],
         [1, 2, 3],
     ],
 )

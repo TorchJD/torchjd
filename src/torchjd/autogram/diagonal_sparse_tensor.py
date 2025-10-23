@@ -83,23 +83,15 @@ class DiagonalSparseTensor(torch.Tensor):
         self._v_shape = [data.shape[i] for i in v_to_p]
 
     def to_dense(self) -> Tensor:
-        first_indices = dict[int, int]()
-        identity_matrices = dict[int, Tensor]()
-        einsum_args: list[Tensor | list[int]] = [self._data, list(range(self._data.ndim))]
-        output_indices = list(range(len(self._v_to_p)))
-        for i, j in enumerate(self._v_to_p):
-            if j not in first_indices:
-                first_indices[j] = i
-            else:
-                if j not in identity_matrices:
-                    device = self._data.device
-                    dtype = self._data.dtype
-                    identity_matrices[j] = torch.eye(self._v_shape[i], device=device, dtype=dtype)
-                einsum_args += [identity_matrices[j], [first_indices[j], i]]
+        if self._data.ndim == 0:
+            return self._data
+        p_index_ranges = [torch.arange(s, device=self._data.device) for s in self._data.shape]
+        p_indices_grid = torch.meshgrid(*p_index_ranges)
+        v_indices_grid = [p_indices_grid[i] for i in self._v_to_p]
 
-        # Need to be careful about nans, we would want to get identity times nan.
-        output = torch.einsum(*einsum_args, output_indices)
-        return output
+        res = torch.zeros(self.shape, device=self._data.device, dtype=self._data.dtype)
+        res[v_indices_grid] = self._data
+        return res
 
     @classmethod
     def __torch_dispatch__(cls, func: {__name__}, types: Any, args: tuple = (), kwargs: Any = None):
