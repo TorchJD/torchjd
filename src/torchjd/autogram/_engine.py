@@ -18,7 +18,7 @@ class Engine:
     Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_ but goes even further:
 
     * It works for any computation graph (not just sequential models).
-    * It is optimized for batched computations (as long as ``batch_dim`` is specified).
+    * It is highly optimized for batched computations but also supports non-batched computations.
     * It supports any shape of tensor to differentiate (not just a vector of losses). For more
       details about this, look at :meth:`Engine.compute_gramian`.
 
@@ -34,10 +34,6 @@ class Engine:
     :param modules: The modules whose parameters will contribute to the Gramian of the Jacobian.
         Several modules can be provided, but it's important that none of them is a child module of
         another of them.
-    :param batch_dim: If the modules work with batches and process each batch element independently,
-        then many intermediary Jacobians are sparse (block-diagonal), which allows for a substantial
-        memory optimization by backpropagating a squashed Jacobian instead. This parameter indicates
-        the batch dimension of the output tensor, if any.
 
     .. admonition::
         Example
@@ -65,7 +61,7 @@ class Engine:
             weighting = UPGradWeighting()
 
             # Create the engine before the backward pass, and only once.
-            engine = Engine(model, batch_dim=0)
+            engine = Engine(model)
 
             for input, target in zip(inputs, targets):
                 output = model(input).squeeze(dim=1)  # shape: [16]
@@ -110,14 +106,9 @@ class Engine:
           another child module to avoid the slow-down.
     """
 
-    def __init__(
-        self,
-        *modules: nn.Module,
-        batch_dim: int | None,
-    ):
+    def __init__(self, *modules: nn.Module):
         self._gramian_accumulator = GramianAccumulator()
         self._target_edges = EdgeRegistry()
-        self._batch_dim = batch_dim
         self._module_hook_manager = ModuleHookManager(self._target_edges, self._gramian_accumulator)
         self._gramian_computers = dict[nn.Module, GramianComputer]()
 

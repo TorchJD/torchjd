@@ -153,11 +153,9 @@ _SPECIAL_PARAMETRIZATIONS = [
 PARAMETRIZATIONS = BASE_PARAMETRIZATIONS + _SPECIAL_PARAMETRIZATIONS
 
 
-def _assert_gramian_is_equivalent_to_autograd(
-    factory: ModuleFactory, batch_size: int, batch_dim: int | None
-):
+def _assert_gramian_is_equivalent_to_autograd(factory: ModuleFactory, batch_size: int):
     model_autograd, model_autogram = factory(), factory()
-    engine = Engine(model_autogram, batch_dim=batch_dim)
+    engine = Engine(model_autogram)
     inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
@@ -198,11 +196,10 @@ _get_losses_and_params = _get_losses_and_params_with_cross_terms
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
-@mark.parametrize("batch_dim", [0, None])
-def test_compute_gramian(factory: ModuleFactory, batch_size: int, batch_dim: int | None):
+def test_compute_gramian(factory: ModuleFactory, batch_size: int):
     """Tests that the autograd and the autogram engines compute the same gramian."""
 
-    _assert_gramian_is_equivalent_to_autograd(factory, batch_size, batch_dim)
+    _assert_gramian_is_equivalent_to_autograd(factory, batch_size)
 
 
 @mark.xfail
@@ -215,45 +212,35 @@ def test_compute_gramian(factory: ModuleFactory, batch_size: int, batch_dim: int
     ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])
-@mark.parametrize("batch_dim", [0, None])
-def test_compute_gramian_unsupported_architectures(
-    factory: ModuleFactory, batch_size: int, batch_dim: int | None
-):
+def test_compute_gramian_unsupported_architectures(factory: ModuleFactory, batch_size: int):
     """
     Tests compute_gramian on some architectures that are known to be unsupported. It is expected to
     fail.
     """
 
-    _assert_gramian_is_equivalent_to_autograd(factory, batch_size, batch_dim)
+    _assert_gramian_is_equivalent_to_autograd(factory, batch_size)
 
 
 @mark.parametrize("batch_size", [1, 3, 16])
 @mark.parametrize(
-    ["reduction", "movedim_source", "movedim_destination", "batch_dim"],
+    ["reduction", "movedim_source", "movedim_destination"],
     [
         # 0D
-        (reduce_to_scalar, [], [], None),  # ()
+        (reduce_to_scalar, [], []),  # ()
         # 1D
-        (reduce_to_vector, [], [], 0),  # (batch_size,)
-        (reduce_to_vector, [], [], None),  # (batch_size,)
+        (reduce_to_vector, [], []),  # (batch_size,)
         # 2D
-        (reduce_to_matrix, [], [], 0),  # (batch_size, d1 * d2)
-        (reduce_to_matrix, [], [], None),  # (batch_size, d1 * d2)
-        (reduce_to_matrix, [0], [1], 1),  # (d1 * d2, batch_size)
-        (reduce_to_matrix, [0], [1], None),  # (d1 * d2, batch_size)
+        (reduce_to_matrix, [], []),  # (batch_size, d1 * d2)
+        (reduce_to_matrix, [0], [1]),  # (d1 * d2, batch_size)
         # 3D
-        (reduce_to_first_tensor, [], [], 0),  # (batch_size, d1, d2)
-        (reduce_to_first_tensor, [], [], None),  # (batch_size, d1, d2)
-        (reduce_to_first_tensor, [0], [1], 1),  # (d1, batch_size, d2)
-        (reduce_to_first_tensor, [0], [1], None),  # (d1, batch_size, d2)
-        (reduce_to_first_tensor, [0], [2], 2),  # (d2, d1, batch_size)
-        (reduce_to_first_tensor, [0], [2], None),  # (d2, d1, batch_size)
+        (reduce_to_first_tensor, [], []),  # (batch_size, d1, d2)
+        (reduce_to_first_tensor, [0], [1]),  # (d1, batch_size, d2)
+        (reduce_to_first_tensor, [0], [2]),  # (d2, d1, batch_size)
     ],
 )
 def test_compute_gramian_various_output_shapes(
     batch_size: int | None,
     reduction: Callable[[list[Tensor]], Tensor],
-    batch_dim: int | None,
     movedim_source: list[int],
     movedim_destination: list[int],
 ):
@@ -274,7 +261,7 @@ def test_compute_gramian_various_output_shapes(
     autograd_gramian = compute_gramian_with_autograd(loss_vector, params)
     expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
 
-    engine = Engine(model_autogram, batch_dim=batch_dim)
+    engine = Engine(model_autogram)
     losses = forward_pass(model_autogram, inputs, loss_fn, reduction)
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     autogram_gramian = engine.compute_gramian(reshaped_losses)
@@ -290,8 +277,7 @@ def _non_empty_subsets(elements: set) -> list[set]:
 
 
 @mark.parametrize("gramian_module_names", _non_empty_subsets({"fc0", "fc1", "fc2", "fc3", "fc4"}))
-@mark.parametrize("batch_dim", [0, None])
-def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int | None):
+def test_compute_partial_gramian(gramian_module_names: set[str]):
     """
     Tests that the autograd and the autogram engines compute the same gramian when only a subset of
     the model parameters is specified.
@@ -310,7 +296,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
 
-    engine = Engine(*gramian_modules, batch_dim=batch_dim)
+    engine = Engine(*gramian_modules)
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     gramian = engine.compute_gramian(losses)
 
@@ -318,14 +304,13 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
-@mark.parametrize("batch_dim", [0, None])
-def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch_dim: int | None):
+def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int):
     """Tests that the autogram engine doesn't raise any error during several IWRM iterations."""
 
     n_iter = 3
     model = factory()
     weighting = UPGradWeighting()
-    engine = Engine(model, batch_dim=batch_dim)
+    engine = Engine(model)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
     for i in range(n_iter):
@@ -338,12 +323,10 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
 
 @mark.parametrize(["factory", "batch_size"], BASE_PARAMETRIZATIONS)
 @mark.parametrize("use_engine", [False, True])
-@mark.parametrize("batch_dim", [0, None])
 def test_autograd_while_modules_are_hooked(
     factory: ModuleFactory,
     batch_size: int,
     use_engine: bool,
-    batch_dim: int | None,
 ):
     """
     Tests that the hooks added when constructing the engine do not interfere with a simple autograd
@@ -358,7 +341,7 @@ def test_autograd_while_modules_are_hooked(
     autograd_grads = {name: p.grad for name, p in model.named_parameters() if p.grad is not None}
 
     # Hook modules and optionally compute the Gramian
-    engine = Engine(model_autogram, batch_dim=batch_dim)
+    engine = Engine(model_autogram)
 
     if use_engine:
         losses = forward_pass(model_autogram, inputs, loss_fn, reduce_to_vector)
@@ -385,7 +368,7 @@ def test_compute_gramian_manual():
     model = factory()
     input = randn_(in_dims)
 
-    engine = Engine(model, batch_dim=None)
+    engine = Engine(model)
     output = model(input)
     gramian = engine.compute_gramian(output)
 
@@ -430,12 +413,12 @@ def test_reshape_equivariance(shape: list[int]):
     model1, model2 = factory(), factory()
     input = randn_([input_size])
 
-    engine1 = Engine(model1, batch_dim=None)
+    engine1 = Engine(model1)
     output = model1(input)
     gramian = engine1.compute_gramian(output)
     expected_reshaped_gramian = reshape_gramian(gramian, shape[1:])
 
-    engine2 = Engine(model2, batch_dim=None)
+    engine2 = Engine(model2)
     reshaped_output = model2(input).reshape(shape[1:])
     reshaped_gramian = engine2.compute_gramian(reshaped_output)
 
@@ -468,78 +451,13 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     model1, model2 = factory(), factory()
     input = randn_([input_size])
 
-    engine1 = Engine(model1, batch_dim=None)
+    engine1 = Engine(model1)
     output = model1(input).reshape(shape[1:])
     gramian = engine1.compute_gramian(output)
     expected_moved_gramian = movedim_gramian(gramian, source, destination)
 
-    engine2 = Engine(model2, batch_dim=None)
+    engine2 = Engine(model2)
     moved_output = model2(input).reshape(shape[1:]).movedim(source, destination)
     moved_gramian = engine2.compute_gramian(moved_output)
 
     assert_close(moved_gramian, expected_moved_gramian)
-
-
-@mark.parametrize(
-    ["shape", "batch_dim"],
-    [
-        ([2, 5, 3, 2], 2),
-        ([3, 2, 5], 1),
-        ([6, 3], 0),
-        ([4, 3, 2], 1),
-        ([1, 1, 1], 0),
-        ([1, 1, 1], 1),
-        ([1, 1, 1], 2),
-        ([1, 1], 0),
-        ([1], 0),
-        ([4, 3, 1], 2),
-    ],
-)
-def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
-    """
-    Tests that for a vector with some batched dimensions, the gramian is the same if we use the
-    appropriate `batch_dim` or if we don't use any.
-    """
-
-    non_batched_shape = [shape[i] for i in range(len(shape)) if i != batch_dim]
-    input_size = prod(non_batched_shape)
-    batch_size = shape[batch_dim]
-    output_size = input_size
-    factory = ModuleFactory(Linear, input_size, output_size)
-    model1, model2 = factory(), factory()
-    input = randn_([batch_size, input_size])
-
-    engine1 = Engine(model1, batch_dim=batch_dim)
-    output1 = model1(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
-    gramian1 = engine1.compute_gramian(output1)
-
-    engine2 = Engine(model2, batch_dim=None)
-    output2 = model2(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
-    gramian2 = engine2.compute_gramian(output2)
-
-    assert_close(gramian1, gramian2)
-
-
-@mark.parametrize(["factory", "batch_size"], BASE_PARAMETRIZATIONS)
-def test_batched_non_batched_equivalence_2(factory: ModuleFactory, batch_size: int):
-    """
-    Same as test_batched_non_batched_equivalence but on real architectures, and thus only between
-    batch_size=0 and batch_size=None.
-
-    If for some architecture this test passes but the test_compute_gramian doesn't pass, it could be
-    that the get_used_params does not work for some module of the architecture.
-    """
-
-    model_0, model_none = factory(), factory()
-    inputs, targets = make_inputs_and_targets(model_0, batch_size)
-    loss_fn = make_mse_loss_fn(targets)
-
-    engine_0 = Engine(model_0, batch_dim=0)
-    losses_0 = forward_pass(model_0, inputs, loss_fn, reduce_to_vector)
-    gramian_0 = engine_0.compute_gramian(losses_0)
-
-    engine_none = Engine(model_none, batch_dim=None)
-    losses_none = forward_pass(model_none, inputs, loss_fn, reduce_to_vector)
-    gramian_none = engine_none.compute_gramian(losses_none)
-
-    assert_close(gramian_0, gramian_none, rtol=1e-4, atol=1e-5)
