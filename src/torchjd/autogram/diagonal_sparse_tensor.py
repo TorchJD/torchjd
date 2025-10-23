@@ -37,6 +37,37 @@ _POINTWISE_FUNCTIONS = {
     aten.hardtanh.default,
     aten.leaky_relu.default,
 }
+_IN_PLACE_POINTWISE_FUNCTIONS = {
+    aten.abs_.default,
+    aten.absolute_.default,
+    aten.neg_.default,
+    aten.negative_.default,
+    aten.sign_.default,
+    aten.sgn_.default,
+    aten.square_.default,
+    aten.fix_.default,
+    aten.floor_.default,
+    aten.ceil_.default,
+    aten.trunc_.default,
+    aten.round_.default,
+    aten.positive_.default,
+    aten.expm1_.default,
+    aten.log1p_.default,
+    aten.sqrt_.default,
+    aten.sin_.default,
+    aten.tan_.default,
+    aten.sinh_.default,
+    aten.tanh_.default,
+    aten.asin_.default,
+    aten.atan_.default,
+    aten.asinh_.default,
+    aten.atanh_.default,
+    aten.erf_.default,
+    aten.erfinv_.default,
+    aten.relu_.default,
+    aten.hardtanh_.default,
+    aten.leaky_relu_.default,
+}
 _HANDLED_FUNCTIONS = dict()
 import functools
 
@@ -93,17 +124,6 @@ class DiagonalSparseTensor(torch.Tensor):
     def __torch_dispatch__(cls, func: {__name__}, types: Any, args: tuple = (), kwargs: Any = None):
         kwargs = {} if kwargs is None else kwargs
 
-        # If `func` is a pointwise operator that applies to a single Tensor and such that func(0)=0
-        # Then we can apply the transformation to self._data and wrap the result.
-        if func in _POINTWISE_FUNCTIONS:
-            assert (
-                isinstance(args, tuple) and len(args) == 1 and func(torch.zeros([])).item() == 0.0
-            )
-            sparse_tensor = args[0]
-            assert isinstance(sparse_tensor, DiagonalSparseTensor)
-            new_data = func(sparse_tensor._data)
-            return diagonal_sparse_tensor(new_data, sparse_tensor._v_to_p)
-
         if func in _HANDLED_FUNCTIONS:
             return _HANDLED_FUNCTIONS[func](*args, **kwargs)
 
@@ -135,13 +155,30 @@ def diagonal_sparse_tensor(data: Tensor, v_to_p: list[int]) -> Tensor:
         return DiagonalSparseTensor(data, v_to_p)
 
 
+for func in _POINTWISE_FUNCTIONS:
+
+    @implements(func)
+    def func(t: Tensor) -> Tensor:
+        assert isinstance(t, DiagonalSparseTensor)
+        return diagonal_sparse_tensor(func(t._data), t._v_to_p)
+
+
+for func in _IN_PLACE_POINTWISE_FUNCTIONS:
+
+    @implements(func)
+    def func(t: Tensor) -> Tensor:
+        assert isinstance(t, DiagonalSparseTensor)
+        func(t._data)
+        return t
+
+
 @implements(aten.mean.default)
-def mean_default(t: Tensor) -> Tensor:
+def mean(t: Tensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t._data) / t.numel()
 
 
 @implements(aten.sum.default)
-def sum_default(t: Tensor) -> Tensor:
+def sum(t: Tensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t._data)
