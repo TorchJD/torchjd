@@ -74,6 +74,11 @@ class DiagonalSparseTensor(torch.Tensor):
         # TODO: If no repeat in v_to_p, return a view of data (non sparse tensor). If this cannot be
         #  done in __new__, create a helper function for that, and use this one everywhere.
 
+        if not all(0 <= i < data.ndim for i in v_to_p):
+            raise ValueError(f"Elements in v_to_p map to dimensions in data. Found {v_to_p}.")
+        if len(set(v_to_p)) != data.ndim:
+            raise ValueError("Every dimension in data must appear at least once in v_to_p.")
+
         shape = [data.shape[i] for i in v_to_p]
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
