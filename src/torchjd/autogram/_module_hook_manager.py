@@ -105,9 +105,6 @@ class Hook:
         _: tuple[PyTree, ...],
         outputs: PyTree,
     ) -> PyTree:
-        if self.gramian_accumulation_phase:
-            return outputs
-
         flat_outputs, output_spec = tree_flatten(outputs)
 
         rg_outputs = list[Tensor]()
