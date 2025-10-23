@@ -33,6 +33,11 @@ class JacobianComputer(ABC):
         """Computes and returns the generalized Jacobian, with its parameter dimensions grouped"""
 
         batched_jacobian = self.compute(rg_outputs, grad_outputs)
+
+        # I think that in our specific case, it's safe to use debug_unwrap, because jacobian will
+        # escape from the vmap context anyway. We basically combine two forbidden things (escaping a
+        # tensor from a vmap context, and unwrapping a BatchedTensor) that seem to be ok when
+        # combined.
         jacobian = torch.func.debug_unwrap(batched_jacobian, recurse=True)
         return jacobian
 
