@@ -2,7 +2,7 @@ from typing import Any
 
 import torch
 from torch import Tensor
-from torch.ops import aten
+from torch.ops import aten  # type: ignore[attr-defined]
 from torch.utils._pytree import tree_map
 
 _HANDLED_FUNCTIONS = dict()
