@@ -51,7 +51,7 @@ class DiagonalSparseTensor(torch.Tensor):
         p_index_ranges = [
             torch.arange(s, device=self.contiguous_data.device) for s in self.contiguous_data.shape
         ]
-        p_indices_grid = torch.meshgrid(*p_index_ranges)
+        p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
         v_indices_grid = [p_indices_grid[i] for i in self.v_to_p]
 
         res = torch.zeros(
