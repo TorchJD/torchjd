@@ -13,7 +13,7 @@ from torchjd.autogram.diagonal_sparse_tensor import (
 def test_to_dense():
     n = 2
     m = 3
-    a = randn_([m, n])
+    a = randn_([n, m])
     b = DiagonalSparseTensor(a, [0, 1, 1, 0])
     c = b.to_dense()
 

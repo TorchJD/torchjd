@@ -42,19 +42,22 @@ class DiagonalSparseTensor(torch.Tensor):
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
     def __init__(self, data: Tensor, v_to_p: list[int]):
-        self._data = data
-        self._v_to_p = v_to_p
-        self._v_shape = [data.shape[i] for i in v_to_p]
+        self.contiguous_data = data  # self.data cannot be used here.
+        self.v_to_p = v_to_p
 
     def to_dense(self) -> Tensor:
-        if self._data.ndim == 0:
-            return self._data
-        p_index_ranges = [torch.arange(s, device=self._data.device) for s in self._data.shape]
+        if self.contiguous_data.ndim == 0:
+            return self.contiguous_data
+        p_index_ranges = [
+            torch.arange(s, device=self.contiguous_data.device) for s in self.contiguous_data.shape
+        ]
         p_indices_grid = torch.meshgrid(*p_index_ranges)
-        v_indices_grid = [p_indices_grid[i] for i in self._v_to_p]
+        v_indices_grid = [p_indices_grid[i] for i in self.v_to_p]
 
-        res = torch.zeros(self.shape, device=self._data.device, dtype=self._data.dtype)
-        res[v_indices_grid] = self._data
+        res = torch.zeros(
+            self.shape, device=self.contiguous_data.device, dtype=self.contiguous_data.dtype
+        )
+        res[v_indices_grid] = self.contiguous_data
         return res
 
     @classmethod
@@ -76,8 +79,8 @@ class DiagonalSparseTensor(torch.Tensor):
 
     def __repr__(self):
         return (
-            f"DiagonalSparseTensor(data={self._data}, v_to_p_map={self._v_to_p}, shape="
-            f"{self._v_shape})"
+            f"DiagonalSparseTensor(data={self.contiguous_data}, v_to_p_map={self.v_to_p}, shape="
+            f"{self.shape})"
         )
 
 
@@ -161,7 +164,7 @@ for func in _POINTWISE_FUNCTIONS:
     @implements(func)
     def func(t: Tensor) -> Tensor:
         assert isinstance(t, DiagonalSparseTensor)
-        return diagonal_sparse_tensor(func(t._data), t._v_to_p)
+        return diagonal_sparse_tensor(func(t.contiguous_data), t.v_to_p)
 
 
 for func in _IN_PLACE_POINTWISE_FUNCTIONS:
@@ -169,17 +172,17 @@ for func in _IN_PLACE_POINTWISE_FUNCTIONS:
     @implements(func)
     def func(t: Tensor) -> Tensor:
         assert isinstance(t, DiagonalSparseTensor)
-        func(t._data)
+        func(t.contiguous_data)
         return t
 
 
 @implements(aten.mean.default)
 def mean(t: Tensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
-    return aten.sum.default(t._data) / t.numel()
+    return aten.sum.default(t.contiguous_data) / t.numel()
 
 
 @implements(aten.sum.default)
 def sum(t: Tensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
-    return aten.sum.default(t._data)
+    return aten.sum.default(t.contiguous_data)
