@@ -136,7 +136,6 @@ _IN_PLACE_POINTWISE_FUNCTIONS = {
     aten.ceil_.default,
     aten.trunc_.default,
     aten.round_.default,
-    aten.positive_.default,
     aten.expm1_.default,
     aten.log1p_.default,
     aten.sqrt_.default,
