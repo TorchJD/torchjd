@@ -160,21 +160,28 @@ _IN_PLACE_POINTWISE_FUNCTIONS = [
 ]
 
 
-for func in _POINTWISE_FUNCTIONS:
-
-    @implements(func)
-    def func(t: Tensor) -> Tensor:
+def _override_pointwise(op):
+    @implements(op)
+    def func_(t: Tensor):
         assert isinstance(t, DiagonalSparseTensor)
-        return diagonal_sparse_tensor(func(t.contiguous_data), t.v_to_p)
+        return diagonal_sparse_tensor(op(t.contiguous_data), t.v_to_p)
 
+    return func_
+
+
+def _override_inplace_pointwise(op):
+    @implements(op)
+    def func_(t: Tensor) -> Tensor:
+        assert isinstance(t, DiagonalSparseTensor)
+        op(t.contiguous_data)
+        return t
+
+
+for func in _POINTWISE_FUNCTIONS:
+    _override_pointwise(func)
 
 for func in _IN_PLACE_POINTWISE_FUNCTIONS:
-
-    @implements(func)
-    def func(t: Tensor) -> Tensor:
-        assert isinstance(t, DiagonalSparseTensor)
-        func(t.contiguous_data)
-        return t
+    _override_inplace_pointwise(func)
 
 
 @implements(aten.mean.default)
