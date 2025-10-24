@@ -96,7 +96,7 @@ def diagonal_sparse_tensor(data: Tensor, v_to_p: list[int]) -> Tensor:
 
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
-_POINTWISE_FUNCTIONS = {
+_POINTWISE_FUNCTIONS = [
     aten.abs.default,
     aten.absolute.default,
     aten.neg.default,
@@ -126,8 +126,8 @@ _POINTWISE_FUNCTIONS = {
     aten.relu.default,
     aten.hardtanh.default,
     aten.leaky_relu.default,
-}
-_IN_PLACE_POINTWISE_FUNCTIONS = {
+]
+_IN_PLACE_POINTWISE_FUNCTIONS = [
     aten.abs_.default,
     aten.absolute_.default,
     aten.neg_.default,
@@ -156,7 +156,7 @@ _IN_PLACE_POINTWISE_FUNCTIONS = {
     aten.relu_.default,
     aten.hardtanh_.default,
     aten.leaky_relu_.default,
-}
+]
 
 
 for func in _POINTWISE_FUNCTIONS:
