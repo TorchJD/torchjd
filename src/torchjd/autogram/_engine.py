@@ -9,6 +9,7 @@ from ._gramian_accumulator import GramianAccumulator
 from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
 from ._jacobian_computer import AutogradJacobianComputer
 from ._module_hook_manager import ModuleHookManager
+from .diagonal_sparse_tensor import DiagonalSparseTensor
 
 
 class Engine:
@@ -173,7 +174,7 @@ class Engine:
                 )
 
             output_dims = list(range(output.ndim))
-            jac_output = _make_initial_jac_output(output)
+            jac_output = DiagonalSparseTensor(torch.ones_like(output), output_dims * 2)
 
             vmapped_diff = differentiation
             for _ in output_dims:
@@ -193,15 +194,3 @@ class Engine:
                 gramian_computer.reset()
 
         return gramian
-
-
-def _make_initial_jac_output(output: Tensor) -> Tensor:
-    if output.ndim == 0:
-        return torch.ones_like(output)
-    p_index_ranges = [torch.arange(s, device=output.device) for s in output.shape]
-    p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
-    v_indices_grid = p_indices_grid + p_indices_grid
-
-    res = torch.zeros(list(output.shape) * 2, device=output.device, dtype=output.dtype)
-    res[v_indices_grid] = 1.0
-    return res
