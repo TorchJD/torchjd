@@ -1,3 +1,6 @@
+import operator
+from itertools import accumulate
+from math import prod
 from typing import Any
 
 import torch
@@ -23,7 +26,7 @@ def implements(torch_function):
 class DiagonalSparseTensor(torch.Tensor):
 
     @staticmethod
-    def __new__(cls, data: Tensor, v_to_p: list[int]):
+    def __new__(cls, data: Tensor, v_to_p: list[list[int]]):
         # At the moment, this class is not compositional, so we assert
         # that the tensor we're wrapping is exactly a Tensor
         assert type(data) is Tensor
@@ -38,12 +41,22 @@ class DiagonalSparseTensor(torch.Tensor):
         # (which is bad!)
         assert not data.requires_grad or not torch.is_grad_enabled()
 
-        shape = [data.shape[i] for i in v_to_p]
+        shape = [prod(data.shape[i] for i in stride) for stride in v_to_p]
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
-    def __init__(self, data: Tensor, v_to_p: list[int]):
+    def __init__(self, data: Tensor, v_to_p: list[list[int]]):
         self.contiguous_data = data  # self.data cannot be used here.
         self.v_to_p = v_to_p
+
+        # This is a list of strides whose shape matches that of v_to_p except that each element
+        # is the stride factor of the index to get the right element for the corresponding virtual
+        # dimension. Stride is the jump necessary to go from one element to the next one in the
+        # specified dimension. For instance if the i'th element of v_to_p is [0, 1, 2], then the
+        # i'th element of _strides is [data.shape[1] * data.shape[2], data.shape[2], 1] and so, if
+        # we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2], which is
+        # a unique decomposition, then this corresponds to indexing dimensions v_to_p[i] at indices
+        # [j_0, j_1, j_2]
+        self._strides = [list(accumulate([1] + dims[:0:-1], operator.mul))[::-1] for dims in v_to_p]
 
     def to_dense(self) -> Tensor:
         if self.contiguous_data.ndim == 0:
@@ -52,7 +65,14 @@ class DiagonalSparseTensor(torch.Tensor):
             torch.arange(s, device=self.contiguous_data.device) for s in self.contiguous_data.shape
         ]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
-        v_indices_grid = tuple(p_indices_grid[i] for i in self.v_to_p)
+
+        v_indices_grid = list[Tensor]()
+        for stride, dims in zip(self._strides, self.v_to_p):
+            stride_ = torch.tensor(stride, device=self.contiguous_data.device, dtype=torch.int)
+            torch.sum(torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1)
+            # This is supposed to be a vector of shape d_1 * d_2 ...
+            # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
+            # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
 
         res = torch.zeros(
             self.shape, device=self.contiguous_data.device, dtype=self.contiguous_data.dtype
