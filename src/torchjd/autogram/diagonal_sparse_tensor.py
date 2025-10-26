@@ -91,6 +91,16 @@ class DiagonalSparseTensor(torch.Tensor):
             f"{self.shape})"
         )
 
+    def debug_info(self) -> str:
+        info = (
+            f"shape: {self.shape}\n"
+            f"stride(): {self.stride()}\n"
+            f"v_to_p: {self.v_to_p}\n"
+            f"contiguous_data.shape: {self.contiguous_data.shape}\n"
+            f"contiguous_data.stride(): {self.contiguous_data.stride()}"
+        )
+        return info
+
 
 def diagonal_sparse_tensor(data: Tensor, v_to_p: list[int]) -> Tensor:
     if not all(0 <= i < data.ndim for i in v_to_p):
