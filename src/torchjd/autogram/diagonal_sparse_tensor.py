@@ -1,6 +1,6 @@
 import torch
 from torch import Tensor
-from torch.ops import aten  # type: ignore[attr-defined]
+from torch.ops import aten  # type: ignore
 from torch.utils._pytree import tree_map
 
 _HANDLED_FUNCTIONS = dict()
