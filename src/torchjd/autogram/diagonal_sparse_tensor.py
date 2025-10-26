@@ -243,3 +243,13 @@ def unsqueeze_default(t: Tensor, dim: int) -> Tensor:
     new_v_to_p.insert(dim, new_data.ndim - 1)
 
     return diagonal_sparse_tensor(new_data, new_v_to_p)
+
+
+@implements(aten.view.default)
+def view_default(t: Tensor, shape: list[int]) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if shape == list(t.shape):
+        return DiagonalSparseTensor(t.contiguous_data, t.v_to_p)
+    else:
+        raise ValueError("Non-trivial view not supported yet.")
