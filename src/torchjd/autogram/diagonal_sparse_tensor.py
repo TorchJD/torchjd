@@ -194,19 +194,19 @@ for func in _IN_PLACE_POINTWISE_FUNCTIONS:
 
 
 @implements(aten.mean.default)
-def mean(t: Tensor) -> Tensor:
+def mean(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data) / t.numel()
 
 
 @implements(aten.sum.default)
-def sum(t: Tensor) -> Tensor:
+def sum(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data)
 
 
 @implements(aten.pow.Tensor_Scalar)
-def pow_Tensor_Scalar(t: Tensor, exponent: float) -> Tensor:
+def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if exponent <= 0:
@@ -219,7 +219,7 @@ def pow_Tensor_Scalar(t: Tensor, exponent: float) -> Tensor:
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
 @implements(aten.pow_.Scalar)
-def pow__Scalar(t: Tensor, exponent: float) -> Tensor:
+def pow__Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if exponent <= 0:
@@ -232,7 +232,7 @@ def pow__Scalar(t: Tensor, exponent: float) -> Tensor:
 
 
 @implements(aten.unsqueeze.default)
-def unsqueeze_default(t: Tensor, dim: int) -> Tensor:
+def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     assert -t.ndim - 1 <= dim < t.ndim + 1
 
@@ -247,7 +247,7 @@ def unsqueeze_default(t: Tensor, dim: int) -> Tensor:
 
 
 @implements(aten.view.default)
-def view_default(t: Tensor, shape: list[int]) -> Tensor:
+def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if shape == list(t.shape):
@@ -257,7 +257,7 @@ def view_default(t: Tensor, shape: list[int]) -> Tensor:
 
 
 @implements(aten.expand.default)
-def expand_default(t: Tensor, sizes: list[int]) -> Tensor:
+def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> Tensor:
     # note that sizes could also be just an int, or a torch.Size i think
     assert isinstance(t, DiagonalSparseTensor)
     assert isinstance(sizes, list)
@@ -284,7 +284,7 @@ def expand_default(t: Tensor, sizes: list[int]) -> Tensor:
 
 
 @implements(aten.div.Scalar)
-def div_Scalar(t: Tensor, divisor: float) -> Tensor:
+def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     new_contiguous_data = aten.div.Scalar(t.contiguous_data, divisor)
@@ -292,7 +292,9 @@ def div_Scalar(t: Tensor, divisor: float) -> Tensor:
 
 
 @implements(aten.slice.Tensor)
-def slice_Tensor(t: Tensor, dim: int, start: int | None, end: int | None, step: int = 1) -> Tensor:
+def slice_Tensor(
+    t: DiagonalSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
+) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     physical_dim = t.v_to_p[dim]
@@ -303,7 +305,7 @@ def slice_Tensor(t: Tensor, dim: int, start: int | None, end: int | None, step: 
 
 
 @implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor, t2: Tensor) -> Tensor:
+def mul_Tensor(t1: Tensor, t2: DiagonalSparseTensor) -> Tensor:
     # Element-wise multiplication where t1 is dense and t2 is DST
     assert isinstance(t2, DiagonalSparseTensor)
 
@@ -312,7 +314,7 @@ def mul_Tensor(t1: Tensor, t2: Tensor) -> Tensor:
 
 
 @implements(aten.transpose.int)
-def transpose_int(t: Tensor, dim0: int, dim1: int) -> Tensor:
+def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     new_v_to_p = [p for p in t.v_to_p]
