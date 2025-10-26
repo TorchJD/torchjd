@@ -300,3 +300,23 @@ def slice_Tensor(t: Tensor, dim: int, start: int | None, end: int | None, step: 
     new_contiguous_data = aten.slice.Tensor(t.contiguous_data, physical_dim, start, end, step)
 
     return diagonal_sparse_tensor(new_contiguous_data, t.v_to_p)
+
+
+@implements(aten.mul.Tensor)
+def mul_Tensor(t1: Tensor, t2: Tensor) -> Tensor:
+    # Element-wise multiplication where t1 is dense and t2 is DST
+    assert isinstance(t2, DiagonalSparseTensor)
+
+    new_contiguous_data = aten.mul.Tensor(t1, t2.contiguous_data)
+    return diagonal_sparse_tensor(new_contiguous_data, t2.v_to_p)
+
+
+@implements(aten.transpose.int)
+def transpose_int(t: Tensor, dim0: int, dim1: int) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    new_v_to_p = [p for p in t.v_to_p]
+    new_v_to_p[dim0] = t.v_to_p[dim1]
+    new_v_to_p[dim1] = t.v_to_p[dim0]
+
+    return diagonal_sparse_tensor(t.contiguous_data, new_v_to_p)
