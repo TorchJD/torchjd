@@ -223,3 +223,18 @@ def pow__Scalar(t: Tensor, exponent: float) -> Tensor:
 
     aten.pow_.Scalar(t.contiguous_data, exponent)
     return t
+
+
+@implements(aten.unsqueeze.default)
+def unsqueeze_default(t: Tensor, dim: int) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+    assert -t.ndim - 1 <= dim < t.ndim + 1
+
+    if dim < 0:
+        dim = t.ndim + dim + 1
+
+    new_data = aten.unsqueeze.default(t.contiguous_data, -1)
+    new_v_to_p = [p for p in t.v_to_p]  # Deepcopy the list to not modify the original v_to_p
+    new_v_to_p.insert(dim, new_data.ndim - 1)
+
+    return diagonal_sparse_tensor(new_data, new_v_to_p)
