@@ -251,7 +251,7 @@ def view_default(t: Tensor, shape: list[int]) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if shape == list(t.shape):
-        return DiagonalSparseTensor(t.contiguous_data, t.v_to_p)
+        return diagonal_sparse_tensor(t.contiguous_data, t.v_to_p)
     else:
         raise ValueError("Non-trivial view not supported yet.")
 
