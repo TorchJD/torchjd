@@ -1,5 +1,3 @@
-from typing import Any
-
 import torch
 from torch import Tensor
 from torch.ops import aten  # type: ignore[attr-defined]
@@ -61,7 +59,7 @@ class DiagonalSparseTensor(torch.Tensor):
         return res
 
     @classmethod
-    def __torch_dispatch__(cls, func: {__name__}, types: Any, args: tuple = (), kwargs: Any = None):
+    def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
         kwargs = {} if kwargs is None else kwargs
 
         if func in _HANDLED_FUNCTIONS:
