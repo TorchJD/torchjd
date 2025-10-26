@@ -263,7 +263,9 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     if shape == list(t.shape):
         return diagonal_sparse_tensor(t.contiguous_data, t.v_to_p)
     else:
-        raise ValueError("Non-trivial view not supported yet.")
+        raise ValueError(
+            f"Non-trivial view not supported yet.\n{t.debug_info()}\ntarget shape: {shape}"
+        )
 
 
 @implements(aten.expand.default)
