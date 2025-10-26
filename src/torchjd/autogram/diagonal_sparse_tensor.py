@@ -1,3 +1,7 @@
+import operator
+from itertools import accumulate
+from math import prod
+
 import torch
 from torch import Tensor
 from torch.ops import aten  # type: ignore
@@ -21,7 +25,7 @@ def implements(torch_function):
 class DiagonalSparseTensor(torch.Tensor):
 
     @staticmethod
-    def __new__(cls, data: Tensor, v_to_p: list[int]):
+    def __new__(cls, data: Tensor, v_to_p: list[list[int]]):
         # At the moment, this class is not compositional, so we assert
         # that the tensor we're wrapping is exactly a Tensor
         assert type(data) is Tensor
@@ -36,12 +40,26 @@ class DiagonalSparseTensor(torch.Tensor):
         # (which is bad!)
         assert not data.requires_grad or not torch.is_grad_enabled()
 
-        shape = [data.shape[i] for i in v_to_p]
+        shape = [prod(data.shape[i] for i in dims) for dims in v_to_p]
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
-    def __init__(self, data: Tensor, v_to_p: list[int]):
+    def __init__(self, data: Tensor, v_to_p: list[list[int]]):
         self.contiguous_data = data  # self.data cannot be used here.
         self.v_to_p = v_to_p
+
+        # This is a list of strides whose shape matches that of v_to_p except that each element
+        # is the stride factor of the index to get the right element for the corresponding virtual
+        # dimension. Stride is the jump necessary to go from one element to the next one in the
+        # specified dimension. For instance if the i'th element of v_to_p is [0, 1, 2], then the
+        # i'th element of _strides is [data.shape[1] * data.shape[2], data.shape[2], 1] and so, if
+        # we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2], which is
+        # a unique decomposition, then this corresponds to indexing dimensions v_to_p[i] at indices
+        # [j_0, j_1, j_2]
+        s = data.shape
+        self._strides = [
+            list(accumulate([1] + [s[dim] for dim in dims[:0:-1]], operator.mul))[::-1]
+            for dims in v_to_p
+        ]
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -55,12 +73,20 @@ class DiagonalSparseTensor(torch.Tensor):
             torch.arange(s, device=self.contiguous_data.device) for s in self.contiguous_data.shape
         ]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
-        v_indices_grid = tuple(p_indices_grid[i] for i in self.v_to_p)
+        v_indices_grid = list[Tensor]()
+        for stride, dims in zip(self._strides, self.v_to_p):
+            stride_ = torch.tensor(stride, device=self.contiguous_data.device, dtype=torch.int)
+            v_indices_grid.append(
+                torch.sum(torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1)
+            )
+            # This is supposed to be a vector of shape d_1 * d_2 ...
+            # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
+            # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
 
         res = torch.zeros(
             self.shape, device=self.contiguous_data.device, dtype=self.contiguous_data.dtype
         )
-        res[v_indices_grid] = self.contiguous_data
+        res[tuple(v_indices_grid)] = self.contiguous_data
         return res
 
     @classmethod
@@ -102,13 +128,16 @@ class DiagonalSparseTensor(torch.Tensor):
         return info
 
 
-def diagonal_sparse_tensor(data: Tensor, v_to_p: list[int]) -> Tensor:
-    if not all(0 <= i < data.ndim for i in v_to_p):
+def diagonal_sparse_tensor(data: Tensor, v_to_p: list[list[int]]):
+    if not all(len(dims) > 0 for dims in v_to_p):
+        raise ValueError(f"All elements of v_to_p must be non-empty lists. Found {v_to_p}.")
+    if not all(all(0 <= dim < data.ndim for dim in dims) for dims in v_to_p):
         raise ValueError(f"Elements in v_to_p map to dimensions in data. Found {v_to_p}.")
-    if len(set(v_to_p)) != data.ndim:
+    if len(set.union(*[set(dims) for dims in v_to_p])) != data.ndim:
         raise ValueError("Every dimension in data must appear at least once in v_to_p.")
     if len(v_to_p) == data.ndim:
-        return torch.movedim(data, (list(range(data.ndim))), v_to_p)
+        # v_to_p should only contain lists of 1 dimension.
+        return torch.movedim(data, (list(range(data.ndim))), [dims[0] for dims in v_to_p])
     else:
         return DiagonalSparseTensor(data, v_to_p)
 
@@ -251,7 +280,7 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> Tensor:
 
     new_data = aten.unsqueeze.default(t.contiguous_data, -1)
     new_v_to_p = [p for p in t.v_to_p]  # Deepcopy the list to not modify the original v_to_p
-    new_v_to_p.insert(dim, new_data.ndim - 1)
+    new_v_to_p.insert(dim, [new_data.ndim - 1])
 
     return diagonal_sparse_tensor(new_data, new_v_to_p)
 
@@ -279,9 +308,15 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> Tensor:
 
     for dim, (original_size, new_size) in enumerate(zip(t.shape, sizes)):
         if new_size != original_size:
-            assert original_size == 1
+            if original_size != 1:
+                raise ValueError("Cannot yet expand dim whose size != 1.")
 
-            physical_dim = t.v_to_p[dim]
+            if len(t.v_to_p[dim]) != 1:
+                raise ValueError(
+                    "Cannot yet expand virtual dim corresponding to several physical dims"
+                )
+
+            physical_dim = t.v_to_p[dim][0]
 
             # Verify that we don't have two virtual dims expanding the same physical dim differently
             previous_value = new_contiguous_data_shape[physical_dim]
@@ -309,7 +344,12 @@ def slice_Tensor(
 ) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
-    physical_dim = t.v_to_p[dim]
+    physical_dims = t.v_to_p[dim]
+
+    if len(physical_dims) != 1:
+        raise ValueError("Cannot yet slice virtual dim corresponding to several physical dims.")
+
+    physical_dim = physical_dims[0]
 
     new_contiguous_data = aten.slice.Tensor(t.contiguous_data, physical_dim, start, end, step)
 
@@ -329,7 +369,7 @@ def mul_Tensor(t1: Tensor, t2: DiagonalSparseTensor) -> Tensor:
 def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
-    new_v_to_p = [p for p in t.v_to_p]
+    new_v_to_p = [dims for dims in t.v_to_p]
     new_v_to_p[dim0] = t.v_to_p[dim1]
     new_v_to_p[dim1] = t.v_to_p[dim0]
 

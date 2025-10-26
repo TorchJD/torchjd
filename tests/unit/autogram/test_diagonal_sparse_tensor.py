@@ -14,7 +14,7 @@ def test_to_dense():
     n = 2
     m = 3
     a = randn_([n, m])
-    b = DiagonalSparseTensor(a, [0, 1, 1, 0])
+    b = DiagonalSparseTensor(a, [[0], [1], [1], [0]])
     c = b.to_dense()
 
     for i in range(n):
@@ -37,7 +37,7 @@ def test_to_dense():
 )
 def test_diagonal_sparse_tensor_scalar(shape: list[int]):
     a = randn_(shape)
-    b = DiagonalSparseTensor(a, list(range(len(shape))))
+    b = DiagonalSparseTensor(a, [[dim] for dim in range(len(shape))])
 
     assert_close(a, b.to_dense())
 
@@ -45,7 +45,7 @@ def test_diagonal_sparse_tensor_scalar(shape: list[int]):
 @mark.parametrize("dim", [1, 2, 3, 4, 5, 10])
 def test_diag_equivalence(dim: int):
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [0, 0])
+    b = DiagonalSparseTensor(a, [[0], [0]])
 
     diag_a = torch.diag(a)
 
@@ -55,7 +55,7 @@ def test_diag_equivalence(dim: int):
 def test_three_virtual_single_physical():
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [0, 0, 0])
+    b = DiagonalSparseTensor(a, [[0], [0], [0]])
 
     expected = zeros_([dim, dim, dim])
     for i in range(dim):
@@ -68,7 +68,7 @@ def test_three_virtual_single_physical():
 def test_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [0, 0])
+    b = DiagonalSparseTensor(a, [[0], [0]])
     c = b.to_dense()
     res = func(b)
     assert isinstance(res, DiagonalSparseTensor)
@@ -80,7 +80,7 @@ def test_pointwise(func):
 def test_inplace_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [0, 0])
+    b = DiagonalSparseTensor(a, [[0], [0]])
     c = b.to_dense()
     func(b)
     assert isinstance(b, DiagonalSparseTensor)
@@ -92,7 +92,7 @@ def test_inplace_pointwise(func):
 def test_unary(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [0, 0])
+    b = DiagonalSparseTensor(a, [[0], [0]])
     c = b.to_dense()
 
     res = func(b)
