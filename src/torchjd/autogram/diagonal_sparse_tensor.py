@@ -233,13 +233,13 @@ for func in _IN_PLACE_POINTWISE_FUNCTIONS:
 
 
 @implements(aten.mean.default)
-def mean(t: DiagonalSparseTensor) -> Tensor:
+def mean_default(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data) / t.numel()
 
 
 @implements(aten.sum.default)
-def sum(t: DiagonalSparseTensor) -> Tensor:
+def sum_default(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data)
 
