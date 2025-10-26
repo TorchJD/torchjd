@@ -112,6 +112,7 @@ _POINTWISE_FUNCTIONS = [
     aten.atan.default,
     aten.atanh.default,
     aten.ceil.default,
+    aten.div.Scalar,
     aten.erf.default,
     aten.erfinv.default,
     aten.expm1.default,
@@ -253,3 +254,49 @@ def view_default(t: Tensor, shape: list[int]) -> Tensor:
         return DiagonalSparseTensor(t.contiguous_data, t.v_to_p)
     else:
         raise ValueError("Non-trivial view not supported yet.")
+
+
+@implements(aten.expand.default)
+def expand_default(t: Tensor, sizes: list[int]) -> Tensor:
+    # note that sizes could also be just an int, or a torch.Size i think
+    assert isinstance(t, DiagonalSparseTensor)
+    assert isinstance(sizes, list)
+    assert len(sizes) == t.ndim
+
+    new_contiguous_data_shape = [-1] * t.contiguous_data.ndim
+
+    for dim, (original_size, new_size) in enumerate(zip(t.shape, sizes)):
+        if new_size != original_size:
+            assert original_size == 1
+
+            physical_dim = t.v_to_p[dim]
+
+            # Verify that we don't have two virtual dims expanding the same physical dim differently
+            previous_value = new_contiguous_data_shape[physical_dim]
+            assert previous_value == -1 or previous_value == new_size
+
+            new_contiguous_data_shape[physical_dim] = new_size
+
+    new_contiguous_data = aten.expand.default(t.contiguous_data, new_contiguous_data_shape)
+
+    # Not sure if it's safe to just provide v_to_p as-is. I think we're supposed to copy it.
+    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_p)
+
+
+@implements(aten.div.Scalar)
+def div_Scalar(t: Tensor, divisor: float) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    new_contiguous_data = aten.div.Scalar(t.contiguous_data, divisor)
+    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_p)
+
+
+@implements(aten.slice.Tensor)
+def slice_Tensor(t: Tensor, dim: int, start: int | None, end: int | None, step: int = 1) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    physical_dim = t.v_to_p[dim]
+
+    new_contiguous_data = aten.slice.Tensor(t.contiguous_data, physical_dim, start, end, step)
+
+    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_p)
