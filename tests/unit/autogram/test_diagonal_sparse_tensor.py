@@ -39,7 +39,7 @@ def test_diagonal_sparse_tensor_scalar(shape: list[int]):
     a = randn_(shape)
     b = DiagonalSparseTensor(a, list(range(len(shape))))
 
-    assert_close(a, b)
+    assert_close(a, b.to_dense())
 
 
 @mark.parametrize("dim", [1, 2, 3, 4, 5, 10])
@@ -49,7 +49,7 @@ def test_diag_equivalence(dim: int):
 
     diag_a = torch.diag(a)
 
-    assert_close(b, diag_a)
+    assert_close(b.to_dense(), diag_a)
 
 
 def test_three_virtual_single_physical():
@@ -61,7 +61,7 @@ def test_three_virtual_single_physical():
     for i in range(dim):
         expected[i, i, i] = a[i]
 
-    assert_close(b, expected)
+    assert_close(b.to_dense(), expected)
 
 
 @mark.parametrize("func", _POINTWISE_FUNCTIONS)
@@ -73,7 +73,7 @@ def test_pointwise(func):
     res = func(b)
     assert isinstance(res, DiagonalSparseTensor)
 
-    assert_close(res, func(c), equal_nan=True)
+    assert_close(res.to_dense(), func(c), equal_nan=True)
 
 
 @mark.parametrize("func", _IN_PLACE_POINTWISE_FUNCTIONS)
@@ -85,7 +85,7 @@ def test_inplace_pointwise(func):
     func(b)
     assert isinstance(b, DiagonalSparseTensor)
 
-    assert_close(b, func(c), equal_nan=True)
+    assert_close(b.to_dense(), func(c), equal_nan=True)
 
 
 @mark.parametrize("func", [torch.mean, torch.sum])
@@ -96,4 +96,4 @@ def test_unary(func):
     c = b.to_dense()
 
     res = func(b)
-    assert_close(res, func(c))
+    assert_close(res.to_dense(), func(c))
