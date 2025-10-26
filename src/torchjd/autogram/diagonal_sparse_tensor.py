@@ -194,3 +194,29 @@ def mean(t: Tensor) -> Tensor:
 def sum(t: Tensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data)
+
+
+@implements(aten.pow.Tensor_Scalar)
+def pow_Tensor_Scalar(t: Tensor, exponent: float) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if exponent <= 0:
+        # Need to densify because we don't have pow(0, exponent) = 0
+        return aten.pow.Tensor_Scalar(t.to_dense(), exponent)
+
+    new_contiguous_data = aten.pow.Tensor_Scalar(t.contiguous_data, exponent)
+    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_p)
+
+
+# Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
+@implements(aten.pow_.Scalar)
+def pow__Scalar(t: Tensor, exponent: float) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if exponent <= 0:
+        # Need to densify because we don't have pow(0, exponent) = 0
+        # Note sure if it's even possible to densify in-place, so let's just raise an error.
+        raise ValueError(f"in-place pow with an exponent of {exponent} (<= 0) is not supported.")
+
+    aten.pow_.Scalar(t.contiguous_data, exponent)
+    return t
