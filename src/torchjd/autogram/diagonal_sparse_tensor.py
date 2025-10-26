@@ -9,14 +9,14 @@ from torch.ops import aten  # type: ignore[attr-defined]
 from torch.utils._pytree import tree_map
 
 _HANDLED_FUNCTIONS = dict()
-import functools
+from functools import wraps
 
 
 def implements(torch_function):
     """Register a torch function override for ScalarTensor"""
 
+    @wraps(func)
     def decorator(func):
-        functools.update_wrapper(func, torch_function)
         _HANDLED_FUNCTIONS[torch_function] = func
         return func
 
