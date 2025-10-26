@@ -43,7 +43,12 @@ class DiagonalSparseTensor(torch.Tensor):
         self.contiguous_data = data  # self.data cannot be used here.
         self.v_to_p = v_to_p
 
-    def to_dense(self) -> Tensor:
+    def to_dense(
+        self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
+    ) -> Tensor:
+        assert dtype is None  # We may add support for this later
+        assert masked_grad is None  # We may add support for this later
+
         if self.contiguous_data.ndim == 0:
             return self.contiguous_data
         p_index_ranges = [
