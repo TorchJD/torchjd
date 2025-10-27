@@ -135,8 +135,10 @@ def diagonal_sparse_tensor(data: Tensor, v_to_p: list[list[int]]):
         raise ValueError(f"Elements in v_to_p map to dimensions in data. Found {v_to_p}.")
     if len(set.union(*[set(dims) for dims in v_to_p])) != data.ndim:
         raise ValueError("Every dimension in data must appear at least once in v_to_p.")
-    if len(v_to_p) == data.ndim:
-        # v_to_p should only contain lists of 1 dimension.
+    if sum([len(dims) for dims in v_to_p]) == data.ndim:
+        # In this case, all lists in v_to_p should contain exactly 1 element.
+        # Also, each physical dimension appears exactly once in the virtual tensor, so it is
+        # actually dense and can be returned as a dense tensor.
         return torch.movedim(data, (list(range(data.ndim))), [dims[0] for dims in v_to_p])
     else:
         return DiagonalSparseTensor(data, v_to_p)
