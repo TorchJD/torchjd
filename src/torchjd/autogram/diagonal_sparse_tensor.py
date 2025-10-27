@@ -89,13 +89,18 @@ class DiagonalSparseTensor(torch.Tensor):
         res[tuple(v_indices_grid)] = self.contiguous_data
         return res
 
-    def p_to_vs(self) -> list[list[int]]:
-        res = dict[int, list[int]]()
+    def p_to_vs(self) -> list[list[tuple[int, int]]]:
+        """
+        A physical dimension is mapped to a list of couples of the form
+        (virtual_dim, sub_index_in_virtual_dim)
+        """
+        res = dict[int, list[tuple[int, int]]]()
         for v_dim, p_dims in enumerate(self.v_to_p):
-            if p_dims not in res:
-                res[p_dims] = [v_dim]
-            else:
-                res[p_dims].append(v_dim)
+            for i, p_dim in enumerate(p_dims):
+                if p_dim not in res:
+                    res[p_dim] = [(v_dim, i)]
+                else:
+                    res[p_dim].append((v_dim, i))
         return [res[i] for i in range(len(res))]
 
     @classmethod
@@ -428,15 +433,26 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> Tensor:
 
 def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
     # TODO: Handle ellipsis
-    new_indices = list[list[int]]()
-    tensors = list[Tensor]()
+    # TODO: Should we take only DiagonalSparseTensors and leave the responsability to cast to the
+    #  caller?
 
-    # If we have an index v for some virtual dim whose corresponding v_to_p is a non-trivial list
+    # If we have an index v for some virtual dim whose corresponding v_to_ps is a non-trivial list
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
+    # For this reason, an index is decomposed into sub-indices that are then independently
+    # clustered.
+    # So if an index i in args for some DiagonalSparseTensor corresponds to a v_to_ps [j, k, l], then
+    # We will consider three indices (i, 0), (i, 1) and (i, 2).
+    # If furthermore [k] correspond to the v_to_ps of some other tensor with index j, then
+    # (i, 1) and (j, 0) will be clustered together (and end up being mapped to the same indice in
+    # the resulting einsum).
+    # Note that this is a problem if two virtual dimensions (from possibly different
+    # DiagonaSparseTensors) have the same size but not the same decomposition into physical
+    # dimension sizes. For now lets leave the responsibility to care about that in the calling
+    # functions, if we can factor code later on we will.
 
-    index_parents = dict[int, int]()
+    index_parents = dict[tuple[int, int], tuple[int, int]]()
 
-    def get_representative(index: int) -> int:
+    def get_representative(index: tuple[int, int]) -> tuple[int, int]:
         if index not in index_parents:
             # If an index is not yet in a cluster, put it in its own.
             index_parents[index] = index
@@ -446,48 +462,65 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
             index_parents[index] = get_representative(current)
         return index_parents[index]
 
-    def group_indices(indices: list[int]) -> None:
+    def group_indices(indices: list[tuple[int, int]]) -> None:
         first_representative = get_representative(indices[0])
         for i in indices[1:]:
             curr_representative = get_representative(i)
             index_parents[curr_representative] = first_representative
 
+    new_indices_pair = list[list[tuple[int, int]]]()
+    tensors = list[Tensor]()
+    indices_to_n_pdims = dict[int, int]()
     for t, indices in args:
         if isinstance(t, DiagonalSparseTensor):
             tensors.append(t.contiguous_data)
+            for ps, index in zip(t.v_to_p, indices):
+                if index in indices_to_n_pdims:
+                    assert indices_to_n_pdims[index] == len(ps)
+                else:
+                    indices_to_n_pdims[index] = len(ps)
             p_to_vs = t.p_to_vs()
             for indices_ in p_to_vs:
                 # elements in indices[indices_] map to the same dimension, they should be clustered
                 # together
-                group_indices([indices[i] for i in indices_])
+                group_indices([(indices[i], sub_i) for i, sub_i in indices_])
             # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
             # final dimension as they were just clustered, so we can take the first, which exists as
             # t is a valid DST.
-            new_indices.append([indices[vs[0]] for vs in p_to_vs])
+            new_indices_pair.append([(indices[vs[0][0]], vs[0][1]) for vs in p_to_vs])
         else:
             tensors.append(t)
-            new_indices.append(indices)
+            new_indices_pair.append([(i, 0) for i in indices])
 
-    new_indices = [[get_representative(i) for i in indices] for indices in new_indices]
+    current = 0
+    pair_to_int = dict[tuple[int, int], int]()
+
+    def unique_int(pair: tuple[int, int]) -> int:
+        nonlocal current
+        if pair in pair_to_int:
+            return pair_to_int[pair]
+        pair_to_int[pair] = current
+        current += 1
+        return pair_to_int[pair]
+
+    new_indices = [
+        [unique_int(get_representative(i)) for i in indices] for indices in new_indices_pair
+    ]
     new_output = list[int]()
-    v_to_p = list[int]()
+    v_to_ps = list[list[int]]()
     for i in output:
-        new_i = get_representative(i)
-        if new_i in new_output:
-            v_to_p.append(new_output.index(new_i))
-        else:
-            v_to_p.append(len(new_output))
-            new_output.append(new_i)
+        current_v_to_ps = []
+        for j in range(indices_to_n_pdims[i]):
+            k = unique_int(get_representative((i, j)))
+            if k in new_output:
+                current_v_to_ps.append(new_output.index(k))
+            else:
+                current_v_to_ps.append(len(new_output))
+                new_output.append(k)
+        v_to_ps.append(current_v_to_ps)
 
-    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    equation = (
-        ",".join("".join(alphabet[i] for i in indices) for indices in new_indices)
-        + "->"
-        + "".join([alphabet[i] for i in new_output])
-    )
-
-    data = torch.einsum(equation, *tensors)
-    return diagonal_sparse_tensor(data, v_to_p)
+    data = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
+    return diagonal_sparse_tensor(data, v_to_ps)
 
 
 @implements(aten.bmm.default)
@@ -499,4 +532,7 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
         and mat1.shape[2] == mat2.shape[1]
     )
 
+    # TODO: Verify that if mat1 and/or mat2 are DiagonalSparseTensors, then their dimension `0` have
+    #  the same physical dimension sizes decompositions.
+    #  If not, can reshape to common decomposition?
     return einsum((mat1, [0, 1, 2]), (mat2, [0, 2, 3]), output=[0, 1, 3])
