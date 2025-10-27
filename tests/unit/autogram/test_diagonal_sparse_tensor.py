@@ -1,5 +1,6 @@
 import torch
 from pytest import mark
+from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
 from utils.tensors import randn_, zeros_
 
@@ -97,3 +98,31 @@ def test_unary(func):
 
     res = func(b)
     assert_close(res.to_dense(), func(c))
+
+
+@mark.parametrize(
+    ["data_shape", "v_to_p", "target_shape"],
+    [
+        ([2, 3], [[0], [0], [1]], [2, 2, 3]),  # no change of shape
+        ([2, 3], [[0], [0, 1]], [2, 6]),  # no change of shape
+        ([2, 3], [[0], [0], [1]], [2, 6]),  # squashing 2 dimensions
+        ([2, 3], [[0], [0, 1]], [2, 2, 3]),  # unsquashing into 2 dimensions
+        ([2, 3], [[0, 0, 1]], [2, 6]),  # unsquashing into 2 dimensions
+        ([2, 3], [[0], [0], [1]], [12]),  # squashing 3 dimensions
+        ([2, 3], [[0, 0, 1]], [2, 2, 3]),  # unsquashing into 3 dimensions
+        (
+            [4],
+            [[0], [0]],
+            [2, 2, 4],
+        ),  # unsquashing into 2 dimensions, need to split physical dimension
+    ],
+)
+def test_view(data_shape: list[int], v_to_p: list[list[int]], target_shape: list[int]):
+    a = randn_(tuple(data_shape))
+    t = DiagonalSparseTensor(a, v_to_p)
+
+    result = aten.view.default(t, target_shape)
+    expected = t.to_dense().reshape(target_shape)
+
+    assert isinstance(result, DiagonalSparseTensor)
+    assert torch.all(torch.eq(result.to_dense(), expected))

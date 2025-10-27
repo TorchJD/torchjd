@@ -289,14 +289,45 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> Tensor:
 
 @implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
+    # TODO: add error message when error is raised
+    # TODO: handle case where the contiguous_data has to be reshaped
+
     assert isinstance(t, DiagonalSparseTensor)
 
-    if shape == list(t.shape):
-        return diagonal_sparse_tensor(t.contiguous_data, t.v_to_p)
-    else:
-        raise ValueError(
-            f"Non-trivial view not supported yet.\n{t.debug_info()}\ntarget shape: {shape}"
-        )
+    if prod(shape) != t.numel():
+        raise ValueError(f"shape '{shape}' is invalid for input of size {t.numel()}")
+
+    new_v_to_p = []
+    idx = 0
+    flat_v_to_p = [dim for dims in t.v_to_p for dim in dims]
+    for s in shape:
+        # Always add the first element of the group, before even entering the while.
+        # This is because both s and t.contiguous_data.shape[flat_v_to_p[idx]] could be equal to 1,
+        # in which case the while will not even be entered but we still want to add the dimension to
+        # the group. More generally, it's a bit arbitrary in which groups the dimension of length 1
+        # are put, but it should rarely be an issue.
+
+        group = [flat_v_to_p[idx]]
+        current_product = t.contiguous_data.shape[flat_v_to_p[idx]]
+        idx += 1
+
+        while current_product < s:
+            if idx >= len(flat_v_to_p):
+                raise ValueError()
+
+            group.append(flat_v_to_p[idx])
+            current_product *= t.contiguous_data.shape[flat_v_to_p[idx]]
+            idx += 1
+
+            if current_product > s:
+                raise ValueError()
+
+        new_v_to_p.append(group)
+
+    if idx != len(flat_v_to_p):
+        raise ValueError(f"idx != len(flat_v_to_p). {idx}; {flat_v_to_p}; {shape}; {t.v_to_p}")
+
+    return diagonal_sparse_tensor(t.contiguous_data, new_v_to_p)
 
 
 @implements(aten.expand.default)
