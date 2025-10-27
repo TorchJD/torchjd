@@ -31,7 +31,7 @@ def test_einsum():
     res = einsum((a, [0, 1, 2]), (b, [0, 2, 3]), output=[0, 1, 3])
 
     expected = torch.einsum("ijk,ikl->ijl", a.to_dense(), b.to_dense())
-    assert_close(res, expected)
+    assert_close(res.to_dense(), expected)
 
 
 @mark.parametrize(
