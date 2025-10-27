@@ -44,6 +44,15 @@ class DiagonalSparseTensor(torch.Tensor):
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
     def __init__(self, data: Tensor, v_to_ps: list[list[int]]):
+        if not all(len(dims) > 0 for dims in v_to_ps):
+            raise ValueError(f"All elements of v_to_ps must be non-empty lists. Found {v_to_ps}.")
+        if not all(all(0 <= dim < data.ndim for dim in dims) for dims in v_to_ps):
+            raise ValueError(
+                f"Elements in v_to_ps must map to dimensions in data. Found {v_to_ps}."
+            )
+        if len(set.union(*[set(dims) for dims in v_to_ps])) != data.ndim:
+            raise ValueError("Every dimension in data must appear at least once in v_to_ps.")
+
         self.contiguous_data = data  # self.data cannot be used here.
         self.v_to_ps = v_to_ps
 
@@ -142,29 +151,6 @@ class DiagonalSparseTensor(torch.Tensor):
         return info
 
 
-def diagonal_sparse_tensor(data: Tensor, v_to_ps: list[list[int]]):
-    if not all(len(dims) > 0 for dims in v_to_ps):
-        raise ValueError(f"All elements of v_to_ps must be non-empty lists. Found {v_to_ps}.")
-    if not all(all(0 <= dim < data.ndim for dim in dims) for dims in v_to_ps):
-        raise ValueError(f"Elements in v_to_ps map to dimensions in data. Found {v_to_ps}.")
-    if len(set.union(*[set(dims) for dims in v_to_ps])) != data.ndim:
-        raise ValueError("Every dimension in data must appear at least once in v_to_ps.")
-    if sum([len(dims) for dims in v_to_ps]) == data.ndim:
-        # In this case, all lists in v_to_ps should contain exactly 1 element.
-        # Also, each physical dimension appears exactly once in the virtual tensor, so it is
-        # actually dense and can be returned as a dense tensor.
-        return torch.movedim(data, (list(range(data.ndim))), [dims[0] for dims in v_to_ps])
-    else:
-        return DiagonalSparseTensor(data, v_to_ps)
-
-
-def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
-    if isinstance(t, DiagonalSparseTensor):
-        return t
-    else:
-        return DiagonalSparseTensor(t, [[i] for i in range(t.ndim)])
-
-
 # pointwise functions applied to one Tensor with `0.0 → 0`
 _POINTWISE_FUNCTIONS = [
     aten.abs.default,
@@ -233,16 +219,16 @@ _IN_PLACE_POINTWISE_FUNCTIONS = [
 
 def _override_pointwise(op):
     @implements(op)
-    def func_(t: Tensor):
+    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
         assert isinstance(t, DiagonalSparseTensor)
-        return diagonal_sparse_tensor(op(t.contiguous_data), t.v_to_ps)
+        return DiagonalSparseTensor(op(t.contiguous_data), t.v_to_ps)
 
     return func_
 
 
 def _override_inplace_pointwise(op):
     @implements(op)
-    def func_(t: Tensor) -> Tensor:
+    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
         assert isinstance(t, DiagonalSparseTensor)
         op(t.contiguous_data)
         return t
@@ -268,7 +254,7 @@ def sum_default(t: DiagonalSparseTensor) -> Tensor:
 
 
 @implements(aten.pow.Tensor_Scalar)
-def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> Tensor:
+def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if exponent <= 0.0:
@@ -276,7 +262,7 @@ def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> Tensor:
         return aten.pow.Tensor_Scalar(t.to_dense(), exponent)
 
     new_contiguous_data = aten.pow.Tensor_Scalar(t.contiguous_data, exponent)
-    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
@@ -294,7 +280,7 @@ def pow__Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTenso
 
 
 @implements(aten.unsqueeze.default)
-def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> Tensor:
+def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
     assert -t.ndim - 1 <= dim < t.ndim + 1
 
@@ -305,11 +291,11 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> Tensor:
     new_v_to_ps = [p for p in t.v_to_ps]  # Deepcopy the list to not modify the original v_to_ps
     new_v_to_ps.insert(dim, [new_data.ndim - 1])
 
-    return diagonal_sparse_tensor(new_data, new_v_to_ps)
+    return DiagonalSparseTensor(new_data, new_v_to_ps)
 
 
 @implements(aten.view.default)
-def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
+def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
     # TODO: add error message when error is raised
     # TODO: handle case where the contiguous_data has to be reshaped
 
@@ -349,11 +335,11 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     if idx != len(flat_v_to_ps):
         raise ValueError(f"idx != len(flat_v_to_ps). {idx}; {flat_v_to_ps}; {shape}; {t.v_to_ps}")
 
-    return diagonal_sparse_tensor(t.contiguous_data, new_v_to_ps)
+    return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
 @implements(aten.expand.default)
-def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> Tensor:
+def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseTensor:
     # note that sizes could also be just an int, or a torch.Size i think
     assert isinstance(t, DiagonalSparseTensor)
     assert isinstance(sizes, list)
@@ -382,21 +368,21 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> Tensor:
     new_contiguous_data = aten.expand.default(t.contiguous_data, new_contiguous_data_shape)
 
     # Not sure if it's safe to just provide v_to_ps as-is. I think we're supposed to copy it.
-    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
 @implements(aten.div.Scalar)
-def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> Tensor:
+def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     new_contiguous_data = aten.div.Scalar(t.contiguous_data, divisor)
-    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
 @implements(aten.slice.Tensor)
 def slice_Tensor(
     t: DiagonalSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
-) -> Tensor:
+) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     physical_dims = t.v_to_ps[dim]
@@ -408,30 +394,30 @@ def slice_Tensor(
 
     new_contiguous_data = aten.slice.Tensor(t.contiguous_data, physical_dim, start, end, step)
 
-    return diagonal_sparse_tensor(new_contiguous_data, t.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
 @implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor, t2: DiagonalSparseTensor) -> Tensor:
+def mul_Tensor(t1: Tensor, t2: DiagonalSparseTensor) -> DiagonalSparseTensor:
     # Element-wise multiplication where t1 is dense and t2 is DST
     assert isinstance(t2, DiagonalSparseTensor)
 
     new_contiguous_data = aten.mul.Tensor(t1, t2.contiguous_data)
-    return diagonal_sparse_tensor(new_contiguous_data, t2.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, t2.v_to_ps)
 
 
 @implements(aten.transpose.int)
-def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> Tensor:
+def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     new_v_to_ps = [dims for dims in t.v_to_ps]
     new_v_to_ps[dim0] = t.v_to_ps[dim1]
     new_v_to_ps[dim1] = t.v_to_ps[dim0]
 
-    return diagonal_sparse_tensor(t.contiguous_data, new_v_to_ps)
+    return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
-def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
+def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> DiagonalSparseTensor:
     # TODO: Handle ellipsis
     # TODO: Should we take only DiagonalSparseTensors and leave the responsability to cast to the
     #  caller?
@@ -520,11 +506,12 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
         v_to_ps.append(current_v_to_ps)
 
     data = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
-    return diagonal_sparse_tensor(data, v_to_ps)
+    return DiagonalSparseTensor(data, v_to_ps)
 
 
 @implements(aten.bmm.default)
 def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
+    assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert (
         mat1.ndim == 3
         and mat2.ndim == 3
