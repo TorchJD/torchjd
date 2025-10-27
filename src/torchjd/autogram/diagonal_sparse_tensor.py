@@ -89,6 +89,15 @@ class DiagonalSparseTensor(torch.Tensor):
         res[tuple(v_indices_grid)] = self.contiguous_data
         return res
 
+    def physical_to_virtual(self) -> dict[int, list[int]]:
+        res = dict[int, list[int]]()
+        for i, j in enumerate(self.v_to_p):
+            if j not in res:
+                res[j] = [i]
+            else:
+                res[j].append(i)
+        return res
+
     @classmethod
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
         kwargs = {} if kwargs is None else kwargs
@@ -142,6 +151,13 @@ def diagonal_sparse_tensor(data: Tensor, v_to_p: list[list[int]]):
         return torch.movedim(data, (list(range(data.ndim))), [dims[0] for dims in v_to_p])
     else:
         return DiagonalSparseTensor(data, v_to_p)
+
+
+def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
+    if isinstance(t, DiagonalSparseTensor):
+        return t
+    else:
+        return DiagonalSparseTensor(t, list(range(t.ndim)))
 
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
@@ -250,8 +266,8 @@ def sum_default(t: DiagonalSparseTensor) -> Tensor:
 def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
-    if exponent <= 0:
-        # Need to densify because we don't have pow(0, exponent) = 0
+    if exponent <= 0.0:
+        # Need to densify because we don't have pow(0.0, exponent) = 0.0
         return aten.pow.Tensor_Scalar(t.to_dense(), exponent)
 
     new_contiguous_data = aten.pow.Tensor_Scalar(t.contiguous_data, exponent)
@@ -263,8 +279,8 @@ def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> Tensor:
 def pow__Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
-    if exponent <= 0:
-        # Need to densify because we don't have pow(0, exponent) = 0
+    if exponent <= 0.0:
+        # Need to densify because we don't have pow(0.0, exponent) = 0.0
         # Note sure if it's even possible to densify in-place, so let's just raise an error.
         raise ValueError(f"in-place pow with an exponent of {exponent} (<= 0) is not supported.")
 
@@ -407,3 +423,76 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> Tensor:
     new_v_to_p[dim1] = t.v_to_p[dim0]
 
     return diagonal_sparse_tensor(t.contiguous_data, new_v_to_p)
+
+
+def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
+    # TODO: Handle ellipsis
+    new_indices = list[list[int]]()
+    tensors = list[Tensor]()
+
+    index_parents = dict[int, int]()
+
+    def get_representative(index: int) -> int:
+        if index not in index_parents:
+            # If an index is not yet in a cluster, put it in its own.
+            index_parents[index] = index
+        current = index_parents[index]
+        if current != index:
+            # Compress path to representative
+            index_parents[index] = get_representative(current)
+        return index_parents[index]
+
+    def group_indices(indices: list[int]) -> None:
+        first_representative = get_representative(indices[0])
+        for i in indices[1:]:
+            curr_representative = get_representative(i)
+            index_parents[curr_representative] = first_representative
+
+    for t, indices in args:
+        if isinstance(t, DiagonalSparseTensor):
+            tensors.append(t.contiguous_data)
+            p_to_v = t.physical_to_virtual()
+            for indices_ in p_to_v.values():
+                # elements in indices[indices_] map to the same dimension, they should be clustered
+                # together
+                group_indices([indices[i] for i in indices_])
+            # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
+            # final dimension as they were just clustered, so we can take the first, which exists as
+            # t is a valid DST.
+            new_indices.append([indices[p_to_v[i][0]] for i in range(t.contiguous_data.ndim)])
+        else:
+            tensors.append(t)
+            new_indices.append(indices)
+
+    new_indices = [[get_representative(i) for i in indices] for indices in new_indices]
+    new_output = list[int]()
+    v_to_p = list[int]()
+    for i in output:
+        new_i = get_representative(i)
+        if new_i in new_output:
+            v_to_p.append(new_output.index(new_i))
+        else:
+            v_to_p.append(len(new_output))
+            new_output.append(new_i)
+
+    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    equation = (
+        ",".join("".join(alphabet[i] for i in indices) for indices in new_indices)
+        + "->"
+        + "".join([alphabet[i] for i in new_output])
+    )
+
+    data = torch.einsum(equation, *tensors)
+    return diagonal_sparse_tensor(data, v_to_p)
+
+
+@implements(aten.bmm.default)
+def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
+    assert (
+        mat1.ndim == 3
+        and mat2.ndim == 3
+        and mat1.shape[0] == mat2.shape[0]
+        and mat1.shape[2] == mat2.shape[1]
+    )
+
+    return einsum((mat1, [0, 1, 2]), (mat2, [0, 2, 3]), output=[0, 1, 3])

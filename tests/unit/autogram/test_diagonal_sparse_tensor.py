@@ -8,6 +8,7 @@ from torchjd.autogram.diagonal_sparse_tensor import (
     _IN_PLACE_POINTWISE_FUNCTIONS,
     _POINTWISE_FUNCTIONS,
     DiagonalSparseTensor,
+    einsum,
 )
 
 
@@ -21,6 +22,16 @@ def test_to_dense():
     for i in range(n):
         for j in range(m):
             assert c[i, j, j, i] == a[i, j]
+
+
+def test_einsum():
+    a = DiagonalSparseTensor(torch.randn([4, 5]), [0, 0, 1])
+    b = DiagonalSparseTensor(torch.randn([5, 4]), [1, 0, 0])
+
+    res = einsum((a, [0, 1, 2]), (b, [0, 2, 3]), output=[0, 1, 3])
+
+    expected = torch.einsum("ijk,ikl->ijl", a.to_dense(), b.to_dense())
+    assert_close(res, expected)
 
 
 @mark.parametrize(
