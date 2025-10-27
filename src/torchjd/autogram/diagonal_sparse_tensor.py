@@ -522,3 +522,11 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     #  the same physical dimension sizes decompositions.
     #  If not, can reshape to common decomposition?
     return einsum((mat1, [0, 1, 2]), (mat2, [0, 2, 3]), output=[0, 1, 3])
+
+
+@implements(aten.mm.default)
+def mm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
+    assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
+    assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
+
+    return einsum((mat1, [0, 1]), (mat2, [1, 2]), output=[0, 2])
