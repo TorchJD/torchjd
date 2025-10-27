@@ -509,7 +509,7 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> DiagonalSparse
 
 
 @implements(aten.bmm.default)
-def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
+def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert (
         mat1.ndim == 3
