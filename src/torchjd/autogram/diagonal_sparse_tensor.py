@@ -316,6 +316,7 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     new_v_to_p = []
     idx = 0
     flat_v_to_p = [dim for dims in t.v_to_p for dim in dims]
+    p_shape = t.contiguous_data.shape
     for s in shape:
         # Always add the first element of the group, before even entering the while.
         # This is because both s and t.contiguous_data.shape[flat_v_to_p[idx]] could be equal to 1,
@@ -324,7 +325,7 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
         # are put, but it should rarely be an issue.
 
         group = [flat_v_to_p[idx]]
-        current_product = t.contiguous_data.shape[flat_v_to_p[idx]]
+        current_product = p_shape[flat_v_to_p[idx]]
         idx += 1
 
         while current_product < s:
@@ -332,7 +333,7 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
                 raise ValueError()
 
             group.append(flat_v_to_p[idx])
-            current_product *= t.contiguous_data.shape[flat_v_to_p[idx]]
+            current_product *= p_shape[flat_v_to_p[idx]]
             idx += 1
 
             if current_product > s:
