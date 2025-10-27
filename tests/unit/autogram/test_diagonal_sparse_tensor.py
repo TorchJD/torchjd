@@ -112,7 +112,7 @@ def test_unary(func):
 
 
 @mark.parametrize(
-    ["data_shape", "v_to_p", "target_shape"],
+    ["data_shape", "v_to_ps", "target_shape"],
     [
         ([2, 3], [[0], [0], [1]], [2, 2, 3]),  # no change of shape
         ([2, 3], [[0], [0, 1]], [2, 6]),  # no change of shape
@@ -128,9 +128,9 @@ def test_unary(func):
         ),  # unsquashing into 2 dimensions, need to split physical dimension
     ],
 )
-def test_view(data_shape: list[int], v_to_p: list[list[int]], target_shape: list[int]):
+def test_view(data_shape: list[int], v_to_ps: list[list[int]], target_shape: list[int]):
     a = randn_(tuple(data_shape))
-    t = DiagonalSparseTensor(a, v_to_p)
+    t = DiagonalSparseTensor(a, v_to_ps)
 
     result = aten.view.default(t, target_shape)
     expected = t.to_dense().reshape(target_shape)
