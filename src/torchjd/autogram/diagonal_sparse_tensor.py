@@ -160,7 +160,6 @@ _POINTWISE_FUNCTIONS = [
     aten.atan.default,
     aten.atanh.default,
     aten.ceil.default,
-    aten.div.Scalar,
     aten.erf.default,
     aten.erfinv.default,
     aten.expm1.default,
