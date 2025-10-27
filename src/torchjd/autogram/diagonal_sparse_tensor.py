@@ -151,6 +151,13 @@ class DiagonalSparseTensor(torch.Tensor):
         return info
 
 
+def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
+    if isinstance(t, DiagonalSparseTensor):
+        return t
+    else:
+        return DiagonalSparseTensor(t, [[i] for i in range(t.ndim)])
+
+
 # pointwise functions applied to one Tensor with `0.0 → 0`
 _POINTWISE_FUNCTIONS = [
     aten.abs.default,
@@ -416,7 +423,9 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSpar
     return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
-def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> DiagonalSparseTensor:
+def einsum(
+    *args: tuple[DiagonalSparseTensor, list[int]], output: list[int]
+) -> DiagonalSparseTensor:
     # TODO: Handle ellipsis
     # TODO: Should we take only DiagonalSparseTensors and leave the responsability to cast to the
     #  caller?
@@ -457,25 +466,22 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> DiagonalSparse
     tensors = list[Tensor]()
     indices_to_n_pdims = dict[int, int]()
     for t, indices in args:
-        if isinstance(t, DiagonalSparseTensor):
-            tensors.append(t.contiguous_data)
-            for ps, index in zip(t.v_to_ps, indices):
-                if index in indices_to_n_pdims:
-                    assert indices_to_n_pdims[index] == len(ps)
-                else:
-                    indices_to_n_pdims[index] = len(ps)
-            p_to_vs = t.p_to_vs()
-            for indices_ in p_to_vs:
-                # elements in indices[indices_] map to the same dimension, they should be clustered
-                # together
-                group_indices([(indices[i], sub_i) for i, sub_i in indices_])
-            # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
-            # final dimension as they were just clustered, so we can take the first, which exists as
-            # t is a valid DST.
-            new_indices_pair.append([(indices[vs[0][0]], vs[0][1]) for vs in p_to_vs])
-        else:
-            tensors.append(t)
-            new_indices_pair.append([(i, 0) for i in indices])
+        assert isinstance(t, DiagonalSparseTensor)
+        tensors.append(t.contiguous_data)
+        for ps, index in zip(t.v_to_ps, indices):
+            if index in indices_to_n_pdims:
+                assert indices_to_n_pdims[index] == len(ps)
+            else:
+                indices_to_n_pdims[index] = len(ps)
+        p_to_vs = t.p_to_vs()
+        for indices_ in p_to_vs:
+            # elements in indices[indices_] map to the same dimension, they should be clustered
+            # together
+            group_indices([(indices[i], sub_i) for i, sub_i in indices_])
+        # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
+        # final dimension as they were just clustered, so we can take the first, which exists as
+        # t is a valid DST.
+        new_indices_pair.append([(indices[vs[0][0]], vs[0][1]) for vs in p_to_vs])
 
     current = 0
     pair_to_int = dict[tuple[int, int], int]()
@@ -518,10 +524,12 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
         and mat1.shape[2] == mat2.shape[1]
     )
 
-    # TODO: Verify that if mat1 and/or mat2 are DiagonalSparseTensors, then their dimension `0` have
-    #  the same physical dimension sizes decompositions.
-    #  If not, can reshape to common decomposition?
-    return einsum((mat1, [0, 1, 2]), (mat2, [0, 2, 3]), output=[0, 1, 3])
+    mat1_ = to_diagonal_sparse_tensor(mat1)
+    mat2_ = to_diagonal_sparse_tensor(mat2)
+
+    # TODO: Verify that the dimension `0` of mat1_ and mat2_ have the same physical dimension sizes
+    #  decompositions. If not, can reshape to common decomposition?
+    return einsum((mat1_, [0, 1, 2]), (mat2_, [0, 2, 3]), output=[0, 1, 3])
 
 
 @implements(aten.mm.default)
@@ -529,4 +537,7 @@ def mm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
 
-    return einsum((mat1, [0, 1]), (mat2, [1, 2]), output=[0, 2])
+    mat1_ = to_diagonal_sparse_tensor(mat1)
+    mat2_ = to_diagonal_sparse_tensor(mat2)
+
+    return einsum((mat1_, [0, 1]), (mat2_, [1, 2]), output=[0, 2])
