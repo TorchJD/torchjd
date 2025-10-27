@@ -89,14 +89,14 @@ class DiagonalSparseTensor(torch.Tensor):
         res[tuple(v_indices_grid)] = self.contiguous_data
         return res
 
-    def p_to_vs(self) -> dict[int, list[int]]:
+    def p_to_vs(self) -> list[list[int]]:
         res = dict[int, list[int]]()
-        for i, j in enumerate(self.v_to_p):
-            if j not in res:
-                res[j] = [i]
+        for v_dim, p_dims in enumerate(self.v_to_p):
+            if p_dims not in res:
+                res[p_dims] = [v_dim]
             else:
-                res[j].append(i)
-        return res
+                res[p_dims].append(v_dim)
+        return [res[i] for i in range(len(res))]
 
     @classmethod
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
@@ -157,7 +157,7 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
     if isinstance(t, DiagonalSparseTensor):
         return t
     else:
-        return DiagonalSparseTensor(t, list(range(t.ndim)))
+        return DiagonalSparseTensor(t, [[i] for i in range(t.ndim)])
 
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
@@ -431,6 +431,9 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
     new_indices = list[list[int]]()
     tensors = list[Tensor]()
 
+    # If we have an index v for some virtual dim whose corresponding v_to_p is a non-trivial list
+    # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
+
     index_parents = dict[int, int]()
 
     def get_representative(index: int) -> int:
@@ -452,15 +455,15 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
     for t, indices in args:
         if isinstance(t, DiagonalSparseTensor):
             tensors.append(t.contiguous_data)
-            p_to_v = t.p_to_vs()
-            for indices_ in p_to_v.values():
+            p_to_vs = t.p_to_vs()
+            for indices_ in p_to_vs:
                 # elements in indices[indices_] map to the same dimension, they should be clustered
                 # together
                 group_indices([indices[i] for i in indices_])
             # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
             # final dimension as they were just clustered, so we can take the first, which exists as
             # t is a valid DST.
-            new_indices.append([indices[p_to_v[i][0]] for i in range(t.contiguous_data.ndim)])
+            new_indices.append([indices[vs[0]] for vs in p_to_vs])
         else:
             tensors.append(t)
             new_indices.append(indices)
