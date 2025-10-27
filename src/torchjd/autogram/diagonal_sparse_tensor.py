@@ -89,7 +89,7 @@ class DiagonalSparseTensor(torch.Tensor):
         res[tuple(v_indices_grid)] = self.contiguous_data
         return res
 
-    def physical_to_virtual(self) -> dict[int, list[int]]:
+    def p_to_vs(self) -> dict[int, list[int]]:
         res = dict[int, list[int]]()
         for i, j in enumerate(self.v_to_p):
             if j not in res:
@@ -452,7 +452,7 @@ def einsum(*args: tuple[Tensor, list[int]], output: list[int]) -> Tensor:
     for t, indices in args:
         if isinstance(t, DiagonalSparseTensor):
             tensors.append(t.contiguous_data)
-            p_to_v = t.physical_to_virtual()
+            p_to_v = t.p_to_vs()
             for indices_ in p_to_v.values():
                 # elements in indices[indices_] map to the same dimension, they should be clustered
                 # together
