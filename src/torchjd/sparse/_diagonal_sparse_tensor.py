@@ -210,7 +210,9 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
     if isinstance(t, DiagonalSparseTensor):
         return t
     else:
-        return DiagonalSparseTensor(t, [[i] for i in range(t.ndim)])
+        physical = t.squeeze()  # Remove all dimensions of size 1
+        v_to_ps = [[i] if t.shape[i] != 1 else [] for i in range(t.ndim)]
+        return DiagonalSparseTensor(physical, v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.mean.default)
