@@ -1,4 +1,5 @@
 import operator
+from functools import wraps
 from itertools import accumulate
 from math import prod
 
@@ -7,22 +8,9 @@ from torch import Tensor
 from torch.ops import aten  # type: ignore
 from torch.utils._pytree import tree_flatten, tree_map, tree_unflatten
 
-_HANDLED_FUNCTIONS = dict()
-from functools import wraps
-
-
-def implements(torch_function):
-    """Register a torch function override for ScalarTensor"""
-
-    @wraps(func)
-    def decorator(func):
-        _HANDLED_FUNCTIONS[torch_function] = func
-        return func
-
-    return decorator
-
 
 class DiagonalSparseTensor(torch.Tensor):
+    _HANDLED_FUNCTIONS = dict()
 
     @staticmethod
     def __new__(cls, data: Tensor, v_to_ps: list[list[int]]):
@@ -128,8 +116,8 @@ class DiagonalSparseTensor(torch.Tensor):
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
         kwargs = {} if kwargs is None else kwargs
 
-        if func in _HANDLED_FUNCTIONS:
-            return _HANDLED_FUNCTIONS[func](*args, **kwargs)
+        if func in cls._HANDLED_FUNCTIONS:
+            return cls._HANDLED_FUNCTIONS[func](*args, **kwargs)
 
         # --- Fallback: Fold to Dense Tensor ---
         def unwrap_to_dense(t: Tensor):
@@ -161,6 +149,17 @@ class DiagonalSparseTensor(torch.Tensor):
             f"contiguous_data.stride(): {self.contiguous_data.stride()}"
         )
         return info
+
+    @classmethod
+    def implements(cls, torch_function):
+        """Register a torch function override for ScalarTensor"""
+
+        @wraps(torch_function)
+        def decorator(func):
+            cls._HANDLED_FUNCTIONS[torch_function] = func
+            return func
+
+        return decorator
 
 
 def first_sort(input: list[int]) -> tuple[list[int], list[int]]:
@@ -268,7 +267,7 @@ _IN_PLACE_POINTWISE_FUNCTIONS = [
 
 
 def _override_pointwise(op):
-    @implements(op)
+    @DiagonalSparseTensor.implements(op)
     def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
         assert isinstance(t, DiagonalSparseTensor)
         return DiagonalSparseTensor(op(t.contiguous_data), t.v_to_ps)
@@ -277,7 +276,7 @@ def _override_pointwise(op):
 
 
 def _override_inplace_pointwise(op):
-    @implements(op)
+    @DiagonalSparseTensor.implements(op)
     def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
         assert isinstance(t, DiagonalSparseTensor)
         op(t.contiguous_data)
@@ -291,19 +290,19 @@ for func in _IN_PLACE_POINTWISE_FUNCTIONS:
     _override_inplace_pointwise(func)
 
 
-@implements(aten.mean.default)
+@DiagonalSparseTensor.implements(aten.mean.default)
 def mean_default(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data) / t.numel()
 
 
-@implements(aten.sum.default)
+@DiagonalSparseTensor.implements(aten.sum.default)
 def sum_default(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
     return aten.sum.default(t.contiguous_data)
 
 
-@implements(aten.pow.Tensor_Scalar)
+@DiagonalSparseTensor.implements(aten.pow.Tensor_Scalar)
 def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
@@ -316,7 +315,7 @@ def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSpars
 
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
-@implements(aten.pow_.Scalar)
+@DiagonalSparseTensor.implements(aten.pow_.Scalar)
 def pow__Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
@@ -329,7 +328,7 @@ def pow__Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTenso
     return t
 
 
-@implements(aten.unsqueeze.default)
+@DiagonalSparseTensor.implements(aten.unsqueeze.default)
 def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
     assert -t.ndim - 1 <= dim < t.ndim + 1
@@ -343,7 +342,7 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
-@implements(aten.view.default)
+@DiagonalSparseTensor.implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
     # TODO: add error message when error is raised
     # TODO: handle case where the contiguous_data has to be reshaped
@@ -380,7 +379,7 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
-@implements(aten.expand.default)
+@DiagonalSparseTensor.implements(aten.expand.default)
 def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseTensor:
     # note that sizes could also be just an int, or a torch.Size i think
     assert isinstance(t, DiagonalSparseTensor)
@@ -415,7 +414,7 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
     return DiagonalSparseTensor(new_contiguous_data, new_v_to_ps)
 
 
-@implements(aten.div.Scalar)
+@DiagonalSparseTensor.implements(aten.div.Scalar)
 def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
@@ -423,7 +422,7 @@ def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
-@implements(aten.slice.Tensor)
+@DiagonalSparseTensor.implements(aten.slice.Tensor)
 def slice_Tensor(
     t: DiagonalSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
 ) -> DiagonalSparseTensor:
@@ -441,7 +440,7 @@ def slice_Tensor(
     return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
 
 
-@implements(aten.mul.Tensor)
+@DiagonalSparseTensor.implements(aten.mul.Tensor)
 def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
     # Element-wise multiplication
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
@@ -450,7 +449,7 @@ def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
     return DiagonalSparseTensor(new_contiguous_data, t2.v_to_ps)
 
 
-@implements(aten.transpose.int)
+@DiagonalSparseTensor.implements(aten.transpose.int)
 def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
@@ -549,7 +548,7 @@ def einsum(
     return DiagonalSparseTensor(data, v_to_ps)
 
 
-@implements(aten.bmm.default)
+@DiagonalSparseTensor.implements(aten.bmm.default)
 def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert (
@@ -567,7 +566,7 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     return einsum((mat1_, [0, 1, 2]), (mat2_, [0, 2, 3]), output=[0, 1, 3])
 
 
-@implements(aten.mm.default)
+@DiagonalSparseTensor.implements(aten.mm.default)
 def mm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
