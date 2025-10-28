@@ -201,95 +201,6 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
         return DiagonalSparseTensor(t, [[i] for i in range(t.ndim)])
 
 
-# pointwise functions applied to one Tensor with `0.0 → 0`
-_POINTWISE_FUNCTIONS = [
-    aten.abs.default,
-    aten.absolute.default,
-    aten.asin.default,
-    aten.asinh.default,
-    aten.atan.default,
-    aten.atanh.default,
-    aten.ceil.default,
-    aten.erf.default,
-    aten.erfinv.default,
-    aten.expm1.default,
-    aten.fix.default,
-    aten.floor.default,
-    aten.hardtanh.default,
-    aten.leaky_relu.default,
-    aten.log1p.default,
-    aten.neg.default,
-    aten.negative.default,
-    aten.positive.default,
-    aten.relu.default,
-    aten.round.default,
-    aten.sgn.default,
-    aten.sign.default,
-    aten.sin.default,
-    aten.sinh.default,
-    aten.sqrt.default,
-    aten.square.default,
-    aten.tan.default,
-    aten.tanh.default,
-    aten.trunc.default,
-]
-
-_IN_PLACE_POINTWISE_FUNCTIONS = [
-    aten.abs_.default,
-    aten.absolute_.default,
-    aten.asin_.default,
-    aten.asinh_.default,
-    aten.atan_.default,
-    aten.atanh_.default,
-    aten.ceil_.default,
-    aten.erf_.default,
-    aten.erfinv_.default,
-    aten.expm1_.default,
-    aten.fix_.default,
-    aten.floor_.default,
-    aten.hardtanh_.default,
-    aten.leaky_relu_.default,
-    aten.log1p_.default,
-    aten.neg_.default,
-    aten.negative_.default,
-    aten.relu_.default,
-    aten.round_.default,
-    aten.sgn_.default,
-    aten.sign_.default,
-    aten.sin_.default,
-    aten.sinh_.default,
-    aten.sqrt_.default,
-    aten.square_.default,
-    aten.tan_.default,
-    aten.tanh_.default,
-    aten.trunc_.default,
-]
-
-
-def _override_pointwise(op):
-    @DiagonalSparseTensor.implements(op)
-    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
-        assert isinstance(t, DiagonalSparseTensor)
-        return DiagonalSparseTensor(op(t.contiguous_data), t.v_to_ps)
-
-    return func_
-
-
-def _override_inplace_pointwise(op):
-    @DiagonalSparseTensor.implements(op)
-    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
-        assert isinstance(t, DiagonalSparseTensor)
-        op(t.contiguous_data)
-        return t
-
-
-for func in _POINTWISE_FUNCTIONS:
-    _override_pointwise(func)
-
-for func in _IN_PLACE_POINTWISE_FUNCTIONS:
-    _override_inplace_pointwise(func)
-
-
 @DiagonalSparseTensor.implements(aten.mean.default)
 def mean_default(t: DiagonalSparseTensor) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
@@ -575,3 +486,92 @@ def mm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
     mat2_ = to_diagonal_sparse_tensor(mat2)
 
     return einsum((mat1_, [0, 1]), (mat2_, [1, 2]), output=[0, 2])
+
+
+# pointwise functions applied to one Tensor with `0.0 → 0`
+_POINTWISE_FUNCTIONS = [
+    aten.abs.default,
+    aten.absolute.default,
+    aten.asin.default,
+    aten.asinh.default,
+    aten.atan.default,
+    aten.atanh.default,
+    aten.ceil.default,
+    aten.erf.default,
+    aten.erfinv.default,
+    aten.expm1.default,
+    aten.fix.default,
+    aten.floor.default,
+    aten.hardtanh.default,
+    aten.leaky_relu.default,
+    aten.log1p.default,
+    aten.neg.default,
+    aten.negative.default,
+    aten.positive.default,
+    aten.relu.default,
+    aten.round.default,
+    aten.sgn.default,
+    aten.sign.default,
+    aten.sin.default,
+    aten.sinh.default,
+    aten.sqrt.default,
+    aten.square.default,
+    aten.tan.default,
+    aten.tanh.default,
+    aten.trunc.default,
+]
+
+_IN_PLACE_POINTWISE_FUNCTIONS = [
+    aten.abs_.default,
+    aten.absolute_.default,
+    aten.asin_.default,
+    aten.asinh_.default,
+    aten.atan_.default,
+    aten.atanh_.default,
+    aten.ceil_.default,
+    aten.erf_.default,
+    aten.erfinv_.default,
+    aten.expm1_.default,
+    aten.fix_.default,
+    aten.floor_.default,
+    aten.hardtanh_.default,
+    aten.leaky_relu_.default,
+    aten.log1p_.default,
+    aten.neg_.default,
+    aten.negative_.default,
+    aten.relu_.default,
+    aten.round_.default,
+    aten.sgn_.default,
+    aten.sign_.default,
+    aten.sin_.default,
+    aten.sinh_.default,
+    aten.sqrt_.default,
+    aten.square_.default,
+    aten.tan_.default,
+    aten.tanh_.default,
+    aten.trunc_.default,
+]
+
+
+def _override_pointwise(op):
+    @DiagonalSparseTensor.implements(op)
+    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
+        assert isinstance(t, DiagonalSparseTensor)
+        return DiagonalSparseTensor(op(t.contiguous_data), t.v_to_ps)
+
+    return func_
+
+
+def _override_inplace_pointwise(op):
+    @DiagonalSparseTensor.implements(op)
+    def func_(t: DiagonalSparseTensor) -> DiagonalSparseTensor:
+        assert isinstance(t, DiagonalSparseTensor)
+        op(t.contiguous_data)
+        return t
+
+
+for pointwise_func in _POINTWISE_FUNCTIONS:
+    _override_pointwise(pointwise_func)
+
+for pointwise_func in _IN_PLACE_POINTWISE_FUNCTIONS:
+    _override_inplace_pointwise(pointwise_func)
