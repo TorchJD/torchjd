@@ -126,6 +126,7 @@ def test_unary(func):
             [[0], [0]],
             [2, 2, 4],
         ),  # unsquashing into 2 dimensions, need to split physical dimension
+        ([2, 3, 4], [[0], [0], [1], [2]], [4, 12]),  # world boss
     ],
 )
 def test_view(data_shape: list[int], v_to_ps: list[list[int]], target_shape: list[int]):
@@ -136,4 +137,50 @@ def test_view(data_shape: list[int], v_to_ps: list[list[int]], target_shape: lis
     expected = t.to_dense().reshape(target_shape)
 
     assert isinstance(result, DiagonalSparseTensor)
+    assert torch.all(torch.eq(result.to_dense(), expected))
+
+
+@mark.parametrize(
+    ["data_shape", "v_to_ps", "target_shape", "expected_data_shape", "expected_v_to_ps"],
+    [
+        ([2, 3], [[0], [0], [1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # no change of shape
+        ([2, 3], [[0], [0, 1]], [2, 6], [2, 3], [[0], [0, 1]]),  # no change of shape
+        ([2, 3], [[0], [0], [1]], [2, 6], [2, 3], [[0], [0, 1]]),  # squashing 2 dimensions
+        (
+            [2, 3],
+            [[0], [0, 1]],
+            [2, 2, 3],
+            [2, 3],
+            [[0], [0], [1]],
+        ),  # unsquashing into 2 dimensions
+        ([2, 3], [[0, 0, 1]], [2, 6], [2, 3], [[0], [0, 1]]),  # unsquashing into 2 dimensions
+        ([2, 3], [[0], [0], [1]], [12], [2, 3], [[0, 0, 1]]),  # squashing 3 dimensions
+        ([2, 3], [[0, 0, 1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # unsquashing into 3 dimensions
+        (
+            [4],
+            [[0], [0]],
+            [2, 2, 4],
+            [2, 2],
+            [[0], [1], [0, 1]],
+        ),  # unsquashing into 2 dimensions, need to split physical dimension
+        ([2, 3, 4], [[0], [0], [1], [2]], [4, 12], [2, 12], [[0, 0], [1]]),  # world boss
+        ([2, 12], [[0, 0], [1]], [2, 2, 3, 4], [2, 3, 4], [[0], [0], [1], [2]]),  # world boss
+    ],
+)
+def test_view2(
+    data_shape: list[int],
+    v_to_ps: list[list[int]],
+    target_shape: list[int],
+    expected_data_shape: list[int],
+    expected_v_to_ps: list[list[int]],
+):
+    a = randn_(tuple(data_shape))
+    t = DiagonalSparseTensor(a, v_to_ps)
+
+    result = aten.view.default(t, target_shape)
+    expected = t.to_dense().reshape(target_shape)
+
+    assert isinstance(result, DiagonalSparseTensor)
+    assert list(result.contiguous_data.shape) == expected_data_shape
+    assert result.v_to_ps == expected_v_to_ps
     assert torch.all(torch.eq(result.to_dense(), expected))
