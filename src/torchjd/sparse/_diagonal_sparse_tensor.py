@@ -167,12 +167,15 @@ class DiagonalSparseTensor(torch.Tensor):
         return decorator
 
 
-def first_sort(input: list[int]) -> tuple[list[int], list[int]]:
+def encode_by_order(input: list[int]) -> tuple[list[int], list[int]]:
     """
-    Sorts a list of ints so that the first element to appear for the first time is 0, the second is
-    1, etc. Elements may appear anywhere after their first appearance. Returns the sorted list and
-    list corresponding to the destination of each original int. destination[i] = j means that
-    all elements of value i in input are mapping to j in sorted list.
+    Encodes values based on the order of their first appearance, starting at 0 and incrementing.
+
+    Returns the encoded list and the destination mapping each original int to its new encoding.
+    destination[i] = j means that all elements of value i in input are mapped to j in the encoded
+    list.
+
+    The input list should only contain consecutive integers starting at 0.
 
     Examples:
         [1, 0, 3, 2] => [0, 1, 2, 3], [1, 0, 3, 2]
@@ -193,9 +196,9 @@ def first_sort(input: list[int]) -> tuple[list[int], list[int]]:
     return output, destination
 
 
-def first_sort_v_to_ps(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
+def encode_v_to_ps(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
     flat_v_to_ps, spec = tree_flatten(v_to_ps)
-    sorted_flat_v_to_ps, destination = first_sort(flat_v_to_ps)
+    sorted_flat_v_to_ps, destination = encode_by_order(flat_v_to_ps)
     return tree_unflatten(sorted_flat_v_to_ps, spec), destination
 
 
@@ -324,7 +327,7 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
             new_v_to_ps[dim] = [t.physical.ndim + n_added_physical_dims]
             n_added_physical_dims += 1
 
-    new_v_to_ps, destination = first_sort_v_to_ps(new_v_to_ps)
+    new_v_to_ps, destination = encode_v_to_ps(new_v_to_ps)
     new_physical = new_physical.movedim(list(range(len(destination))), destination)
 
     return DiagonalSparseTensor(new_physical, new_v_to_ps)

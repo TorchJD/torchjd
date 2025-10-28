@@ -9,7 +9,7 @@ from torchjd.sparse._diagonal_sparse_tensor import (
     _POINTWISE_FUNCTIONS,
     DiagonalSparseTensor,
     einsum,
-    first_sort,
+    encode_by_order,
 )
 
 
@@ -193,12 +193,12 @@ def test_view2(
         ([1, 0, 0, 1], [0, 1, 1, 0], [1, 0]),
     ],
 )
-def test_first_sort(
+def test_encode_by_order(
     input: list[int],
     expected_output: list[int],
     expected_destination: list[int],
 ):
-    output, destination = first_sort(input)
+    output, destination = encode_by_order(input)
 
     assert output == expected_output
     assert destination == expected_destination
