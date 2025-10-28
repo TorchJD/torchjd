@@ -139,11 +139,8 @@ class DiagonalSparseTensor(torch.Tensor):
         print()
         return func(*tree_map(unwrap_to_dense, args), **tree_map(unwrap_to_dense, kwargs))
 
-    def __repr__(self):
-        return (
-            f"DiagonalSparseTensor(physical={self.physical}, v_to_ps_map={self.v_to_ps}, shape="
-            f"{self.shape})"
-        )
+    def __repr__(self, *, tensor_contents=None) -> str:
+        return f"DiagonalSparseTensor(physical={self.physical}, v_to_ps={self.v_to_ps})"
 
     def debug_info(self) -> str:
         info = (
