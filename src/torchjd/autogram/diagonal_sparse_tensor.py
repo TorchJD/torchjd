@@ -450,9 +450,6 @@ def einsum(
     *args: tuple[DiagonalSparseTensor, list[int]], output: list[int]
 ) -> DiagonalSparseTensor:
     # TODO: Handle ellipsis
-    # TODO: Should we take only DiagonalSparseTensors and leave the responsability to cast to the
-    #  caller?
-
     # If we have an index v for some virtual dim whose corresponding v_to_ps is a non-trivial list
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
     # For this reason, an index is decomposed into sub-indices that are then independently
