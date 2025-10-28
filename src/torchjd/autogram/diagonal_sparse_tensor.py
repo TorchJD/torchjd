@@ -152,19 +152,19 @@ class DiagonalSparseTensor(torch.Tensor):
 
 
 def sort_dst(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
-    map = dict[int, int]()
+    mapping = dict[int, int]()
     curr = 0
     res_v_to_ps = list[list[int]]()
     for p_dims in v_to_ps:
         new_p_dims = list[int]()
         for p_dim in p_dims:
-            if p_dim not in map:
-                map[p_dim] = curr
+            if p_dim not in mapping:
+                mapping[p_dim] = curr
                 curr += 1
-            new_p_dims.append(map[p_dim])
+            new_p_dims.append(mapping[p_dim])
         res_v_to_ps.append(new_p_dims)
 
-    destination = [map[i] for i in range(len(map))]
+    destination = [mapping[i] for i in range(len(mapping))]
     return res_v_to_ps, destination
 
 
