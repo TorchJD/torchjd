@@ -58,20 +58,6 @@ class DiagonalSparseTensor(torch.Tensor):
         self.physical = physical
         self.v_to_ps = v_to_ps
 
-        # This is a list of strides whose shape matches that of v_to_ps except that each element
-        # is the stride factor of the index to get the right element for the corresponding virtual
-        # dimension. Stride is the jump necessary to go from one element to the next one in the
-        # specified dimension. For instance if the i'th element of v_to_ps is [0, 1, 2], then the
-        # i'th element of _strides is [physical.shape[1] * physical.shape[2], physical.shape[2], 1]
-        # and so, if we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2]
-        # which isa unique decomposition, then this corresponds to indexing dimensions v_to_ps[i] at
-        # indices [j_0, j_1, j_2]
-        s = physical.shape
-        self._strides = [
-            list(accumulate([1] + [s[dim] for dim in dims[:0:-1]], operator.mul))[::-1]
-            for dims in v_to_ps
-        ]
-
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
     ) -> Tensor:
@@ -80,10 +66,25 @@ class DiagonalSparseTensor(torch.Tensor):
 
         if self.physical.ndim == 0:
             return self.physical
+
+        # This is a list of strides whose shape matches that of v_to_ps except that each element
+        # is the stride factor of the index to get the right element for the corresponding virtual
+        # dimension. Stride is the jump necessary to go from one element to the next one in the
+        # specified dimension. For instance if the i'th element of v_to_ps is [0, 1, 2], then the
+        # i'th element of _strides is [physical.shape[1] * physical.shape[2], physical.shape[2], 1]
+        # and so, if we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2]
+        # which isa unique decomposition, then this corresponds to indexing dimensions v_to_ps[i] at
+        # indices [j_0, j_1, j_2]
+        s = self.physical.shape
+        strides = [
+            list(accumulate([1] + [s[dim] for dim in dims[:0:-1]], operator.mul))[::-1]
+            for dims in self.v_to_ps
+        ]
+
         p_index_ranges = [torch.arange(s, device=self.physical.device) for s in self.physical.shape]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
         v_indices_grid = list[Tensor]()
-        for stride, dims in zip(self._strides, self.v_to_ps):
+        for stride, dims in zip(strides, self.v_to_ps):
             stride_ = torch.tensor(stride, device=self.physical.device, dtype=torch.int)
             v_indices_grid.append(
                 torch.sum(torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1)
