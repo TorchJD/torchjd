@@ -548,7 +548,9 @@ def einsum(
         v_to_ps.append(current_v_to_ps)
 
     physical = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
-    return DiagonalSparseTensor(physical, v_to_ps)
+    # Need to use the safe constructor, otherwise the dimensions may not be maximally grouped.
+    # Maybe there is a way to fix that though.
+    return make_dst(physical, v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.bmm.default)
