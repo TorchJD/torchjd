@@ -50,7 +50,7 @@ class DiagonalSparseTensor(torch.Tensor):
             raise ValueError(
                 f"Elements in v_to_ps must map to dimensions in data. Found {v_to_ps}."
             )
-        if len(set().union(set(dims) for dims in v_to_ps)) != data.ndim:
+        if len(set().union(*[set(dims) for dims in v_to_ps])) != data.ndim:
             raise ValueError("Every dimension in data must appear at least once in v_to_ps.")
 
         self.contiguous_data = data  # self.data cannot be used here.
