@@ -103,20 +103,6 @@ class DiagonalSparseTensor(torch.Tensor):
         res[tuple(v_indices_grid)] = self.physical
         return res
 
-    def p_to_vs(self) -> list[list[tuple[int, int]]]:
-        """
-        A physical dimension is mapped to a list of couples of the form
-        (virtual_dim, sub_index_in_virtual_dim)
-        """
-        res = dict[int, list[tuple[int, int]]]()
-        for v_dim, p_dims in enumerate(self.v_to_ps):
-            for i, p_dim in enumerate(p_dims):
-                if p_dim not in res:
-                    res[p_dim] = [(v_dim, i)]
-                else:
-                    res[p_dim].append((v_dim, i))
-        return [res[i] for i in range(len(res))]
-
     @classmethod
     def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
         kwargs = {} if kwargs is None else kwargs
@@ -169,6 +155,22 @@ class DiagonalSparseTensor(torch.Tensor):
             return func
 
         return decorator
+
+
+def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]]:
+    """
+    A physical dimension is mapped to a list of couples of the form
+    (virtual_dim, sub_index_in_virtual_dim)
+    """
+
+    res = dict[int, list[tuple[int, int]]]()
+    for v_dim, p_dims in enumerate(v_to_ps):
+        for i, p_dim in enumerate(p_dims):
+            if p_dim not in res:
+                res[p_dim] = [(v_dim, i)]
+            else:
+                res[p_dim].append((v_dim, i))
+    return [res[i] for i in range(len(res))]
 
 
 def encode_by_order(input: list[int]) -> tuple[list[int], list[int]]:
@@ -459,7 +461,7 @@ def einsum(
                 assert indices_to_n_pdims[index] == len(ps)
             else:
                 indices_to_n_pdims[index] = len(ps)
-        p_to_vs = t.p_to_vs()
+        p_to_vs = p_to_vs_from_v_to_ps(t.v_to_ps)
         for indices_ in p_to_vs:
             # elements in indices[indices_] map to the same dimension, they should be clustered
             # together
