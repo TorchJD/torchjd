@@ -210,9 +210,36 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
     if isinstance(t, DiagonalSparseTensor):
         return t
     else:
-        physical = t.squeeze()  # Remove all dimensions of size 1
-        v_to_ps = [[i] if t.shape[i] != 1 else [] for i in range(t.ndim)]
-        return DiagonalSparseTensor(physical, v_to_ps)
+        return make_dst(t, [[i] for i in range(t.ndim)])
+
+
+def fix_dim_encoding(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tensor, list[list[int]]]:
+    v_to_ps, destination = encode_v_to_ps(v_to_ps)
+    source = list(range(physical.ndim))
+    physical = physical.movedim(source, destination)
+
+    return physical, v_to_ps
+
+
+def fix_dim_of_size_1(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tensor, list[list[int]]]:
+    is_of_size_1 = [s == 1 for s in physical.shape]
+
+    def new_encoding(d: int) -> int:
+        n_removed_dims_before_d = sum(is_of_size_1[:d])
+        return d - n_removed_dims_before_d
+
+    physical = physical.squeeze()
+    v_to_ps = [[new_encoding(d) for d in dims if not is_of_size_1[d]] for dims in v_to_ps]
+
+    return physical, v_to_ps
+
+
+def make_dst(physical: Tensor, v_to_ps: list[list[int]]) -> DiagonalSparseTensor:
+    """Fix physical and v_to_ps and create a DiagonalSparseTensor with them."""
+
+    physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
+    physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
+    return DiagonalSparseTensor(physical, v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.mean.default)

@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
-from torchjd.sparse import DiagonalSparseTensor
+from torchjd.sparse import make_dst
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
@@ -175,9 +175,8 @@ class Engine:
                 )
 
             output_dims = list(range(output.ndim))
-            physical = torch.ones_like(output).squeeze()
-            v_to_ps = [[dim] if output.shape[dim] != 1 else [] for dim in output_dims * 2]
-            jac_output = DiagonalSparseTensor(physical, v_to_ps)
+            v_to_ps = [[dim] for dim in output_dims * 2]
+            jac_output = make_dst(torch.ones_like(output), v_to_ps)
 
             vmapped_diff = differentiation
             for _ in output_dims:
