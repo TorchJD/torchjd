@@ -61,6 +61,9 @@ class DiagonalSparseTensor(torch.Tensor):
                 f"v_to_ps elements are not encoded by first appearance. Found {v_to_ps}."
             )
 
+        if any(len(group) != 1 for group in get_groupings(v_to_ps)):
+            raise ValueError(f"Dimensions must be maximally grouped. Found {v_to_ps}.")
+
         self.physical = physical
         self.v_to_ps = v_to_ps
 
