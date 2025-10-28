@@ -56,6 +56,11 @@ class DiagonalSparseTensor(torch.Tensor):
         if len(set().union(*[set(dims) for dims in v_to_ps])) != physical.ndim:
             raise ValueError("Every dimension in physical must appear at least once in v_to_ps.")
 
+        if v_to_ps != encode_v_to_ps(v_to_ps)[0]:
+            raise ValueError(
+                f"v_to_ps elements are not encoded by first appearance. Found {v_to_ps}."
+            )
+
         self.physical = physical
         self.v_to_ps = v_to_ps
 

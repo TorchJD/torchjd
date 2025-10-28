@@ -27,7 +27,7 @@ def test_to_dense():
 
 def test_einsum():
     a = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [0], [1]])
-    b = DiagonalSparseTensor(torch.randn([5, 4]), [[1], [0], [0]])
+    b = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [1], [1]])
 
     res = einsum((a, [0, 1, 2]), (b, [0, 2, 3]), output=[0, 1, 3])
 
