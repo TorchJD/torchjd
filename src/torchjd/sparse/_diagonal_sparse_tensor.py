@@ -124,12 +124,19 @@ class DiagonalSparseTensor(torch.Tensor):
             else:
                 return t
 
-        print(f"Falling back to dense for {func.__name__} called with the following args:")
-        for arg in args:
-            print(arg)
-        print("and the following kwargs:")
-        for k, v in kwargs.items():
-            print(f"{k}: {v}")
+        print(f"Falling back to dense for {func.__name__}")
+        if len(args) > 0:
+            print("* args:")
+            for arg in args:
+                if isinstance(arg, Tensor):
+                    print(f"  > {arg.__class__.__name__} - {arg.shape}")
+                else:
+                    print(f"  > {arg}")
+        if len(kwargs) > 0:
+            print("* kwargs:")
+            for k, v in kwargs.items():
+                print(f"  > {k}: {v}")
+        print()
         return func(*tree_map(unwrap_to_dense, args), **tree_map(unwrap_to_dense, kwargs))
 
     def __repr__(self):
