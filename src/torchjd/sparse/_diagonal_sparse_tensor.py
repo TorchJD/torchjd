@@ -95,9 +95,15 @@ class DiagonalSparseTensor(torch.Tensor):
         v_indices_grid = list[Tensor]()
         for stride, dims in zip(strides, self.v_to_ps):
             stride_ = torch.tensor(stride, device=self.physical.device, dtype=torch.int)
-            v_indices_grid.append(
-                torch.sum(torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1)
-            )
+
+            if len(dims) > 0:
+                v_indices_grid.append(
+                    torch.sum(
+                        torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1
+                    )
+                )
+            else:
+                v_indices_grid.append(torch.tensor(0, device=self.physical.device, dtype=torch.int))
             # This is supposed to be a vector of shape d_1 * d_2 ...
             # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
             # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
