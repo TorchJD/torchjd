@@ -4,12 +4,13 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
+from torchjd.sparse import DiagonalSparseTensor
+
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
 from ._jacobian_computer import AutogradJacobianComputer
 from ._module_hook_manager import ModuleHookManager
-from .diagonal_sparse_tensor import DiagonalSparseTensor
 
 
 class Engine:

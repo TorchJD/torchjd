@@ -4,7 +4,7 @@ from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
 from utils.tensors import randn_, zeros_
 
-from torchjd.autogram.diagonal_sparse_tensor import (
+from torchjd.sparse._diagonal_sparse_tensor import (
     _IN_PLACE_POINTWISE_FUNCTIONS,
     _POINTWISE_FUNCTIONS,
     DiagonalSparseTensor,
