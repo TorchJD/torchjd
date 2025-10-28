@@ -433,12 +433,30 @@ def slice_Tensor(
 
     physical_dims = t.v_to_ps[dim]
 
-    if len(physical_dims) != 1:
-        raise ValueError("Cannot yet slice virtual dim corresponding to several physical dims.")
-
-    physical_dim = physical_dims[0]
-
-    new_physical = aten.slice.Tensor(t.physical, physical_dim, start, end, step)
+    if len(physical_dims) > 1:
+        raise ValueError(
+            "Cannot yet slice virtual dim corresponding to several physical dims.\n"
+            f"{t.debug_info()}\n"
+            f"dim={dim}, start={start}, end={end}, step={step}."
+        )
+    elif len(physical_dims) == 0:
+        # Trying to slice a virtual dim of size 1.
+        # Either
+        # - the element of this dim is included in the slice: keep it as it is
+        # - it's not included in the slice (e.g. end<=start): we would end up with a size of 0 on
+        #   that dimension, so we'd need to add a dimension of size 0 to the physical. This is not
+        #   implemented yet.
+        start_ = start if start is not None else 0
+        end_ = end if end is not None else 1
+        if end_ <= start_:  # TODO: the condition might be a bit more complex if step != 1
+            raise NotImplementedError(
+                "Slicing of dimension of size 1 leading to dimension of size 0 not implemented yet."
+            )
+        else:
+            new_physical = t.physical
+    else:
+        physical_dim = physical_dims[0]
+        new_physical = aten.slice.Tensor(t.physical, physical_dim, start, end, step)
 
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
