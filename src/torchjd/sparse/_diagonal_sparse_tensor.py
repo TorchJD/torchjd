@@ -384,7 +384,7 @@ def einsum(
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
     # For this reason, an index is decomposed into sub-indices that are then independently
     # clustered.
-    # So if an index i in args for some DiagonalSparseTensor corresponds to a v_to_ps [j, k, l], then
+    # So if an index i in args for some DiagonalSparseTensor corresponds to a v_to_ps [j, k, l],
     # We will consider three indices (i, 0), (i, 1) and (i, 2).
     # If furthermore [k] correspond to the v_to_ps of some other tensor with index j, then
     # (i, 1) and (j, 0) will be clustered together (and end up being mapped to the same indice in
