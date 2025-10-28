@@ -109,35 +109,6 @@ def test_unary(func):
 
 
 @mark.parametrize(
-    ["physical_shape", "v_to_ps", "target_shape"],
-    [
-        ([2, 3], [[0], [0], [1]], [2, 2, 3]),  # no change of shape
-        ([2, 3], [[0], [0, 1]], [2, 6]),  # no change of shape
-        ([2, 3], [[0], [0], [1]], [2, 6]),  # squashing 2 dimensions
-        ([2, 3], [[0], [0, 1]], [2, 2, 3]),  # unsquashing into 2 dimensions
-        ([2, 3], [[0, 0, 1]], [2, 6]),  # unsquashing into 2 dimensions
-        ([2, 3], [[0], [0], [1]], [12]),  # squashing 3 dimensions
-        ([2, 3], [[0, 0, 1]], [2, 2, 3]),  # unsquashing into 3 dimensions
-        (
-            [4],
-            [[0], [0]],
-            [2, 2, 4],
-        ),  # unsquashing into 2 dimensions, need to split physical dimension
-        ([2, 3, 4], [[0], [0], [1], [2]], [4, 12]),  # world boss
-    ],
-)
-def test_view(physical_shape: list[int], v_to_ps: list[list[int]], target_shape: list[int]):
-    a = randn_(tuple(physical_shape))
-    t = DiagonalSparseTensor(a, v_to_ps)
-
-    result = aten.view.default(t, target_shape)
-    expected = t.to_dense().reshape(target_shape)
-
-    assert isinstance(result, DiagonalSparseTensor)
-    assert torch.all(torch.eq(result.to_dense(), expected))
-
-
-@mark.parametrize(
     ["physical_shape", "v_to_ps", "target_shape", "expected_physical_shape", "expected_v_to_ps"],
     [
         ([2, 3], [[0], [0], [1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # no change of shape
@@ -164,7 +135,7 @@ def test_view(physical_shape: list[int], v_to_ps: list[list[int]], target_shape:
         ([2, 12], [[0, 0], [1]], [2, 2, 3, 4], [2, 3, 4], [[0], [0], [1], [2]]),  # world boss
     ],
 )
-def test_view2(
+def test_view(
     physical_shape: list[int],
     v_to_ps: list[list[int]],
     target_shape: list[int],
