@@ -39,13 +39,9 @@ def test_einsum():
     "shape",
     [
         [],
-        [1],
-        [3],
-        [1, 1],
-        [1, 4],
-        [3, 1],
-        [3, 4],
-        [1, 2, 3],
+        [2],
+        [2, 3],
+        [2, 3, 4],
     ],
 )
 def test_diagonal_sparse_tensor_scalar(shape: list[int]):
@@ -55,7 +51,7 @@ def test_diagonal_sparse_tensor_scalar(shape: list[int]):
     assert_close(a, b.to_dense())
 
 
-@mark.parametrize("dim", [1, 2, 3, 4, 5, 10])
+@mark.parametrize("dim", [2, 3, 4, 5, 10])
 def test_diag_equivalence(dim: int):
     a = randn_([dim])
     b = DiagonalSparseTensor(a, [[0], [0]])

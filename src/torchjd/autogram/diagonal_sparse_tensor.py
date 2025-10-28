@@ -44,8 +44,20 @@ class DiagonalSparseTensor(torch.Tensor):
         return Tensor._make_wrapper_subclass(cls, shape, dtype=data.dtype, device=data.device)
 
     def __init__(self, data: Tensor, v_to_ps: list[list[int]]):
-        if not all(len(dims) > 0 for dims in v_to_ps):
-            raise ValueError(f"All elements of v_to_ps must be non-empty lists. Found {v_to_ps}.")
+        """
+        This constructor is made for specifying data and v_to_ps exactly. It should not modify it.
+
+        For this reason, another constructor will be made to either modify the data / v_to_ps to
+        simplify the result, or to create a dense tensor directly if it's already dense. It could
+        also be responsible for sorting the first apparition of each physical dim in the flattened
+        v_to_ps.
+        """
+
+        if any(s == 1 for s in data.shape):
+            raise ValueError(
+                "Physical data must not contain any dimension of size 1. Found data.shape="
+                f"{data.shape}."
+            )
         if not all(all(0 <= dim < data.ndim for dim in dims) for dims in v_to_ps):
             raise ValueError(
                 f"Elements in v_to_ps must map to dimensions in data. Found {v_to_ps}."
@@ -310,11 +322,10 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     if dim < 0:
         dim = t.ndim + dim + 1
 
-    new_data = aten.unsqueeze.default(t.contiguous_data, -1)
     new_v_to_ps = [p for p in t.v_to_ps]  # Deepcopy the list to not modify the original v_to_ps
-    new_v_to_ps.insert(dim, [new_data.ndim - 1])
+    new_v_to_ps.insert(dim, [])
 
-    return DiagonalSparseTensor(new_data, new_v_to_ps)
+    return DiagonalSparseTensor(t.contiguous_data, new_v_to_ps)
 
 
 @implements(aten.view.default)
@@ -332,15 +343,8 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     flat_v_to_ps = [dim for dims in t.v_to_ps for dim in dims]
     p_shape = t.contiguous_data.shape
     for s in shape:
-        # Always add the first element of the group, before even entering the while.
-        # This is because both s and t.contiguous_data.shape[flat_v_to_ps[idx]] could be equal to 1,
-        # in which case the while will not even be entered but we still want to add the dimension to
-        # the group. More generally, it's a bit arbitrary in which groups the dimension of length 1
-        # are put, but it should rarely be an issue.
-
-        group = [flat_v_to_ps[idx]]
-        current_product = p_shape[flat_v_to_ps[idx]]
-        idx += 1
+        group = []
+        current_product = 1
 
         while current_product < s:
             if idx >= len(flat_v_to_ps):
@@ -366,32 +370,34 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
     # note that sizes could also be just an int, or a torch.Size i think
     assert isinstance(t, DiagonalSparseTensor)
     assert isinstance(sizes, list)
+    assert len(sizes) >= t.ndim
+
+    for _ in range(len(sizes) - t.ndim):
+        t = t.unsqueeze(0)
+
     assert len(sizes) == t.ndim
 
-    new_contiguous_data_shape = [-1] * t.contiguous_data.ndim
+    new_contiguous_data = t.contiguous_data
+    new_v_to_ps = t.v_to_ps
+    n_added_physical_dims = 0
+    for dim, (ps, orig_size, new_size) in enumerate(zip(t.v_to_ps, t.shape, sizes, strict=True)):
+        if len(ps) > 0 and orig_size != new_size and new_size != -1:
+            raise ValueError(
+                f"Cannot expand dim {dim} of size != 1. Found size {orig_size} and target size "
+                f"{new_size}."
+            )
 
-    for dim, (original_size, new_size) in enumerate(zip(t.shape, sizes)):
-        if new_size != original_size:
-            if original_size != 1:
-                raise ValueError("Cannot yet expand dim whose size != 1.")
+        if len(ps) == 0 and new_size != 1 and new_size != -1:
+            # Add a dimension of size new_size at the end of the physical tensor.
+            new_physical_shape = list(new_contiguous_data.shape) + [new_size]
+            new_contiguous_data = new_contiguous_data.unsqueeze(-1).expand(new_physical_shape)
+            new_v_to_ps[dim] = [t.contiguous_data.ndim + n_added_physical_dims]
+            n_added_physical_dims += 1
 
-            if len(t.v_to_ps[dim]) != 1:
-                raise ValueError(
-                    "Cannot yet expand virtual dim corresponding to several physical dims"
-                )
+    new_v_to_ps, destination = sort_dst(new_v_to_ps)
+    new_contiguous_data = new_contiguous_data.movedim(list(range(len(destination))), destination)
 
-            physical_dim = t.v_to_ps[dim][0]
-
-            # Verify that we don't have two virtual dims expanding the same physical dim differently
-            previous_value = new_contiguous_data_shape[physical_dim]
-            assert previous_value == -1 or previous_value == new_size
-
-            new_contiguous_data_shape[physical_dim] = new_size
-
-    new_contiguous_data = aten.expand.default(t.contiguous_data, new_contiguous_data_shape)
-
-    # Not sure if it's safe to just provide v_to_ps as-is. I think we're supposed to copy it.
-    return DiagonalSparseTensor(new_contiguous_data, t.v_to_ps)
+    return DiagonalSparseTensor(new_contiguous_data, new_v_to_ps)
 
 
 @implements(aten.div.Scalar)
@@ -421,9 +427,9 @@ def slice_Tensor(
 
 
 @implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor, t2: DiagonalSparseTensor) -> DiagonalSparseTensor:
-    # Element-wise multiplication where t1 is dense and t2 is DST
-    assert isinstance(t2, DiagonalSparseTensor)
+def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
+    # Element-wise multiplication
+    assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
     new_contiguous_data = aten.mul.Tensor(t1, t2.contiguous_data)
     return DiagonalSparseTensor(new_contiguous_data, t2.v_to_ps)
