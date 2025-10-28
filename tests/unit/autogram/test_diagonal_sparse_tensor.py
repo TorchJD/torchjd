@@ -9,6 +9,7 @@ from torchjd.autogram.diagonal_sparse_tensor import (
     _POINTWISE_FUNCTIONS,
     DiagonalSparseTensor,
     einsum,
+    sort_dst,
 )
 
 
@@ -184,3 +185,21 @@ def test_view2(
     assert list(result.contiguous_data.shape) == expected_data_shape
     assert result.v_to_ps == expected_v_to_ps
     assert torch.all(torch.eq(result.to_dense(), expected))
+
+
+@mark.parametrize(
+    ["v_to_ps", "expected_sorted_v_to_ps", "expected_destination"],
+    [
+        ([[0], [1, 0], [2, 1, 3]], [[0], [1, 0], [2, 1, 3]], [0, 1, 2, 3]),
+        ([[1, 0], [3, 2, 1]], [[0, 1], [2, 3, 0]], [1, 0, 3, 2]),
+    ],
+)
+def test_sort_dst(
+    v_to_ps: list[list[int]],
+    expected_sorted_v_to_ps: list[list[int]],
+    expected_destination: list[int],
+):
+    sorted_v_to_ps, destination = sort_dst(v_to_ps)
+
+    assert sorted_v_to_ps == expected_sorted_v_to_ps
+    assert destination == expected_destination
