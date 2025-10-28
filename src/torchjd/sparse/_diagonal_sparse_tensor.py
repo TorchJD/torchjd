@@ -173,6 +173,40 @@ def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]
     return [res[i] for i in range(len(res))]
 
 
+def get_groupings(v_to_ps: list[list[int]]) -> list[list[int]]:
+    """Example: [[0, 1, 2], [2, 0, 1], [2]] => [[0, 1], [2]]"""
+
+    mapping = dict[int, list[int]]()
+
+    for p_dims in v_to_ps:
+        for i, p_dim in enumerate(p_dims):
+            if p_dim not in mapping:
+                mapping[p_dim] = p_dims[i:]
+            else:
+                mapping[p_dim] = longest_common_prefix(mapping[p_dim], p_dims[i:])
+
+    groups = []
+    visited_is = set()
+    for i, group in mapping.items():
+        if i in visited_is:
+            continue
+
+        groups.append(group)
+        visited_is.update(set(group))
+
+    return groups
+
+
+def longest_common_prefix(l1: list[int], l2: list[int]) -> list[int]:
+    prefix = []
+    for a, b in zip(l1, l2, strict=False):
+        if a == b:
+            prefix.append(a)
+        else:
+            break
+    return prefix
+
+
 def encode_by_order(input: list[int]) -> tuple[list[int], list[int]]:
     """
     Encodes values based on the order of their first appearance, starting at 0 and incrementing.
@@ -236,11 +270,23 @@ def fix_dim_of_size_1(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tenso
     return physical, v_to_ps
 
 
+def fix_ungrouped_dims(
+    physical: Tensor, v_to_ps: list[list[int]]
+) -> tuple[Tensor, list[list[int]]]:
+    groups = get_groupings(v_to_ps)
+    physical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
+    mapping = {group[0]: i for i, group in enumerate(groups)}
+    new_v_to_ps = [[mapping[i] for i in dims if i in mapping] for dims in v_to_ps]
+
+    return physical, new_v_to_ps
+
+
 def make_dst(physical: Tensor, v_to_ps: list[list[int]]) -> DiagonalSparseTensor:
     """Fix physical and v_to_ps and create a DiagonalSparseTensor with them."""
 
     physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
     physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
+    physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
     return DiagonalSparseTensor(physical, v_to_ps)
 
 

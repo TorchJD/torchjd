@@ -10,6 +10,8 @@ from torchjd.sparse._diagonal_sparse_tensor import (
     DiagonalSparseTensor,
     einsum,
     encode_by_order,
+    fix_ungrouped_dims,
+    get_groupings,
 )
 
 
@@ -161,3 +163,35 @@ def test_encode_by_order(
 
     assert output == expected_output
     assert destination == expected_destination
+
+
+@mark.parametrize(
+    ["v_to_ps", "expected_groupings"],
+    [
+        ([[0, 1, 2], [2, 0, 1], [2]], [[0, 1], [2]]),
+    ],
+)
+def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[int]]):
+    groupings = get_groupings(v_to_ps)
+    print(groupings)
+
+    assert groupings == expected_groupings
+
+
+@mark.parametrize(
+    ["physical_shape", "v_to_ps", "expected_physical_shape", "expected_v_to_ps"],
+    [
+        ([3, 4, 5], [[0, 1, 2], [2, 0, 1], [2]], [12, 5], [[0, 1], [1, 0], [1]]),
+    ],
+)
+def test_fix_ungrouped_dims(
+    physical_shape: list[int],
+    v_to_ps: list[list[int]],
+    expected_physical_shape: list[int],
+    expected_v_to_ps: list[list[int]],
+):
+    physical = torch.randn(physical_shape)
+    fixed_physical, fixed_v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
+
+    assert list(fixed_physical.shape) == expected_physical_shape
+    assert fixed_v_to_ps == expected_v_to_ps
