@@ -5,7 +5,7 @@ from math import prod
 import torch
 from torch import Tensor
 from torch.ops import aten  # type: ignore
-from torch.utils._pytree import tree_map
+from torch.utils._pytree import tree_flatten, tree_map, tree_unflatten
 
 _HANDLED_FUNCTIONS = dict()
 from functools import wraps
@@ -163,21 +163,36 @@ class DiagonalSparseTensor(torch.Tensor):
         return info
 
 
-def sort_dst(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
+def first_sort(input: list[int]) -> tuple[list[int], list[int]]:
+    """
+    Sorts a list of ints so that the first element to appear for the first time is 0, the second is
+    1, etc. Elements may appear anywhere after their first appearance. Returns the sorted list and
+    list corresponding to the destination of each original int. destination[i] = j means that
+    all elements of value i in input are mapping to j in sorted list.
+
+    Examples:
+        [1, 0, 3, 2] => [0, 1, 2, 3], [1, 0, 3, 2]
+        [0, 2, 0, 1] => [0, 1, 0, 2], [0, 2, 1]
+        [1, 0, 0, 1] => [0, 1, 1, 0], [1, 0]
+    """
+
     mapping = dict[int, int]()
     curr = 0
-    res_v_to_ps = list[list[int]]()
-    for p_dims in v_to_ps:
-        new_p_dims = list[int]()
-        for p_dim in p_dims:
-            if p_dim not in mapping:
-                mapping[p_dim] = curr
-                curr += 1
-            new_p_dims.append(mapping[p_dim])
-        res_v_to_ps.append(new_p_dims)
-
+    output = []
+    for v in input:
+        if v not in mapping:
+            mapping[v] = curr
+            curr += 1
+        output.append(mapping[v])
     destination = [mapping[i] for i in range(len(mapping))]
-    return res_v_to_ps, destination
+
+    return output, destination
+
+
+def first_sort_v_to_ps(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
+    flat_v_to_ps, spec = tree_flatten(v_to_ps)
+    sorted_flat_v_to_ps, destination = first_sort(flat_v_to_ps)
+    return tree_unflatten(sorted_flat_v_to_ps, spec), destination
 
 
 def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
@@ -394,7 +409,7 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
             new_v_to_ps[dim] = [t.contiguous_data.ndim + n_added_physical_dims]
             n_added_physical_dims += 1
 
-    new_v_to_ps, destination = sort_dst(new_v_to_ps)
+    new_v_to_ps, destination = first_sort_v_to_ps(new_v_to_ps)
     new_contiguous_data = new_contiguous_data.movedim(list(range(len(destination))), destination)
 
     return DiagonalSparseTensor(new_contiguous_data, new_v_to_ps)
