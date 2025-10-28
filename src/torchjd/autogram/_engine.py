@@ -175,9 +175,9 @@ class Engine:
                 )
 
             output_dims = list(range(output.ndim))
-            physical_data = torch.ones_like(output).squeeze()
+            physical = torch.ones_like(output).squeeze()
             v_to_ps = [[dim] if output.shape[dim] != 1 else [] for dim in output_dims * 2]
-            jac_output = DiagonalSparseTensor(physical_data, v_to_ps)
+            jac_output = DiagonalSparseTensor(physical, v_to_ps)
 
             vmapped_diff = differentiation
             for _ in output_dims:
