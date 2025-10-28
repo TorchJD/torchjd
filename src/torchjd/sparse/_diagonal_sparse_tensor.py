@@ -35,7 +35,8 @@ class DiagonalSparseTensor(torch.Tensor):
 
     def __init__(self, physical: Tensor, v_to_ps: list[list[int]]):
         """
-        This constructor is made for specifying physical and v_to_ps exactly. It should not modify it.
+        This constructor is made for specifying physical and v_to_ps exactly. It should not modify
+        it.
 
         For this reason, another constructor will be made to either modify the physical / v_to_ps to
         simplify the result, or to create a dense tensor directly if it's already dense. It could
