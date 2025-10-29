@@ -28,13 +28,25 @@ def test_to_dense():
             assert c[i, j, j, i] == a[i, j]
 
 
-def test_einsum():
-    a = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [0], [1]])
-    b = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [1], [1]])
+@mark.parametrize(
+    ["a_pshape", "a_v_to_ps", "b_pshape", "b_v_to_ps", "a_indices", "b_indices", "output_indices"],
+    [([4, 5], [[0], [0], [1]], [4, 5], [[0], [1], [1]], [0, 1, 2], [0, 2, 3], [0, 1, 3])],
+)
+def test_einsum(
+    a_pshape: list[int],
+    a_v_to_ps: list[list[int]],
+    b_pshape: list[int],
+    b_v_to_ps: list[list[int]],
+    a_indices: list[int],
+    b_indices: list[int],
+    output_indices: list[int],
+):
+    a = DiagonalSparseTensor(torch.randn(a_pshape), a_v_to_ps)
+    b = DiagonalSparseTensor(torch.randn(b_pshape), b_v_to_ps)
 
-    res = einsum((a, [0, 1, 2]), (b, [0, 2, 3]), output=[0, 1, 3])
+    res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
-    expected = torch.einsum("ijk,ikl->ijl", a.to_dense(), b.to_dense())
+    expected = torch.einsum(a.to_dense(), a_indices, b.to_dense(), b_indices, output_indices)
     assert_close(res.to_dense(), expected)
 
 
