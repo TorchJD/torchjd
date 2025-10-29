@@ -603,11 +603,21 @@ def slice_Tensor(
 
 
 @DiagonalSparseTensor.implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
+def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> DiagonalSparseTensor:
     # Element-wise multiplication with broadcasting
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
-    t1_, t2_ = aten.broadcast_tensors.default([t1, t2])
+    if isinstance(t1, int) or isinstance(t1, float):
+        t1_ = torch.tensor(t1, device=t2.device)
+    else:
+        t1_ = t1
+
+    if isinstance(t2, int) or isinstance(t2, float):
+        t2_ = torch.tensor(t2, device=t1.device)
+    else:
+        t2_ = t2
+
+    t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
     t1_ = to_diagonal_sparse_tensor(t1_)
     t2_ = to_diagonal_sparse_tensor(t2_)
 
