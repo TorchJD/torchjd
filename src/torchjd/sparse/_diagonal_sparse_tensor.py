@@ -592,11 +592,15 @@ def slice_Tensor(
 
 @DiagonalSparseTensor.implements(aten.mul.Tensor)
 def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
-    # Element-wise multiplication
+    # Element-wise multiplication with broadcasting
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
-    new_physical = aten.mul.Tensor(t1, t2.physical)
-    return DiagonalSparseTensor(new_physical, t2.v_to_ps)
+    t1_, t2_ = aten.broadcast_tensors.default([t1, t2])
+    t1_ = to_diagonal_sparse_tensor(t1_)
+    t2_ = to_diagonal_sparse_tensor(t2_)
+
+    all_dims = list(range(t1_.ndim))
+    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
 @DiagonalSparseTensor.implements(aten.transpose.int)
