@@ -369,17 +369,17 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     p_shape = t.physical.shape
     for s in shape:
         group = []
-        current_product = 1
+        current_size = 1
 
-        while current_product < s:
+        while current_size < s:
             if idx >= len(flat_v_to_ps):
                 raise ValueError()
 
             group.append(flat_v_to_ps[idx])
-            current_product *= p_shape[flat_v_to_ps[idx]]
+            current_size *= p_shape[flat_v_to_ps[idx]]
             idx += 1
 
-            if current_product > s:
+            if current_size > s:
                 raise ValueError()
 
         new_v_to_ps.append(group)
