@@ -534,7 +534,8 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSpar
     new_v_to_ps[dim0] = t.v_to_ps[dim1]
     new_v_to_ps[dim1] = t.v_to_ps[dim0]
 
-    return DiagonalSparseTensor(t.physical, new_v_to_ps)
+    new_physical, new_v_to_ps = fix_dim_encoding(t.physical, new_v_to_ps)
+    return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
 def einsum(
