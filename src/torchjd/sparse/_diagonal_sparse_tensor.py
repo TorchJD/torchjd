@@ -90,11 +90,13 @@ class DiagonalSparseTensor(torch.Tensor):
             for dims in self.v_to_ps
         ]
 
-        p_index_ranges = [torch.arange(s, device=self.physical.device) for s in self.physical.shape]
+        # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
+        #  what's faster
+        p_index_ranges = [torch.arange(s) for s in self.physical.shape]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
         v_indices_grid = list[Tensor]()
         for stride, dims in zip(strides, self.v_to_ps):
-            stride_ = torch.tensor(stride, device=self.physical.device, dtype=torch.int)
+            stride_ = torch.tensor(stride, dtype=torch.int)
 
             if len(dims) > 0:
                 v_indices_grid.append(
@@ -103,7 +105,7 @@ class DiagonalSparseTensor(torch.Tensor):
                     )
                 )
             else:
-                v_indices_grid.append(torch.tensor(0, device=self.physical.device, dtype=torch.int))
+                v_indices_grid.append(torch.tensor(0, dtype=torch.int))
             # This is supposed to be a vector of shape d_1 * d_2 ...
             # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
             # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
