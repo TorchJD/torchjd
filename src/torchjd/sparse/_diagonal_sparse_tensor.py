@@ -202,7 +202,8 @@ def get_groupings(v_to_ps: list[list[int]]) -> list[list[int]]:
         if i in visited_is:
             continue
 
-        groups.append(group)
+        available_dims = set(group) - visited_is
+        groups.append(list(available_dims))
         visited_is.update(set(group))
 
     return groups

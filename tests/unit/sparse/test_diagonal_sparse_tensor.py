@@ -184,6 +184,7 @@ def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[i
     ["physical_shape", "v_to_ps", "expected_physical_shape", "expected_v_to_ps"],
     [
         ([3, 4, 5], [[0, 1, 2], [2, 0, 1], [2]], [12, 5], [[0, 1], [1, 0], [1]]),
+        ([32, 20, 8], [[0], [1, 0], [2]], [32, 20, 8], [[0], [1, 0], [2]]),
     ],
 )
 def test_fix_ungrouped_dims(
