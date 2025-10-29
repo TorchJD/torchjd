@@ -8,7 +8,7 @@ on:
 
 env:
   UV_NO_SYNC: 1
-  PYTHON_VERSION: 3.13
+  PYTHON_VERSION: '3.13'
 
 jobs:
   build-deploy-doc:
