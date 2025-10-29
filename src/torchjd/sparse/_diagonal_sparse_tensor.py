@@ -376,9 +376,22 @@ def unsquash_pdim(
     return new_physical, new_encoding
 
 
+def infer_shape(shape: list[int], numel: int) -> list[int]:
+    if shape.count(-1) > 1:
+        raise ValueError("Only one dimension can be inferred")
+    known = 1
+    for s in shape:
+        if s != -1:
+            known *= s
+    inferred = numel // known
+    return [inferred if s == -1 else s for s in shape]
+
+
 @DiagonalSparseTensor.implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
+
+    shape = infer_shape(shape, t.numel())
 
     if prod(shape) != t.numel():
         raise ValueError(f"shape '{shape}' is invalid for input of size {t.numel()}")
