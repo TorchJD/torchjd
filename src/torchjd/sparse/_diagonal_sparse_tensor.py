@@ -385,28 +385,56 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     new_v_to_ps = []
     idx = 0
     flat_v_to_ps = [dim for dims in t.v_to_ps for dim in dims]
-    p_shape = t.physical.shape
+    new_physical = t.physical
     for s in shape:
         group = []
         current_size = 1
 
         while current_size < s:
             if idx >= len(flat_v_to_ps):
+                # TODO: I don't think this can happen, need to review and remove if I'm right.
                 raise ValueError()
 
-            group.append(flat_v_to_ps[idx])
-            current_size *= p_shape[flat_v_to_ps[idx]]
+            pdim = flat_v_to_ps[idx]
+            pdim_size = new_physical.shape[pdim]
+
+            if current_size * pdim_size > s:
+                # Need to split physical dimension
+                if s % current_size != 0:
+                    raise ValueError("Can't split physical dimension")
+
+                new_pdim_first_dim_size = s // current_size
+
+                if pdim_size % new_pdim_first_dim_size != 0:
+                    raise ValueError("Can't split physical dimension")
+
+                new_pdim_shape = [new_pdim_first_dim_size, pdim_size // new_pdim_first_dim_size]
+                new_physical, new_encoding = unsquash_pdim(new_physical, pdim, new_pdim_shape)
+
+                new_v_to_ps = [
+                    [new_d for d in dims for new_d in new_encoding[d]] for dims in new_v_to_ps
+                ]
+                # A bit of a weird trick here. We want to re-encode flat_v_to_ps according to
+                # new_encoding. However, re-encoding elements before idx would potentially change
+                # the length of the list before idx, so idx would not have the right value anymore.
+                # Since we don't need the elements of flat_v_to_ps that are before idx anyway, we
+                # just get rid of them and re-encode flat_v_to_ps[idx:] instead, and reset idx to 0
+                # to say that we're back at the beginning of this new list.
+                flat_v_to_ps = [new_d for d in flat_v_to_ps[idx:] for new_d in new_encoding[d]]
+                idx = 0
+
+            group.append(pdim)
+            current_size *= new_physical.shape[pdim]
             idx += 1
-
-            if current_size > s:
-                raise ValueError()
 
         new_v_to_ps.append(group)
 
     if idx != len(flat_v_to_ps):
         raise ValueError(f"idx != len(flat_v_to_ps). {idx}; {flat_v_to_ps}; {shape}; {t.v_to_ps}")
 
-    return DiagonalSparseTensor(t.physical, new_v_to_ps)
+    # The above code does not handle physical dimension squashing, so the physical is not
+    # necessarily maximally squashed at this point, so we need the safe constructor.
+    return make_dst(new_physical, new_v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.expand.default)
