@@ -692,8 +692,18 @@ def einsum(
     # First part of the algorithm, determine how to cluster physical indices as well as the common
     # p_shapes corresponding to matching v_dims. Second part translates to physical einsum.
 
-    # new plan for first part:
     # get a map from einsum index to (tensor_idx, v_dims)
+    # get a map from einsum index to merge of strides corresponding to v_dims with that index
+    # use to_target_physical_strides on each physical and v_to_ps
+    # cluster pairs of (einsum_index, new_stride) using new_v_to_ps and possibly its corresponding
+    #  p_to_vs
+    # get unique indices
+    # map output indices (there can be splits)
+    # call physical einsum
+    # build resulting dst
+
+    # OVER
+
     # an index in the physical einsum is uniquely characterized by a virtual einsum index and a
     # stride corresponding to the physical stride in the virtual one (note that as the virtual shape
     # for two virtual index that match should match, then we want to match the strides and reshape
