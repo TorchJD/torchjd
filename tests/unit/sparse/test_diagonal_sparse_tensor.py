@@ -169,6 +169,7 @@ def test_encode_by_order(
     ["v_to_ps", "expected_groupings"],
     [
         ([[0, 1, 2], [2, 0, 1], [2]], [[0, 1], [2]]),
+        ([[0, 1, 0, 1]], [[0, 1]]),
     ],
 )
 def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[int]]):
