@@ -353,6 +353,25 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.physical, new_v_to_ps)
 
 
+def unsquash_pdim(
+    physical: Tensor, v_to_ps: list[list[int]], pdim: int, new_pdim_shape: list[int]
+) -> tuple[Tensor, list[list[int]]]:
+    new_shape = list(physical.shape)
+    new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
+    new_physical = physical.reshape(new_shape)
+
+    def new_encodings(d: int) -> list[int]:
+        if d < pdim:
+            return [d]
+        elif d > pdim:
+            return [d + len(new_pdim_shape) - 1]
+        else:
+            return [pdim + i for i in range(len(new_pdim_shape))]
+
+    new_v_to_ps = [[new_d for d in dims for new_d in new_encodings(d)] for dims in v_to_ps]
+    return new_physical, new_v_to_ps
+
+
 @DiagonalSparseTensor.implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
     # TODO: add error message when error is raised

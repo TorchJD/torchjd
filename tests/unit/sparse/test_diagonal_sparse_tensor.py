@@ -12,6 +12,7 @@ from torchjd.sparse._diagonal_sparse_tensor import (
     encode_by_order,
     fix_ungrouped_dims,
     get_groupings,
+    unsquash_pdim,
 )
 
 
@@ -195,3 +196,46 @@ def test_fix_ungrouped_dims(
 
     assert list(fixed_physical.shape) == expected_physical_shape
     assert fixed_v_to_ps == expected_v_to_ps
+
+
+@mark.parametrize(
+    [
+        "physical_shape",
+        "v_to_ps",
+        "pdim",
+        "new_pdim_shape",
+        "expected_physical_shape",
+        "expected_v_to_ps",
+    ],
+    [
+        ([4], [[0], [0]], 0, [4], [4], [[0], [0]]),  # trivial
+        ([4], [[0], [0]], 0, [2, 2], [2, 2], [[0, 1], [0, 1]]),
+        (
+            [3, 4, 5],
+            [[0, 1, 2], [1], [2, 1, 0], [0, 0, 1, 1, 2, 2], [2, 2, 1, 1, 0, 0]],
+            1,
+            [2, 1, 1, 2],
+            [3, 2, 1, 1, 2, 5],
+            [
+                [0, 1, 2, 3, 4, 5],
+                [1, 2, 3, 4],
+                [5, 1, 2, 3, 4, 0],
+                [0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 5],
+                [5, 5, 1, 2, 3, 4, 1, 2, 3, 4, 0, 0],
+            ],
+        ),
+    ],
+)
+def test_unsquash_pdim(
+    physical_shape: list[int],
+    v_to_ps: list[list[int]],
+    pdim: int,
+    new_pdim_shape: list[int],
+    expected_physical_shape: list[int],
+    expected_v_to_ps: list[list[int]],
+):
+    physical = torch.randn(physical_shape)
+    new_physical, new_v_to_ps = unsquash_pdim(physical, v_to_ps, pdim, new_pdim_shape)
+
+    assert list(new_physical.shape) == expected_physical_shape
+    assert new_v_to_ps == expected_v_to_ps
