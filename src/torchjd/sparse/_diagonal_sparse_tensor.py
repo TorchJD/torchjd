@@ -501,6 +501,15 @@ def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.threshold_backward.default)
+def threshold_backward_default(
+    grad_output: DiagonalSparseTensor, self: Tensor, threshold
+) -> DiagonalSparseTensor:
+    new_physical = aten.threshold_backward.default(grad_output.physical, self, threshold)
+
+    return DiagonalSparseTensor(new_physical, grad_output.v_to_ps)
+
+
 @DiagonalSparseTensor.implements(aten.slice.Tensor)
 def slice_Tensor(
     t: DiagonalSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
