@@ -317,6 +317,23 @@ def sum_default(t: DiagonalSparseTensor) -> Tensor:
     return aten.sum.default(t.physical)
 
 
+@DiagonalSparseTensor.implements(aten.sum.dim_IntList)
+def sum_dim_IntList(t: DiagonalSparseTensor, dim: list[int], keepdim: bool, dtype=None) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if dtype:
+        raise NotImplementedError()
+
+    all_dims = list(range(t.ndim))
+    result = einsum((t, all_dims), output=[d for d in all_dims if d not in dim])
+
+    if keepdim:
+        for d in dim:
+            result = result.unsqueeze(d)
+
+    return result
+
+
 @DiagonalSparseTensor.implements(aten.pow.Tensor_Scalar)
 def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
