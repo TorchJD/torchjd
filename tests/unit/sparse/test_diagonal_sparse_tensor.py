@@ -201,41 +201,26 @@ def test_fix_ungrouped_dims(
 @mark.parametrize(
     [
         "physical_shape",
-        "v_to_ps",
         "pdim",
         "new_pdim_shape",
         "expected_physical_shape",
-        "expected_v_to_ps",
+        "expected_new_encoding",
     ],
     [
-        ([4], [[0], [0]], 0, [4], [4], [[0], [0]]),  # trivial
-        ([4], [[0], [0]], 0, [2, 2], [2, 2], [[0, 1], [0, 1]]),
-        (
-            [3, 4, 5],
-            [[0, 1, 2], [1], [2, 1, 0], [0, 0, 1, 1, 2, 2], [2, 2, 1, 1, 0, 0]],
-            1,
-            [2, 1, 1, 2],
-            [3, 2, 1, 1, 2, 5],
-            [
-                [0, 1, 2, 3, 4, 5],
-                [1, 2, 3, 4],
-                [5, 1, 2, 3, 4, 0],
-                [0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 5],
-                [5, 5, 1, 2, 3, 4, 1, 2, 3, 4, 0, 0],
-            ],
-        ),
+        ([4], 0, [4], [4], [[0]]),  # trivial
+        ([4], 0, [2, 2], [2, 2], [[0, 1]]),
+        ([3, 4, 5], 1, [2, 1, 1, 2], [3, 2, 1, 1, 2, 5], [[0], [1, 2, 3, 4], [5]]),
     ],
 )
 def test_unsquash_pdim(
     physical_shape: list[int],
-    v_to_ps: list[list[int]],
     pdim: int,
     new_pdim_shape: list[int],
     expected_physical_shape: list[int],
-    expected_v_to_ps: list[list[int]],
+    expected_new_encoding: list[list[int]],
 ):
     physical = torch.randn(physical_shape)
-    new_physical, new_v_to_ps = unsquash_pdim(physical, v_to_ps, pdim, new_pdim_shape)
+    new_physical, new_encoding = unsquash_pdim(physical, pdim, new_pdim_shape)
 
     assert list(new_physical.shape) == expected_physical_shape
-    assert new_v_to_ps == expected_v_to_ps
+    assert new_encoding == expected_new_encoding

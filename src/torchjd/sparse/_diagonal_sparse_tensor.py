@@ -354,13 +354,13 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
 
 
 def unsquash_pdim(
-    physical: Tensor, v_to_ps: list[list[int]], pdim: int, new_pdim_shape: list[int]
+    physical: Tensor, pdim: int, new_pdim_shape: list[int]
 ) -> tuple[Tensor, list[list[int]]]:
     new_shape = list(physical.shape)
     new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
     new_physical = physical.reshape(new_shape)
 
-    def new_encodings(d: int) -> list[int]:
+    def new_encoding_fn(d: int) -> list[int]:
         if d < pdim:
             return [d]
         elif d > pdim:
@@ -368,8 +368,8 @@ def unsquash_pdim(
         else:
             return [pdim + i for i in range(len(new_pdim_shape))]
 
-    new_v_to_ps = [[new_d for d in dims for new_d in new_encodings(d)] for dims in v_to_ps]
-    return new_physical, new_v_to_ps
+    new_encoding = [new_encoding_fn(d) for d in range(len(physical.shape))]
+    return new_physical, new_encoding
 
 
 @DiagonalSparseTensor.implements(aten.view.default)
