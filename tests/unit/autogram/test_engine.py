@@ -309,7 +309,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     the model parameters is specified.
     """
 
-    model = SimpleBranched()
+    model = ModuleFactory(SimpleBranched)()
     batch_size = 64
     inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
