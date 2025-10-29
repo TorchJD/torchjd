@@ -378,9 +378,6 @@ def unsquash_pdim(
 
 @DiagonalSparseTensor.implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
-    # TODO: add error message when error is raised
-    # TODO: handle case where the physical has to be reshaped
-
     assert isinstance(t, DiagonalSparseTensor)
 
     if prod(shape) != t.numel():
