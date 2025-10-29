@@ -128,12 +128,22 @@ class DiagonalSparseTensor(torch.Tensor):
             else:
                 return t
 
+        def tensor_to_str(tensor: Tensor) -> str:
+            result = f"{tensor.__class__.__name__} - shape: {tensor.shape}"
+            if isinstance(tensor, DiagonalSparseTensor):
+                result += f" - pshape: {tensor.physical.shape} - v_to_ps: {tensor.v_to_ps}"
+
+            return result
+
         print(f"Falling back to dense for {func.__name__}")
         if len(args) > 0:
             print("* args:")
             for arg in args:
                 if isinstance(arg, Tensor):
-                    print(f"  > {arg.__class__.__name__} - {arg.shape}")
+                    print(f"  > {tensor_to_str(arg)}")
+                elif isinstance(arg, list) and len(arg) > 0 and isinstance(arg[0], Tensor):
+                    list_content = "\n     ".join([tensor_to_str(t) for t in arg])
+                    print(f"  > [{list_content}]")
                 else:
                     print(f"  > {arg}")
         if len(kwargs) > 0:
