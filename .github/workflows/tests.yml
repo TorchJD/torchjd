@@ -8,7 +8,7 @@ on:
 
 env:
   UV_NO_SYNC: 1
-  PYTHON_VERSION: 3.13
+  PYTHON_VERSION: 3.14
 
 jobs:
   tests-full-install:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false  # Ensure matrix jobs keep running even if one fails
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
