@@ -615,6 +615,16 @@ def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
+@DiagonalSparseTensor.implements(aten.mul.Scalar)
+def mul_Scalar(t: DiagonalSparseTensor, scalar) -> DiagonalSparseTensor:
+    # TODO: maybe it could be that scalar is a scalar DST and t is a normal tensor. Need to check
+    #  that
+
+    assert isinstance(t, DiagonalSparseTensor)
+    new_physical = aten.mul.Scalar(t.physical, scalar)
+    return DiagonalSparseTensor(new_physical, t.v_to_ps)
+
+
 @DiagonalSparseTensor.implements(aten.transpose.int)
 def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
