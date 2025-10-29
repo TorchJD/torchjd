@@ -510,6 +510,33 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
     return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.broadcast_tensors.default)
+def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
+    if len(tensors) != 2:
+        raise NotImplementedError()
+
+    t1, t2 = tensors
+
+    if t1.shape == t2.shape:
+        return t1, t2
+
+    a = t1 if t1.ndim >= t2.ndim else t2
+    b = t2 if t1.ndim >= t2.ndim else t1
+
+    a_shape = list(a.shape)
+    padded_b_shape = [1] * (a.ndim - b.ndim) + list(b.shape)
+
+    new_shape = list[int]()
+
+    for s_a, s_b in zip(a_shape, padded_b_shape):
+        if s_a != 1 and s_b != 1 and s_a != s_b:
+            raise ValueError("Incompatible shapes for broadcasting")
+        else:
+            new_shape.append(max(s_a, s_b))
+
+    return aten.expand.default(t1, new_shape), aten.expand.default(t2, new_shape)
+
+
 @DiagonalSparseTensor.implements(aten.div.Scalar)
 def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
