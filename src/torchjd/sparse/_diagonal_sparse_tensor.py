@@ -84,11 +84,8 @@ class DiagonalSparseTensor(torch.Tensor):
         # and so, if we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2]
         # which isa unique decomposition, then this corresponds to indexing dimensions v_to_ps[i] at
         # indices [j_0, j_1, j_2]
-        s = self.physical.shape
-        strides = [
-            list(accumulate([1] + [s[dim] for dim in dims[:0:-1]], operator.mul))[::-1]
-            for dims in self.v_to_ps
-        ]
+        s = list(self.physical.shape)
+        strides = [strides_from_p_dims_and_p_shape(dims, s) for dims in self.v_to_ps]
 
         # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
         #  what's faster
@@ -179,6 +176,12 @@ class DiagonalSparseTensor(torch.Tensor):
             return func
 
         return decorator
+
+
+def strides_from_p_dims_and_p_shape(p_dims: list[int], physical_shape: list[int]) -> list[int]:
+    return list(accumulate([1] + [physical_shape[dim] for dim in p_dims[:0:-1]], operator.mul))[
+        ::-1
+    ]
 
 
 def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]]:
@@ -650,6 +653,18 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSpar
 def einsum(
     *args: tuple[DiagonalSparseTensor, list[int]], output: list[int]
 ) -> DiagonalSparseTensor:
+
+    # First part of the algorithm, determine how to cluster physical indices as well as the common
+    # p_shapes corresponding to matching v_dims. Second part translates to physical einsum.
+
+    # new plan for first part:
+    # get a map from einsum index to (tensor_idx, v_dims)
+    # an index in the physical einsum is uniquely characterized by a virtual einsum index and a
+    # stride corresponding to the physical stride in the virtual one (note that as the virtual shape
+    # for two virtual index that match should match, then we want to match the strides and reshape
+    # accordingly).
+    # We want to cluster such indices whenever several appear in the same p_to_vs
+
     # TODO: Handle ellipsis
     # If we have an index v for some virtual dim whose corresponding v_to_ps is a non-trivial list
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
