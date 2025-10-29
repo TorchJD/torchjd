@@ -12,6 +12,7 @@ from torchjd.sparse._diagonal_sparse_tensor import (
     encode_by_order,
     fix_ungrouped_dims,
     get_groupings,
+    unsquash_pdim,
 )
 
 
@@ -27,13 +28,31 @@ def test_to_dense():
             assert c[i, j, j, i] == a[i, j]
 
 
-def test_einsum():
-    a = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [0], [1]])
-    b = DiagonalSparseTensor(torch.randn([4, 5]), [[0], [1], [1]])
+@mark.parametrize(
+    ["a_pshape", "a_v_to_ps", "b_pshape", "b_v_to_ps", "a_indices", "b_indices", "output_indices"],
+    [
+        ([4, 5], [[0], [0], [1]], [4, 5], [[0], [1], [1]], [0, 1, 2], [0, 2, 3], [0, 1, 3]),
+        ([2, 3, 5], [[0, 1], [2, 0]], [10, 3], [[0], [1]], [0, 1], [1, 2], [0, 2]),
+        ([2, 3], [[0, 1]], [6], [[0]], [0], [0], []),
+    ],
+)
+def test_einsum(
+    a_pshape: list[int],
+    a_v_to_ps: list[list[int]],
+    b_pshape: list[int],
+    b_v_to_ps: list[list[int]],
+    a_indices: list[int],
+    b_indices: list[int],
+    output_indices: list[int],
+):
+    a = DiagonalSparseTensor(torch.randn(a_pshape), a_v_to_ps)
+    b = DiagonalSparseTensor(torch.randn(b_pshape), b_v_to_ps)
 
-    res = einsum((a, [0, 1, 2]), (b, [0, 2, 3]), output=[0, 1, 3])
+    res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
-    expected = torch.einsum("ijk,ikl->ijl", a.to_dense(), b.to_dense())
+    expected = torch.einsum(a.to_dense(), a_indices, b.to_dense(), b_indices, output_indices)
+
+    assert isinstance(res, DiagonalSparseTensor)
     assert_close(res.to_dense(), expected)
 
 
@@ -121,6 +140,7 @@ def test_unary(func):
         ([2, 3], [[0], [0], [1]], [12], [2, 3], [[0, 0, 1]]),  # squashing 3 dims
         ([2, 3], [[0, 0, 1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # unsquashing into 3 dims
         ([4], [[0], [0]], [2, 2, 4], [2, 2], [[0], [1], [0, 1]]),  # unsquashing physical dim
+        ([4], [[0], [0]], [4, 2, 2], [2, 2], [[0, 1], [0], [1]]),  # unsquashing physical dim
         ([2, 3, 4], [[0], [0], [1], [2]], [4, 12], [2, 12], [[0, 0], [1]]),  # world boss
         ([2, 12], [[0, 0], [1]], [2, 2, 3, 4], [2, 3, 4], [[0], [0], [1], [2]]),  # world boss
     ],
@@ -183,6 +203,7 @@ def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[i
     ["physical_shape", "v_to_ps", "expected_physical_shape", "expected_v_to_ps"],
     [
         ([3, 4, 5], [[0, 1, 2], [2, 0, 1], [2]], [12, 5], [[0, 1], [1, 0], [1]]),
+        ([32, 20, 8], [[0], [1, 0], [2]], [32, 20, 8], [[0], [1, 0], [2]]),
     ],
 )
 def test_fix_ungrouped_dims(
@@ -196,3 +217,31 @@ def test_fix_ungrouped_dims(
 
     assert list(fixed_physical.shape) == expected_physical_shape
     assert fixed_v_to_ps == expected_v_to_ps
+
+
+@mark.parametrize(
+    [
+        "physical_shape",
+        "pdim",
+        "new_pdim_shape",
+        "expected_physical_shape",
+        "expected_new_encoding",
+    ],
+    [
+        ([4], 0, [4], [4], [[0]]),  # trivial
+        ([4], 0, [2, 2], [2, 2], [[0, 1]]),
+        ([3, 4, 5], 1, [2, 1, 1, 2], [3, 2, 1, 1, 2, 5], [[0], [1, 2, 3, 4], [5]]),
+    ],
+)
+def test_unsquash_pdim(
+    physical_shape: list[int],
+    pdim: int,
+    new_pdim_shape: list[int],
+    expected_physical_shape: list[int],
+    expected_new_encoding: list[list[int]],
+):
+    physical = torch.randn(physical_shape)
+    new_physical, new_encoding = unsquash_pdim(physical, pdim, new_pdim_shape)
+
+    assert list(new_physical.shape) == expected_physical_shape
+    assert new_encoding == expected_new_encoding

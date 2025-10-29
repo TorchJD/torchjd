@@ -90,14 +90,22 @@ class DiagonalSparseTensor(torch.Tensor):
             for dims in self.v_to_ps
         ]
 
-        p_index_ranges = [torch.arange(s, device=self.physical.device) for s in self.physical.shape]
+        # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
+        #  what's faster
+        p_index_ranges = [torch.arange(s) for s in self.physical.shape]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
         v_indices_grid = list[Tensor]()
         for stride, dims in zip(strides, self.v_to_ps):
-            stride_ = torch.tensor(stride, device=self.physical.device, dtype=torch.int)
-            v_indices_grid.append(
-                torch.sum(torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1)
-            )
+            stride_ = torch.tensor(stride, dtype=torch.int)
+
+            if len(dims) > 0:
+                v_indices_grid.append(
+                    torch.sum(
+                        torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1
+                    )
+                )
+            else:
+                v_indices_grid.append(torch.tensor(0, dtype=torch.int))
             # This is supposed to be a vector of shape d_1 * d_2 ...
             # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
             # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
@@ -120,12 +128,22 @@ class DiagonalSparseTensor(torch.Tensor):
             else:
                 return t
 
+        def tensor_to_str(tensor: Tensor) -> str:
+            result = f"{tensor.__class__.__name__} - shape: {tensor.shape}"
+            if isinstance(tensor, DiagonalSparseTensor):
+                result += f" - pshape: {tensor.physical.shape} - v_to_ps: {tensor.v_to_ps}"
+
+            return result
+
         print(f"Falling back to dense for {func.__name__}")
         if len(args) > 0:
             print("* args:")
             for arg in args:
                 if isinstance(arg, Tensor):
-                    print(f"  > {arg.__class__.__name__} - {arg.shape}")
+                    print(f"  > {tensor_to_str(arg)}")
+                elif isinstance(arg, list) and len(arg) > 0 and isinstance(arg[0], Tensor):
+                    list_content = "\n     ".join([tensor_to_str(t) for t in arg])
+                    print(f"  > [{list_content}]")
                 else:
                     print(f"  > {arg}")
         if len(kwargs) > 0:
@@ -133,7 +151,10 @@ class DiagonalSparseTensor(torch.Tensor):
             for k, v in kwargs.items():
                 print(f"  > {k}: {v}")
         print()
-        return func(*tree_map(unwrap_to_dense, args), **tree_map(unwrap_to_dense, kwargs))
+
+        unwrapped_args = tree_map(unwrap_to_dense, args)
+        unwrapped_kwargs = tree_map(unwrap_to_dense, kwargs)
+        return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
         return f"DiagonalSparseTensor(physical={self.physical}, v_to_ps={self.v_to_ps})"
@@ -194,7 +215,8 @@ def get_groupings(v_to_ps: list[list[int]]) -> list[list[int]]:
         if i in visited_is:
             continue
 
-        groups.append(group)
+        available_dims = set(group) - visited_is
+        groups.append(list(available_dims))
         visited_is.update(set(group))
 
     return groups
@@ -305,6 +327,25 @@ def sum_default(t: DiagonalSparseTensor) -> Tensor:
     return aten.sum.default(t.physical)
 
 
+@DiagonalSparseTensor.implements(aten.sum.dim_IntList)
+def sum_dim_IntList(
+    t: DiagonalSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
+) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if dtype:
+        raise NotImplementedError()
+
+    all_dims = list(range(t.ndim))
+    result = einsum((t, all_dims), output=[d for d in all_dims if d not in dim])
+
+    if keepdim:
+        for d in dim:
+            result = result.unsqueeze(d)
+
+    return result
+
+
 @DiagonalSparseTensor.implements(aten.pow.Tensor_Scalar)
 def pow_Tensor_Scalar(t: DiagonalSparseTensor, exponent: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
@@ -345,12 +386,41 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.physical, new_v_to_ps)
 
 
+def unsquash_pdim(
+    physical: Tensor, pdim: int, new_pdim_shape: list[int]
+) -> tuple[Tensor, list[list[int]]]:
+    new_shape = list(physical.shape)
+    new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
+    new_physical = physical.reshape(new_shape)
+
+    def new_encoding_fn(d: int) -> list[int]:
+        if d < pdim:
+            return [d]
+        elif d > pdim:
+            return [d + len(new_pdim_shape) - 1]
+        else:
+            return [pdim + i for i in range(len(new_pdim_shape))]
+
+    new_encoding = [new_encoding_fn(d) for d in range(len(physical.shape))]
+    return new_physical, new_encoding
+
+
+def infer_shape(shape: list[int], numel: int) -> list[int]:
+    if shape.count(-1) > 1:
+        raise ValueError("Only one dimension can be inferred")
+    known = 1
+    for s in shape:
+        if s != -1:
+            known *= s
+    inferred = numel // known
+    return [inferred if s == -1 else s for s in shape]
+
+
 @DiagonalSparseTensor.implements(aten.view.default)
 def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
-    # TODO: add error message when error is raised
-    # TODO: handle case where the physical has to be reshaped
-
     assert isinstance(t, DiagonalSparseTensor)
+
+    shape = infer_shape(shape, t.numel())
 
     if prod(shape) != t.numel():
         raise ValueError(f"shape '{shape}' is invalid for input of size {t.numel()}")
@@ -358,28 +428,63 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     new_v_to_ps = []
     idx = 0
     flat_v_to_ps = [dim for dims in t.v_to_ps for dim in dims]
-    p_shape = t.physical.shape
+    new_physical = t.physical
     for s in shape:
         group = []
-        current_product = 1
+        current_size = 1
 
-        while current_product < s:
+        while current_size < s:
             if idx >= len(flat_v_to_ps):
+                # TODO: I don't think this can happen, need to review and remove if I'm right.
                 raise ValueError()
 
-            group.append(flat_v_to_ps[idx])
-            current_product *= p_shape[flat_v_to_ps[idx]]
+            pdim = flat_v_to_ps[idx]
+            pdim_size = new_physical.shape[pdim]
+
+            if current_size * pdim_size > s:
+                # Need to split physical dimension
+                if s % current_size != 0:
+                    raise ValueError("Can't split physical dimension")
+
+                new_pdim_first_dim_size = s // current_size
+
+                if pdim_size % new_pdim_first_dim_size != 0:
+                    raise ValueError("Can't split physical dimension")
+
+                new_pdim_shape = [new_pdim_first_dim_size, pdim_size // new_pdim_first_dim_size]
+                new_physical, new_encoding = unsquash_pdim(new_physical, pdim, new_pdim_shape)
+
+                new_v_to_ps = [
+                    [new_d for d in dims for new_d in new_encoding[d]] for dims in new_v_to_ps
+                ]
+                # A bit of a weird trick here. We want to re-encode flat_v_to_ps according to
+                # new_encoding. However, re-encoding elements before idx would potentially change
+                # the length of the list before idx, so idx would not have the right value anymore.
+                # Since we don't need the elements of flat_v_to_ps that are before idx anyway, we
+                # just get rid of them and re-encode flat_v_to_ps[idx:] instead, and reset idx to 0
+                # to say that we're back at the beginning of this new list.
+                flat_v_to_ps = [new_d for d in flat_v_to_ps[idx:] for new_d in new_encoding[d]]
+                idx = 0
+
+            group.append(pdim)
+            current_size *= new_physical.shape[pdim]
             idx += 1
-
-            if current_product > s:
-                raise ValueError()
 
         new_v_to_ps.append(group)
 
     if idx != len(flat_v_to_ps):
         raise ValueError(f"idx != len(flat_v_to_ps). {idx}; {flat_v_to_ps}; {shape}; {t.v_to_ps}")
 
-    return DiagonalSparseTensor(t.physical, new_v_to_ps)
+    # The above code does not handle physical dimension squashing, so the physical is not
+    # necessarily maximally squashed at this point, so we need the safe constructor.
+    return make_dst(new_physical, new_v_to_ps)
+
+
+@DiagonalSparseTensor.implements(aten._unsafe_view.default)
+def _unsafe_view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
+    return view_default(
+        t, shape
+    )  # We don't do the optimizations that they do in https://github.com/pytorch/pytorch/blame/main/aten/src/ATen/native/TensorShape.cpp
 
 
 @DiagonalSparseTensor.implements(aten.expand.default)
@@ -417,12 +522,48 @@ def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseT
     return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.broadcast_tensors.default)
+def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
+    if len(tensors) != 2:
+        raise NotImplementedError()
+
+    t1, t2 = tensors
+
+    if t1.shape == t2.shape:
+        return t1, t2
+
+    a = t1 if t1.ndim >= t2.ndim else t2
+    b = t2 if t1.ndim >= t2.ndim else t1
+
+    a_shape = list(a.shape)
+    padded_b_shape = [1] * (a.ndim - b.ndim) + list(b.shape)
+
+    new_shape = list[int]()
+
+    for s_a, s_b in zip(a_shape, padded_b_shape):
+        if s_a != 1 and s_b != 1 and s_a != s_b:
+            raise ValueError("Incompatible shapes for broadcasting")
+        else:
+            new_shape.append(max(s_a, s_b))
+
+    return aten.expand.default(t1, new_shape), aten.expand.default(t2, new_shape)
+
+
 @DiagonalSparseTensor.implements(aten.div.Scalar)
 def div_Scalar(t: DiagonalSparseTensor, divisor: float) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     new_physical = aten.div.Scalar(t.physical, divisor)
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
+
+
+@DiagonalSparseTensor.implements(aten.threshold_backward.default)
+def threshold_backward_default(
+    grad_output: DiagonalSparseTensor, self: Tensor, threshold
+) -> DiagonalSparseTensor:
+    new_physical = aten.threshold_backward.default(grad_output.physical, self, threshold)
+
+    return DiagonalSparseTensor(new_physical, grad_output.v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.slice.Tensor)
@@ -433,23 +574,65 @@ def slice_Tensor(
 
     physical_dims = t.v_to_ps[dim]
 
-    if len(physical_dims) != 1:
-        raise ValueError("Cannot yet slice virtual dim corresponding to several physical dims.")
-
-    physical_dim = physical_dims[0]
-
-    new_physical = aten.slice.Tensor(t.physical, physical_dim, start, end, step)
+    if len(physical_dims) > 1:
+        raise ValueError(
+            "Cannot yet slice virtual dim corresponding to several physical dims.\n"
+            f"{t.debug_info()}\n"
+            f"dim={dim}, start={start}, end={end}, step={step}."
+        )
+    elif len(physical_dims) == 0:
+        # Trying to slice a virtual dim of size 1.
+        # Either
+        # - the element of this dim is included in the slice: keep it as it is
+        # - it's not included in the slice (e.g. end<=start): we would end up with a size of 0 on
+        #   that dimension, so we'd need to add a dimension of size 0 to the physical. This is not
+        #   implemented yet.
+        start_ = start if start is not None else 0
+        end_ = end if end is not None else 1
+        if end_ <= start_:  # TODO: the condition might be a bit more complex if step != 1
+            raise NotImplementedError(
+                "Slicing of dimension of size 1 leading to dimension of size 0 not implemented yet."
+            )
+        else:
+            new_physical = t.physical
+    else:
+        physical_dim = physical_dims[0]
+        new_physical = aten.slice.Tensor(t.physical, physical_dim, start, end, step)
 
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor, t2: Tensor) -> DiagonalSparseTensor:
-    # Element-wise multiplication
+def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> DiagonalSparseTensor:
+    # Element-wise multiplication with broadcasting
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
-    new_physical = aten.mul.Tensor(t1, t2.physical)
-    return DiagonalSparseTensor(new_physical, t2.v_to_ps)
+    if isinstance(t1, int) or isinstance(t1, float):
+        t1_ = torch.tensor(t1, device=t2.device)
+    else:
+        t1_ = t1
+
+    if isinstance(t2, int) or isinstance(t2, float):
+        t2_ = torch.tensor(t2, device=t1.device)
+    else:
+        t2_ = t2
+
+    t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
+    t1_ = to_diagonal_sparse_tensor(t1_)
+    t2_ = to_diagonal_sparse_tensor(t2_)
+
+    all_dims = list(range(t1_.ndim))
+    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
+
+
+@DiagonalSparseTensor.implements(aten.mul.Scalar)
+def mul_Scalar(t: DiagonalSparseTensor, scalar) -> DiagonalSparseTensor:
+    # TODO: maybe it could be that scalar is a scalar DST and t is a normal tensor. Need to check
+    #  that
+
+    assert isinstance(t, DiagonalSparseTensor)
+    new_physical = aten.mul.Scalar(t.physical, scalar)
+    return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.transpose.int)
@@ -460,7 +643,8 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSpar
     new_v_to_ps[dim0] = t.v_to_ps[dim1]
     new_v_to_ps[dim1] = t.v_to_ps[dim0]
 
-    return DiagonalSparseTensor(t.physical, new_v_to_ps)
+    new_physical, new_v_to_ps = fix_dim_encoding(t.physical, new_v_to_ps)
+    return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
 def einsum(
@@ -548,7 +732,9 @@ def einsum(
         v_to_ps.append(current_v_to_ps)
 
     physical = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
-    return DiagonalSparseTensor(physical, v_to_ps)
+    # Need to use the safe constructor, otherwise the dimensions may not be maximally grouped.
+    # Maybe there is a way to fix that though.
+    return make_dst(physical, v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.bmm.default)
