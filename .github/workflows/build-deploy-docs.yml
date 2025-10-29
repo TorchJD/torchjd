@@ -24,10 +24,10 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: $PYTHON_VERSION
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies (default with full options & doc)
-        run: uv pip install --python-version=$PYTHON_VERSION '.[full]' --group doc
+        run: uv pip install --python-version=${{ env.PYTHON_VERSION }} '.[full]' --group doc
 
       - name: Determine deployment folder
         id: deploy_folder
