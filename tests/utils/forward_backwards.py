@@ -4,6 +4,7 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
+from torch.utils.hooks import RemovableHandle
 from utils.architectures import get_in_out_shapes
 from utils.contexts import fork_rng
 
@@ -144,3 +145,75 @@ def compute_gramian(matrix: Tensor) -> Tensor:
     indices = list(range(matrix.ndim))
     transposed_matrix = matrix.movedim(indices, indices[::-1])
     return torch.tensordot(matrix, transposed_matrix, dims=([-1], [0]))
+
+
+class CloneParams:
+    """
+    ContextManager enabling the computation of per-usage gradients.
+
+    For each submodule with direct trainable parameters, registers:
+    - A pre-hook that clones the params before using them, so that gradients will be computed with
+      respect to the cloned params.
+    - A post-hook that restores the original params.
+
+    The list of clones is returned so that we know where to find the .grad values corresponding to
+    each individual usage of a parameter.
+
+    Exiting this context manager takes care of removing hooks and restoring the original params (in
+    case an exception occurred before the post-hook could do it).
+
+    Note that this does not work for intra-module parameter reuse, which would require a node-based
+    algorithm rather than a module-based algorithm.
+    """
+
+    def __init__(self, model: nn.Module):
+        self.model = model
+        self.clones = list[nn.Parameter]()
+        self._module_to_original_params = dict[nn.Module, dict[str, nn.Parameter]]()
+        self._handles: list[RemovableHandle] = []
+
+    def __enter__(self) -> list[nn.Parameter]:
+        """Register hooks and return list of (orig_param_id, clone_param)."""
+
+        def pre_hook(module: nn.Module, _) -> None:
+            self._module_to_original_params[module] = {}
+            for name, param in module.named_parameters():
+                if param is None or not param.requires_grad:
+                    continue
+                self._module_to_original_params[module][name] = param
+                clone = nn.Parameter(param.detach().clone().requires_grad_())
+                self._set_module_param(module, name, clone)
+                self.clones.append(clone)
+
+        def post_hook(module: nn.Module, _, __) -> None:
+            self._restore_original_params(module)
+
+        # Register hooks on all modules with direct trainable params
+        for mod in self.model.modules():
+            if any(p.requires_grad for p in mod.parameters(recurse=False)):
+                self._handles.append(mod.register_forward_pre_hook(pre_hook))
+                self._handles.append(mod.register_forward_hook(post_hook))
+
+        return self.clones
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Remove hooks and restore parameters."""
+        for handle in self._handles:
+            handle.remove()
+        for module in self.model.modules():
+            self._restore_original_params(module)
+
+        return False  # don’t suppress exceptions
+
+    def _restore_original_params(self, module: nn.Module):
+        original_params = self._module_to_original_params.pop(module, {})
+        for name, param in original_params.items():
+            self._set_module_param(module, name, param)
+
+    @staticmethod
+    def _set_module_param(module: nn.Module, name: str, param: nn.Parameter) -> None:
+        name_parts = name.split(".")
+        for module_name in name_parts[:-1]:
+            module = module.get_submodule(module_name)
+        param_name = name_parts[-1]
+        setattr(module, param_name, param)

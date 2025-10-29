@@ -6,9 +6,10 @@ import pytest
 import torch
 from pytest import mark, param
 from torch import Tensor
-from torch.nn import BatchNorm2d, InstanceNorm2d, Linear
+from torch.nn import BatchNorm2d, InstanceNorm2d, Linear, Module, Parameter
 from torch.optim import SGD
 from torch.testing import assert_close
+from torch.utils._pytree import PyTree
 from utils.architectures import (
     AlexNet,
     Cifar10Model,
@@ -64,6 +65,7 @@ from utils.architectures import (
 )
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.forward_backwards import (
+    CloneParams,
     autograd_forward_backward,
     autogram_forward_backward,
     compute_gramian,
@@ -148,13 +150,40 @@ def _assert_gramian_is_equivalent_to_autograd(
     inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
-    losses = forward_pass(model_autograd, inputs, loss_fn, reduce_to_vector)
-    autograd_gramian = compute_gramian_with_autograd(losses, list(model_autograd.parameters()))
+    losses, params = _get_losses_and_params(model_autograd, inputs, loss_fn, reduce_to_vector)
+    autograd_gramian = compute_gramian_with_autograd(losses, params)
 
     losses = forward_pass(model_autogram, inputs, loss_fn, reduce_to_vector)
     autogram_gramian = engine.compute_gramian(losses)
 
     assert_close(autogram_gramian, autograd_gramian, rtol=1e-4, atol=3e-5)
+
+
+def _get_losses_and_params_with_cross_terms(
+    model: Module,
+    inputs: PyTree,
+    loss_fn: Callable[[PyTree], list[Tensor]],
+    reduction: Callable[[list[Tensor]], Tensor],
+) -> tuple[Tensor, list[Parameter]]:
+    losses = forward_pass(model, inputs, loss_fn, reduction)
+    params = list(model.parameters())
+    return losses, params
+
+
+def _get_losses_and_params_without_cross_terms(
+    model: Module,
+    inputs: PyTree,
+    loss_fn: Callable[[PyTree], list[Tensor]],
+    reduction: Callable[[list[Tensor]], Tensor],
+) -> tuple[Tensor, list[Parameter]]:
+    # Not considering cross-terms (except intra-module parameter reuse):
+    with CloneParams(model) as params:
+        losses = forward_pass(model, inputs, loss_fn, reduction)
+
+    return losses, params
+
+
+_get_losses_and_params = _get_losses_and_params_with_cross_terms
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
@@ -250,11 +279,11 @@ def test_compute_gramian_various_output_shapes(
     inputs, targets = make_inputs_and_targets(model_autograd, batch_size)
     loss_fn = make_mse_loss_fn(targets)
 
-    losses = forward_pass(model_autograd, inputs, loss_fn, reduction)
+    losses, params = _get_losses_and_params(model_autograd, inputs, loss_fn, reduction)
     reshaped_losses = torch.movedim(losses, movedim_source, movedim_destination)
     # Go back to a vector so that compute_gramian_with_autograd works
     loss_vector = reshaped_losses.reshape([-1])
-    autograd_gramian = compute_gramian_with_autograd(loss_vector, list(model_autograd.parameters()))
+    autograd_gramian = compute_gramian_with_autograd(loss_vector, params)
     expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
 
     engine = Engine(model_autogram, batch_dim=batch_dim)
@@ -280,7 +309,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     the model parameters is specified.
     """
 
-    model = SimpleBranched()
+    model = ModuleFactory(SimpleBranched)()
     batch_size = 64
     inputs, targets = make_inputs_and_targets(model, batch_size)
     loss_fn = make_mse_loss_fn(targets)
@@ -289,6 +318,7 @@ def test_compute_partial_gramian(gramian_module_names: set[str], batch_dim: int 
     for m in gramian_modules:
         gramian_params += list(m.parameters())
 
+    # This includes cross-terms, but the model has no parameter reuse.
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     autograd_gramian = compute_gramian_with_autograd(losses, gramian_params, retain_graph=True)
 
