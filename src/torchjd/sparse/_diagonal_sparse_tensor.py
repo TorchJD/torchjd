@@ -184,6 +184,10 @@ def strides_from_p_dims_and_p_shape(p_dims: list[int], physical_shape: list[int]
     ]
 
 
+def merge_strides(strides: list[list[int]]) -> list[int]:
+    return sorted({s for stride in strides for s in stride})
+
+
 def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]]:
     """
     A physical dimension is mapped to a list of couples of the form
