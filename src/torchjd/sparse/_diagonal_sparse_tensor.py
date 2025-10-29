@@ -286,6 +286,32 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
         return make_dst(t, [[i] for i in range(t.ndim)])
 
 
+def to_target_physical_strides(
+    physical: Tensor, v_to_ps: list[list[int]], strides: list[list[int]]
+) -> tuple[Tensor, list[list[int]]]:
+    current_strides = [
+        strides_from_p_dims_and_p_shape(p_dims, list(physical.shape)) for p_dims in v_to_ps
+    ]
+    target_stride = merge_strides(strides)
+
+    numel = physical.numel()
+    target_shape = stride_to_shape(numel, target_stride)
+    new_physical = physical.reshape(target_shape)
+
+    stride_to_p_dim = {s: i for i, s in enumerate(target_stride)}
+    stride_to_p_dim[0] = len(target_shape)
+
+    new_v_to_ps = list[list[int]]()
+    for stride in current_strides:
+        extended_stride = stride + [0]
+        new_p_dims = list[int]()
+        for s_curr, s_next in zip(extended_stride[:-1], extended_stride[1:]):
+            new_p_dims += range(stride_to_p_dim[s_curr], stride_to_p_dim[s_next])
+        new_v_to_ps.append(new_p_dims)
+
+    return new_physical, new_v_to_ps
+
+
 def fix_dim_encoding(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tensor, list[list[int]]]:
     v_to_ps, destination = encode_v_to_ps(v_to_ps)
     source = list(range(physical.ndim))
