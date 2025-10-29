@@ -51,6 +51,8 @@ def test_einsum(
     res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
     expected = torch.einsum(a.to_dense(), a_indices, b.to_dense(), b_indices, output_indices)
+
+    assert isinstance(res, DiagonalSparseTensor)
     assert_close(res.to_dense(), expected)
 
 
