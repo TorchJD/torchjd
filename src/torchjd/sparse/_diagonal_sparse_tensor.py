@@ -318,7 +318,9 @@ def sum_default(t: DiagonalSparseTensor) -> Tensor:
 
 
 @DiagonalSparseTensor.implements(aten.sum.dim_IntList)
-def sum_dim_IntList(t: DiagonalSparseTensor, dim: list[int], keepdim: bool, dtype=None) -> Tensor:
+def sum_dim_IntList(
+    t: DiagonalSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
+) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     if dtype:
