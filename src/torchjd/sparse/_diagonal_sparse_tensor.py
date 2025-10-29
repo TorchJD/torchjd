@@ -451,6 +451,13 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
     return make_dst(new_physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten._unsafe_view.default)
+def _unsafe_view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
+    return view_default(
+        t, shape
+    )  # We don't do the optimizations that they do in https://github.com/pytorch/pytorch/blame/main/aten/src/ATen/native/TensorShape.cpp
+
+
 @DiagonalSparseTensor.implements(aten.expand.default)
 def expand_default(t: DiagonalSparseTensor, sizes: list[int]) -> DiagonalSparseTensor:
     # note that sizes could also be just an int, or a torch.Size i think
