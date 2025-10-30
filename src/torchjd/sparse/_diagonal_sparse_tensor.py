@@ -212,6 +212,46 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
     return result
 
 
+def argmax(iterable):
+    return max(enumerate(iterable), key=lambda x: x[1])[0]
+
+
+def strides_to_pdims(strides: list[int], physical_shape: list[int]) -> list[int]:
+    """
+    Given a list of strides, find and return the used physical dimensions.
+
+    This algorithm runs in O(n * m) with n the number of physical dimensions (i.e.
+    len(physical_shape) and len(strides)), and with m the number of pdims in the result.
+
+    I'm pretty sure it could be implemented in O((n+m)log(n)) by using a sorted linked list for the
+    remaining_strides, and keeping it sorted each time we update it. Argmax would then always be 0,
+    removing the need to go through the whole list at every iteration.
+    """
+
+    # e.g. strides = [22111, 201000], physical_shape = [10, 2]
+
+    pdims = []
+    remaining_strides = [s for s in strides]
+    remaining_numel = (
+        sum(remaining_strides[i] * (physical_shape[i] - 1) for i in range(len(physical_shape))) + 1
+    )
+    # e.g. 9 * 22111 + 1 * 201000 + 1 = 400000
+
+    while sum(remaining_strides) > 0:
+        current_pdim = argmax(remaining_strides)
+        # e.g. 1
+
+        pdims.append(current_pdim)
+
+        remaining_numel = remaining_numel // physical_shape[current_pdim]
+        # e.g. 400000 / 2 = 200000
+
+        remaining_strides[current_pdim] -= remaining_numel
+        # e.g. [22111, 1000]
+
+    return pdims
+
+
 def merge_strides(strides: list[list[int]]) -> list[int]:
     return sorted({s for stride in strides for s in stride}, reverse=True)
 
