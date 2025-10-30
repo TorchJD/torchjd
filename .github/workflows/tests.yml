@@ -39,9 +39,9 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.14'
+          python-version: '3.10'
       - name: Install default (without any option) and test dependencies
-        run: uv pip install --python-version=3.14 . --group test
+        run: uv pip install --python-version=3.10 . --group test
       - name: Run unit and doc tests with coverage report
         run: |
           uv run --no-sync pytest -W error tests/unit tests/doc \
