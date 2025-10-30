@@ -190,11 +190,13 @@ def test_encode_by_order(
     [
         ([[0, 1, 2], [2, 0, 1], [2]], [[0, 1], [2]]),
         ([[0, 1, 0, 1]], [[0, 1]]),
+        ([[0, 1, 0, 1, 2]], [[0, 1], [2]]),
+        ([[0, 0]], [[0, 0]]),
+        ([[0, 1], [1, 2]], [[0], [1], [2]]),
     ],
 )
 def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[int]]):
     groupings = get_groupings(v_to_ps)
-    print(groupings)
 
     assert groupings == expected_groupings
 
@@ -204,6 +206,7 @@ def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[i
     [
         ([3, 4, 5], [[0, 1, 2], [2, 0, 1], [2]], [12, 5], [[0, 1], [1, 0], [1]]),
         ([32, 20, 8], [[0], [1, 0], [2]], [32, 20, 8], [[0], [1, 0], [2]]),
+        ([3, 3, 4], [[0, 1], [1, 2]], [3, 3, 4], [[0, 1], [1, 2]]),
     ],
 )
 def test_fix_ungrouped_dims(
