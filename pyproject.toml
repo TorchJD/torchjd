@@ -71,9 +71,9 @@ check = [
 
 doc = [
     "sphinx>=6.0, !=7.2.0, !=7.2.1, !=7.2.3, !=7.2.4, !=7.2.5",  # Versions in [7.2.0, 7.2.5] have a bug with an internal torch import from _C
-    "furo>=2023.0",  # Force it to be recent so that the theme looks better
+    "furo>=2023.0, <2024.04.27",  # Force it to be recent so that the theme looks better, 2024.04.27 seems to have bugged link colors
     "tomli>=1.1",  # The load function doesn't work similarly before 1.1
-    "sphinx-autodoc-typehints>=3.5.0",  # Bugged Union on Python 3.14 before 3.5.0
+    "sphinx-autodoc-typehints>=1.16.0",  # Some problems with TypeVars before 1.16
     "myst-parser>=3.0.1",  # Never tested lower versions
     "sphinx-design>=0.6.0",  # Never tested lower versions
 ]
