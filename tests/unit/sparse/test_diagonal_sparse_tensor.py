@@ -248,3 +248,22 @@ def test_unsquash_pdim(
 
     assert list(new_physical.shape) == expected_physical_shape
     assert new_encoding == expected_new_encoding
+
+
+@mark.parametrize(
+    ["dst_args", "dim"],
+    [
+        ([([3, 4], [[0], [0, 1]]), ([3, 3, 4], [[0, 1], [1, 2]])], 0),
+        ([([3, 12], [[0, 1], [0]]), ([9, 4], [[0, 1], [0]])], 1),
+    ],
+)
+def test_concatenate(
+    dst_args: list[tuple[list[int], list[list[int]]]],
+    dim: int,
+):
+    tensors = [DiagonalSparseTensor(randn_(pshape), v_to_ps) for pshape, v_to_ps in dst_args]
+    res = aten.cat.default(tensors, dim)
+    expected = aten.cat.default([t.to_dense() for t in tensors], dim)
+
+    assert isinstance(res, DiagonalSparseTensor)
+    assert torch.all(torch.eq(res.to_dense(), expected))
