@@ -8,6 +8,43 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added the `autogram` package, with the `autogram.Engine`. This is an implementation of Algorithm 3
+  from [Jacobian Descent for Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232),
+  optimized for batched computations, as in IWRM. Generalized Gramians can also be obtained by using
+  the autogram engine on a tensor of losses of arbitrary shape.
+- For all `Aggregator`s based on the weighting of the Gramian of the Jacobian, made their
+  `Weighting` class public. It can be used directly on a Gramian (computed via the
+  `autogram.Engine`) to extract some weights. The list of new public classes is:
+  - `Weighting` (abstract base class)
+  - `UPGradWeighting`
+  - `AlignedMTLWeighting`
+  - `CAGradWeighting`
+  - `ConstantWeighting`
+  - `DualProjWeighting`
+  - `IMTLGWeighting`
+  - `KrumWeighting`
+  - `MeanWeighting`
+  - `MGDAWeighting`
+  - `PCGradWeighting`
+  - `RandomWeighting`
+  - `SumWeighting`
+- Added `GeneralizedWeighting` (base class) and `Flattening` (implementation) to extract tensors of
+  weights from generalized Gramians.
+- Added usage example for IWRM with autogram.
+- Added usage example for IWRM with partial autogram.
+- Added usage example for IWMTL with autogram.
+- Added Python 3.14 classifier in pyproject.toml (we now also run tests on Python 3.14 in the CI).
+
+### Changed
+
+- Removed an unnecessary internal reshape when computing Jacobians. This should have no effect but a
+  slight performance improvement in `autojac`.
+- Revamped documentation.
+- Made `backward` and `mtl_backward` importable from `torchjd.autojac` (like it was prior to 0.7.0).
+- Deprecated importing `backward` and `mtl_backward` from `torchjd` directly.
+
 ## [0.7.0] - 2025-06-04
 
 ### Changed

@@ -12,14 +12,35 @@ mandatory, we only provide installation steps with this tool. You can install it
 1) Pre-requisites: Use `uv` to install a Python version compatible with TorchJD and to pin it to the
   `torchjd` folder. From the root of the `torchjd` repo, run:
    ```bash
-   uv python install 3.13.3
-   uv python pin 3.13.3
+   uv python install 3.14.0
+   uv python pin 3.14.0
    ```
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    uv venv
-   CC=gcc uv pip install -e '.[full]' --group check --group doc --group test --group plot
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
+   ```
+   If you want to install PyTorch with a different CUDA version (this could be required depending on
+   your GPU), you'll need to specify and extra index. For instance, for CUDA 12.6, run:
+      ```bash
+   uv venv
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu126
+   ```
+
+   We also advise using `UV_NO_SYNC=1` to prevent `uv` from syncing all the time. This is because by
+   default, it tries to resolve libraries compatible with the whole range of Python versions
+   supported by TorchJD, but in reality, we just need an installation compatible with the currently
+   used Python version. That's also why we specify `--python-version=3.14` when running
+   `uv pip install`. To follow that recommendation, add the following line to your `.bashrc`:
+   ```bash
+   export UV_NO_SYNC=1
+   ```
+   and start a new terminal. The alternative is to use the `--no-sync` flag whenever you run a pip
+   command that would normally sync (like `uv run`).
+
+3) Install pre-commit:
+   ```bash
    uv run pre-commit install
    ```
 
@@ -37,11 +58,29 @@ mandatory, we only provide installation steps with this tool. You can install it
 > created by `uv`, using `source .venv/bin/activate` from the root of `torchjd`. This will, however,
 > only work in the current terminal until it is closed.
 
+
+## Clean reinstallation
+
+If you want to update all dependencies or just reinstall from scratch, run the following command
+from the root of `torchjd`:
+```bash
+rm -rf .venv
+rm uv.lock
+uv venv
+CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
+uv run pre-commit install
+```
+
 ## Running tests
-   - To verify that your installation was successful, and that all unit tests pass, run:
+   - To verify that your installation was successful, and that unit tests pass, run:
      ```bash
      uv run pytest tests/unit
      ```
+
+   - To also run the unit tests that are marked as slow, add the `--runslow` flag:
+    ```bash
+    uv run pytest tests/unit --runslow
+    ```
 
    - If you have access to a cuda-enabled GPU, you should also check that the unit tests pass on it:
      ```bash
@@ -100,29 +139,31 @@ We ask contributors to implement the unit tests necessary to check the correctne
 implementations. Besides, whenever usage examples are provided, we require the example's code to be
 tested in `tests/doc`. We require a very high code coverage for newly introduced sources (~95-100%).
 To ensure that the tensors generated during the tests are on the right device, you have to use the
-partial functions defined in `tests/unit/_utils.py` to instantiate tensors. For instance, instead of
+partial functions defined in `tests/utils/tensors.py` to instantiate tensors. For instance, instead
+of
 ```python
 import torch
 a = torch.ones(3, 4)
 ```
 use
 ```python
-from unit._utils import ones_
+from utils.tensors import ones_
 a = ones_(3, 4)
 ```
 
-This will automatically call `torch.ones` with `device=unit.conftest.DEVICE`.
-If the function you need does not exist yet as a partial function in `_utils.py`, add it.
+This will automatically call `torch.ones` with `device=DEVICE`.
+If the function you need does not exist yet as a partial function in `tensors.py`, add it.
 Lastly, when you create a model or a random generator, you have to move them manually to the right
-device (the `DEVICE` defined in `unit.conftest`):
+device (the `DEVICE` defined in `device.py`).
 ```python
 import torch
 from torch.nn import Linear
-from unit.conftest import DEVICE
+from device import DEVICE
 
 model = Linear(3, 4).to(device=DEVICE)
 rng = torch.Generator(device=DEVICE)
 ```
+You may also use a `ModuleFactory` to make the modules on `DEVICE` automatically.
 
 ### Coding
 
@@ -148,6 +189,11 @@ implementation of a mathematical aggregator.
 > [!NOTE]
 > Before working on the implementation of a new aggregator, please contact us via an issue or a
 > discussion: in many cases, we have already thought about it, or even started an implementation.
+
+## Deprecation
+
+To deprecate some public functionality, make it raise a `DeprecationWarning`. A test should also be
+added in `tests/units/test_deprecations.py`, ensuring that this warning is issued.
 
 ## Release
 

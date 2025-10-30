@@ -1,16 +1,15 @@
 import math
 
 import torch
+from device import DEVICE
 from pytest import mark, raises
-from unit._utils import rand_, tensor_, zeros_
-from unit.conftest import DEVICE
+from utils.dict_assertions import assert_tensor_dicts_are_close
+from utils.tensors import rand_, tensor_, zeros_
 
-from torchjd._autojac._transform import OrderedSet, RequirementError
-from torchjd._autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape
-from torchjd._autojac._transform._base import TensorDict
 from torchjd.aggregation import Random
-
-from ._dict_assertions import assert_tensor_dicts_are_close
+from torchjd.autojac._transform import OrderedSet, RequirementError
+from torchjd.autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape
+from torchjd.autojac._transform._base import TensorDict
 
 
 def _make_jacobian_matrices(n_outputs: int, rng: torch.Generator) -> TensorDict:

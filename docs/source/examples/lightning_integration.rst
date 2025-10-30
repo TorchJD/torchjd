@@ -21,8 +21,8 @@ The following code example demonstrates a basic multi-task learning setup using 
     from torch.optim import Adam
     from torch.utils.data import DataLoader, TensorDataset
 
-    from torchjd import mtl_backward
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import mtl_backward
 
     class Model(LightningModule):
         def __init__(self):

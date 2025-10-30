@@ -15,32 +15,12 @@ class Krum(GramianWeightedAggregator):
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
         source.
     :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
-
-    .. admonition::
-        Example
-
-        Use Multi-Krum to aggregate a matrix with 1 adversarial row.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import Krum
-        >>>
-        >>> A = Krum(n_byzantine=1, n_selected=4)
-        >>> J = tensor([
-        ...     [1.,     1., 1.],
-        ...     [1.,     0., 1.],
-        ...     [75., -666., 23],  # adversarial row
-        ...     [1.,     2., 3.],
-        ...     [2.,     0., 1.],
-        ... ])
-        >>>
-        >>> A(J)
-        tensor([1.2500, 0.7500, 1.5000])
     """
 
     def __init__(self, n_byzantine: int, n_selected: int = 1):
         self._n_byzantine = n_byzantine
         self._n_selected = n_selected
-        super().__init__(_KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
+        super().__init__(KrumWeighting(n_byzantine=n_byzantine, n_selected=n_selected))
 
     def __repr__(self) -> str:
         return (
@@ -52,19 +32,17 @@ class Krum(GramianWeightedAggregator):
         return f"Krum{self._n_byzantine}-{self._n_selected}"
 
 
-class _KrumWeighting(Weighting[PSDMatrix]):
+class KrumWeighting(Weighting[PSDMatrix]):
     """
-    :class:`~torchjd.aggregation._weighting_bases.Weighting` that extracts weights using the
-    (Multi-)Krum aggregation rule, as defined in `Machine Learning with Adversaries: Byzantine
-    Tolerant Gradient Descent
-    <https://proceedings.neurips.cc/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf>`_.
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.Krum`.
 
     :param n_byzantine: The number of rows of the input matrix that can come from an adversarial
         source.
     :param n_selected: The number of selected rows in the context of Multi-Krum. Defaults to 1.
     """
 
-    def __init__(self, n_byzantine: int, n_selected: int):
+    def __init__(self, n_byzantine: int, n_selected: int = 1):
         super().__init__()
         if n_byzantine < 0:
             raise ValueError(

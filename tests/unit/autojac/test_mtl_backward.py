@@ -2,12 +2,12 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
-from unit._utils import rand_, randn_, tensor_
+from utils.tensors import rand_, randn_, tensor_
 
-from torchjd import mtl_backward
-from torchjd._autojac._mtl_backward import _create_transform
-from torchjd._autojac._transform import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac import mtl_backward
+from torchjd.autojac._mtl_backward import _create_transform
+from torchjd.autojac._transform import OrderedSet
 
 
 def test_check_create_transform():
@@ -496,7 +496,7 @@ def test_tasks_params_overlap():
     assert_close(p1.grad, f * p12)
     assert_close(p12.grad, f * p1 + f * p2)
 
-    J = tensor_([[-p1 * p12, p1 * p12], [-p2 * p12, p2 * p12]])
+    J = tensor_([[-8.0, 8.0], [-12.0, 12.0]])
     assert_close(p0.grad, aggregator(J))
 
 
@@ -515,7 +515,7 @@ def test_tasks_params_are_the_same():
 
     assert_close(p1.grad, f + 1)
 
-    J = tensor_([[-p1, p1], [-1.0, 1.0]])
+    J = tensor_([[-2.0, 2.0], [-1.0, 1.0]])
     assert_close(p0.grad, aggregator(J))
 
 
@@ -539,7 +539,7 @@ def test_task_params_is_subset_of_other_task_params():
     assert_close(p2.grad, y1)
     assert_close(p1.grad, p2 * f + f)
 
-    J = tensor_([[-p1, p1], [-p1 * p2, p1 * p2]])
+    J = tensor_([[-2.0, 2.0], [-6.0, 6.0]])
     assert_close(p0.grad, aggregator(J))
 
 

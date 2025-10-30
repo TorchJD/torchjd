@@ -29,32 +29,19 @@ import torch
 from torch import Tensor
 
 from ._aggregator_bases import GramianWeightedAggregator
-from ._mean import _MeanWeighting
+from ._mean import MeanWeighting
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import PSDMatrix, Weighting
 
 
 class AlignedMTL(GramianWeightedAggregator):
-    """
+    r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` as defined in Algorithm 1 of
     `Independent Component Alignment for Multi-Task Learning
     <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
 
-    :param pref_vector: The preference vector to use.
-
-    .. admonition::
-        Example
-
-        Use AlignedMTL to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import AlignedMTL
-        >>>
-        >>> A = AlignedMTL()
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.2133, 0.9673, 0.9673])
+    :param pref_vector: The preference vector to use.  If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
 
     .. note::
         This implementation was adapted from the `official implementation
@@ -62,10 +49,8 @@ class AlignedMTL(GramianWeightedAggregator):
     """
 
     def __init__(self, pref_vector: Tensor | None = None):
-        weighting = pref_vector_to_weighting(pref_vector, default=_MeanWeighting())
         self._pref_vector = pref_vector
-
-        super().__init__(_AlignedMTLWrapper(weighting))
+        super().__init__(AlignedMTLWeighting(pref_vector))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
@@ -74,20 +59,19 @@ class AlignedMTL(GramianWeightedAggregator):
         return f"AlignedMTL{pref_vector_to_str_suffix(self._pref_vector)}"
 
 
-class _AlignedMTLWrapper(Weighting[PSDMatrix]):
-    """
-    Wrapper of :class:`~torchjd.aggregation._weighting_bases.Weighting` that corrects the extracted
-    weights with the balance transformation defined in Algorithm 1 of `Independent Component
-    Alignment for Multi-Task Learning
-    <https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf>`_.
+class AlignedMTLWeighting(Weighting[PSDMatrix]):
+    r"""
+    :class:`~torchjd.aggregation._weighting_bases.Weighting` giving the weights of
+    :class:`~torchjd.aggregation.AlignedMTL`.
 
-    :param weighting: The wrapped :class:`~torchjd.aggregation._weighting_bases.Weighting`
-        responsible for extracting weight vectors from the input matrices.
+    :param pref_vector: The preference vector to use. If not provided, defaults to
+        :math:`\begin{bmatrix} \frac{1}{m} & \dots & \frac{1}{m} \end{bmatrix}^T \in \mathbb{R}^m`.
     """
 
-    def __init__(self, weighting: Weighting[PSDMatrix]):
+    def __init__(self, pref_vector: Tensor | None = None):
         super().__init__()
-        self.weighting = weighting
+        self._pref_vector = pref_vector
+        self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
 
     def forward(self, gramian: Tensor) -> Tensor:
         w = self.weighting(gramian)

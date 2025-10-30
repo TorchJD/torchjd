@@ -1,7 +1,7 @@
 import torch
 from pytest import mark
 from torch import Tensor
-from unit._utils import ones_
+from utils.tensors import ones_
 
 from torchjd.aggregation import DualProj
 

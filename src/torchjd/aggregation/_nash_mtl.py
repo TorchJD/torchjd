@@ -33,7 +33,7 @@ check_dependencies_are_installed(["cvxpy", "ecos"])
 import cvxpy as cp
 import numpy as np
 import torch
-from cvxpy import Expression
+from cvxpy import Expression, SolverError
 from torch import Tensor
 
 from ._aggregator_bases import WeightedAggregator
@@ -52,20 +52,6 @@ class NashMTL(WeightedAggregator):
         performed. A larger value means that the same weights will be re-used for more calls to the
         aggregator.
     :param optim_niter: The number of iterations of the underlying optimization process.
-
-    .. admonition::
-        Example
-
-        Use NashMTL to aggregate a matrix.
-
-        >>> from torch import tensor
-        >>> from torchjd.aggregation import NashMTL
-        >>>
-        >>> A = NashMTL(n_tasks=2)
-        >>> J = tensor([[-4., 1., 1.], [6., 1., 1.]])
-        >>>
-        >>> A(J)
-        tensor([0.0542, 0.7061, 0.7061])
 
     .. note::
         This aggregator is not installed by default. When not installed, trying to import it should
@@ -119,7 +105,7 @@ class NashMTL(WeightedAggregator):
 
 class _NashMTLWeighting(Weighting[Matrix]):
     """
-    :class:`~torchjd.aggregation._weighting.Weighting` that extracts weights using the step decision
+    :class:`~torchjd.aggregation.Weighting` that extracts weights using the step decision
     of Algorithm 1 of `Multi-Task Learning as a Bargaining Game
     <https://arxiv.org/pdf/2202.01017.pdf>`_.
 
@@ -170,8 +156,8 @@ class _NashMTLWeighting(Weighting[Matrix]):
 
             try:
                 self.prob.solve(solver=cp.ECOS, warm_start=True, max_iters=100)
-            except Exception:
-                # On macOS, this can happen with a cvxpy.error.SolverError: Solver 'ECOS' failed.
+            except SolverError:
+                # On macOS, this can happen with: Solver 'ECOS' failed.
                 # No idea why. The corresponding matrix is of shape [9, 11] with rank 5.
                 # Maybe other exceptions can happen in other cases.
                 self.alpha_param.value = self.prvs_alpha_param.value

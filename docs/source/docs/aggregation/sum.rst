@@ -7,3 +7,8 @@ Sum
     :members:
     :undoc-members:
     :exclude-members: forward
+
+.. autoclass:: torchjd.aggregation.SumWeighting
+    :members:
+    :undoc-members:
+    :exclude-members: forward

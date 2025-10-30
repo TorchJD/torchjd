@@ -2,12 +2,12 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
-from unit._utils import randn_, tensor_
+from utils.tensors import randn_, tensor_
 
-from torchjd import backward
-from torchjd._autojac._backward import _create_transform
-from torchjd._autojac._transform import OrderedSet
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
+from torchjd.autojac import backward
+from torchjd.autojac._backward import _create_transform
+from torchjd.autojac._transform import OrderedSet
 
 
 def test_check_create_transform():
@@ -233,8 +233,8 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
 
     expected_jacobian = tensor_(
         [
-            [2.0 * 3.0 * a**2],
-            [2.0 * 4.0 * a**3],
+            [2.0 * 3.0 * (a**2).item()],
+            [2.0 * 4.0 * (a**3).item()],
         ],
     )
 
