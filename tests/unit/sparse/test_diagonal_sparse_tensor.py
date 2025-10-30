@@ -45,8 +45,8 @@ def test_einsum(
     b_indices: list[int],
     output_indices: list[int],
 ):
-    a = DiagonalSparseTensor(torch.randn(a_pshape), a_v_to_ps)
-    b = DiagonalSparseTensor(torch.randn(b_pshape), b_v_to_ps)
+    a = DiagonalSparseTensor(randn_(a_pshape), a_v_to_ps)
+    b = DiagonalSparseTensor(randn_(b_pshape), b_v_to_ps)
 
     res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
@@ -212,7 +212,7 @@ def test_fix_ungrouped_dims(
     expected_physical_shape: list[int],
     expected_v_to_ps: list[list[int]],
 ):
-    physical = torch.randn(physical_shape)
+    physical = randn_(physical_shape)
     fixed_physical, fixed_v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
 
     assert list(fixed_physical.shape) == expected_physical_shape
@@ -240,7 +240,7 @@ def test_unsquash_pdim(
     expected_physical_shape: list[int],
     expected_new_encoding: list[list[int]],
 ):
-    physical = torch.randn(physical_shape)
+    physical = randn_(physical_shape)
     new_physical, new_encoding = unsquash_pdim(physical, pdim, new_pdim_shape)
 
     assert list(new_physical.shape) == expected_physical_shape
