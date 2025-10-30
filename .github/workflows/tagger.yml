@@ -19,7 +19,7 @@ jobs:
               'src/torchjd/_autogram/': 'package: autogram',
               'src/torchjd/_autojac/': 'package: autojac',
               'src/torchjd/aggregation/': 'package: aggregation',
-              '.github/workflows/': 'CI',
+              '.github/workflows/': 'ci',
               'docs/': 'docs',
               'tests/': 'test'
             };
