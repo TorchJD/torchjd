@@ -2,9 +2,28 @@ from functools import partial
 
 import torch
 import torchvision
+from device import DEVICE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+from utils.contexts import fork_rng
+
+
+class ModuleFactory:
+    def __init__(self, architecture: type[nn.Module], *args, **kwargs):
+        self.architecture = architecture
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self) -> nn.Module:
+        with fork_rng(seed=0):
+            return self.architecture(*self.args, **self.kwargs).to(device=DEVICE)
+
+    def __str__(self) -> str:
+        args_string = ", ".join([str(arg) for arg in self.args])
+        kwargs_string = ", ".join([f"{key}={value}" for key, value in self.kwargs.items()])
+        optional_comma = "" if args_string == "" or kwargs_string == "" else ", "
+        return f"{self.architecture.__name__}({args_string}{optional_comma}{kwargs_string})"
 
 
 class ShapedModule(nn.Module):
@@ -19,6 +38,20 @@ class ShapedModule(nn.Module):
             raise TypeError(f"{cls.__name__} must define INPUT_SHAPES")
         if getattr(cls, "OUTPUT_SHAPES", None) is None:
             raise TypeError(f"{cls.__name__} must define OUTPUT_SHAPES")
+
+
+def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
+    if isinstance(module, ShapedModule):
+        return module.INPUT_SHAPES, module.OUTPUT_SHAPES
+
+    elif isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+        HEIGHT = 6  # Arbitrary choice
+        WIDTH = 6  # Arbitrary choice
+        shape = (module.num_features, HEIGHT, WIDTH)
+        return shape, shape
+
+    else:
+        raise ValueError("Unknown input / output shapes of module", module)
 
 
 class OverlyNested(ShapedModule):
@@ -390,7 +423,7 @@ class WithNoTensorOutput(ShapedModule):
         return self.linear(input)
 
 
-class SimpleParamReuse(ShapedModule):
+class IntraModuleParamReuse(ShapedModule):
     """Module that reuses the same nn.Parameter for two computations directly inside of it."""
 
     INPUT_SHAPES = (50,)
@@ -709,35 +742,8 @@ class WithRNN(ShapedModule):
         self.rnn = nn.RNN(input_size=8, hidden_size=5, batch_first=True)
 
     def forward(self, input: Tensor) -> Tensor:
-        return self.rnn(input)
-
-
-class WithModuleTrackingRunningStats(ShapedModule):
-    """Simple model containing a module that has side-effects and modifies tensors in-place."""
-
-    INPUT_SHAPES = (3, 6, 6)
-    OUTPUT_SHAPES = (3, 6, 6)
-
-    def __init__(self):
-        super().__init__()
-        self.instance_norm = nn.InstanceNorm2d(3, affine=True, track_running_stats=True)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.instance_norm(input)
-
-
-class WithBatchNorm(ShapedModule):
-    """Simple model containing a BatchNorm layer."""
-
-    INPUT_SHAPES = (3, 6, 6)
-    OUTPUT_SHAPES = (3, 6, 6)
-
-    def __init__(self):
-        super().__init__()
-        self.batch_norm = nn.BatchNorm2d(3, affine=True, track_running_stats=False)
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.batch_norm(input)
+        output, _ = self.rnn(input)
+        return output
 
 
 class WithDropout(ShapedModule):

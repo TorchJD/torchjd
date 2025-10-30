@@ -1,8 +1,11 @@
 from functools import partial
 
 import torch
+from device import DEVICE
+from torch import nn
 from torch.utils._pytree import PyTree, tree_map
-from unit.conftest import DEVICE
+from utils.architectures import get_in_out_shapes
+from utils.contexts import fork_rng
 
 # Curried calls to torch functions that require a device so that we automatically fix the device
 # for code written in the tests, while not affecting code written in src (what
@@ -19,7 +22,16 @@ tensor_ = partial(torch.tensor, device=DEVICE)
 zeros_ = partial(torch.zeros, device=DEVICE)
 
 
-def make_tensors(batch_size: int, tensor_shapes: PyTree) -> PyTree:
+def make_inputs_and_targets(model: nn.Module, batch_size: int) -> tuple[PyTree, PyTree]:
+    input_shapes, output_shapes = get_in_out_shapes(model)
+    with fork_rng(seed=0):
+        inputs = _make_tensors(batch_size, input_shapes)
+        targets = _make_tensors(batch_size, output_shapes)
+
+    return inputs, targets
+
+
+def _make_tensors(batch_size: int, tensor_shapes: PyTree) -> PyTree:
     def is_leaf(s):
         return isinstance(s, tuple) and all([isinstance(e, int) for e in s])
 
