@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  PYTHON_VERSION: 3.14
+  PYTHON_VERSION: 3.13
 
 jobs:
   pypi-publish:

@@ -12,8 +12,8 @@ mandatory, we only provide installation steps with this tool. You can install it
 1) Pre-requisites: Use `uv` to install a Python version compatible with TorchJD and to pin it to the
   `torchjd` folder. From the root of the `torchjd` repo, run:
    ```bash
-   uv python install 3.14.0
-   uv python pin 3.14.0
+   uv python install 3.13.3
+   uv python pin 3.13.3
    ```
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:

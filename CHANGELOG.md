@@ -35,7 +35,6 @@ changes that do not affect the user.
 - Added usage example for IWRM with autogram.
 - Added usage example for IWRM with partial autogram.
 - Added usage example for IWMTL with autogram.
-- Added Python 3.14 classifier in pyproject.toml (we now also run tests on Python 3.14 in the CI).
 
 ### Changed
 
