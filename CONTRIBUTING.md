@@ -19,8 +19,15 @@ mandatory, we only provide installation steps with this tool. You can install it
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    uv venv
-   CC=gcc uv pip install --python-version=3.13.3 -e '.[full]' --group check --group doc --group test --group plot
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
    ```
+   If you want to install PyTorch with a different CUDA version (this could be required depending on
+   your GPU), you'll need to specify and extra index. For instance, for CUDA 12.6, run:
+      ```bash
+   uv venv
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu126
+   ```
+
    We also advise using `UV_NO_SYNC=1` to prevent `uv` from syncing all the time. This is because by
    default, it tries to resolve libraries compatible with the whole range of Python versions
    supported by TorchJD, but in reality, we just need an installation compatible with the currently
@@ -60,7 +67,7 @@ from the root of `torchjd`:
 rm -rf .venv
 rm uv.lock
 uv venv
-CC=gcc uv pip install --python-version=3.13.3 -e '.[full]' --group check --group doc --group test --group plot
+CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
 uv run pre-commit install
 ```
 
