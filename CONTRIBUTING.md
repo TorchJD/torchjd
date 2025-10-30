@@ -12,14 +12,35 @@ mandatory, we only provide installation steps with this tool. You can install it
 1) Pre-requisites: Use `uv` to install a Python version compatible with TorchJD and to pin it to the
   `torchjd` folder. From the root of the `torchjd` repo, run:
    ```bash
-   uv python install 3.13.3
-   uv python pin 3.13.3
+   uv python install 3.14.0
+   uv python pin 3.14.0
    ```
 
 2) Create a virtual environment and install the project in it. From the root of `torchjd`, run:
    ```bash
    uv venv
-   CC=gcc uv pip install -e '.[full]' --group check --group doc --group test --group plot
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
+   ```
+   If you want to install PyTorch with a different CUDA version (this could be required depending on
+   your GPU), you'll need to specify and extra index. For instance, for CUDA 12.6, run:
+      ```bash
+   uv venv
+   CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu126
+   ```
+
+   We also advise using `UV_NO_SYNC=1` to prevent `uv` from syncing all the time. This is because by
+   default, it tries to resolve libraries compatible with the whole range of Python versions
+   supported by TorchJD, but in reality, we just need an installation compatible with the currently
+   used Python version. That's also why we specify `--python-version=3.14` when running
+   `uv pip install`. To follow that recommendation, add the following line to your `.bashrc`:
+   ```bash
+   export UV_NO_SYNC=1
+   ```
+   and start a new terminal. The alternative is to use the `--no-sync` flag whenever you run a pip
+   command that would normally sync (like `uv run`).
+
+3) Install pre-commit:
+   ```bash
    uv run pre-commit install
    ```
 
@@ -46,7 +67,7 @@ from the root of `torchjd`:
 rm -rf .venv
 rm uv.lock
 uv venv
-CC=gcc uv pip install -e '.[full]' --group check --group doc --group test --group plot
+CC=gcc uv pip install --python-version=3.14 -e '.[full]' --group check --group doc --group test --group plot
 uv run pre-commit install
 ```
 
