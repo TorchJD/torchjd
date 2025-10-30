@@ -185,7 +185,7 @@ def strides_from_p_dims_and_p_shape(p_dims: list[int], physical_shape: list[int]
 
 
 def merge_strides(strides: list[list[int]]) -> list[int]:
-    return sorted({s for stride in strides for s in stride})
+    return sorted({s for stride in strides for s in stride}, reverse=True)
 
 
 def stride_to_shape(numel: int, stride: list[int]) -> list[int]:
