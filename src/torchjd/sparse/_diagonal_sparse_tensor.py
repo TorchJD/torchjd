@@ -472,6 +472,17 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.cat.default)
+def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
+    if any(not isinstance(t, DiagonalSparseTensor) for t in tensors):
+        print_fallback(aten.cat.default, (tensors, dim), {})
+        return aten.cat.default([unwrap_to_dense(t) for t in tensors])
+
+    else:
+        # TODO: efficient implementation when all tensors are sparse
+        return aten.cat.default([unwrap_to_dense(t) for t in tensors])
+
+
 def unsquash_pdim(
     physical: Tensor, pdim: int, new_pdim_shape: list[int]
 ) -> tuple[Tensor, list[list[int]]]:
