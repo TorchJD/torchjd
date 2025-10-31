@@ -94,30 +94,7 @@ class DiagonalSparseTensor(Tensor):
         if func in cls._HANDLED_FUNCTIONS:
             return cls._HANDLED_FUNCTIONS[func](*args, **kwargs)
 
-        def tensor_to_str(tensor: Tensor) -> str:
-            result = f"{tensor.__class__.__name__} - shape: {tensor.shape}"
-            if isinstance(tensor, DiagonalSparseTensor):
-                result += f" - pshape: {tensor.physical.shape} - v_to_ps: {tensor.v_to_ps}"
-
-            return result
-
-        print(f"Falling back to dense for {func.__name__}")
-        if len(args) > 0:
-            print("* args:")
-            for arg in args:
-                if isinstance(arg, Tensor):
-                    print(f"  > {tensor_to_str(arg)}")
-                elif isinstance(arg, list) and len(arg) > 0 and isinstance(arg[0], Tensor):
-                    list_content = "\n     ".join([tensor_to_str(t) for t in arg])
-                    print(f"  > [{list_content}]")
-                else:
-                    print(f"  > {arg}")
-        if len(kwargs) > 0:
-            print("* kwargs:")
-            for k, v in kwargs.items():
-                print(f"  > {k}: {v}")
-        print()
-
+        print_fallback(func, args, kwargs)
         unwrapped_args = tree_map(unwrap_to_dense, args)
         unwrapped_kwargs = tree_map(unwrap_to_dense, kwargs)
         return func(*unwrapped_args, **unwrapped_kwargs)
@@ -146,6 +123,32 @@ class DiagonalSparseTensor(Tensor):
             return func
 
         return decorator
+
+
+def print_fallback(func, args, kwargs) -> None:
+    def tensor_to_str(t: Tensor) -> str:
+        result = f"{t.__class__.__name__} - shape: {t.shape}"
+        if isinstance(t, DiagonalSparseTensor):
+            result += f" - pshape: {t.physical.shape} - v_to_ps: {t.v_to_ps}"
+
+        return result
+
+    print(f"Falling back to dense for {func.__name__}")
+    if len(args) > 0:
+        print("* args:")
+        for arg in args:
+            if isinstance(arg, Tensor):
+                print(f"  > {tensor_to_str(arg)}")
+            elif isinstance(arg, list) and len(arg) > 0 and isinstance(arg[0], Tensor):
+                list_content = "\n     ".join([tensor_to_str(t) for t in arg])
+                print(f"  > [{list_content}]")
+            else:
+                print(f"  > {arg}")
+    if len(kwargs) > 0:
+        print("* kwargs:")
+        for k, v in kwargs.items():
+            print(f"  > {k}: {v}")
+    print()
 
 
 def strides_from_p_dims_and_p_shape(p_dims: list[int], physical_shape: list[int]) -> list[int]:
