@@ -771,6 +771,19 @@ def mul_Scalar(t: DiagonalSparseTensor, scalar) -> DiagonalSparseTensor:
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.add.Tensor)
+def add_Tensor(
+    t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
+) -> DiagonalSparseTensor:
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+
+    if t1_.v_to_ps == t2_.v_to_ps:
+        new_physical = t1_.physical + t2_.physical * alpha
+        return DiagonalSparseTensor(new_physical, t1_.v_to_ps)
+    else:
+        raise NotImplementedError()
+
+
 @DiagonalSparseTensor.implements(aten.transpose.int)
 def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSparseTensor:
     assert isinstance(t, DiagonalSparseTensor)
