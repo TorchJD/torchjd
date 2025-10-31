@@ -2,7 +2,7 @@ import torch
 from pytest import mark
 from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
-from utils.tensors import randn_, zeros_
+from utils.tensors import randn_, tensor_, zeros_
 
 from torchjd.sparse._diagonal_sparse_tensor import (
     _IN_PLACE_POINTWISE_FUNCTIONS,
@@ -26,6 +26,14 @@ def test_to_dense():
     for i in range(n):
         for j in range(m):
             assert c[i, j, j, i] == a[i, j]
+
+
+def test_to_dense2():
+    a = tensor_([1.0, 2.0, 3.0])
+    b = DiagonalSparseTensor(a, [[0, 0]])
+    c = b.to_dense()
+    expected = tensor_([1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0])
+    assert torch.all(torch.eq(c, expected))
 
 
 @mark.parametrize(
