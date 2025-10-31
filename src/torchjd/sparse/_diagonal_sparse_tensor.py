@@ -94,13 +94,6 @@ class DiagonalSparseTensor(Tensor):
         if func in cls._HANDLED_FUNCTIONS:
             return cls._HANDLED_FUNCTIONS[func](*args, **kwargs)
 
-        # --- Fallback: Fold to Dense Tensor ---
-        def unwrap_to_dense(t: Tensor):
-            if isinstance(t, cls):
-                return t.to_dense()
-            else:
-                return t
-
         def tensor_to_str(tensor: Tensor) -> str:
             result = f"{tensor.__class__.__name__} - shape: {tensor.shape}"
             if isinstance(tensor, DiagonalSparseTensor):
@@ -329,6 +322,13 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
         return t
     else:
         return make_dst(t, [[i] for i in range(t.ndim)])
+
+
+def unwrap_to_dense(t: Tensor):
+    if isinstance(t, DiagonalSparseTensor):
+        return t.to_dense()
+    else:
+        return t
 
 
 def to_target_physical_strides(
