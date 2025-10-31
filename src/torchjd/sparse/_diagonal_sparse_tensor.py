@@ -76,36 +76,22 @@ class DiagonalSparseTensor(torch.Tensor):
         if self.physical.ndim == 0:
             return self.physical
 
-        # This is a list of strides whose shape matches that of v_to_ps except that each element
-        # is the stride factor of the index to get the right element for the corresponding virtual
-        # dimension. Stride is the jump necessary to go from one element to the next one in the
-        # specified dimension. For instance if the i'th element of v_to_ps is [0, 1, 2], then the
-        # i'th element of _strides is [physical.shape[1] * physical.shape[2], physical.shape[2], 1]
-        # and so, if we index dimension i with j=j_0 * stride[0] + j_1 * stride[1] + j_2 * stride[2]
-        # which isa unique decomposition, then this corresponds to indexing dimensions v_to_ps[i] at
-        # indices [j_0, j_1, j_2]
-        s = list(self.physical.shape)
-        strides = [strides_from_p_dims_and_p_shape(dims, s) for dims in self.v_to_ps]
+        strides = [strides_v2(p_dims, list(self.physical.shape)) for p_dims in self.v_to_ps]
 
         # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
         #  what's faster
         p_index_ranges = [torch.arange(s) for s in self.physical.shape]
         p_indices_grid = torch.meshgrid(*p_index_ranges, indexing="ij")
         v_indices_grid = list[Tensor]()
+        all_pdims = list(range(self.physical.ndim))
         for stride, dims in zip(strides, self.v_to_ps):
             stride_ = torch.tensor(stride, dtype=torch.int)
 
-            if len(dims) > 0:
-                v_indices_grid.append(
-                    torch.sum(
-                        torch.stack([p_indices_grid[d] for d in dims], dim=-1) * stride_, dim=-1
-                    )
+            v_indices_grid.append(
+                torch.sum(
+                    torch.stack([p_indices_grid[d] for d in all_pdims], dim=-1) * stride_, dim=-1
                 )
-            else:
-                v_indices_grid.append(torch.tensor(0, dtype=torch.int))
-            # This is supposed to be a vector of shape d_1 * d_2 ...
-            # whose elements are the coordinates 1 in p_indices_grad[d_1] times stride 1
-            # plus coordinates 2 in p_indices_grad[d_2] times stride 2, etc...
+            )
 
         res = torch.zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
         res[tuple(v_indices_grid)] = self.physical
