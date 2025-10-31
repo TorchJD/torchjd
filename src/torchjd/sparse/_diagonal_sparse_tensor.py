@@ -483,6 +483,14 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.permute.default)
+def permute_default(t: DiagonalSparseTensor, dims: list[int]) -> DiagonalSparseTensor:
+    new_v_to_ps = [t.v_to_ps[d] for d in dims]
+
+    new_physical, new_v_to_ps = fix_dim_encoding(t.physical, new_v_to_ps)
+    return DiagonalSparseTensor(new_physical, new_v_to_ps)
+
+
 @DiagonalSparseTensor.implements(aten.cat.default)
 def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     if any(not isinstance(t, DiagonalSparseTensor) for t in tensors):
