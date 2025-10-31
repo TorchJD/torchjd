@@ -327,6 +327,17 @@ def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
         return make_dst(t, [[i] for i in range(t.ndim)])
 
 
+def to_most_efficient_tensor(physical: Tensor, v_to_ps: list[list[int]]) -> Tensor:
+    physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
+    physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
+    physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
+
+    if sum([len(pdims) for pdims in v_to_ps]) == physical.ndim:
+        return torch.movedim(physical, list(range(physical.ndim)), [pdims[0] for pdims in v_to_ps])
+    else:
+        return DiagonalSparseTensor(physical, v_to_ps)
+
+
 def unwrap_to_dense(t: Tensor):
     if isinstance(t, DiagonalSparseTensor):
         return t.to_dense()
@@ -514,7 +525,7 @@ def infer_shape(shape: list[int], numel: int) -> list[int]:
 
 
 @DiagonalSparseTensor.implements(aten.view.default)
-def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
+def view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     assert isinstance(t, DiagonalSparseTensor)
 
     shape = infer_shape(shape, t.numel())
@@ -574,11 +585,11 @@ def view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTen
 
     # The above code does not handle physical dimension squashing, so the physical is not
     # necessarily maximally squashed at this point, so we need the safe constructor.
-    return make_dst(new_physical, new_v_to_ps)
+    return to_most_efficient_tensor(new_physical, new_v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten._unsafe_view.default)
-def _unsafe_view_default(t: DiagonalSparseTensor, shape: list[int]) -> DiagonalSparseTensor:
+def _unsafe_view_default(t: DiagonalSparseTensor, shape: list[int]) -> Tensor:
     return view_default(
         t, shape
     )  # We don't do the optimizations that they do in https://github.com/pytorch/pytorch/blame/main/aten/src/ATen/native/TensorShape.cpp
@@ -744,9 +755,7 @@ def transpose_int(t: DiagonalSparseTensor, dim0: int, dim1: int) -> DiagonalSpar
     return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
-def einsum(
-    *args: tuple[DiagonalSparseTensor, list[int]], output: list[int]
-) -> DiagonalSparseTensor:
+def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> Tensor:
 
     # First part of the algorithm, determine how to cluster physical indices as well as the common
     # p_shapes corresponding to matching v_dims. Second part translates to physical einsum.
@@ -853,7 +862,7 @@ def einsum(
     physical = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
     # Need to use the safe constructor, otherwise the dimensions may not be maximally grouped.
     # Maybe there is a way to fix that though.
-    return make_dst(physical, v_to_ps)
+    return to_most_efficient_tensor(physical, v_to_ps)
 
 
 @DiagonalSparseTensor.implements(aten.bmm.default)
