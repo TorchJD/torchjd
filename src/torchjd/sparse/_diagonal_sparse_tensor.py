@@ -137,6 +137,7 @@ class DiagonalSparseTensor(torch.Tensor):
             f"shape: {self.shape}\n"
             f"stride(): {self.stride()}\n"
             f"v_to_ps: {self.v_to_ps}\n"
+            f"strides: {self.strides}\n"
             f"physical.shape: {self.physical.shape}\n"
             f"physical.stride(): {self.physical.stride()}"
         )
