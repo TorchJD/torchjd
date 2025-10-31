@@ -83,7 +83,7 @@ class DiagonalSparseTensor(torch.Tensor):
         p_index_ranges = [torch.arange(s) for s in self.physical.shape]
         p_indices_grid = torch.stack(torch.meshgrid(*p_index_ranges, indexing="ij"), dim=-1)
         v_indices_grid = list[Tensor]()
-        for stride, dims in zip(strides, self.v_to_ps):
+        for stride in strides:
             stride_ = torch.tensor(stride, dtype=torch.int)
             v_indices_grid.append(torch.sum(p_indices_grid * stride_, dim=-1))
 
