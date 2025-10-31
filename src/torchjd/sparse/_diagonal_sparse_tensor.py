@@ -66,7 +66,11 @@ class DiagonalSparseTensor(Tensor):
 
         self.physical = physical
         self.v_to_ps = v_to_ps
-        self.strides = [strides_v2(pdims, list(self.physical.shape)) for pdims in self.v_to_ps]
+        pshape = list(self.physical.shape)
+
+        # TODO: not sure if strides should be always on cpu (e.g. if it's only used for indexing)
+        #  or if we should put it on physical.device.
+        self.strides = tensor([strides_v2(pdims, pshape) for pdims in self.v_to_ps])
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -81,8 +85,7 @@ class DiagonalSparseTensor(Tensor):
         #  what's faster
         p_index_ranges = [arange(s) for s in self.physical.shape]
         p_indices_grid = stack(meshgrid(*p_index_ranges, indexing="ij"))
-        strides = tensor(self.strides)
-        v_indices_grid = tensordot(strides, p_indices_grid, dims=1)
+        v_indices_grid = tensordot(self.strides, p_indices_grid, dims=1)
         res = zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
