@@ -719,7 +719,7 @@ def slice_Tensor(
 
 
 @DiagonalSparseTensor.implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> DiagonalSparseTensor:
+def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     # Element-wise multiplication with broadcasting
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
@@ -874,7 +874,7 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
 
 
 @DiagonalSparseTensor.implements(aten.bmm.default)
-def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
+def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert (
         mat1.ndim == 3
@@ -892,7 +892,7 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
 
 
 @DiagonalSparseTensor.implements(aten.mm.default)
-def mm_default(mat1: Tensor, mat2: Tensor) -> DiagonalSparseTensor:
+def mm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
 
