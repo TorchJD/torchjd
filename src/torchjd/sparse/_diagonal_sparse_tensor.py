@@ -80,11 +80,11 @@ class DiagonalSparseTensor(torch.Tensor):
         # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
         #  what's faster
         p_index_ranges = [torch.arange(s) for s in self.physical.shape]
-        p_indices_grid = torch.stack(torch.meshgrid(*p_index_ranges, indexing="ij"), dim=-1)
-        strides = [torch.tensor(stride) for stride in self.strides]
-        v_indices_grid = tuple(torch.sum(p_indices_grid * stride, dim=-1) for stride in strides)
+        p_indices_grid = torch.stack(torch.meshgrid(*p_index_ranges, indexing="ij"))
+        strides = torch.stack([torch.tensor(stride) for stride in self.strides])
+        v_indices_grid = torch.tensordot(strides, p_indices_grid, dims=1)
         res = torch.zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
-        res[v_indices_grid] = self.physical
+        res[tuple(v_indices_grid)] = self.physical
         return res
 
     @classmethod
