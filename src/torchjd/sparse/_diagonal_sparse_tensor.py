@@ -718,9 +718,14 @@ def slice_Tensor(
     return DiagonalSparseTensor(new_physical, t.v_to_ps)
 
 
-@DiagonalSparseTensor.implements(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
-    # Element-wise multiplication with broadcasting
+def prepare_for_elementwise_op(
+    t1: Tensor | int | float, t2: Tensor | int | float
+) -> tuple[DiagonalSparseTensor, DiagonalSparseTensor]:
+    """
+    Prepares two DSTs of the same shape from two args, one of those being a DST, and the other being
+    a DST, Tensor, int or float.
+    """
+
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
     if isinstance(t1, int) or isinstance(t1, float):
@@ -737,6 +742,21 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_ = to_diagonal_sparse_tensor(t1_)
     t2_ = to_diagonal_sparse_tensor(t2_)
 
+    return t1_, t2_
+
+
+@DiagonalSparseTensor.implements(aten.mul.Tensor)
+def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
+    # Element-wise multiplication with broadcasting
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+    all_dims = list(range(t1_.ndim))
+    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
+
+
+@DiagonalSparseTensor.implements(aten.div.Tensor)
+def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+    t2_ = DiagonalSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
     all_dims = list(range(t1_.ndim))
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
