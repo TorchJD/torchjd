@@ -83,7 +83,7 @@ class DiagonalSparseTensor(Tensor):
 
         # addmm_cuda not implemented for Long tensors => gotta have these tensors on cpu
         v_indices_grid = tensordot(self.strides, p_indices_grid, dims=1)
-        res = zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
+        res = zeros(self.shape, device=self.device, dtype=self.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
 
