@@ -4,12 +4,12 @@ from itertools import accumulate
 from math import prod
 
 import torch
-from torch import Tensor
+from torch import Tensor, arange, meshgrid, stack, tensor, tensordot, zeros
 from torch.ops import aten  # type: ignore
 from torch.utils._pytree import tree_flatten, tree_map, tree_unflatten
 
 
-class DiagonalSparseTensor(torch.Tensor):
+class DiagonalSparseTensor(Tensor):
     _HANDLED_FUNCTIONS = dict()
 
     @staticmethod
@@ -79,11 +79,11 @@ class DiagonalSparseTensor(torch.Tensor):
 
         # TODO: I think it's ok to create index tensors on CPU when tensor to index is on cuda. Idk
         #  what's faster
-        p_index_ranges = [torch.arange(s) for s in self.physical.shape]
-        p_indices_grid = torch.stack(torch.meshgrid(*p_index_ranges, indexing="ij"))
-        strides = torch.tensor(self.strides)
-        v_indices_grid = torch.tensordot(strides, p_indices_grid, dims=1)
-        res = torch.zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
+        p_index_ranges = [arange(s) for s in self.physical.shape]
+        p_indices_grid = stack(meshgrid(*p_index_ranges, indexing="ij"))
+        strides = tensor(self.strides)
+        v_indices_grid = tensordot(strides, p_indices_grid, dims=1)
+        res = zeros(self.shape, device=self.physical.device, dtype=self.physical.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
 
@@ -691,12 +691,12 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> DiagonalSp
     assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
 
     if isinstance(t1, int) or isinstance(t1, float):
-        t1_ = torch.tensor(t1, device=t2.device)
+        t1_ = tensor(t1, device=t2.device)
     else:
         t1_ = t1
 
     if isinstance(t2, int) or isinstance(t2, float):
-        t2_ = torch.tensor(t2, device=t1.device)
+        t2_ = tensor(t2, device=t1.device)
     else:
         t2_ = t2
 
