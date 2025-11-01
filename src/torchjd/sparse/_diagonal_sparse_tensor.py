@@ -333,7 +333,22 @@ def to_most_efficient_tensor(physical: Tensor, v_to_ps: list[list[int]]) -> Tens
     physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
 
     if sum([len(pdims) for pdims in v_to_ps]) == physical.ndim:
-        return torch.movedim(physical, list(range(physical.ndim)), [pdims[0] for pdims in v_to_ps])
+        next_physical_index = physical.ndim
+        new_v_to_ps = []
+        # Add as many dimensions of size 1 as there are pdims equal to [] in v_to_ps.
+        # Create the corresponding new_v_to_ps.
+        # E.g. if v_to_ps is [[0], [], [1]], new_v_to_ps is [[0], [2], [1]].
+        for vdim, pdims in enumerate(v_to_ps):
+            if len(pdims) == 0:
+                physical = physical.unsqueeze(-1)
+                new_v_to_ps.append([next_physical_index])
+                next_physical_index += 1
+            else:
+                new_v_to_ps.append(pdims)
+
+        return torch.movedim(
+            physical, list(range(physical.ndim)), [pdims[0] for pdims in new_v_to_ps]
+        )
     else:
         return DiagonalSparseTensor(physical, v_to_ps)
 
