@@ -483,6 +483,22 @@ def unsqueeze_default(t: DiagonalSparseTensor, dim: int) -> DiagonalSparseTensor
     return DiagonalSparseTensor(t.physical, new_v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.squeeze.dims)
+def squeeze_dims(t: DiagonalSparseTensor, dims: list[int] | int | None) -> Tensor:
+    assert isinstance(t, DiagonalSparseTensor)
+
+    if dims is None:
+        excluded = set(range(t.ndim))
+    elif isinstance(dims, int):
+        excluded = {dims}
+    else:
+        excluded = set(dims)
+
+    new_v_to_ps = [pdims for i, pdims in enumerate(t.v_to_ps) if i not in excluded]
+
+    return to_most_efficient_tensor(t.physical, new_v_to_ps)
+
+
 @DiagonalSparseTensor.implements(aten.permute.default)
 def permute_default(t: DiagonalSparseTensor, dims: list[int]) -> DiagonalSparseTensor:
     new_v_to_ps = [t.v_to_ps[d] for d in dims]
