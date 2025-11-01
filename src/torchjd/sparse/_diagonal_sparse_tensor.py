@@ -727,6 +727,15 @@ def hardtanh_backward_default(
     return DiagonalSparseTensor(new_physical, grad_output.v_to_ps)
 
 
+@DiagonalSparseTensor.implements(aten.hardswish_backward.default)
+def hardswish_backward_default(grad_output: DiagonalSparseTensor, self: Tensor):
+    if isinstance(self, DiagonalSparseTensor):
+        raise NotImplementedError()
+
+    new_physical = aten.hardswish_backward.default(grad_output.physical, self)
+    return DiagonalSparseTensor(new_physical, grad_output.v_to_ps)
+
+
 @DiagonalSparseTensor.implements(aten.slice.Tensor)
 def slice_Tensor(
     t: DiagonalSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
