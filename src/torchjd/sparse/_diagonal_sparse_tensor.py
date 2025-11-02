@@ -277,16 +277,6 @@ def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
     return new_columns
 
 
-def longest_common_prefix(l1: list[int], l2: list[int]) -> list[int]:
-    prefix = []
-    for a, b in zip(l1, l2, strict=False):
-        if a == b:
-            prefix.append(a)
-        else:
-            break
-    return prefix
-
-
 def encode_by_order(input: list[int]) -> tuple[list[int], list[int]]:
     """
     Encodes values based on the order of their first appearance, starting at 0 and incrementing.
