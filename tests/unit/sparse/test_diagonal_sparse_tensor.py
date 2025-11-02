@@ -194,19 +194,18 @@ def test_encode_by_order(
 
 
 @mark.parametrize(
-    ["v_to_ps", "expected_groupings"],
+    ["pshape", "strides", "expected"],
     [
-        ([[0, 1, 2], [2, 0, 1], [2]], [[0, 1], [2]]),
-        ([[0, 1, 0, 1]], [[0, 1]]),
-        ([[0, 1, 0, 1, 2]], [[0, 1], [2]]),
-        ([[0, 0]], [[0, 0]]),
-        ([[0, 1], [1, 2]], [[0], [1], [2]]),
+        (
+            [[32, 2, 3, 4, 5]],
+            torch.tensor([[1, 0, 0, 0, 0], [0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 60, 20, 5, 1]]),
+            [[0], [1, 2, 3, 4]],
+        )
     ],
 )
-def test_get_groupings(v_to_ps: list[list[int]], expected_groupings: list[list[int]]):
-    groupings = get_groupings(v_to_ps)
-
-    assert groupings == expected_groupings
+def test_get_groupings(pshape: list[int], strides: torch.Tensor, expected: list[list[int]]):
+    result = get_groupings(pshape, strides)
+    assert result == expected
 
 
 @mark.parametrize(

@@ -1,3 +1,4 @@
+import itertools
 import operator
 from functools import wraps
 from itertools import accumulate
@@ -62,15 +63,14 @@ class DiagonalSparseTensor(Tensor):
                 f"v_to_ps elements are not encoded by first appearance. Found {v_to_ps}."
             )
 
-        if any(len(group) != 1 for group in get_groupings(v_to_ps)):
-            raise ValueError(f"Dimensions must be maximally grouped. Found {v_to_ps}.")
-
         self.physical = physical
         self.v_to_ps = v_to_ps
 
         # strides is of shape [v_ndim, p_ndim], such that v_index = strides @ p_index
-        pshape = list(self.physical.shape)
-        self.strides = tensor([strides_v2(pdims, pshape) for pdims in self.v_to_ps])
+        self.strides = get_strides(list(self.physical.shape), v_to_ps)
+
+        if any(len(group) != 1 for group in get_groupings_generalized(self.strides)):
+            raise ValueError(f"Dimensions must be maximally grouped. Found {v_to_ps}.")
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -188,11 +188,18 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
     return result
 
 
+def get_strides(pshape: list[int], v_to_ps: list[list[int]]) -> Tensor:
+    strides = torch.tensor([strides_v2(pdims, pshape) for pdims in v_to_ps], dtype=torch.int64)
+
+    # It's sometimes necessary to reshape: when v_to_ps contains 0 element for instance.
+    return strides.reshape(len(v_to_ps), len(pshape))
+
+
 def argmax(iterable):
     return max(enumerate(iterable), key=lambda x: x[1])[0]
 
 
-def strides_to_pdims(strides: list[int], physical_shape: list[int]) -> list[int]:
+def strides_to_pdims(strides: Tensor, physical_shape: list[int]) -> list[int]:
     """
     Given a list of strides, find and return the used physical dimensions.
 
@@ -207,7 +214,7 @@ def strides_to_pdims(strides: list[int], physical_shape: list[int]) -> list[int]
     # e.g. strides = [22111, 201000], physical_shape = [10, 2]
 
     pdims = []
-    remaining_strides = [s for s in strides]
+    remaining_strides = strides.clone()
     remaining_numel = (
         sum(remaining_strides[i] * (physical_shape[i] - 1) for i in range(len(physical_shape))) + 1
     )
@@ -253,29 +260,62 @@ def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]
     return [res[i] for i in range(len(res))]
 
 
-def get_groupings(v_to_ps: list[list[int]]) -> list[list[int]]:
-    """Example: [[0, 1, 2], [2, 0, 1], [2]] => [[0, 1], [2]]"""
+def are_ratios_matching(v: Tensor) -> bool:
+    # Returns a boolean indicating whether all non-nan values in a vector are integer and equal to
+    # each other.
+    # Returns a scalar boolean tensor indicating whether all values in v are the same or nan:
+    # [3.0, nan, 3.0] => True
+    # [nan, nan, nan] => True
+    # [3.0, nan, 2.0] => False
+    # [0.5, 0.5, 0.5] => False
 
-    mapping = dict[int, list[int]]()
+    non_nan_values = v[~v.isnan()]
+    return (
+        torch.eq(non_nan_values.int(), non_nan_values).all().item()
+        and non_nan_values.eq(non_nan_values[0:1]).all().item()
+    )
 
-    for p_dims in v_to_ps:
-        for i, p_dim in enumerate(p_dims):
-            if p_dim not in mapping:
-                mapping[p_dim] = p_dims[i:]
-            else:
-                mapping[p_dim] = longest_common_prefix(mapping[p_dim], p_dims[i:])
 
-    groups = []
-    visited_is = set()
-    for i, group in mapping.items():
-        if i in visited_is:
-            continue
+def get_groupings_generalized(strides: Tensor) -> list[list[int]]:
+    fstrides = strides.to(dtype=torch.float64)
+    # Note that float64 has 53 bits of precision, meaning that every integer number up to 2^53 can
+    # be represented on a float64 without any numerical error. Since strides are stored on int64,
+    # ratios can be of up to 2^64. This function may thus fail for stride values between 2^53 and
+    # 2^64.
 
-        available_dims = set(group) - visited_is
-        groups.append(list(available_dims))
-        visited_is.update(set(group))
+    ratios = torch.div(fstrides.unsqueeze(2), fstrides.unsqueeze(1))
 
-    return groups
+    # Mapping from column id to the set of columns with which it can be grouped
+    groups = {i: {i} for i, column in enumerate(strides.T)}
+    for i1, i2 in itertools.permutations(range(strides.shape[1]), 2):
+        if are_ratios_matching(ratios[:, i1, i2]):
+            groups[i1].update(groups[i2])
+            groups[i2].update(groups[i1])
+
+    new_columns = []
+    for i, group in groups.items():
+        sorted_group = sorted(list(group))
+        if i == sorted_group[0]:  # This ensures that the same group is added only once
+            new_columns.append(sorted_group)
+
+    return new_columns
+
+
+def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
+    strides_time_pshape = strides * tensor(pshape)
+    groups = {i: {i} for i, column in enumerate(strides.T)}
+    group_ids = [i for i in range(len(strides.T))]
+    for i1, i2 in itertools.combinations(range(strides.shape[1]), 2):
+        if torch.equal(strides[:, i1], strides_time_pshape[:, i2]):
+            groups[group_ids[i1]].update(groups[group_ids[i2]])
+            group_ids[i2] = group_ids[i1]
+
+    new_columns = [sorted(groups[group_id]) for group_id in sorted(set(group_ids))]
+
+    if len(new_columns) != len(pshape):
+        print(f"Combined pshape with the following new columns: {new_columns}.")
+
+    return new_columns
 
 
 def longest_common_prefix(l1: list[int], l2: list[int]) -> list[int]:
@@ -413,12 +453,16 @@ def fix_dim_of_size_1(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tenso
 def fix_ungrouped_dims(
     physical: Tensor, v_to_ps: list[list[int]]
 ) -> tuple[Tensor, list[list[int]]]:
-    groups = get_groupings(v_to_ps)
-    physical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
-    mapping = {group[0]: i for i, group in enumerate(groups)}
-    new_v_to_ps = [[mapping[i] for i in dims if i in mapping] for dims in v_to_ps]
+    strides = get_strides(list(physical.shape), v_to_ps)
+    groups = get_groupings(list(physical.shape), strides)
+    nphysical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
+    stride_mapping = torch.zeros(physical.ndim, nphysical.ndim, dtype=torch.int64)
+    for j, group in enumerate(groups):
+        stride_mapping[group[-1], j] = 1
 
-    return physical, new_v_to_ps
+    new_strides = strides @ stride_mapping
+    new_v_to_ps = [strides_to_pdims(stride, list(nphysical.shape)) for stride in new_strides]
+    return nphysical, new_v_to_ps
 
 
 def make_dst(physical: Tensor, v_to_ps: list[list[int]]) -> DiagonalSparseTensor:
