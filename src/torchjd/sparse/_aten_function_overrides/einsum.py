@@ -4,6 +4,7 @@ from torch.ops import aten  # type: ignore
 
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
+    impl,
     p_to_vs_from_v_to_ps,
     to_most_efficient_tensor,
     to_structured_sparse_tensor,
@@ -37,7 +38,7 @@ def prepare_for_elementwise_op(
     return t1_, t2_
 
 
-@StructuredSparseTensor.implements(aten.mul.Tensor)
+@impl(aten.mul.Tensor)
 def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     # Element-wise multiplication with broadcasting
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
@@ -45,7 +46,7 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
-@StructuredSparseTensor.implements(aten.div.Tensor)
+@impl(aten.div.Tensor)
 def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
     t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
@@ -53,7 +54,7 @@ def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
-@StructuredSparseTensor.implements(aten.mul.Scalar)
+@impl(aten.mul.Scalar)
 def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
     # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
     #  that
@@ -63,7 +64,7 @@ def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
     return StructuredSparseTensor(new_physical, t.v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.add.Tensor)
+@impl(aten.add.Tensor)
 def add_Tensor(
     t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
 ) -> StructuredSparseTensor:
@@ -186,7 +187,7 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
     return to_most_efficient_tensor(physical, v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.bmm.default)
+@impl(aten.bmm.default)
 def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
     assert (
@@ -204,7 +205,7 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     return einsum((mat1_, [0, 1, 2]), (mat2_, [0, 2, 3]), output=[0, 1, 3])
 
 
-@StructuredSparseTensor.implements(aten.mm.default)
+@impl(aten.mm.default)
 def mm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
@@ -215,19 +216,19 @@ def mm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
     return einsum((mat1_, [0, 1]), (mat2_, [1, 2]), output=[0, 2])
 
 
-@StructuredSparseTensor.implements(aten.mean.default)
+@impl(aten.mean.default)
 def mean_default(t: StructuredSparseTensor) -> Tensor:
     assert isinstance(t, StructuredSparseTensor)
     return aten.sum.default(t.physical) / t.numel()
 
 
-@StructuredSparseTensor.implements(aten.sum.default)
+@impl(aten.sum.default)
 def sum_default(t: StructuredSparseTensor) -> Tensor:
     assert isinstance(t, StructuredSparseTensor)
     return aten.sum.default(t.physical)
 
 
-@StructuredSparseTensor.implements(aten.sum.dim_IntList)
+@impl(aten.sum.dim_IntList)
 def sum_dim_IntList(
     t: StructuredSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
 ) -> Tensor:

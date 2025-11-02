@@ -9,13 +9,14 @@ from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
     encode_v_to_ps,
     fix_dim_encoding,
+    impl,
     print_fallback,
     to_most_efficient_tensor,
     unwrap_to_dense,
 )
 
 
-@StructuredSparseTensor.implements(aten.view.default)
+@impl(aten.view.default)
 def view_default(t: StructuredSparseTensor, shape: list[int]) -> Tensor:
     assert isinstance(t, StructuredSparseTensor)
 
@@ -120,14 +121,14 @@ def unsquash_pdim(
     return new_physical, new_encoding
 
 
-@StructuredSparseTensor.implements(aten._unsafe_view.default)
+@impl(aten._unsafe_view.default)
 def _unsafe_view_default(t: StructuredSparseTensor, shape: list[int]) -> Tensor:
     return view_default(
         t, shape
     )  # We don't do the optimizations that they do in https://github.com/pytorch/pytorch/blame/main/aten/src/ATen/native/TensorShape.cpp
 
 
-@StructuredSparseTensor.implements(aten.unsqueeze.default)
+@impl(aten.unsqueeze.default)
 def unsqueeze_default(t: StructuredSparseTensor, dim: int) -> StructuredSparseTensor:
     assert isinstance(t, StructuredSparseTensor)
     assert -t.ndim - 1 <= dim < t.ndim + 1
@@ -141,7 +142,7 @@ def unsqueeze_default(t: StructuredSparseTensor, dim: int) -> StructuredSparseTe
     return StructuredSparseTensor(t.physical, new_v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.squeeze.dims)
+@impl(aten.squeeze.dims)
 def squeeze_dims(t: StructuredSparseTensor, dims: list[int] | int | None) -> Tensor:
     assert isinstance(t, StructuredSparseTensor)
 
@@ -157,7 +158,7 @@ def squeeze_dims(t: StructuredSparseTensor, dims: list[int] | int | None) -> Ten
     return to_most_efficient_tensor(t.physical, new_v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.permute.default)
+@impl(aten.permute.default)
 def permute_default(t: StructuredSparseTensor, dims: list[int]) -> StructuredSparseTensor:
     new_v_to_ps = [t.v_to_ps[d] for d in dims]
 
@@ -165,7 +166,7 @@ def permute_default(t: StructuredSparseTensor, dims: list[int]) -> StructuredSpa
     return StructuredSparseTensor(new_physical, new_v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.cat.default)
+@impl(aten.cat.default)
 def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     if any(not isinstance(t, StructuredSparseTensor) for t in tensors):
         print_fallback(aten.cat.default, (tensors, dim), {})
@@ -217,7 +218,7 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     return StructuredSparseTensor(new_physical, new_v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.expand.default)
+@impl(aten.expand.default)
 def expand_default(t: StructuredSparseTensor, sizes: list[int]) -> StructuredSparseTensor:
     # note that sizes could also be just an int, or a torch.Size i think
     assert isinstance(t, StructuredSparseTensor)
@@ -252,7 +253,7 @@ def expand_default(t: StructuredSparseTensor, sizes: list[int]) -> StructuredSpa
     return StructuredSparseTensor(new_physical, new_v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.broadcast_tensors.default)
+@impl(aten.broadcast_tensors.default)
 def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
     if len(tensors) != 2:
         raise NotImplementedError()
@@ -279,7 +280,7 @@ def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
     return aten.expand.default(t1, new_shape), aten.expand.default(t2, new_shape)
 
 
-@StructuredSparseTensor.implements(aten.slice.Tensor)
+@impl(aten.slice.Tensor)
 def slice_Tensor(
     t: StructuredSparseTensor, dim: int, start: int | None, end: int | None, step: int = 1
 ) -> StructuredSparseTensor:
@@ -315,7 +316,7 @@ def slice_Tensor(
     return StructuredSparseTensor(new_physical, t.v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.transpose.int)
+@impl(aten.transpose.int)
 def transpose_int(t: StructuredSparseTensor, dim0: int, dim1: int) -> StructuredSparseTensor:
     assert isinstance(t, StructuredSparseTensor)
 

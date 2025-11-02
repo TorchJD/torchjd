@@ -126,6 +126,9 @@ class StructuredSparseTensor(Tensor):
         return decorator
 
 
+impl = StructuredSparseTensor.implements
+
+
 def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
         result = f"{t.__class__.__name__} - shape: {t.shape}"

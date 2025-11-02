@@ -1,10 +1,10 @@
 from torch import Tensor
 from torch.ops import aten  # type: ignore
 
-from torchjd.sparse._structured_sparse_tensor import StructuredSparseTensor
+from torchjd.sparse._structured_sparse_tensor import StructuredSparseTensor, impl
 
 
-@StructuredSparseTensor.implements(aten.threshold_backward.default)
+@impl(aten.threshold_backward.default)
 def threshold_backward_default(
     grad_output: StructuredSparseTensor, self: Tensor, threshold
 ) -> StructuredSparseTensor:
@@ -13,7 +13,7 @@ def threshold_backward_default(
     return StructuredSparseTensor(new_physical, grad_output.v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.hardtanh_backward.default)
+@impl(aten.hardtanh_backward.default)
 def hardtanh_backward_default(
     grad_output: StructuredSparseTensor,
     self: Tensor,
@@ -27,7 +27,7 @@ def hardtanh_backward_default(
     return StructuredSparseTensor(new_physical, grad_output.v_to_ps)
 
 
-@StructuredSparseTensor.implements(aten.hardswish_backward.default)
+@impl(aten.hardswish_backward.default)
 def hardswish_backward_default(grad_output: StructuredSparseTensor, self: Tensor):
     if isinstance(self, StructuredSparseTensor):
         raise NotImplementedError()

@@ -1,6 +1,6 @@
 from torch.ops import aten  # type: ignore
 
-from torchjd.sparse._structured_sparse_tensor import StructuredSparseTensor
+from torchjd.sparse._structured_sparse_tensor import StructuredSparseTensor, impl
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
 _POINTWISE_FUNCTIONS = [
@@ -68,7 +68,7 @@ _IN_PLACE_POINTWISE_FUNCTIONS = [
 
 
 def _override_pointwise(op):
-    @StructuredSparseTensor.implements(op)
+    @impl(op)
     def func_(t: StructuredSparseTensor) -> StructuredSparseTensor:
         assert isinstance(t, StructuredSparseTensor)
         return StructuredSparseTensor(op(t.physical), t.v_to_ps)
@@ -77,7 +77,7 @@ def _override_pointwise(op):
 
 
 def _override_inplace_pointwise(op):
-    @StructuredSparseTensor.implements(op)
+    @impl(op)
     def func_(t: StructuredSparseTensor) -> StructuredSparseTensor:
         assert isinstance(t, StructuredSparseTensor)
         op(t.physical)
@@ -91,7 +91,7 @@ for pointwise_func in _IN_PLACE_POINTWISE_FUNCTIONS:
     _override_inplace_pointwise(pointwise_func)
 
 
-@StructuredSparseTensor.implements(aten.pow.Tensor_Scalar)
+@impl(aten.pow.Tensor_Scalar)
 def pow_Tensor_Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseTensor:
     assert isinstance(t, StructuredSparseTensor)
 
@@ -104,7 +104,7 @@ def pow_Tensor_Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredS
 
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
-@StructuredSparseTensor.implements(aten.pow_.Scalar)
+@impl(aten.pow_.Scalar)
 def pow__Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseTensor:
     assert isinstance(t, StructuredSparseTensor)
 
@@ -117,7 +117,7 @@ def pow__Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseT
     return t
 
 
-@StructuredSparseTensor.implements(aten.div.Scalar)
+@impl(aten.div.Scalar)
 def div_Scalar(t: StructuredSparseTensor, divisor: float) -> StructuredSparseTensor:
     assert isinstance(t, StructuredSparseTensor)
 
