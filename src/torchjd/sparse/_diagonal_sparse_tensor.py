@@ -549,13 +549,28 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     assert len(indices) <= 1
 
     if len(indices) == 0:
-        # TODO: create new physical dimension on which we'll concatenate
-        raise NotImplementedError()
+        # Add a physical dimension pdim on which we can concatenate the physicals such that this
+        # translates into a concatenation of the virtuals on virtual dimension dim.
 
-    pdim = indices[0][0]
+        # Stride-based representation:
+        # new_stride_column = torch.zeros(ref_tensor.ndim, dtype=torch.int)
+        # new_stride_column[dim] = ref_virtual_dim_size
 
-    new_physical = aten.cat.default([t.physical for t in tensors_], dim=pdim)
-    return DiagonalSparseTensor(new_physical, ref_tensor.v_to_ps)
+        pdim = ref_tensor.physical.ndim
+        new_v_to_ps = [[d for d in pdims] for pdims in ref_tensor.v_to_ps]
+        new_v_to_ps[dim] = [pdim] + new_v_to_ps[dim]
+        new_v_to_ps, destination = encode_v_to_ps(new_v_to_ps)
+        source = list(range(len(destination)))
+        physicals = [t.physical.unsqueeze(-1).movedim(source, destination) for t in tensors_]
+    else:
+        # Such a physical dimension already exists. Note that an alternative implementation would be
+        # to simply always add the physical dimension, and squash it if it ends up being not needed.
+        physicals = [t.physical for t in tensors_]
+        pdim = indices[0][0]
+        new_v_to_ps = ref_tensor.v_to_ps
+
+    new_physical = aten.cat.default(physicals, dim=pdim)
+    return DiagonalSparseTensor(new_physical, new_v_to_ps)
 
 
 def unsquash_pdim_from_strides(
