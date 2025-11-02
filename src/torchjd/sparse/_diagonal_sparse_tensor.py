@@ -66,6 +66,8 @@ class DiagonalSparseTensor(Tensor):
 
         self.physical = physical
         self.v_to_ps = v_to_ps
+
+        # strides is of shape [v_ndim, p_ndim], such that v_index = strides @ p_index
         pshape = list(self.physical.shape)
         self.strides = tensor([strides_v2(pdims, pshape) for pdims in self.v_to_ps])
 
