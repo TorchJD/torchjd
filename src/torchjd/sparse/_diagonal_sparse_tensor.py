@@ -2,6 +2,7 @@ import operator
 from functools import wraps
 from itertools import accumulate
 from math import prod
+from typing import cast
 
 import torch
 from torch import Tensor, arange, meshgrid, stack, tensor, tensordot, zeros
@@ -530,9 +531,31 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
         print_fallback(aten.cat.default, (tensors, dim), {})
         return aten.cat.default([unwrap_to_dense(t) for t in tensors])
 
-    else:
-        # TODO: efficient implementation when all tensors are sparse
-        return aten.cat.default([unwrap_to_dense(t) for t in tensors])
+    tensors_ = [cast(DiagonalSparseTensor, t) for t in tensors]
+    ref_tensor = tensors_[0]
+    ref_strides = ref_tensor.strides
+    if any(not torch.equal(t.strides, ref_strides) for t in tensors_[1:]):
+        raise NotImplementedError()
+
+    # We need to try to find the (pretty sure it either does not exist or is unique) physical
+    # dimension that makes us only move on virtual dimension dim. It also needs to be such that
+    # traversing it entirely brings us exactly to the end of virtual dimension dim.
+
+    ref_virtual_dim_size = ref_tensor.shape[dim]
+    indices = torch.argwhere(
+        torch.eq(ref_strides[dim] * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
+        & torch.eq(ref_strides.sum(dim=0) * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
+    )
+    assert len(indices) <= 1
+
+    if len(indices) == 0:
+        # TODO: create new physical dimension on which we'll concatenate
+        raise NotImplementedError()
+
+    pdim = indices[0][0]
+
+    new_physical = aten.cat.default([t.physical for t in tensors_], dim=pdim)
+    return DiagonalSparseTensor(new_physical, ref_tensor.v_to_ps)
 
 
 def unsquash_pdim_from_strides(
