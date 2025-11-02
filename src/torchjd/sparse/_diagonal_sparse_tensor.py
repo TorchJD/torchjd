@@ -535,6 +535,17 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
         return aten.cat.default([unwrap_to_dense(t) for t in tensors])
 
 
+def unsquash_pdim_from_strides(
+    physical: Tensor, pdim: int, new_pdim_shape: list[int]
+) -> tuple[Tensor, Tensor]:
+    new_shape = list(physical.shape)
+    new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
+    new_physical = physical.reshape(new_shape)
+
+    stride_multipliers = tensor([prod(new_pdim_shape[i + 1 :]) for i in range(len(new_pdim_shape))])
+    return new_physical, stride_multipliers
+
+
 def unsquash_pdim(
     physical: Tensor, pdim: int, new_pdim_shape: list[int]
 ) -> tuple[Tensor, list[list[int]]]:
