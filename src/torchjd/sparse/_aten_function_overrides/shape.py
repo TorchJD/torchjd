@@ -178,7 +178,7 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     if any(not torch.equal(t.strides, ref_strides) for t in tensors_[1:]):
         raise NotImplementedError(
             "Override for aten.cat.default does not support SSTs that do not all have the same "
-            f"strides. Found the following strides:\n{[t.strides for t in tensors_]} and the "
+            f"strides. Found the following tensors:\n{[t.debug_info() for t in tensors_]} and the "
             f"following dim: {dim}."
         )
 
