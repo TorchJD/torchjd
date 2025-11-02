@@ -69,7 +69,7 @@ class DiagonalSparseTensor(Tensor):
         # strides is of shape [v_ndim, p_ndim], such that v_index = strides @ p_index
         self.strides = get_strides(list(self.physical.shape), v_to_ps)
 
-        if any(len(group) != 1 for group in get_groupings_generalized(self.strides)):
+        if any(len(group) != 1 for group in get_groupings(list(self.physical.shape), self.strides)):
             raise ValueError(f"Dimensions must be maximally grouped. Found {v_to_ps}.")
 
     def to_dense(
@@ -258,47 +258,6 @@ def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]
             else:
                 res[p_dim].append((v_dim, i))
     return [res[i] for i in range(len(res))]
-
-
-def are_ratios_matching(v: Tensor) -> bool:
-    # Returns a boolean indicating whether all non-nan values in a vector are integer and equal to
-    # each other.
-    # Returns a scalar boolean tensor indicating whether all values in v are the same or nan:
-    # [3.0, nan, 3.0] => True
-    # [nan, nan, nan] => True
-    # [3.0, nan, 2.0] => False
-    # [0.5, 0.5, 0.5] => False
-
-    non_nan_values = v[~v.isnan()]
-    return (
-        torch.eq(non_nan_values.int(), non_nan_values).all().item()
-        and non_nan_values.eq(non_nan_values[0:1]).all().item()
-    )
-
-
-def get_groupings_generalized(strides: Tensor) -> list[list[int]]:
-    fstrides = strides.to(dtype=torch.float64)
-    # Note that float64 has 53 bits of precision, meaning that every integer number up to 2^53 can
-    # be represented on a float64 without any numerical error. Since strides are stored on int64,
-    # ratios can be of up to 2^64. This function may thus fail for stride values between 2^53 and
-    # 2^64.
-
-    ratios = torch.div(fstrides.unsqueeze(2), fstrides.unsqueeze(1))
-
-    # Mapping from column id to the set of columns with which it can be grouped
-    groups = {i: {i} for i, column in enumerate(strides.T)}
-    for i1, i2 in itertools.permutations(range(strides.shape[1]), 2):
-        if are_ratios_matching(ratios[:, i1, i2]):
-            groups[i1].update(groups[i2])
-            groups[i2].update(groups[i1])
-
-    new_columns = []
-    for i, group in groups.items():
-        sorted_group = sorted(list(group))
-        if i == sorted_group[0]:  # This ensures that the same group is added only once
-            new_columns.append(sorted_group)
-
-    return new_columns
 
 
 def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
