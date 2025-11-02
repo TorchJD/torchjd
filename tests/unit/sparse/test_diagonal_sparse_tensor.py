@@ -4,15 +4,17 @@ from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
 from utils.tensors import randn_, tensor_, zeros_
 
-from torchjd.sparse._diagonal_sparse_tensor import (
+from torchjd.sparse._aten_function_overrides.einsum import einsum
+from torchjd.sparse._aten_function_overrides.pointwise import (
     _IN_PLACE_POINTWISE_FUNCTIONS,
     _POINTWISE_FUNCTIONS,
+)
+from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
+from torchjd.sparse._diagonal_sparse_tensor import (
     DiagonalSparseTensor,
-    einsum,
     encode_by_order,
     fix_ungrouped_dims,
     get_groupings,
-    unsquash_pdim,
 )
 
 
