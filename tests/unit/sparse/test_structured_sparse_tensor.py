@@ -10,8 +10,8 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
     _POINTWISE_FUNCTIONS,
 )
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
-from torchjd.sparse._diagonal_sparse_tensor import (
-    DiagonalSparseTensor,
+from torchjd.sparse._structured_sparse_tensor import (
+    StructuredSparseTensor,
     encode_by_order,
     fix_ungrouped_dims,
     get_groupings,
@@ -22,7 +22,7 @@ def test_to_dense():
     n = 2
     m = 3
     a = randn_([n, m])
-    b = DiagonalSparseTensor(a, [[0], [1], [1], [0]])
+    b = StructuredSparseTensor(a, [[0], [1], [1], [0]])
     c = b.to_dense()
 
     for i in range(n):
@@ -32,7 +32,7 @@ def test_to_dense():
 
 def test_to_dense2():
     a = tensor_([1.0, 2.0, 3.0])
-    b = DiagonalSparseTensor(a, [[0, 0]])
+    b = StructuredSparseTensor(a, [[0, 0]])
     c = b.to_dense()
     expected = tensor_([1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0])
     assert torch.all(torch.eq(c, expected))
@@ -55,14 +55,14 @@ def test_einsum(
     b_indices: list[int],
     output_indices: list[int],
 ):
-    a = DiagonalSparseTensor(randn_(a_pshape), a_v_to_ps)
-    b = DiagonalSparseTensor(randn_(b_pshape), b_v_to_ps)
+    a = StructuredSparseTensor(randn_(a_pshape), a_v_to_ps)
+    b = StructuredSparseTensor(randn_(b_pshape), b_v_to_ps)
 
     res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
     expected = torch.einsum(a.to_dense(), a_indices, b.to_dense(), b_indices, output_indices)
 
-    assert isinstance(res, DiagonalSparseTensor)
+    assert isinstance(res, StructuredSparseTensor)
     assert_close(res.to_dense(), expected)
 
 
@@ -75,9 +75,9 @@ def test_einsum(
         [2, 3, 4],
     ],
 )
-def test_diagonal_sparse_tensor_scalar(shape: list[int]):
+def test_structured_sparse_tensor_scalar(shape: list[int]):
     a = randn_(shape)
-    b = DiagonalSparseTensor(a, [[dim] for dim in range(len(shape))])
+    b = StructuredSparseTensor(a, [[dim] for dim in range(len(shape))])
 
     assert_close(a, b.to_dense())
 
@@ -85,7 +85,7 @@ def test_diagonal_sparse_tensor_scalar(shape: list[int]):
 @mark.parametrize("dim", [2, 3, 4, 5, 10])
 def test_diag_equivalence(dim: int):
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, [[0], [0]])
 
     diag_a = torch.diag(a)
 
@@ -95,7 +95,7 @@ def test_diag_equivalence(dim: int):
 def test_three_virtual_single_physical():
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [[0], [0], [0]])
+    b = StructuredSparseTensor(a, [[0], [0], [0]])
 
     expected = zeros_([dim, dim, dim])
     for i in range(dim):
@@ -108,10 +108,10 @@ def test_three_virtual_single_physical():
 def test_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, [[0], [0]])
     c = b.to_dense()
     res = func(b)
-    assert isinstance(res, DiagonalSparseTensor)
+    assert isinstance(res, StructuredSparseTensor)
 
     assert_close(res.to_dense(), func(c), equal_nan=True)
 
@@ -120,10 +120,10 @@ def test_pointwise(func):
 def test_inplace_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, [[0], [0]])
     c = b.to_dense()
     func(b)
-    assert isinstance(b, DiagonalSparseTensor)
+    assert isinstance(b, StructuredSparseTensor)
 
     assert_close(b.to_dense(), func(c), equal_nan=True)
 
@@ -132,7 +132,7 @@ def test_inplace_pointwise(func):
 def test_unary(func):
     dim = 10
     a = randn_([dim])
-    b = DiagonalSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, [[0], [0]])
     c = b.to_dense()
 
     res = func(b)
@@ -163,12 +163,12 @@ def test_view(
     expected_v_to_ps: list[list[int]],
 ):
     a = randn_(tuple(physical_shape))
-    t = DiagonalSparseTensor(a, v_to_ps)
+    t = StructuredSparseTensor(a, v_to_ps)
 
     result = aten.view.default(t, target_shape)
     expected = t.to_dense().reshape(target_shape)
 
-    assert isinstance(result, DiagonalSparseTensor)
+    assert isinstance(result, StructuredSparseTensor)
     assert list(result.physical.shape) == expected_physical_shape
     assert result.v_to_ps == expected_v_to_ps
     assert torch.all(torch.eq(result.to_dense(), expected))
@@ -260,19 +260,19 @@ def test_unsquash_pdim(
 
 
 @mark.parametrize(
-    ["dst_args", "dim"],
+    ["sst_args", "dim"],
     [
         ([([3], [[0], [0]]), ([3], [[0], [0]])], 1),
         ([([3, 2], [[0], [1, 0]]), ([3, 2], [[0], [1, 0]])], 1),
     ],
 )
 def test_concatenate(
-    dst_args: list[tuple[list[int], list[list[int]]]],
+    sst_args: list[tuple[list[int], list[list[int]]]],
     dim: int,
 ):
-    tensors = [DiagonalSparseTensor(randn_(pshape), v_to_ps) for pshape, v_to_ps in dst_args]
+    tensors = [StructuredSparseTensor(randn_(pshape), v_to_ps) for pshape, v_to_ps in sst_args]
     res = aten.cat.default(tensors, dim)
     expected = aten.cat.default([t.to_dense() for t in tensors], dim)
 
-    assert isinstance(res, DiagonalSparseTensor)
+    assert isinstance(res, StructuredSparseTensor)
     assert torch.all(torch.eq(res.to_dense(), expected))

@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
-from torchjd.sparse import make_dst
+from torchjd.sparse import make_sst
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
@@ -176,7 +176,7 @@ class Engine:
 
             output_dims = list(range(output.ndim))
             v_to_ps = [[dim] for dim in output_dims * 2]
-            jac_output = make_dst(torch.ones_like(output), v_to_ps)
+            jac_output = make_sst(torch.ones_like(output), v_to_ps)
 
             vmapped_diff = differentiation
             for _ in output_dims:

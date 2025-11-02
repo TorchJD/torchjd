@@ -2,23 +2,23 @@ import torch
 from torch import Tensor, tensor
 from torch.ops import aten  # type: ignore
 
-from torchjd.sparse import DiagonalSparseTensor
-from torchjd.sparse._diagonal_sparse_tensor import (
+from torchjd.sparse._structured_sparse_tensor import (
+    StructuredSparseTensor,
     p_to_vs_from_v_to_ps,
-    to_diagonal_sparse_tensor,
     to_most_efficient_tensor,
+    to_structured_sparse_tensor,
 )
 
 
 def prepare_for_elementwise_op(
     t1: Tensor | int | float, t2: Tensor | int | float
-) -> tuple[DiagonalSparseTensor, DiagonalSparseTensor]:
+) -> tuple[StructuredSparseTensor, StructuredSparseTensor]:
     """
-    Prepares two DSTs of the same shape from two args, one of those being a DST, and the other being
-    a DST, Tensor, int or float.
+    Prepares two SSTs of the same shape from two args, one of those being a SST, and the other being
+    a SST, Tensor, int or float.
     """
 
-    assert isinstance(t1, DiagonalSparseTensor) or isinstance(t2, DiagonalSparseTensor)
+    assert isinstance(t1, StructuredSparseTensor) or isinstance(t2, StructuredSparseTensor)
 
     if isinstance(t1, int) or isinstance(t1, float):
         t1_ = tensor(t1, device=t2.device)
@@ -31,13 +31,13 @@ def prepare_for_elementwise_op(
         t2_ = t2
 
     t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
-    t1_ = to_diagonal_sparse_tensor(t1_)
-    t2_ = to_diagonal_sparse_tensor(t2_)
+    t1_ = to_structured_sparse_tensor(t1_)
+    t2_ = to_structured_sparse_tensor(t2_)
 
     return t1_, t2_
 
 
-@DiagonalSparseTensor.implements(aten.mul.Tensor)
+@StructuredSparseTensor.implements(aten.mul.Tensor)
 def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     # Element-wise multiplication with broadcasting
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
@@ -45,38 +45,38 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
-@DiagonalSparseTensor.implements(aten.div.Tensor)
+@StructuredSparseTensor.implements(aten.div.Tensor)
 def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    t2_ = DiagonalSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
+    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
     all_dims = list(range(t1_.ndim))
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
-@DiagonalSparseTensor.implements(aten.mul.Scalar)
-def mul_Scalar(t: DiagonalSparseTensor, scalar) -> DiagonalSparseTensor:
-    # TODO: maybe it could be that scalar is a scalar DST and t is a normal tensor. Need to check
+@StructuredSparseTensor.implements(aten.mul.Scalar)
+def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
+    # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
     #  that
 
-    assert isinstance(t, DiagonalSparseTensor)
+    assert isinstance(t, StructuredSparseTensor)
     new_physical = aten.mul.Scalar(t.physical, scalar)
-    return DiagonalSparseTensor(new_physical, t.v_to_ps)
+    return StructuredSparseTensor(new_physical, t.v_to_ps)
 
 
-@DiagonalSparseTensor.implements(aten.add.Tensor)
+@StructuredSparseTensor.implements(aten.add.Tensor)
 def add_Tensor(
     t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
-) -> DiagonalSparseTensor:
+) -> StructuredSparseTensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
 
     if t1_.v_to_ps == t2_.v_to_ps:
         new_physical = t1_.physical + t2_.physical * alpha
-        return DiagonalSparseTensor(new_physical, t1_.v_to_ps)
+        return StructuredSparseTensor(new_physical, t1_.v_to_ps)
     else:
         raise NotImplementedError()
 
 
-def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> Tensor:
+def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -> Tensor:
 
     # First part of the algorithm, determine how to cluster physical indices as well as the common
     # p_shapes corresponding to matching v_dims. Second part translates to physical einsum.
@@ -89,7 +89,7 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
     # get unique indices
     # map output indices (there can be splits)
     # call physical einsum
-    # build resulting dst
+    # build resulting sst
 
     # OVER
 
@@ -104,7 +104,7 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
     # For this reason, an index is decomposed into sub-indices that are then independently
     # clustered.
-    # So if an index i in args for some DiagonalSparseTensor corresponds to a v_to_ps [j, k, l],
+    # So if an index i in args for some StructuredSparseTensor corresponds to a v_to_ps [j, k, l],
     # We will consider three indices (i, 0), (i, 1) and (i, 2).
     # If furthermore [k] correspond to the v_to_ps of some other tensor with index j, then
     # (i, 1) and (j, 0) will be clustered together (and end up being mapped to the same indice in
@@ -136,7 +136,7 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
     tensors = list[Tensor]()
     indices_to_n_pdims = dict[int, int]()
     for t, indices in args:
-        assert isinstance(t, DiagonalSparseTensor)
+        assert isinstance(t, StructuredSparseTensor)
         tensors.append(t.physical)
         for ps, index in zip(t.v_to_ps, indices):
             if index in indices_to_n_pdims:
@@ -150,7 +150,7 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
             group_indices([(indices[i], sub_i) for i, sub_i in indices_])
         # record the physical dimensions, index[v] for v in vs will end-up mapping to the same
         # final dimension as they were just clustered, so we can take the first, which exists as
-        # t is a valid DST.
+        # t is a valid SST.
         new_indices_pair.append([(indices[vs[0][0]], vs[0][1]) for vs in p_to_vs])
 
     current = 0
@@ -186,9 +186,9 @@ def einsum(*args: tuple[DiagonalSparseTensor, list[int]], output: list[int]) -> 
     return to_most_efficient_tensor(physical, v_to_ps)
 
 
-@DiagonalSparseTensor.implements(aten.bmm.default)
+@StructuredSparseTensor.implements(aten.bmm.default)
 def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
-    assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
+    assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
     assert (
         mat1.ndim == 3
         and mat2.ndim == 3
@@ -196,42 +196,42 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
         and mat1.shape[2] == mat2.shape[1]
     )
 
-    mat1_ = to_diagonal_sparse_tensor(mat1)
-    mat2_ = to_diagonal_sparse_tensor(mat2)
+    mat1_ = to_structured_sparse_tensor(mat1)
+    mat2_ = to_structured_sparse_tensor(mat2)
 
     # TODO: Verify that the dimension `0` of mat1_ and mat2_ have the same physical dimension sizes
     #  decompositions. If not, can reshape to common decomposition?
     return einsum((mat1_, [0, 1, 2]), (mat2_, [0, 2, 3]), output=[0, 1, 3])
 
 
-@DiagonalSparseTensor.implements(aten.mm.default)
+@StructuredSparseTensor.implements(aten.mm.default)
 def mm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
-    assert isinstance(mat1, DiagonalSparseTensor) or isinstance(mat2, DiagonalSparseTensor)
+    assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
 
-    mat1_ = to_diagonal_sparse_tensor(mat1)
-    mat2_ = to_diagonal_sparse_tensor(mat2)
+    mat1_ = to_structured_sparse_tensor(mat1)
+    mat2_ = to_structured_sparse_tensor(mat2)
 
     return einsum((mat1_, [0, 1]), (mat2_, [1, 2]), output=[0, 2])
 
 
-@DiagonalSparseTensor.implements(aten.mean.default)
-def mean_default(t: DiagonalSparseTensor) -> Tensor:
-    assert isinstance(t, DiagonalSparseTensor)
+@StructuredSparseTensor.implements(aten.mean.default)
+def mean_default(t: StructuredSparseTensor) -> Tensor:
+    assert isinstance(t, StructuredSparseTensor)
     return aten.sum.default(t.physical) / t.numel()
 
 
-@DiagonalSparseTensor.implements(aten.sum.default)
-def sum_default(t: DiagonalSparseTensor) -> Tensor:
-    assert isinstance(t, DiagonalSparseTensor)
+@StructuredSparseTensor.implements(aten.sum.default)
+def sum_default(t: StructuredSparseTensor) -> Tensor:
+    assert isinstance(t, StructuredSparseTensor)
     return aten.sum.default(t.physical)
 
 
-@DiagonalSparseTensor.implements(aten.sum.dim_IntList)
+@StructuredSparseTensor.implements(aten.sum.dim_IntList)
 def sum_dim_IntList(
-    t: DiagonalSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
+    t: StructuredSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
 ) -> Tensor:
-    assert isinstance(t, DiagonalSparseTensor)
+    assert isinstance(t, StructuredSparseTensor)
 
     if dtype:
         raise NotImplementedError()

@@ -9,7 +9,7 @@ from torch import Tensor, arange, meshgrid, stack, tensor, tensordot, zeros
 from torch.utils._pytree import tree_flatten, tree_map, tree_unflatten
 
 
-class DiagonalSparseTensor(Tensor):
+class StructuredSparseTensor(Tensor):
     _HANDLED_FUNCTIONS = dict()
 
     @staticmethod
@@ -101,7 +101,7 @@ class DiagonalSparseTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"DiagonalSparseTensor(physical={self.physical}, v_to_ps={self.v_to_ps})"
+        return f"StructuredSparseTensor(physical={self.physical}, v_to_ps={self.v_to_ps})"
 
     def debug_info(self) -> str:
         info = (
@@ -129,7 +129,7 @@ class DiagonalSparseTensor(Tensor):
 def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
         result = f"{t.__class__.__name__} - shape: {t.shape}"
-        if isinstance(t, DiagonalSparseTensor):
+        if isinstance(t, StructuredSparseTensor):
             result += f" - pshape: {t.physical.shape} - v_to_ps: {t.v_to_ps}"
 
         return result
@@ -166,7 +166,7 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
 
     Example:
         Imagine a vector of size 3, and of value [1, 2, 3].
-        Imagine a DST t of shape [3, 3] using this vector as physical and using [[0, 0]] as v_to_ps.
+        Imagine a SST t of shape [3, 3] using this vector as physical and using [[0, 0]] as v_to_ps.
         t.to_dense() is [1, 0, 0, 0, 2, 0, 0, 0, 3] (it's the flattening of the diagonal matrix
         [[1, 0, 0], [0, 2, 0], [0, 0, 3]]).
         When you move by 1 on physical dimension 0, you move by 4 on virtual dimension 0, i.e.
@@ -310,11 +310,11 @@ def encode_v_to_ps(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]
     return tree_unflatten(sorted_flat_v_to_ps, spec), destination
 
 
-def to_diagonal_sparse_tensor(t: Tensor) -> DiagonalSparseTensor:
-    if isinstance(t, DiagonalSparseTensor):
+def to_structured_sparse_tensor(t: Tensor) -> StructuredSparseTensor:
+    if isinstance(t, StructuredSparseTensor):
         return t
     else:
-        return make_dst(t, [[i] for i in range(t.ndim)])
+        return make_sst(t, [[i] for i in range(t.ndim)])
 
 
 def to_most_efficient_tensor(physical: Tensor, v_to_ps: list[list[int]]) -> Tensor:
@@ -340,11 +340,11 @@ def to_most_efficient_tensor(physical: Tensor, v_to_ps: list[list[int]]) -> Tens
             physical, list(range(physical.ndim)), [pdims[0] for pdims in new_v_to_ps]
         )
     else:
-        return DiagonalSparseTensor(physical, v_to_ps)
+        return StructuredSparseTensor(physical, v_to_ps)
 
 
 def unwrap_to_dense(t: Tensor):
-    if isinstance(t, DiagonalSparseTensor):
+    if isinstance(t, StructuredSparseTensor):
         return t.to_dense()
     else:
         return t
@@ -412,10 +412,10 @@ def fix_ungrouped_dims(
     return nphysical, new_v_to_ps
 
 
-def make_dst(physical: Tensor, v_to_ps: list[list[int]]) -> DiagonalSparseTensor:
-    """Fix physical and v_to_ps and create a DiagonalSparseTensor with them."""
+def make_sst(physical: Tensor, v_to_ps: list[list[int]]) -> StructuredSparseTensor:
+    """Fix physical and v_to_ps and create a StructuredSparseTensor with them."""
 
     physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
     physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
     physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
-    return DiagonalSparseTensor(physical, v_to_ps)
+    return StructuredSparseTensor(physical, v_to_ps)
