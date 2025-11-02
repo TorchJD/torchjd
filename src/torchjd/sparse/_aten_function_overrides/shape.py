@@ -175,7 +175,11 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     ref_tensor = tensors_[0]
     ref_strides = ref_tensor.strides
     if any(not torch.equal(t.strides, ref_strides) for t in tensors_[1:]):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "Override for aten.cat.default does not support SSTs that do not all have the same "
+            f"strides. Found the following strides:\n{[t.strides for t in tensors_]} and the "
+            f"following dim: {dim}."
+        )
 
     # We need to try to find the (pretty sure it either does not exist or is unique) physical
     # dimension that makes us only move on virtual dimension dim. It also needs to be such that
