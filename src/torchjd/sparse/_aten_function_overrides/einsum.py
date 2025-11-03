@@ -11,72 +11,6 @@ from torchjd.sparse._structured_sparse_tensor import (
 )
 
 
-def prepare_for_elementwise_op(
-    t1: Tensor | int | float, t2: Tensor | int | float
-) -> tuple[StructuredSparseTensor, StructuredSparseTensor]:
-    """
-    Prepares two SSTs of the same shape from two args, one of those being a SST, and the other being
-    a SST, Tensor, int or float.
-    """
-
-    assert isinstance(t1, StructuredSparseTensor) or isinstance(t2, StructuredSparseTensor)
-
-    if isinstance(t1, int) or isinstance(t1, float):
-        t1_ = tensor(t1, device=t2.device)
-    else:
-        t1_ = t1
-
-    if isinstance(t2, int) or isinstance(t2, float):
-        t2_ = tensor(t2, device=t1.device)
-    else:
-        t2_ = t2
-
-    t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
-    t1_ = to_structured_sparse_tensor(t1_)
-    t2_ = to_structured_sparse_tensor(t2_)
-
-    return t1_, t2_
-
-
-@impl(aten.mul.Tensor)
-def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
-    # Element-wise multiplication with broadcasting
-    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    all_dims = list(range(t1_.ndim))
-    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
-
-
-@impl(aten.div.Tensor)
-def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
-    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
-    all_dims = list(range(t1_.ndim))
-    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
-
-
-@impl(aten.mul.Scalar)
-def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
-    # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
-    #  that
-
-    assert isinstance(t, StructuredSparseTensor)
-    new_physical = aten.mul.Scalar(t.physical, scalar)
-    return StructuredSparseTensor(new_physical, t.v_to_ps)
-
-
-@impl(aten.add.Tensor)
-def add_Tensor(
-    t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
-) -> StructuredSparseTensor:
-    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-
-    if t1_.v_to_ps == t2_.v_to_ps:
-        new_physical = t1_.physical + t2_.physical * alpha
-        return StructuredSparseTensor(new_physical, t1_.v_to_ps)
-    else:
-        raise NotImplementedError()
-
-
 def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -> Tensor:
 
     # First part of the algorithm, determine how to cluster physical indices as well as the common
@@ -191,6 +125,72 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
     # Need to use the safe constructor, otherwise the dimensions may not be maximally grouped.
     # Maybe there is a way to fix that though.
     return to_most_efficient_tensor(physical, v_to_ps)
+
+
+def prepare_for_elementwise_op(
+    t1: Tensor | int | float, t2: Tensor | int | float
+) -> tuple[StructuredSparseTensor, StructuredSparseTensor]:
+    """
+    Prepares two SSTs of the same shape from two args, one of those being a SST, and the other being
+    a SST, Tensor, int or float.
+    """
+
+    assert isinstance(t1, StructuredSparseTensor) or isinstance(t2, StructuredSparseTensor)
+
+    if isinstance(t1, int) or isinstance(t1, float):
+        t1_ = tensor(t1, device=t2.device)
+    else:
+        t1_ = t1
+
+    if isinstance(t2, int) or isinstance(t2, float):
+        t2_ = tensor(t2, device=t1.device)
+    else:
+        t2_ = t2
+
+    t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
+    t1_ = to_structured_sparse_tensor(t1_)
+    t2_ = to_structured_sparse_tensor(t2_)
+
+    return t1_, t2_
+
+
+@impl(aten.mul.Tensor)
+def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
+    # Element-wise multiplication with broadcasting
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+    all_dims = list(range(t1_.ndim))
+    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
+
+
+@impl(aten.div.Tensor)
+def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
+    all_dims = list(range(t1_.ndim))
+    return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
+
+
+@impl(aten.mul.Scalar)
+def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
+    # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
+    #  that
+
+    assert isinstance(t, StructuredSparseTensor)
+    new_physical = aten.mul.Scalar(t.physical, scalar)
+    return StructuredSparseTensor(new_physical, t.v_to_ps)
+
+
+@impl(aten.add.Tensor)
+def add_Tensor(
+    t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
+) -> StructuredSparseTensor:
+    t1_, t2_ = prepare_for_elementwise_op(t1, t2)
+
+    if t1_.v_to_ps == t2_.v_to_ps:
+        new_physical = t1_.physical + t2_.physical * alpha
+        return StructuredSparseTensor(new_physical, t1_.v_to_ps)
+    else:
+        raise NotImplementedError()
 
 
 @impl(aten.bmm.default)
