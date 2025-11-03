@@ -111,7 +111,7 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
     # (i, 1) and (j, 0) will be clustered together (and end up being mapped to the same indice in
     # the resulting einsum).
     # Note that this is a problem if two virtual dimensions (from possibly different
-    # DiagonaSparseTensors) have the same size but not the same decomposition into physical
+    # StructuredSparseTensors) have the same size but not the same decomposition into physical
     # dimension sizes. For now lets leave the responsibility to care about that in the calling
     # functions, if we can factor code later on we will.
 
@@ -134,16 +134,16 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
             index_parents[curr_representative] = first_representative
 
     new_indices_pair = list[list[tuple[int, int]]]()
-    tensors = list[Tensor]()
+    physicals = list[Tensor]()
     indices_to_n_pdims = dict[int, int]()
     for t, indices in args:
         assert isinstance(t, StructuredSparseTensor)
-        tensors.append(t.physical)
-        for ps, index in zip(t.v_to_ps, indices):
+        physicals.append(t.physical)
+        for pdims, index in zip(t.v_to_ps, indices):
             if index in indices_to_n_pdims:
-                assert indices_to_n_pdims[index] == len(ps)
+                assert indices_to_n_pdims[index] == len(pdims)
             else:
-                indices_to_n_pdims[index] = len(ps)
+                indices_to_n_pdims[index] = len(pdims)
         p_to_vs = p_to_vs_from_v_to_ps(t.v_to_ps)
         for indices_ in p_to_vs:
             # elements in indices[indices_] map to the same dimension, they should be clustered
@@ -181,7 +181,7 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
                 new_output.append(k)
         v_to_ps.append(current_v_to_ps)
 
-    physical = torch.einsum(*[x for y in zip(tensors, new_indices) for x in y], new_output)
+    physical = torch.einsum(*[x for y in zip(physicals, new_indices) for x in y], new_output)
     # Need to use the safe constructor, otherwise the dimensions may not be maximally grouped.
     # Maybe there is a way to fix that though.
     return to_most_efficient_tensor(physical, v_to_ps)
