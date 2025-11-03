@@ -141,7 +141,13 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
         physicals.append(t.physical)
         for pdims, index in zip(t.v_to_ps, indices):
             if index in indices_to_n_pdims:
-                assert indices_to_n_pdims[index] == len(pdims)
+                if indices_to_n_pdims[index] != len(pdims):
+                    raise NotImplementedError(
+                        "einsum currently does not support having a different number of physical "
+                        "dimensions corresponding to matching virtual dimensions of different "
+                        f"tensors. Found {[(t.debug_info(), indices) for t, indices in args]}, "
+                        f"output_indices={output}."
+                    )
             else:
                 indices_to_n_pdims[index] = len(pdims)
         p_to_vs = p_to_vs_from_v_to_ps(t.v_to_ps)
