@@ -424,14 +424,14 @@ def make_sst(physical: Tensor, v_to_ps: list[list[int]]) -> StructuredSparseTens
     return StructuredSparseTensor(physical, v_to_ps)
 
 
-def clear_null_stride_columns(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
+def fix_zero_stride_columns(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
     """Remove columns of strides that are all 0 and sum the corresponding elements in the physical tensor."""
-    all_zero_columns = (strides == 0).all(dim=0)
+    are_columns_zero = (strides == 0).all(dim=0)
 
-    if not (all_zero_columns).any():
+    if not (are_columns_zero).any():
         return physical, strides
 
-    all_zero_columns_indices = all_zero_columns.nonzero().flatten().tolist()
-    physical = physical.sum(dim=all_zero_columns_indices)
-    strides = strides[:, ~all_zero_columns]
+    zero_column_indices = torch.arange(len(are_columns_zero))[are_columns_zero].tolist()
+    physical = physical.sum(dim=zero_column_indices)
+    strides = strides[:, ~are_columns_zero]
     return physical, strides

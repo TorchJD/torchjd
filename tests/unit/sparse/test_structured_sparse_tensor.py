@@ -1,5 +1,6 @@
 import torch
 from pytest import mark
+from torch import Tensor, tensor
 from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
 from utils.tensors import randn_, tensor_, zeros_
@@ -12,9 +13,9 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
-    clear_null_stride_columns,
     encode_by_order,
     fix_ungrouped_dims,
+    fix_zero_stride_columns,
     get_groupings,
 )
 
@@ -283,26 +284,32 @@ def test_concatenate(
 @mark.parametrize(
     ["physical", "strides", "expected_physical", "expected_strides"],
     [
-        ([[1, 2, 3], [4, 5, 6]], [[1, 0], [1, 0], [2, 0]], [6, 15], [[1], [1], [2]]),
         (
-            [[1, 2, 3], [4, 5, 6]],
-            [[1, 1], [1, 0], [2, 0]],
-            [[1, 2, 3], [4, 5, 6]],
-            [[1, 1], [1, 0], [2, 0]],
+            tensor_([[1, 2, 3], [4, 5, 6]]),
+            tensor([[1, 0], [1, 0], [2, 0]]),
+            tensor_([6, 15]),
+            tensor([[1], [1], [2]]),
+        ),
+        (
+            tensor_([[1, 2, 3], [4, 5, 6]]),
+            tensor([[1, 1], [1, 0], [2, 0]]),
+            tensor_([[1, 2, 3], [4, 5, 6]]),
+            tensor([[1, 1], [1, 0], [2, 0]]),
+        ),
+        (
+            tensor_([[3, 2, 1], [6, 5, 4]]),
+            tensor([[0, 0], [0, 0], [0, 0]]),
+            tensor_(21),
+            tensor([[], [], []], dtype=torch.int64),
         ),
     ],
 )
-def test_clear_null_stride_columns(
-    physical: list,
-    strides: list,
-    expected_physical: list,
-    expected_strides: list,
+def test_fix_zero_stride_columns(
+    physical: Tensor,
+    strides: Tensor,
+    expected_physical: Tensor,
+    expected_strides: Tensor,
 ):
-    physical, strides = torch.tensor(physical), torch.tensor(strides)
-    expected_physical, expected_strides = torch.tensor(expected_physical), torch.tensor(
-        expected_strides
-    )
-
-    physical, strides = clear_null_stride_columns(physical, strides)
-    assert_close(physical, expected_physical)
-    assert_close(strides, expected_strides)
+    physical, strides = fix_zero_stride_columns(physical, strides)
+    assert torch.equal(physical, expected_physical)
+    assert torch.equal(strides, expected_strides)
