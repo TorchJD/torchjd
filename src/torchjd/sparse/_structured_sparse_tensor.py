@@ -6,14 +6,14 @@ from math import prod
 
 import torch
 from torch import Tensor, arange, meshgrid, stack, tensor, tensordot, zeros
-from torch.utils._pytree import tree_flatten, tree_map, tree_unflatten
+from torch.utils._pytree import tree_map
 
 
 class StructuredSparseTensor(Tensor):
     _HANDLED_FUNCTIONS = dict()
 
     @staticmethod
-    def __new__(cls, physical: Tensor, v_to_ps: list[list[int]]):
+    def __new__(cls, physical: Tensor, strides: Tensor):
         # At the moment, this class is not compositional, so we assert
         # that the tensor we're wrapping is exactly a Tensor
         assert type(physical) is Tensor
@@ -28,20 +28,24 @@ class StructuredSparseTensor(Tensor):
         # (which is bad!)
         assert not physical.requires_grad or not torch.is_grad_enabled()
 
-        shape = [prod(physical.shape[i] for i in dims) for dims in v_to_ps]
+        pshape = torch.tensor(physical.shape)
+        vshape = strides @ (pshape - 1) + 1
         return Tensor._make_wrapper_subclass(
-            cls, shape, dtype=physical.dtype, device=physical.device
+            cls, vshape, dtype=physical.dtype, device=physical.device
         )
 
-    def __init__(self, physical: Tensor, v_to_ps: list[list[int]]):
+    def __init__(self, physical: Tensor, strides: Tensor):
         """
-        This constructor is made for specifying physical and v_to_ps exactly. It should not modify
+        This constructor is made for specifying physical and strides exactly. It should not modify
         it.
 
-        For this reason, another constructor will be made to either modify the physical / v_to_ps to
-        simplify the result, or to create a dense tensor directly if it's already dense. It could
-        also be responsible for sorting the first apparition of each physical dim in the flattened
-        v_to_ps.
+        For this reason, another constructor will be made to either modify the physical / strides to
+        simplify the result, or to create a dense tensor directly if it's already dense.
+
+        :param physical: The dense tensor holding the actual data.
+        :param strides: Integer (int64) tensor of shape [virtual_ndim, physical_ndim], representing
+            the linear transformation between an index in the physical tensor and the corresponding
+            index in the virtual tensor, i.e. v_index = strides @ p_index.
         """
 
         if any(s == 1 for s in physical.shape):
@@ -49,26 +53,25 @@ class StructuredSparseTensor(Tensor):
                 "physical must not contain any dimension of size 1. Found physical.shape="
                 f"{physical.shape}."
             )
-        if not all(all(0 <= dim < physical.ndim for dim in dims) for dims in v_to_ps):
+        if strides.dtype is not torch.int64:
             raise ValueError(
-                f"Elements in v_to_ps must map to dimensions in physical. Found {v_to_ps}."
+                f"strides should be of int64 dtype. Found strides.dtype={strides.dtype}."
             )
-        if len(set().union(*[set(dims) for dims in v_to_ps])) != physical.ndim:
-            raise ValueError("Every dimension in physical must appear at least once in v_to_ps.")
-
-        if v_to_ps != encode_v_to_ps(v_to_ps)[0]:
+        if not (strides >= 0).all():
+            raise ValueError(f"All strides must be non-negative. Found strides={strides}.")
+        if strides.shape[1] != physical.ndim:
             raise ValueError(
-                f"v_to_ps elements are not encoded by first appearance. Found {v_to_ps}."
+                f"strides should have 1 column per physical dimension. Found strides={strides} and physical.shape={physical.shape}."
             )
+        if (strides.sum(dim=0) == 0).any():
+            raise ValueError(
+                f"strides should not have any column full of zeros. Found strides={strides}."
+            )
+        if any(len(group) != 1 for group in get_groupings(list(physical.shape), strides)):
+            raise ValueError(f"Dimensions must be maximally grouped. Found strides={strides}.")
 
         self.physical = physical
-        self.v_to_ps = v_to_ps
-
-        # strides is of shape [v_ndim, p_ndim], such that v_index = strides @ p_index
-        self.strides = get_strides(list(self.physical.shape), v_to_ps)
-
-        if any(len(group) != 1 for group in get_groupings(list(self.physical.shape), self.strides)):
-            raise ValueError(f"Dimensions must be maximally grouped. Found {v_to_ps}.")
+        self.strides = strides
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -101,16 +104,13 @@ class StructuredSparseTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"StructuredSparseTensor(physical={self.physical}, v_to_ps={self.v_to_ps})"
+        return f"StructuredSparseTensor(physical={self.physical}, strides={self.strides})"
 
     def debug_info(self) -> str:
         info = (
-            f"shape: {self.shape}\n"
-            f"stride(): {self.stride()}\n"
-            f"v_to_ps: {self.v_to_ps}\n"
+            f"vshape: {self.shape}\n"
+            f"pshape: {self.physical.shape}\n"
             f"strides: {self.strides}\n"
-            f"physical.shape: {self.physical.shape}\n"
-            f"physical.stride(): {self.physical.stride()}"
         )
         return info
 
@@ -131,9 +131,9 @@ impl = StructuredSparseTensor.implements
 
 def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
-        result = f"{t.__class__.__name__} - shape: {t.shape}"
+        result = f"{t.__class__.__name__} - vshape: {t.shape}"
         if isinstance(t, StructuredSparseTensor):
-            result += f" - pshape: {t.physical.shape} - v_to_ps: {t.v_to_ps}"
+            result += f" - pshape: {t.physical.shape} - strides: {t.strides}"
 
         return result
 
@@ -153,12 +153,6 @@ def print_fallback(func, args, kwargs) -> None:
         for k, v in kwargs.items():
             print(f"  > {k}: {v}")
     print()
-
-
-def strides_from_p_dims_and_p_shape(p_dims: list[int], physical_shape: list[int]) -> list[int]:
-    return list(accumulate([1] + [physical_shape[dim] for dim in p_dims[:0:-1]], operator.mul))[
-        ::-1
-    ]
 
 
 def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
@@ -182,83 +176,13 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
         1 on physical dimension 1 makes you move by 1 on the virtual dimension.
     """
 
-    strides_v1 = strides_from_p_dims_and_p_shape(p_dims, physical_shape)
+    strides_v1 = list(accumulate([1] + [physical_shape[d] for d in p_dims[:0:-1]], operator.mul))[
+        ::-1
+    ]
     result = [0 for _ in range(len(physical_shape))]
     for i, d in enumerate(p_dims):
         result[d] += strides_v1[i]
     return result
-
-
-def get_strides(pshape: list[int], v_to_ps: list[list[int]]) -> Tensor:
-    strides = torch.tensor([strides_v2(pdims, pshape) for pdims in v_to_ps], dtype=torch.int64)
-
-    # It's sometimes necessary to reshape: when v_to_ps contains 0 element for instance.
-    return strides.reshape(len(v_to_ps), len(pshape))
-
-
-def argmax(iterable):
-    return max(enumerate(iterable), key=lambda x: x[1])[0]
-
-
-def strides_to_pdims(strides: Tensor, physical_shape: list[int]) -> list[int]:
-    """
-    Given a list of strides, find and return the used physical dimensions.
-
-    This algorithm runs in O(n * m) with n the number of physical dimensions (i.e.
-    len(physical_shape) and len(strides)), and with m the number of pdims in the result.
-
-    I'm pretty sure it could be implemented in O((n+m)log(n)) by using a sorted linked list for the
-    remaining_strides, and keeping it sorted each time we update it. Argmax would then always be 0,
-    removing the need to go through the whole list at every iteration.
-    """
-
-    # e.g. strides = [22111, 201000], physical_shape = [10, 2]
-
-    pdims = []
-    remaining_strides = strides.clone()
-    remaining_numel = (
-        sum(remaining_strides[i] * (physical_shape[i] - 1) for i in range(len(physical_shape))) + 1
-    )
-    # e.g. 9 * 22111 + 1 * 201000 + 1 = 400000
-
-    while sum(remaining_strides) > 0:
-        current_pdim = argmax(remaining_strides)
-        # e.g. 1
-
-        pdims.append(current_pdim)
-
-        remaining_numel = remaining_numel // physical_shape[current_pdim]
-        # e.g. 400000 / 2 = 200000
-
-        remaining_strides[current_pdim] -= remaining_numel
-        # e.g. [22111, 1000]
-
-    return pdims
-
-
-def merge_strides(strides: list[list[int]]) -> list[int]:
-    return sorted({s for stride in strides for s in stride}, reverse=True)
-
-
-def stride_to_shape(numel: int, stride: list[int]) -> list[int]:
-    augmented_stride = [numel] + stride
-    return [a // b for a, b in zip(augmented_stride[:-1], augmented_stride[1:])]
-
-
-def p_to_vs_from_v_to_ps(v_to_ps: list[list[int]]) -> list[list[tuple[int, int]]]:
-    """
-    A physical dimension is mapped to a list of couples of the form
-    (virtual_dim, sub_index_in_virtual_dim)
-    """
-
-    res = dict[int, list[tuple[int, int]]]()
-    for v_dim, p_dims in enumerate(v_to_ps):
-        for i, p_dim in enumerate(p_dims):
-            if p_dim not in res:
-                res[p_dim] = [(v_dim, i)]
-            else:
-                res[p_dim].append((v_dim, i))
-    return [res[i] for i in range(len(res))]
 
 
 def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
@@ -278,72 +202,38 @@ def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
     return new_columns
 
 
-def encode_by_order(input: list[int]) -> tuple[list[int], list[int]]:
-    """
-    Encodes values based on the order of their first appearance, starting at 0 and incrementing.
-
-    Returns the encoded list and the destination mapping each original int to its new encoding.
-    destination[i] = j means that all elements of value i in input are mapped to j in the encoded
-    list.
-
-    The input list should only contain consecutive integers starting at 0.
-
-    Examples:
-        [1, 0, 3, 2] => [0, 1, 2, 3], [1, 0, 3, 2]
-        [0, 2, 0, 1] => [0, 1, 0, 2], [0, 2, 1]
-        [1, 0, 0, 1] => [0, 1, 1, 0], [1, 0]
-    """
-
-    mapping = dict[int, int]()
-    curr = 0
-    output = []
-    for v in input:
-        if v not in mapping:
-            mapping[v] = curr
-            curr += 1
-        output.append(mapping[v])
-    destination = [mapping[i] for i in range(len(mapping))]
-
-    return output, destination
-
-
-def encode_v_to_ps(v_to_ps: list[list[int]]) -> tuple[list[list[int]], list[int]]:
-    flat_v_to_ps, spec = tree_flatten(v_to_ps)
-    sorted_flat_v_to_ps, destination = encode_by_order(flat_v_to_ps)
-    return tree_unflatten(sorted_flat_v_to_ps, spec), destination
-
-
 def to_structured_sparse_tensor(t: Tensor) -> StructuredSparseTensor:
     if isinstance(t, StructuredSparseTensor):
         return t
     else:
-        return make_sst(t, [[i] for i in range(t.ndim)])
+        return make_sst(physical=t, strides=torch.eye(t.ndim, dtype=torch.int64))
 
 
-def to_most_efficient_tensor(physical: Tensor, v_to_ps: list[list[int]]) -> Tensor:
-    physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
-    physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
-    physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
+def to_most_efficient_tensor(physical: Tensor, strides: Tensor) -> Tensor:
+    physical, strides = fix_dim_of_size_1(physical, strides)
+    physical, strides = fix_ungrouped_dims(physical, strides)
 
-    if sum([len(pdims) for pdims in v_to_ps]) == physical.ndim:
-        next_physical_index = physical.ndim
-        new_v_to_ps = []
-        # Add as many dimensions of size 1 as there are pdims equal to [] in v_to_ps.
-        # Create the corresponding new_v_to_ps.
-        # E.g. if v_to_ps is [[0], [], [1]], new_v_to_ps is [[0], [2], [1]].
-        for vdim, pdims in enumerate(v_to_ps):
-            if len(pdims) == 0:
-                physical = physical.unsqueeze(-1)
-                new_v_to_ps.append([next_physical_index])
-                next_physical_index += 1
-            else:
-                new_v_to_ps.append(pdims)
+    if (strides.sum(dim=0) == 1).all():
+        # All physical dimensions make you move by 1 in exactly 1 virtual dimension.
+        # Also, because all physical dimensions have been maximally grouped, we cannot have two
+        # physical dimensions that make you move in the same virtual dimension.
+        # So strides is an identity matrix with potentially some extra rows of zeros, and
+        # potentially shuffled columns.
 
-        return torch.movedim(
-            physical, list(range(physical.ndim)), [pdims[0] for pdims in new_v_to_ps]
-        )
+        # The first step is to unsqueeze the physical tensor for each extra row of zeros in the
+        # strides.
+        zero_row_mask = strides.sum(dim=1) == 0
+        number_of_zero_rows = zero_row_mask.sum()
+        for _ in number_of_zero_rows:
+            physical = physical.unsqueeze(-1)
+
+        # The second step is to re-order the physical dimensions so that the corresponding
+        # strides matrix would be an identity.
+        source = arange(strides.shape[0])
+        destination = strides[zero_row_mask] @ source
+        return physical.movedim(list(source), list(destination))
     else:
-        return StructuredSparseTensor(physical, v_to_ps)
+        return StructuredSparseTensor(physical, strides)
 
 
 def unwrap_to_dense(t: Tensor):
@@ -353,57 +243,12 @@ def unwrap_to_dense(t: Tensor):
         return t
 
 
-def to_target_physical_strides(
-    physical: Tensor, v_to_ps: list[list[int]], strides: list[list[int]]
-) -> tuple[Tensor, list[list[int]]]:
-    current_strides = [
-        strides_from_p_dims_and_p_shape(p_dims, list(physical.shape)) for p_dims in v_to_ps
-    ]
-    target_stride = merge_strides(strides)
-
-    numel = physical.numel()
-    target_shape = stride_to_shape(numel, target_stride)
-    new_physical = physical.reshape(target_shape)
-
-    stride_to_p_dim = {s: i for i, s in enumerate(target_stride)}
-    stride_to_p_dim[0] = len(target_shape)
-
-    new_v_to_ps = list[list[int]]()
-    for stride in current_strides:
-        extended_stride = stride + [0]
-        new_p_dims = list[int]()
-        for s_curr, s_next in zip(extended_stride[:-1], extended_stride[1:]):
-            new_p_dims += range(stride_to_p_dim[s_curr], stride_to_p_dim[s_next])
-        new_v_to_ps.append(new_p_dims)
-
-    return new_physical, new_v_to_ps
+def fix_dim_of_size_1(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
+    is_of_size_1 = torch.tensor([s == 1 for s in physical.shape])
+    return physical.squeeze(), strides[:, ~is_of_size_1]
 
 
-def fix_dim_encoding(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tensor, list[list[int]]]:
-    v_to_ps, destination = encode_v_to_ps(v_to_ps)
-    source = list(range(physical.ndim))
-    physical = physical.movedim(source, destination)
-
-    return physical, v_to_ps
-
-
-def fix_dim_of_size_1(physical: Tensor, v_to_ps: list[list[int]]) -> tuple[Tensor, list[list[int]]]:
-    is_of_size_1 = [s == 1 for s in physical.shape]
-
-    def new_encoding(d: int) -> int:
-        n_removed_dims_before_d = sum(is_of_size_1[:d])
-        return d - n_removed_dims_before_d
-
-    physical = physical.squeeze()
-    v_to_ps = [[new_encoding(d) for d in dims if not is_of_size_1[d]] for dims in v_to_ps]
-
-    return physical, v_to_ps
-
-
-def fix_ungrouped_dims(
-    physical: Tensor, v_to_ps: list[list[int]]
-) -> tuple[Tensor, list[list[int]]]:
-    strides = get_strides(list(physical.shape), v_to_ps)
+def fix_ungrouped_dims(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
     groups = get_groupings(list(physical.shape), strides)
     nphysical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
     stride_mapping = torch.zeros(physical.ndim, nphysical.ndim, dtype=torch.int64)
@@ -411,17 +256,15 @@ def fix_ungrouped_dims(
         stride_mapping[group[-1], j] = 1
 
     new_strides = strides @ stride_mapping
-    new_v_to_ps = [strides_to_pdims(stride, list(nphysical.shape)) for stride in new_strides]
-    return nphysical, new_v_to_ps
+    return nphysical, new_strides
 
 
-def make_sst(physical: Tensor, v_to_ps: list[list[int]]) -> StructuredSparseTensor:
-    """Fix physical and v_to_ps and create a StructuredSparseTensor with them."""
+def make_sst(physical: Tensor, strides: Tensor) -> StructuredSparseTensor:
+    """Fix physical and strides and create a StructuredSparseTensor with them."""
 
-    physical, v_to_ps = fix_dim_encoding(physical, v_to_ps)
-    physical, v_to_ps = fix_dim_of_size_1(physical, v_to_ps)
-    physical, v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
-    return StructuredSparseTensor(physical, v_to_ps)
+    physical, strides = fix_dim_of_size_1(physical, strides)
+    physical, strides = fix_ungrouped_dims(physical, strides)
+    return StructuredSparseTensor(physical, strides)
 
 
 def fix_zero_stride_columns(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:

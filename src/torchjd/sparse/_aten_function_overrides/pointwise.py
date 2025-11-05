@@ -71,7 +71,7 @@ def _override_pointwise(op):
     @impl(op)
     def func_(t: StructuredSparseTensor) -> StructuredSparseTensor:
         assert isinstance(t, StructuredSparseTensor)
-        return StructuredSparseTensor(op(t.physical), t.v_to_ps)
+        return StructuredSparseTensor(op(t.physical), t.strides)
 
     return func_
 
@@ -100,7 +100,7 @@ def pow_Tensor_Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredS
         return aten.pow.Tensor_Scalar(t.to_dense(), exponent)
 
     new_physical = aten.pow.Tensor_Scalar(t.physical, exponent)
-    return StructuredSparseTensor(new_physical, t.v_to_ps)
+    return StructuredSparseTensor(new_physical, t.strides)
 
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
@@ -122,4 +122,4 @@ def div_Scalar(t: StructuredSparseTensor, divisor: float) -> StructuredSparseTen
     assert isinstance(t, StructuredSparseTensor)
 
     new_physical = aten.div.Scalar(t.physical, divisor)
-    return StructuredSparseTensor(new_physical, t.v_to_ps)
+    return StructuredSparseTensor(new_physical, t.strides)

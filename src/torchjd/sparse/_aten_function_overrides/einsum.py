@@ -5,7 +5,6 @@ from torch.ops import aten  # type: ignore
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
     impl,
-    p_to_vs_from_v_to_ps,
     to_most_efficient_tensor,
     to_structured_sparse_tensor,
 )
@@ -84,7 +83,7 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
                     )
             else:
                 indices_to_n_pdims[index] = len(pdims)
-        p_to_vs = p_to_vs_from_v_to_ps(t.v_to_ps)
+        p_to_vs = ...  # p_to_vs_from_v_to_ps(t.v_to_ps)
         for indices_ in p_to_vs:
             # elements in indices[indices_] map to the same dimension, they should be clustered
             # together
@@ -165,7 +164,7 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
 @impl(aten.div.Tensor)
 def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.v_to_ps)
+    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.strides)
     all_dims = list(range(t1_.ndim))
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
@@ -177,7 +176,7 @@ def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
 
     assert isinstance(t, StructuredSparseTensor)
     new_physical = aten.mul.Scalar(t.physical, scalar)
-    return StructuredSparseTensor(new_physical, t.v_to_ps)
+    return StructuredSparseTensor(new_physical, t.strides)
 
 
 @impl(aten.add.Tensor)
@@ -186,9 +185,9 @@ def add_Tensor(
 ) -> StructuredSparseTensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
 
-    if t1_.v_to_ps == t2_.v_to_ps:
+    if torch.equal(t1_.strides, t2_.strides):
         new_physical = t1_.physical + t2_.physical * alpha
-        return StructuredSparseTensor(new_physical, t1_.v_to_ps)
+        return StructuredSparseTensor(new_physical, t1_.strides)
     else:
         raise NotImplementedError()
 
