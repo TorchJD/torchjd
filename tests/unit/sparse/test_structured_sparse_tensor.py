@@ -12,6 +12,7 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
+    clear_null_stride_columns,
     encode_by_order,
     fix_ungrouped_dims,
     get_groupings,
@@ -277,3 +278,31 @@ def test_concatenate(
 
     assert isinstance(res, StructuredSparseTensor)
     assert torch.all(torch.eq(res.to_dense(), expected))
+
+
+@mark.parametrize(
+    ["physical", "strides", "expected_physical", "expected_strides"],
+    [
+        ([[1, 2, 3], [4, 5, 6]], [[1, 0], [1, 0], [2, 0]], [6, 15], [[1], [1], [2]]),
+        (
+            [[1, 2, 3], [4, 5, 6]],
+            [[1, 1], [1, 0], [2, 0]],
+            [[1, 2, 3], [4, 5, 6]],
+            [[1, 1], [1, 0], [2, 0]],
+        ),
+    ],
+)
+def test_clear_null_stride_columns(
+    physical: list,
+    strides: list,
+    expected_physical: list,
+    expected_strides: list,
+):
+    physical, strides = torch.tensor(physical), torch.tensor(strides)
+    expected_physical, expected_strides = torch.tensor(expected_physical), torch.tensor(
+        expected_strides
+    )
+
+    physical, strides = clear_null_stride_columns(physical, strides)
+    assert_close(physical, expected_physical)
+    assert_close(strides, expected_strides)
