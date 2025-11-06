@@ -13,7 +13,6 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
-    encode_by_order,
     fix_ungrouped_dims,
     fix_zero_stride_columns,
     get_groupings,
@@ -24,7 +23,7 @@ def test_to_dense():
     n = 2
     m = 3
     a = randn_([n, m])
-    b = StructuredSparseTensor(a, [[0], [1], [1], [0]])
+    b = StructuredSparseTensor(a, tensor([[1, 0], [0, 1], [0, 1], [1, 0]]))
     c = b.to_dense()
 
     for i in range(n):
@@ -34,32 +33,56 @@ def test_to_dense():
 
 def test_to_dense2():
     a = tensor_([1.0, 2.0, 3.0])
-    b = StructuredSparseTensor(a, [[0, 0]])
+    b = StructuredSparseTensor(a, tensor([[4]]))
     c = b.to_dense()
     expected = tensor_([1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0])
     assert torch.all(torch.eq(c, expected))
 
 
 @mark.parametrize(
-    ["a_pshape", "a_v_to_ps", "b_pshape", "b_v_to_ps", "a_indices", "b_indices", "output_indices"],
+    ["a_pshape", "a_strides", "b_pshape", "b_strides", "a_indices", "b_indices", "output_indices"],
     [
-        ([4, 5], [[0], [0], [1]], [4, 5], [[0], [1], [1]], [0, 1, 2], [0, 2, 3], [0, 1, 3]),
-        ([2, 3, 5], [[0, 1], [2, 0]], [10, 3], [[0], [1]], [0, 1], [1, 2], [0, 2]),
-        ([2, 3], [[0, 1]], [6], [[0]], [0], [0], []),
-        ([6, 2, 3], [[0], [1], [2]], [2, 3], [[0, 1], [0], [1]], [0, 1, 2], [0, 1, 2], [0, 1, 2]),
+        (
+            [4, 5],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+            [4, 5],
+            tensor([[1, 0], [0, 1], [0, 1]]),
+            [0, 1, 2],
+            [0, 2, 3],
+            [0, 1, 3],
+        ),
+        (
+            [2, 3, 5],
+            tensor([[3, 1, 0], [1, 0, 2]]),
+            [10, 3],
+            tensor([[1, 0], [0, 1]]),
+            [0, 1],
+            [1, 2],
+            [0, 2],
+        ),
+        ([2, 3], tensor([[3, 1]]), [6], tensor([[1]]), [0], [0], []),
+        (
+            [6, 2, 3],
+            tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            [2, 3],
+            tensor([[3, 1], [1, 0], [0, 1]]),
+            [0, 1, 2],
+            [0, 1, 2],
+            [0, 1, 2],
+        ),
     ],
 )
 def test_einsum(
     a_pshape: list[int],
-    a_v_to_ps: list[list[int]],
+    a_strides: Tensor,
     b_pshape: list[int],
-    b_v_to_ps: list[list[int]],
+    b_strides: Tensor,
     a_indices: list[int],
     b_indices: list[int],
     output_indices: list[int],
 ):
-    a = StructuredSparseTensor(randn_(a_pshape), a_v_to_ps)
-    b = StructuredSparseTensor(randn_(b_pshape), b_v_to_ps)
+    a = StructuredSparseTensor(randn_(a_pshape), a_strides)
+    b = StructuredSparseTensor(randn_(b_pshape), b_strides)
 
     res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
@@ -80,7 +103,7 @@ def test_einsum(
 )
 def test_structured_sparse_tensor_scalar(shape: list[int]):
     a = randn_(shape)
-    b = StructuredSparseTensor(a, [[dim] for dim in range(len(shape))])
+    b = StructuredSparseTensor(a, torch.eye(len(shape), dtype=torch.int64))
 
     assert_close(a, b.to_dense())
 
@@ -88,7 +111,7 @@ def test_structured_sparse_tensor_scalar(shape: list[int]):
 @mark.parametrize("dim", [2, 3, 4, 5, 10])
 def test_diag_equivalence(dim: int):
     a = randn_([dim])
-    b = StructuredSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, tensor([[1], [1]]))
 
     diag_a = torch.diag(a)
 
@@ -98,7 +121,7 @@ def test_diag_equivalence(dim: int):
 def test_three_virtual_single_physical():
     dim = 10
     a = randn_([dim])
-    b = StructuredSparseTensor(a, [[0], [0], [0]])
+    b = StructuredSparseTensor(a, tensor([[1], [1], [1]]))
 
     expected = zeros_([dim, dim, dim])
     for i in range(dim):
@@ -111,7 +134,7 @@ def test_three_virtual_single_physical():
 def test_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = StructuredSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, tensor([[1], [1]]))
     c = b.to_dense()
     res = func(b)
     assert isinstance(res, StructuredSparseTensor)
@@ -123,7 +146,7 @@ def test_pointwise(func):
 def test_inplace_pointwise(func):
     dim = 10
     a = randn_([dim])
-    b = StructuredSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, tensor([[1], [1]]))
     c = b.to_dense()
     func(b)
     assert isinstance(b, StructuredSparseTensor)
@@ -135,7 +158,7 @@ def test_inplace_pointwise(func):
 def test_unary(func):
     dim = 10
     a = randn_([dim])
-    b = StructuredSparseTensor(a, [[0], [0]])
+    b = StructuredSparseTensor(a, tensor([[1], [1]]))
     c = b.to_dense()
 
     res = func(b)
@@ -143,59 +166,104 @@ def test_unary(func):
 
 
 @mark.parametrize(
-    ["physical_shape", "v_to_ps", "target_shape", "expected_physical_shape", "expected_v_to_ps"],
+    ["physical_shape", "strides", "target_shape", "expected_physical_shape", "expected_strides"],
     [
-        ([2, 3], [[0], [0], [1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # no change of shape
-        ([2, 3], [[0], [0, 1]], [2, 6], [2, 3], [[0], [0, 1]]),  # no change of shape
-        ([2, 3], [[0], [0], [1]], [2, 6], [2, 3], [[0], [0, 1]]),  # squashing 2 dims
-        ([2, 3], [[0], [0, 1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # unsquashing into 2 dims
-        ([2, 3], [[0, 0, 1]], [2, 6], [2, 3], [[0], [0, 1]]),  # unsquashing into 2 dims
-        ([2, 3], [[0], [0], [1]], [12], [2, 3], [[0, 0, 1]]),  # squashing 3 dims
-        ([2, 3], [[0, 0, 1]], [2, 2, 3], [2, 3], [[0], [0], [1]]),  # unsquashing into 3 dims
-        ([4], [[0], [0]], [2, 2, 4], [2, 2], [[0], [1], [0, 1]]),  # unsquashing physical dim
-        ([4], [[0], [0]], [4, 2, 2], [2, 2], [[0, 1], [0], [1]]),  # unsquashing physical dim
-        ([2, 3, 4], [[0], [0], [1], [2]], [4, 12], [2, 12], [[0, 0], [1]]),  # world boss
-        ([2, 12], [[0, 0], [1]], [2, 2, 3, 4], [2, 3, 4], [[0], [0], [1], [2]]),  # world boss
+        (
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+            [2, 2, 3],
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+        ),  # no change of shape
+        (
+            [2, 3],
+            tensor([[1, 0], [3, 1]]),
+            [2, 6],
+            [2, 3],
+            tensor([[1, 0], [3, 1]]),
+        ),  # no change of shape
+        (
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+            [2, 6],
+            [2, 3],
+            tensor([[1, 0], [3, 1]]),
+        ),  # squashing 2 dims
+        (
+            [2, 3],
+            tensor([[1, 0], [3, 1]]),
+            [2, 2, 3],
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+        ),  # unsquashing into 2 dims
+        (
+            [2, 3],
+            tensor([[9, 1]]),
+            [2, 6],
+            [2, 3],
+            tensor([[1, 0], [3, 1]]),
+        ),  # unsquashing into 2 dims
+        (
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+            [12],
+            [2, 3],
+            tensor([[9, 1]]),
+        ),  # squashing 3 dims
+        (
+            [2, 3],
+            tensor([[9, 1]]),
+            [2, 2, 3],
+            [2, 3],
+            tensor([[1, 0], [1, 0], [0, 1]]),
+        ),  # unsquashing into 3 dims
+        (
+            [4],
+            tensor([[1], [1]]),
+            [2, 2, 4],
+            [2, 2],
+            tensor([[1, 0], [0, 1], [2, 1]]),
+        ),  # unsquashing physical dim
+        (
+            [4],
+            tensor([[1], [1]]),
+            [4, 2, 2],
+            [2, 2],
+            tensor([[2, 1], [1, 0], [0, 1]]),
+        ),  # unsquashing physical dim
+        (
+            [2, 3, 4],
+            tensor([[1, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            [4, 12],
+            [2, 12],
+            tensor([[3, 0], [0, 1]]),
+        ),  # world boss
+        (
+            [2, 12],
+            tensor([[3, 0], [0, 1]]),
+            [2, 2, 3, 4],
+            [2, 3, 4],
+            tensor([[1, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+        ),  # world boss
     ],
 )
 def test_view(
     physical_shape: list[int],
-    v_to_ps: list[list[int]],
+    strides: Tensor,
     target_shape: list[int],
     expected_physical_shape: list[int],
-    expected_v_to_ps: list[list[int]],
+    expected_strides: Tensor,
 ):
     a = randn_(tuple(physical_shape))
-    t = StructuredSparseTensor(a, v_to_ps)
+    t = StructuredSparseTensor(a, strides)
 
     result = aten.view.default(t, target_shape)
     expected = t.to_dense().reshape(target_shape)
 
     assert isinstance(result, StructuredSparseTensor)
     assert list(result.physical.shape) == expected_physical_shape
-    assert result.v_to_ps == expected_v_to_ps
+    assert torch.equal(result.strides, expected_strides)
     assert torch.all(torch.eq(result.to_dense(), expected))
-
-
-@mark.parametrize(
-    ["input", "expected_output", "expected_destination"],
-    [
-        ([0, 1, 0, 2, 1, 3], [0, 1, 0, 2, 1, 3], [0, 1, 2, 3]),  # trivial
-        ([1, 0, 3, 2, 1], [0, 1, 2, 3, 0], [1, 0, 3, 2]),
-        ([1, 0, 3, 2], [0, 1, 2, 3], [1, 0, 3, 2]),
-        ([0, 2, 0, 1], [0, 1, 0, 2], [0, 2, 1]),
-        ([1, 0, 0, 1], [0, 1, 1, 0], [1, 0]),
-    ],
-)
-def test_encode_by_order(
-    input: list[int],
-    expected_output: list[int],
-    expected_destination: list[int],
-):
-    output, destination = encode_by_order(input)
-
-    assert output == expected_output
-    assert destination == expected_destination
 
 
 @mark.parametrize(
@@ -214,24 +282,34 @@ def test_get_groupings(pshape: list[int], strides: torch.Tensor, expected: list[
 
 
 @mark.parametrize(
-    ["physical_shape", "v_to_ps", "expected_physical_shape", "expected_v_to_ps"],
+    ["physical_shape", "strides", "expected_physical_shape", "expected_strides"],
     [
-        ([3, 4, 5], [[0, 1, 2], [2, 0, 1], [2]], [12, 5], [[0, 1], [1, 0], [1]]),
-        ([32, 20, 8], [[0], [1, 0], [2]], [32, 20, 8], [[0], [1, 0], [2]]),
-        ([3, 3, 4], [[0, 1], [1, 2]], [3, 3, 4], [[0, 1], [1, 2]]),
+        (
+            [3, 4, 5],
+            tensor([[20, 5, 1], [4, 1, 12], [0, 0, 1]]),
+            [12, 5],
+            tensor([[5, 1], [1, 12], [0, 1]]),
+        ),
+        (
+            [32, 20, 8],
+            tensor([[1, 0, 0], [1, 32, 0], [0, 0, 1]]),
+            [32, 20, 8],
+            tensor([[1, 0, 0], [1, 32, 0], [0, 0, 1]]),
+        ),
+        ([3, 3, 4], tensor([[3, 1, 0], [0, 4, 1]]), [3, 3, 4], tensor([[3, 1, 0], [0, 4, 1]])),
     ],
 )
 def test_fix_ungrouped_dims(
     physical_shape: list[int],
-    v_to_ps: list[list[int]],
+    strides: Tensor,
     expected_physical_shape: list[int],
-    expected_v_to_ps: list[list[int]],
+    expected_strides: Tensor,
 ):
     physical = randn_(physical_shape)
-    fixed_physical, fixed_v_to_ps = fix_ungrouped_dims(physical, v_to_ps)
+    fixed_physical, fixed_strides = fix_ungrouped_dims(physical, strides)
 
     assert list(fixed_physical.shape) == expected_physical_shape
-    assert fixed_v_to_ps == expected_v_to_ps
+    assert torch.equal(fixed_strides, expected_strides)
 
 
 @mark.parametrize(
@@ -265,15 +343,15 @@ def test_unsquash_pdim(
 @mark.parametrize(
     ["sst_args", "dim"],
     [
-        ([([3], [[0], [0]]), ([3], [[0], [0]])], 1),
-        ([([3, 2], [[0], [1, 0]]), ([3, 2], [[0], [1, 0]])], 1),
+        ([([3], tensor([[1], [1]])), ([3], tensor([[1], [1]]))], 1),
+        ([([3, 2], tensor([[1, 0], [1, 3]])), ([3, 2], tensor([[1, 0], [1, 3]]))], 1),
     ],
 )
 def test_concatenate(
-    sst_args: list[tuple[list[int], list[list[int]]]],
+    sst_args: list[tuple[list[int], Tensor]],
     dim: int,
 ):
-    tensors = [StructuredSparseTensor(randn_(pshape), v_to_ps) for pshape, v_to_ps in sst_args]
+    tensors = [StructuredSparseTensor(randn_(pshape), strides) for pshape, strides in sst_args]
     res = aten.cat.default(tensors, dim)
     expected = aten.cat.default([t.to_dense() for t in tensors], dim)
 
