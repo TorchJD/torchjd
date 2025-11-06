@@ -31,7 +31,7 @@ class StructuredSparseTensor(Tensor):
         pshape = torch.tensor(physical.shape)
         vshape = strides @ (pshape - 1) + 1
         return Tensor._make_wrapper_subclass(
-            cls, vshape, dtype=physical.dtype, device=physical.device
+            cls, tuple(vshape.tolist()), dtype=physical.dtype, device=physical.device
         )
 
     def __init__(self, physical: Tensor, strides: Tensor):
