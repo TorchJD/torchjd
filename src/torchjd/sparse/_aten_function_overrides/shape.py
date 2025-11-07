@@ -49,17 +49,8 @@ def view_default(t: StructuredSparseTensor, shape: list[int]) -> Tensor:
     S = t.strides
     vshape = list(t.shape)
     c = _reverse_cumulative_product(vshape)
-    remaining_cT_S = c @ S
-
-    stride_rows = list[Tensor]()
-    for modulo in shape[::-1]:
-        stride_row = remaining_cT_S % modulo
-        stride_rows.append(stride_row)
-        remaining_cT_S = (remaining_cT_S - stride_row) // modulo
-        # I think we could skip the - stride_row because the floor div will handle it for us, but it
-        # will make code harder to understand.
-
-    new_strides = torch.stack(stride_rows[::-1], dim=0)
+    c_prime = _reverse_cumulative_product(shape)
+    new_strides = ((c @ S).unsqueeze(0) // c_prime.unsqueeze(1)) % tensor(shape).unsqueeze(1)
     return to_most_efficient_tensor(t.physical, new_strides)
 
 
