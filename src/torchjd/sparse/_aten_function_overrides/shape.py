@@ -59,7 +59,7 @@ def view_default(t: StructuredSparseTensor, shape: list[int]) -> Tensor:
         # I think we could skip the - stride_row because the floor div will handle it for us, but it
         # will make code harder to understand.
 
-    new_strides = torch.stack(stride_rows, dim=0)
+    new_strides = torch.stack(stride_rows[::-1], dim=0)
     return to_most_efficient_tensor(t.physical, new_strides)
 
 
