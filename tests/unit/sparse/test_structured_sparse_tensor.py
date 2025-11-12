@@ -315,29 +315,38 @@ def test_fix_ungrouped_dims(
 @mark.parametrize(
     [
         "physical_shape",
+        "strides",
         "pdim",
         "new_pdim_shape",
         "expected_physical_shape",
-        "expected_new_encoding",
+        "expected_strides",
     ],
     [
-        ([4], 0, [4], [4], [[0]]),  # trivial
-        ([4], 0, [2, 2], [2, 2], [[0, 1]]),
-        ([3, 4, 5], 1, [2, 1, 1, 2], [3, 2, 1, 1, 2, 5], [[0], [1, 2, 3, 4], [5]]),
+        ([4], tensor([[1], [2]]), 0, [4], [4], tensor([[1], [2]])),  # trivial
+        ([4], tensor([[1], [2]]), 0, [2, 2], [2, 2], tensor([[2, 1], [4, 2]])),
+        (
+            [3, 4, 5],
+            tensor([[1, 2, 0], [1, 0, 1], [0, 1, 1]]),
+            1,
+            [2, 1, 1, 2],
+            [3, 2, 1, 1, 2, 5],
+            tensor([[1, 4, 4, 4, 2, 0], [1, 0, 0, 0, 0, 1], [0, 2, 2, 2, 1, 1]]),
+        ),
     ],
 )
 def test_unsquash_pdim(
     physical_shape: list[int],
+    strides: Tensor,
     pdim: int,
     new_pdim_shape: list[int],
     expected_physical_shape: list[int],
-    expected_new_encoding: list[list[int]],
+    expected_strides: Tensor,
 ):
     physical = randn_(physical_shape)
-    new_physical, new_encoding = unsquash_pdim(physical, pdim, new_pdim_shape)
+    new_physical, new_strides = unsquash_pdim(physical, strides, pdim, new_pdim_shape)
 
     assert list(new_physical.shape) == expected_physical_shape
-    assert new_encoding == expected_new_encoding
+    assert torch.equal(new_strides, expected_strides)
 
 
 @mark.parametrize(

@@ -69,34 +69,59 @@ def infer_shape(shape: list[int], numel: int) -> list[int]:
     return [inferred if s == -1 else s for s in shape]
 
 
-def unsquash_pdim_from_strides(
-    physical: Tensor, pdim: int, new_pdim_shape: list[int]
+def unsquash_pdim(
+    physical: Tensor, strides: Tensor, pdim: int, new_pdim_shape: list[int]
 ) -> tuple[Tensor, Tensor]:
-    new_shape = list(physical.shape)
-    new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
+    """
+    EXAMPLE:
+
+    physical = [
+        [1, 2, 3, 4, 5, 6],
+        [7, 8, 9, 10, 11, 12],
+        [13, 14, 15, 16, 17, 18],
+    ]
+    strides = [
+        [1, 1],
+        [0, 2],
+    ]
+
+    dim = 1
+    shape = [2, 3]
+
+    new_physical = [[
+        [1, 2, 3],
+        [4, 5, 6],
+    ], [
+        [7, 8, 9],
+        [10, 11, 12],
+    ], [
+        [13, 14, 15],
+        [16, 17, 18],
+    ]]
+
+    new_strides = [
+        [1, 3, 1],
+        [0, 6, 2]
+    """
+
+    # TODO: handle working with multiple dimensions at once
+
+    old_shape = list(physical.shape)
+    new_shape = old_shape[:pdim] + new_pdim_shape + old_shape[pdim + 1 :]
     new_physical = physical.reshape(new_shape)
 
     stride_multipliers = tensor([prod(new_pdim_shape[i + 1 :]) for i in range(len(new_pdim_shape))])
-    return new_physical, stride_multipliers
 
+    new_strides = torch.concat(
+        [
+            strides[:, :pdim],
+            torch.outer(strides[:, pdim], stride_multipliers),
+            strides[:, pdim + 1 :],
+        ],
+        dim=1,
+    )
 
-def unsquash_pdim(
-    physical: Tensor, pdim: int, new_pdim_shape: list[int]
-) -> tuple[Tensor, list[list[int]]]:
-    new_shape = list(physical.shape)
-    new_shape = new_shape[:pdim] + new_pdim_shape + new_shape[pdim + 1 :]
-    new_physical = physical.reshape(new_shape)
-
-    def new_encoding_fn(d: int) -> list[int]:
-        if d < pdim:
-            return [d]
-        elif d > pdim:
-            return [d + len(new_pdim_shape) - 1]
-        else:
-            return [pdim + i for i in range(len(new_pdim_shape))]
-
-    new_encoding = [new_encoding_fn(d) for d in range(len(physical.shape))]
-    return new_physical, new_encoding
+    return new_physical, new_strides
 
 
 @impl(aten._unsafe_view.default)
