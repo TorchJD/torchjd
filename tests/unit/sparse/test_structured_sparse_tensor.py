@@ -15,6 +15,7 @@ from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
     fix_ungrouped_dims,
     fix_zero_stride_columns,
+    get_full_source,
     get_groupings,
 )
 
@@ -347,6 +348,26 @@ def test_unsquash_pdim(
 
     assert list(new_physical.shape) == expected_physical_shape
     assert torch.equal(new_strides, expected_strides)
+
+
+@mark.parametrize(
+    [
+        "source",
+        "destination",
+        "ndim",
+    ],
+    [
+        ([2, 4], [0, 3], 5),
+        ([5, 3, 6], [2, 0, 5], 8),
+    ],
+)
+def test_get_column_indices(source: list[int], destination: list[int], ndim: int):
+    # TODO: this test should be improved / removed. It creates quite big tensors for nothing.
+
+    t = randn_(list(torch.randint(3, 8, size=(ndim,))))
+    full_destination = list(range(ndim))
+    full_source = get_full_source(source, destination, ndim)
+    assert torch.equal(t.movedim(full_source, full_destination), t.movedim(source, destination))
 
 
 @mark.parametrize(

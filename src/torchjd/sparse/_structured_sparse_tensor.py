@@ -243,6 +243,43 @@ def unwrap_to_dense(t: Tensor):
         return t
 
 
+def get_full_source(source: list[int], destination: list[int], ndim: int) -> list[int]:
+    """
+    Doing a movedim with source and destination is always equivalent to doing a movedim with
+    [0, 1, ..., ndim-1] (aka "full_destination") as destination, and the "full_source" as source.
+
+    This function computes the full_source based on a source and destination.
+
+    Example:
+    source=[2, 4]
+    destination=[0, 3]
+    ndim=5
+
+    full_source = [2, 0, 1, 4, 3]
+    full_destination = [0, 1, 2, 3, 4]
+    """
+
+    idx = torch.full((ndim,), -1, dtype=torch.int64)
+    idx[destination] = tensor(source)
+    source_set = set(source)
+    idx[idx.eq(-1)] = tensor([i for i in range(ndim) if i not in source_set])
+
+    # source_mask = torch.zeros(ndim, dtype=torch.bool)
+    # destination_mask = torch.zeros(ndim, dtype=torch.bool)
+    # source_mask[source] = True
+    # destination_mask[destination] = True
+    #
+    # destination_cumsum = torch.cumsum(destination_mask, dim=0)
+    # source_cumsum = torch.cumsum(source_mask, dim=0)
+    # base = arange(ndim, dtype=torch.int64)
+    #
+    # idx = torch.empty((ndim,), dtype=torch.int64)
+    # idx[destination_mask] = tensor(source)
+    # idx[~destination_mask] = base[~destination_mask] - destination_cumsum[~destination_mask] + source_cumsum[:ndim - len(source)]
+
+    return idx.tolist()
+
+
 def fix_dim_of_size_1(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
     is_of_size_1 = torch.tensor([s == 1 for s in physical.shape])
     return physical.squeeze(), strides[:, ~is_of_size_1]
