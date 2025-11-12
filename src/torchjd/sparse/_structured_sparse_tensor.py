@@ -264,19 +264,6 @@ def get_full_source(source: list[int], destination: list[int], ndim: int) -> lis
     source_set = set(source)
     idx[idx.eq(-1)] = tensor([i for i in range(ndim) if i not in source_set])
 
-    # source_mask = torch.zeros(ndim, dtype=torch.bool)
-    # destination_mask = torch.zeros(ndim, dtype=torch.bool)
-    # source_mask[source] = True
-    # destination_mask[destination] = True
-    #
-    # destination_cumsum = torch.cumsum(destination_mask, dim=0)
-    # source_cumsum = torch.cumsum(source_mask, dim=0)
-    # base = arange(ndim, dtype=torch.int64)
-    #
-    # idx = torch.empty((ndim,), dtype=torch.int64)
-    # idx[destination_mask] = tensor(source)
-    # idx[~destination_mask] = base[~destination_mask] - destination_cumsum[~destination_mask] + source_cumsum[:ndim - len(source)]
-
     return idx.tolist()
 
 
