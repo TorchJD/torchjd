@@ -1,6 +1,9 @@
 # uv
 uv.lock
 
+# Jupyter Notebooks
+*.ipynb
+
 # PyCharm
 .idea/
 
