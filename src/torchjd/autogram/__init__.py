@@ -7,7 +7,9 @@ Multi-Objective Optimization <https://arxiv.org/pdf/2406.16232>`_).
 
 Due to computing the Gramian iteratively over the layers, without ever having to store the full
 Jacobian in memory, this method is much more memory-efficient than
-:doc:`autojac <../autojac/index>`, which makes it often much faster.
+:doc:`autojac <../autojac/index>`, which makes it often much faster. Note that we're still working
+on making autogram faster and more memory-efficient, and it's interface may change in future
+releases.
 
 The list of Weightings compatible with ``autogram`` is:
 

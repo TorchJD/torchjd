@@ -71,7 +71,8 @@ this Gramian, using a
 and used to combine the losses of the batch. Assuming each element of the batch is
 processed independently from the others, this approach is equivalent to
 [`torchjd.autojac.backward`](https://torchjd.org/stable/docs/autojac/backward/) while being
-generally much faster due to the lower memory usage.
+generally much faster due to the lower memory usage. Note that we're still working on making
+`autogram` faster and more memory-efficient, and it's interface may change in future releases.
 
 The following example shows how to use TorchJD to train a multi-task model with Jacobian descent,
 using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
