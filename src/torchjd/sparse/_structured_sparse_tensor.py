@@ -1,5 +1,6 @@
 import itertools
 import operator
+from collections.abc import Callable
 from functools import wraps
 from itertools import accumulate
 from math import prod
@@ -10,7 +11,7 @@ from torch.utils._pytree import tree_map
 
 
 class StructuredSparseTensor(Tensor):
-    _HANDLED_FUNCTIONS = dict()
+    _HANDLED_FUNCTIONS = dict[Callable, Callable]()
 
     @staticmethod
     def __new__(cls, physical: Tensor, strides: Tensor):

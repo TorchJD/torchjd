@@ -207,7 +207,7 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
         # Such a physical dimension already exists. Note that an alternative implementation would be
         # to simply always add the physical dimension, and squash it if it ends up being not needed.
         physicals = [t.physical for t in tensors_]
-        pdim = indices[0][0]
+        pdim = cast(int, indices[0, 0].item())
         new_strides = ref_tensor.strides
 
     new_physical = aten.cat.default(physicals, dim=pdim)
