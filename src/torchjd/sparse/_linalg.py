@@ -161,17 +161,28 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         K2: (m x n2) Factors for S2
     """
     assert S1.shape[0] == S2.shape[0], "Virtual dimension mismatch"
-    m = S1.shape[0]
-    n1 = S1.shape[1]
+    m, n1 = S1.shape
 
-    # 1. Stack: [S1 | S2]
     A = torch.cat([S1, S2], dim=1)
-
-    # 2. Decompose
     H, U, V = hnf_decomposition(A)
 
+    # H = [S1 | S2] @ U
+    # [S1 | S2] = H @ V
+    #
+    # S1 = H @ V[:, :m1]
+    # S2 = H @ V[:, m1:]
+    #
+    # K1 = V[:, :m1]
+    # K2 = V[:, m1:]
+    # G = H
+    #
+    # S1 = G @ K1
+    # S2 = G @ K2
+    #
+    # SST(p1, S1) = SST(SST(p1, K1), G)
+    # SST(p2, S2) = SST(SST(p2, K2), G)
+
     col_magnitudes = torch.sum(torch.abs(H), dim=0)
-    # Find the last index that is non-zero.
     non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
 
     if len(non_zero_indices) == 0:
@@ -179,14 +190,8 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     else:
         rank = non_zero_indices.max().item() + 1
 
-    # 3. Extract G (Compact Basis)
-    # We only take the first 'rank' columns.
     G = H[:, :rank]
-
-    # 4. Extract Factors from V
-    # S = G @ V_top.
-    # V tracks the inverse transforms, so it contains the coefficients K directly.
-    V_active = V[:m, :]  # Top m rows
+    V_active = V[:rank, :]
 
     K1 = V_active[:, :n1]
     K2 = V_active[:, n1:]
