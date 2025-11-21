@@ -170,8 +170,18 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     # 2. Decompose
     H, U, V = hnf_decomposition(A)
 
-    # 3. Extract G (First m columns of H)
-    G = H[:, :m]
+    col_magnitudes = torch.sum(torch.abs(H), dim=0)
+    # Find the last index that is non-zero.
+    non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
+
+    if len(non_zero_indices) == 0:
+        rank = 0
+    else:
+        rank = non_zero_indices.max().item() + 1
+
+    # 3. Extract G (Compact Basis)
+    # We only take the first 'rank' columns.
+    G = H[:, :rank]
 
     # 4. Extract Factors from V
     # S = G @ V_top.
