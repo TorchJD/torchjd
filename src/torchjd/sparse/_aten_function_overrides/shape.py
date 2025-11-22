@@ -178,7 +178,7 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     ref_basis = ref_tensor.basis
     if any(not torch.equal(t.basis, ref_basis) for t in tensors_[1:]):
         raise NotImplementedError(
-            "Override for aten.cat.default does not support SSTs that do not all have the same "
+            "Override for aten.cat.default does not support SLTs that do not all have the same "
             f"basis. Found the following tensors:\n{[t.debug_info() for t in tensors_]} and the "
             f"following dim: {dim}."
         )

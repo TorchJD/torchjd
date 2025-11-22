@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
-from torchjd.sparse import make_sst
+from torchjd.sparse import make_slt
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
@@ -177,7 +177,7 @@ class Engine:
             output_dims = list(range(output.ndim))
             identity = torch.eye(output.ndim, dtype=torch.int64)
             basis = torch.concatenate([identity, identity], dim=0)
-            jac_output = make_sst(torch.ones_like(output), basis)
+            jac_output = make_slt(torch.ones_like(output), basis)
 
             vmapped_diff = differentiation
             for _ in output_dims:

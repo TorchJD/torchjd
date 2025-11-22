@@ -370,17 +370,17 @@ def test_get_column_indices(source: list[int], destination: list[int], ndim: int
 
 
 @mark.parametrize(
-    ["sst_args", "dim"],
+    ["slt_args", "dim"],
     [
         ([([3], tensor([[1], [1]])), ([3], tensor([[1], [1]]))], 1),
         ([([3, 2], tensor([[1, 0], [1, 3]])), ([3, 2], tensor([[1, 0], [1, 3]]))], 1),
     ],
 )
 def test_concatenate(
-    sst_args: list[tuple[list[int], Tensor]],
+    slt_args: list[tuple[list[int], Tensor]],
     dim: int,
 ):
-    tensors = [SparseLatticedTensor(randn_(pshape), basis) for pshape, basis in sst_args]
+    tensors = [SparseLatticedTensor(randn_(pshape), basis) for pshape, basis in slt_args]
     res = aten.cat.default(tensors, dim)
     expected = aten.cat.default([t.to_dense() for t in tensors], dim)
 

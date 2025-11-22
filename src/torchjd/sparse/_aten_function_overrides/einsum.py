@@ -131,8 +131,8 @@ def prepare_for_elementwise_op(
     t1: Tensor | int | float, t2: Tensor | int | float
 ) -> tuple[SparseLatticedTensor, SparseLatticedTensor]:
     """
-    Prepares two SSTs of the same shape from two args, one of those being a SST, and the other being
-    a SST, Tensor, int or float.
+    Prepares two SLTs of the same shape from two args, one of those being a SLT, and the other being
+    a SLT, Tensor, int or float.
     """
 
     assert isinstance(t1, SparseLatticedTensor) or isinstance(t2, SparseLatticedTensor)
@@ -172,7 +172,7 @@ def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
 
 @impl(aten.mul.Scalar)
 def mul_Scalar(t: SparseLatticedTensor, scalar) -> SparseLatticedTensor:
-    # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
+    # TODO: maybe it could be that scalar is a scalar SLT and t is a normal tensor. Need to check
     #  that
 
     assert isinstance(t, SparseLatticedTensor)

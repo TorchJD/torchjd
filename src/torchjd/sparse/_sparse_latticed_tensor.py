@@ -160,7 +160,7 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
 
     Example:
         Imagine a vector of size 3, and of value [1, 2, 3].
-        Imagine a SST t of shape [3, 3] using this vector as physical and using [[0, 0]] as v_to_ps.
+        Imagine a SLT t of shape [3, 3] using this vector as physical and using [[0, 0]] as v_to_ps.
         t.to_dense() is [1, 0, 0, 0, 2, 0, 0, 0, 3] (it's the flattening of the diagonal matrix
         [[1, 0, 0], [0, 2, 0], [0, 0, 3]]).
         When you move by 1 on physical dimension 0, you move by 4 on virtual dimension 0, i.e.
@@ -203,7 +203,7 @@ def to_sparse_latticed_tensor(t: Tensor) -> SparseLatticedTensor:
     if isinstance(t, SparseLatticedTensor):
         return t
     else:
-        return make_sst(physical=t, basis=torch.eye(t.ndim, dtype=torch.int64))
+        return make_slt(physical=t, basis=torch.eye(t.ndim, dtype=torch.int64))
 
 
 def to_most_efficient_tensor(physical: Tensor, basis: Tensor) -> Tensor:
@@ -211,7 +211,7 @@ def to_most_efficient_tensor(physical: Tensor, basis: Tensor) -> Tensor:
     physical, basis = fix_ungrouped_dims(physical, basis)
 
     if (basis.sum(dim=0) == 1).all():
-        # TODO: this can be done more efficiently (without even creating the SST)
+        # TODO: this can be done more efficiently (without even creating the SLT)
         return SparseLatticedTensor(physical, basis).to_dense()
     else:
         return SparseLatticedTensor(physical, basis)
@@ -264,7 +264,7 @@ def fix_ungrouped_dims(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]
     return nphysical, new_basis
 
 
-def make_sst(physical: Tensor, basis: Tensor) -> SparseLatticedTensor:
+def make_slt(physical: Tensor, basis: Tensor) -> SparseLatticedTensor:
     """Fix physical and basis and create a SparseLatticedTensor with them."""
 
     physical, basis = fix_dim_of_size_1(physical, basis)

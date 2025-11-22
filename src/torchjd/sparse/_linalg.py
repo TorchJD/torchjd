@@ -179,8 +179,8 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     # S1 = G @ K1
     # S2 = G @ K2
     #
-    # SST(p1, S1) = SST(SST(p1, K1), G)
-    # SST(p2, S2) = SST(SST(p2, K2), G)
+    # SLT(p1, S1) = SLT(SLT(p1, K1), G)
+    # SLT(p2, S2) = SLT(SLT(p2, K2), G)
 
     col_magnitudes = torch.sum(torch.abs(H), dim=0)
     non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
