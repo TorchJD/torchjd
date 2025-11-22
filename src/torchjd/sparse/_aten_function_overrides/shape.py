@@ -28,8 +28,8 @@ def view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
         c.T = [prod(t.shape[1:]), prod(t.shape[2:]), ..., t.shape[-1], 1]
     * c' is the same thing but after the reshape, i.e.
         c'.T = [prod(shape[1:]), prod(shape[2:]), ..., shape[-1], 1]
-    * S is the original matrix of strides (t.strides)
-    * S' is the matrix of strides after reshaping.
+    * S is the original basis matrix (t.basis)
+    * S' is the basis matrix after reshaping.
 
     For u, v in Z^m and c in Z, say that u ≡ v (mod c) if u_i ≡ v_i (mod c) for all i.
     Note that c'.T S' ≡ S'[-1] (mod shape[-1])
@@ -46,12 +46,12 @@ def view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
     if prod(shape) != t.numel():
         raise ValueError(f"shape '{shape}' is invalid for input of size {t.numel()}")
 
-    S = t.strides
+    S = t.basis
     vshape = list(t.shape)
     c = _reverse_cumulative_product(vshape)
     c_prime = _reverse_cumulative_product(shape)
-    new_strides = ((c @ S).unsqueeze(0) // c_prime.unsqueeze(1)) % tensor(shape).unsqueeze(1)
-    return to_most_efficient_tensor(t.physical, new_strides)
+    new_basis = ((c @ S).unsqueeze(0) // c_prime.unsqueeze(1)) % tensor(shape).unsqueeze(1)
+    return to_most_efficient_tensor(t.physical, new_basis)
 
 
 def _reverse_cumulative_product(values: list[int]) -> Tensor:
@@ -70,7 +70,7 @@ def infer_shape(shape: list[int], numel: int) -> list[int]:
 
 
 def unsquash_pdim(
-    physical: Tensor, strides: Tensor, pdim: int, new_pdim_shape: list[int]
+    physical: Tensor, basis: Tensor, pdim: int, new_pdim_shape: list[int]
 ) -> tuple[Tensor, Tensor]:
     """
     EXAMPLE:
@@ -80,7 +80,7 @@ def unsquash_pdim(
         [7, 8, 9, 10, 11, 12],
         [13, 14, 15, 16, 17, 18],
     ]
-    strides = [
+    basis = [
         [1, 1],
         [0, 2],
     ]
@@ -99,7 +99,7 @@ def unsquash_pdim(
         [16, 17, 18],
     ]]
 
-    new_strides = [
+    new_basis = [
         [1, 3, 1],
         [0, 6, 2]
     """
@@ -110,18 +110,18 @@ def unsquash_pdim(
     new_shape = old_shape[:pdim] + new_pdim_shape + old_shape[pdim + 1 :]
     new_physical = physical.reshape(new_shape)
 
-    stride_multipliers = tensor([prod(new_pdim_shape[i + 1 :]) for i in range(len(new_pdim_shape))])
+    multipliers = tensor([prod(new_pdim_shape[i + 1 :]) for i in range(len(new_pdim_shape))])
 
-    new_strides = torch.concat(
+    new_basis = torch.concat(
         [
-            strides[:, :pdim],
-            torch.outer(strides[:, pdim], stride_multipliers),
-            strides[:, pdim + 1 :],
+            basis[:, :pdim],
+            torch.outer(basis[:, pdim], multipliers),
+            basis[:, pdim + 1 :],
         ],
         dim=1,
     )
 
-    return new_physical, new_strides
+    return new_physical, new_basis
 
 
 @impl(aten._unsafe_view.default)
@@ -139,10 +139,10 @@ def unsqueeze_default(t: SparseLatticedTensor, dim: int) -> SparseLatticedTensor
     if dim < 0:
         dim = t.ndim + dim + 1
 
-    new_strides = torch.concatenate(
-        [t.strides[:dim], torch.zeros(1, t.strides.shape[1], dtype=torch.int64), t.strides[dim:]]
+    new_basis = torch.concatenate(
+        [t.basis[:dim], torch.zeros(1, t.basis.shape[1], dtype=torch.int64), t.basis[dim:]]
     )
-    return SparseLatticedTensor(t.physical, new_strides)
+    return SparseLatticedTensor(t.physical, new_basis)
 
 
 @impl(aten.squeeze.dims)
@@ -157,14 +157,14 @@ def squeeze_dims(t: SparseLatticedTensor, dims: list[int] | int | None) -> Tenso
         excluded = set(dims)
 
     is_row_kept = [i not in excluded for i in range(t.ndim)]
-    new_strides = t.strides[is_row_kept]
-    return to_most_efficient_tensor(t.physical, new_strides)
+    new_basis = t.basis[is_row_kept]
+    return to_most_efficient_tensor(t.physical, new_basis)
 
 
 @impl(aten.permute.default)
 def permute_default(t: SparseLatticedTensor, dims: list[int]) -> SparseLatticedTensor:
-    new_strides = t.strides[torch.tensor(dims)]
-    return SparseLatticedTensor(t.physical, new_strides)
+    new_basis = t.basis[torch.tensor(dims)]
+    return SparseLatticedTensor(t.physical, new_basis)
 
 
 @impl(aten.cat.default)
@@ -175,11 +175,11 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
 
     tensors_ = [cast(SparseLatticedTensor, t) for t in tensors]
     ref_tensor = tensors_[0]
-    ref_strides = ref_tensor.strides
-    if any(not torch.equal(t.strides, ref_strides) for t in tensors_[1:]):
+    ref_basis = ref_tensor.basis
+    if any(not torch.equal(t.basis, ref_basis) for t in tensors_[1:]):
         raise NotImplementedError(
             "Override for aten.cat.default does not support SSTs that do not all have the same "
-            f"strides. Found the following tensors:\n{[t.debug_info() for t in tensors_]} and the "
+            f"basis. Found the following tensors:\n{[t.debug_info() for t in tensors_]} and the "
             f"following dim: {dim}."
         )
 
@@ -189,8 +189,8 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
 
     ref_virtual_dim_size = ref_tensor.shape[dim]
     indices = torch.argwhere(
-        torch.eq(ref_strides[dim] * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
-        & torch.eq(ref_strides.sum(dim=0) * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
+        torch.eq(ref_basis[dim] * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
+        & torch.eq(ref_basis.sum(dim=0) * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
     )
     assert len(indices) <= 1
 
@@ -200,18 +200,18 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
 
         pdim = ref_tensor.physical.ndim
         physicals = [t.physical.unsqueeze(-1) for t in tensors_]
-        new_stride_column = torch.zeros(ref_tensor.ndim, 1, dtype=torch.int64)
-        new_stride_column[dim, 0] = ref_virtual_dim_size
-        new_strides = torch.concatenate([ref_tensor.strides, new_stride_column], dim=1)
+        new_basis_vector = torch.zeros(ref_tensor.ndim, 1, dtype=torch.int64)
+        new_basis_vector[dim, 0] = ref_virtual_dim_size
+        new_basis = torch.concatenate([ref_tensor.basis, new_basis_vector], dim=1)
     else:
         # Such a physical dimension already exists. Note that an alternative implementation would be
         # to simply always add the physical dimension, and squash it if it ends up being not needed.
         physicals = [t.physical for t in tensors_]
         pdim = cast(int, indices[0, 0].item())
-        new_strides = ref_tensor.strides
+        new_basis = ref_tensor.basis
 
     new_physical = aten.cat.default(physicals, dim=pdim)
-    return SparseLatticedTensor(new_physical, new_strides)
+    return SparseLatticedTensor(new_physical, new_basis)
 
 
 @impl(aten.expand.default)
@@ -227,26 +227,26 @@ def expand_default(t: SparseLatticedTensor, sizes: list[int]) -> SparseLatticedT
 
     # Try to expand each dimension to its new size
     new_physical = t.physical
-    new_strides = t.strides
-    for d, (vstride, orig_size, new_size) in enumerate(zip(t.strides, t.shape, sizes, strict=True)):
-        if vstride.sum() > 0 and orig_size != new_size and new_size != -1:
+    new_basis = t.basis
+    for d, (v, orig_size, new_size) in enumerate(zip(t.basis, t.shape, sizes, strict=True)):
+        if v.sum() > 0 and orig_size != new_size and new_size != -1:
             raise ValueError(
                 f"Cannot expand dim {d} of size != 1. Found size {orig_size} and target size "
                 f"{new_size}."
             )
 
-        if vstride.sum() == 0 and new_size != 1 and new_size != -1:
+        if v.sum() == 0 and new_size != 1 and new_size != -1:
             # Add a dimension of size new_size at the end of the physical tensor.
             new_physical_shape = list(new_physical.shape) + [new_size]
             new_physical = new_physical.unsqueeze(-1).expand(new_physical_shape)
 
-            # Make this new physical dimension have a stride of 1 at virtual dimension d and 0 at
-            # every other virtual dimension
-            new_stride_column = torch.zeros(t.ndim, 1, dtype=torch.int64)
-            new_stride_column[d, 0] = 1
-            new_strides = torch.cat([new_strides, new_stride_column], dim=1)
+            # Make the basis vector of this new physical dimension be 1 at virtual dimension d and 0
+            # at every other virtual dimension
+            new_basis_vector = torch.zeros(t.ndim, 1, dtype=torch.int64)
+            new_basis_vector[d, 0] = 1
+            new_basis = torch.cat([new_basis, new_basis_vector], dim=1)
 
-    return SparseLatticedTensor(new_physical, new_strides)
+    return SparseLatticedTensor(new_physical, new_basis)
 
 
 @impl(aten.broadcast_tensors.default)
@@ -279,7 +279,7 @@ def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
 @impl(aten.transpose.int)
 def transpose_int(t: SparseLatticedTensor, dim0: int, dim1: int) -> SparseLatticedTensor:
     assert isinstance(t, SparseLatticedTensor)
-    return SparseLatticedTensor(t.physical, _swap_rows(t.strides, dim0, dim1))
+    return SparseLatticedTensor(t.physical, _swap_rows(t.basis, dim0, dim1))
 
 
 def _swap_rows(matrix: Tensor, c0: int, c1: int) -> Tensor:

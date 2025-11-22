@@ -11,7 +11,7 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
     _POINTWISE_FUNCTIONS,
 )
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
-from torchjd.sparse._coalesce import fix_zero_stride_columns
+from torchjd.sparse._coalesce import fix_zero_basis_vectors
 from torchjd.sparse._sparse_latticed_tensor import (
     SparseLatticedTensor,
     fix_ungrouped_dims,
@@ -41,7 +41,7 @@ def test_to_dense2():
 
 
 @mark.parametrize(
-    ["a_pshape", "a_strides", "b_pshape", "b_strides", "a_indices", "b_indices", "output_indices"],
+    ["a_pshape", "a_basis", "b_pshape", "b_basis", "a_indices", "b_indices", "output_indices"],
     [
         (
             [4, 5],
@@ -74,15 +74,15 @@ def test_to_dense2():
 )
 def test_einsum(
     a_pshape: list[int],
-    a_strides: Tensor,
+    a_basis: Tensor,
     b_pshape: list[int],
-    b_strides: Tensor,
+    b_basis: Tensor,
     a_indices: list[int],
     b_indices: list[int],
     output_indices: list[int],
 ):
-    a = SparseLatticedTensor(randn_(a_pshape), a_strides)
-    b = SparseLatticedTensor(randn_(b_pshape), b_strides)
+    a = SparseLatticedTensor(randn_(a_pshape), a_basis)
+    b = SparseLatticedTensor(randn_(b_pshape), b_basis)
 
     res = einsum((a, a_indices), (b, b_indices), output=output_indices)
 
@@ -166,7 +166,7 @@ def test_unary(func):
 
 
 @mark.parametrize(
-    ["physical_shape", "strides", "target_shape", "expected_physical_shape", "expected_strides"],
+    ["physical_shape", "basis", "target_shape", "expected_physical_shape", "expected_basis"],
     [
         (
             [2, 3],
@@ -249,25 +249,25 @@ def test_unary(func):
 )
 def test_view(
     physical_shape: list[int],
-    strides: Tensor,
+    basis: Tensor,
     target_shape: list[int],
     expected_physical_shape: list[int],
-    expected_strides: Tensor,
+    expected_basis: Tensor,
 ):
     a = randn_(tuple(physical_shape))
-    t = SparseLatticedTensor(a, strides)
+    t = SparseLatticedTensor(a, basis)
 
     result = aten.view.default(t, target_shape)
     expected = t.to_dense().reshape(target_shape)
 
     assert isinstance(result, SparseLatticedTensor)
     assert list(result.physical.shape) == expected_physical_shape
-    assert torch.equal(result.strides, expected_strides)
+    assert torch.equal(result.basis, expected_basis)
     assert torch.all(torch.eq(result.to_dense(), expected))
 
 
 @mark.parametrize(
-    ["pshape", "strides", "expected"],
+    ["pshape", "basis", "expected"],
     [
         (
             [[32, 2, 3, 4, 5]],
@@ -276,13 +276,13 @@ def test_view(
         )
     ],
 )
-def test_get_groupings(pshape: list[int], strides: torch.Tensor, expected: list[list[int]]):
-    result = get_groupings(pshape, strides)
+def test_get_groupings(pshape: list[int], basis: torch.Tensor, expected: list[list[int]]):
+    result = get_groupings(pshape, basis)
     assert result == expected
 
 
 @mark.parametrize(
-    ["physical_shape", "strides", "expected_physical_shape", "expected_strides"],
+    ["physical_shape", "basis", "expected_physical_shape", "expected_basis"],
     [
         (
             [3, 4, 5],
@@ -301,25 +301,25 @@ def test_get_groupings(pshape: list[int], strides: torch.Tensor, expected: list[
 )
 def test_fix_ungrouped_dims(
     physical_shape: list[int],
-    strides: Tensor,
+    basis: Tensor,
     expected_physical_shape: list[int],
-    expected_strides: Tensor,
+    expected_basis: Tensor,
 ):
     physical = randn_(physical_shape)
-    fixed_physical, fixed_strides = fix_ungrouped_dims(physical, strides)
+    fixed_physical, fixed_basis = fix_ungrouped_dims(physical, basis)
 
     assert list(fixed_physical.shape) == expected_physical_shape
-    assert torch.equal(fixed_strides, expected_strides)
+    assert torch.equal(fixed_basis, expected_basis)
 
 
 @mark.parametrize(
     [
         "physical_shape",
-        "strides",
+        "basis",
         "pdim",
         "new_pdim_shape",
         "expected_physical_shape",
-        "expected_strides",
+        "expected_basis",
     ],
     [
         ([4], tensor([[1], [2]]), 0, [4], [4], tensor([[1], [2]])),  # trivial
@@ -336,17 +336,17 @@ def test_fix_ungrouped_dims(
 )
 def test_unsquash_pdim(
     physical_shape: list[int],
-    strides: Tensor,
+    basis: Tensor,
     pdim: int,
     new_pdim_shape: list[int],
     expected_physical_shape: list[int],
-    expected_strides: Tensor,
+    expected_basis: Tensor,
 ):
     physical = randn_(physical_shape)
-    new_physical, new_strides = unsquash_pdim(physical, strides, pdim, new_pdim_shape)
+    new_physical, new_basis = unsquash_pdim(physical, basis, pdim, new_pdim_shape)
 
     assert list(new_physical.shape) == expected_physical_shape
-    assert torch.equal(new_strides, expected_strides)
+    assert torch.equal(new_basis, expected_basis)
 
 
 @mark.parametrize(
@@ -380,7 +380,7 @@ def test_concatenate(
     sst_args: list[tuple[list[int], Tensor]],
     dim: int,
 ):
-    tensors = [SparseLatticedTensor(randn_(pshape), strides) for pshape, strides in sst_args]
+    tensors = [SparseLatticedTensor(randn_(pshape), basis) for pshape, basis in sst_args]
     res = aten.cat.default(tensors, dim)
     expected = aten.cat.default([t.to_dense() for t in tensors], dim)
 
@@ -389,7 +389,7 @@ def test_concatenate(
 
 
 @mark.parametrize(
-    ["physical", "strides", "expected_physical", "expected_strides"],
+    ["physical", "basis", "expected_physical", "expected_basis"],
     [
         (
             tensor_([[1, 2, 3], [4, 5, 6]]),
@@ -411,12 +411,12 @@ def test_concatenate(
         ),
     ],
 )
-def test_fix_zero_stride_columns(
+def test_fix_zero_basis_vectors(
     physical: Tensor,
-    strides: Tensor,
+    basis: Tensor,
     expected_physical: Tensor,
-    expected_strides: Tensor,
+    expected_basis: Tensor,
 ):
-    physical, strides = fix_zero_stride_columns(physical, strides)
+    physical, basis = fix_zero_basis_vectors(physical, basis)
     assert torch.equal(physical, expected_physical)
-    assert torch.equal(strides, expected_strides)
+    assert torch.equal(basis, expected_basis)

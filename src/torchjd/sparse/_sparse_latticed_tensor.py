@@ -14,8 +14,8 @@ class SparseLatticedTensor(Tensor):
     _HANDLED_FUNCTIONS = dict[Callable, Callable]()
 
     @staticmethod
-    def __new__(cls, physical: Tensor, strides: Tensor):
-        assert strides.dtype == torch.int64
+    def __new__(cls, physical: Tensor, basis: Tensor):
+        assert basis.dtype == torch.int64
 
         # Note [Passing requires_grad=true tensors to subclasses]
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,23 +28,23 @@ class SparseLatticedTensor(Tensor):
         assert not physical.requires_grad or not torch.is_grad_enabled()
 
         pshape = tensor(physical.shape, dtype=torch.int64)
-        vshape = strides @ (pshape - 1) + 1
+        vshape = basis @ (pshape - 1) + 1
         return Tensor._make_wrapper_subclass(
             cls, tuple(vshape.tolist()), dtype=physical.dtype, device=physical.device
         )
 
-    def __init__(self, physical: Tensor, strides: Tensor):
+    def __init__(self, physical: Tensor, basis: Tensor):
         """
-        This constructor is made for specifying physical and strides exactly. It should not modify
+        This constructor is made for specifying physical and basis exactly. It should not modify
         it.
 
-        For this reason, another constructor will be made to either modify the physical / strides to
+        For this reason, another constructor will be made to either modify the physical / basis to
         simplify the result, or to create a dense tensor directly if it's already dense.
 
         :param physical: The dense tensor holding the actual data.
-        :param strides: Integer (int64) tensor of shape [virtual_ndim, physical_ndim], representing
+        :param basis: Integer (int64) tensor of shape [virtual_ndim, physical_ndim], representing
             the linear transformation between an index in the physical tensor and the corresponding
-            index in the virtual tensor, i.e. v_index = strides @ p_index.
+            index in the virtual tensor, i.e. v_index = basis @ p_index.
         """
 
         if any(s == 1 for s in physical.shape):
@@ -52,30 +52,27 @@ class SparseLatticedTensor(Tensor):
                 "physical must not contain any dimension of size 1. Found physical.shape="
                 f"{physical.shape}."
             )
-        if strides.dtype is not torch.int64:
+        if basis.dtype is not torch.int64:
+            raise ValueError(f"basis should be of int64 dtype. Found basis.dtype={basis.dtype}.")
+        if not (basis >= 0).all():
+            raise ValueError(f"All basis vectors must be non-negative. Found basis={basis}.")
+        if basis.shape[1] != physical.ndim:
             raise ValueError(
-                f"strides should be of int64 dtype. Found strides.dtype={strides.dtype}."
-            )
-        if not (strides >= 0).all():
-            raise ValueError(f"All strides must be non-negative. Found strides={strides}.")
-        if strides.shape[1] != physical.ndim:
-            raise ValueError(
-                f"strides should have 1 column per physical dimension. Found strides={strides} and "
+                f"basis should have 1 column per physical dimension. Found basis={basis} and "
                 f"physical.shape={physical.shape}."
             )
-        if (strides.sum(dim=0) == 0).any():
+        if (basis.sum(dim=0) == 0).any():
             raise ValueError(
-                f"strides should not have any column full of zeros. Found strides={strides}."
+                f"basis should not have any column full of zeros. Found basis={basis}."
             )
-        groups = get_groupings(list(physical.shape), strides)
+        groups = get_groupings(list(physical.shape), basis)
         if any(len(group) != 1 for group in groups):
             raise ValueError(
-                f"Dimensions must be maximally grouped. Found strides={strides} and "
-                f"groups={groups}"
+                f"Dimensions must be maximally grouped. Found basis={basis} and " f"groups={groups}"
             )
 
         self.physical = physical
-        self.strides = strides
+        self.basis = basis
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -90,7 +87,7 @@ class SparseLatticedTensor(Tensor):
         p_indices_grid = stack(meshgrid(*p_index_ranges, indexing="ij"))
 
         # addmm_cuda not implemented for Long tensors => gotta have these tensors on cpu
-        v_indices_grid = tensordot(self.strides, p_indices_grid, dims=1)
+        v_indices_grid = tensordot(self.basis, p_indices_grid, dims=1)
         res = zeros(self.shape, device=self.device, dtype=self.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
@@ -108,14 +105,10 @@ class SparseLatticedTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"SparseLatticedTensor(physical={self.physical}, strides={self.strides})"
+        return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis})"
 
     def debug_info(self) -> str:
-        info = (
-            f"vshape: {self.shape}\n"
-            f"pshape: {self.physical.shape}\n"
-            f"strides: {self.strides}\n"
-        )
+        info = f"vshape: {self.shape}\n" f"pshape: {self.physical.shape}\n" f"basis: {self.basis}\n"
         return info
 
     @classmethod
@@ -137,7 +130,7 @@ def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
         result = f"{t.__class__.__name__} - vshape: {t.shape}"
         if isinstance(t, SparseLatticedTensor):
-            result += f" - pshape: {t.physical.shape} - strides: {t.strides}"
+            result += f" - pshape: {t.physical.shape} - basis: {t.basis}"
 
         return result
 
@@ -189,12 +182,12 @@ def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
     return result
 
 
-def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
-    strides_time_pshape = strides * tensor(pshape, dtype=torch.int64)
-    groups = {i: {i} for i, column in enumerate(strides.T)}
-    group_ids = [i for i in range(len(strides.T))]
-    for i1, i2 in itertools.combinations(range(strides.shape[1]), 2):
-        if torch.equal(strides[:, i1], strides_time_pshape[:, i2]):
+def get_groupings(pshape: list[int], basis: Tensor) -> list[list[int]]:
+    basis_time_pshape = basis * tensor(pshape, dtype=torch.int64)
+    groups = {i: {i} for i, column in enumerate(basis.T)}
+    group_ids = [i for i in range(len(basis.T))]
+    for i1, i2 in itertools.combinations(range(basis.shape[1]), 2):
+        if torch.equal(basis[:, i1], basis_time_pshape[:, i2]):
             groups[group_ids[i1]].update(groups[group_ids[i2]])
             group_ids[i2] = group_ids[i1]
 
@@ -210,18 +203,18 @@ def to_sparse_latticed_tensor(t: Tensor) -> SparseLatticedTensor:
     if isinstance(t, SparseLatticedTensor):
         return t
     else:
-        return make_sst(physical=t, strides=torch.eye(t.ndim, dtype=torch.int64))
+        return make_sst(physical=t, basis=torch.eye(t.ndim, dtype=torch.int64))
 
 
-def to_most_efficient_tensor(physical: Tensor, strides: Tensor) -> Tensor:
-    physical, strides = fix_dim_of_size_1(physical, strides)
-    physical, strides = fix_ungrouped_dims(physical, strides)
+def to_most_efficient_tensor(physical: Tensor, basis: Tensor) -> Tensor:
+    physical, basis = fix_dim_of_size_1(physical, basis)
+    physical, basis = fix_ungrouped_dims(physical, basis)
 
-    if (strides.sum(dim=0) == 1).all():
+    if (basis.sum(dim=0) == 1).all():
         # TODO: this can be done more efficiently (without even creating the SST)
-        return SparseLatticedTensor(physical, strides).to_dense()
+        return SparseLatticedTensor(physical, basis).to_dense()
     else:
-        return SparseLatticedTensor(physical, strides)
+        return SparseLatticedTensor(physical, basis)
 
 
 def unwrap_to_dense(t: Tensor):
@@ -255,25 +248,25 @@ def get_full_source(source: list[int], destination: list[int], ndim: int) -> lis
     return idx.tolist()
 
 
-def fix_dim_of_size_1(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
+def fix_dim_of_size_1(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]:
     is_of_size_1 = tensor([s == 1 for s in physical.shape], dtype=torch.bool)
-    return physical.squeeze(), strides[:, ~is_of_size_1]
+    return physical.squeeze(), basis[:, ~is_of_size_1]
 
 
-def fix_ungrouped_dims(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tensor]:
-    groups = get_groupings(list(physical.shape), strides)
+def fix_ungrouped_dims(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]:
+    groups = get_groupings(list(physical.shape), basis)
     nphysical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
-    stride_mapping = torch.zeros(physical.ndim, nphysical.ndim, dtype=torch.int64)
+    basis_mapping = torch.zeros(physical.ndim, nphysical.ndim, dtype=torch.int64)
     for j, group in enumerate(groups):
-        stride_mapping[group[-1], j] = 1
+        basis_mapping[group[-1], j] = 1
 
-    new_strides = strides @ stride_mapping
-    return nphysical, new_strides
+    new_basis = basis @ basis_mapping
+    return nphysical, new_basis
 
 
-def make_sst(physical: Tensor, strides: Tensor) -> SparseLatticedTensor:
-    """Fix physical and strides and create a SparseLatticedTensor with them."""
+def make_sst(physical: Tensor, basis: Tensor) -> SparseLatticedTensor:
+    """Fix physical and basis and create a SparseLatticedTensor with them."""
 
-    physical, strides = fix_dim_of_size_1(physical, strides)
-    physical, strides = fix_ungrouped_dims(physical, strides)
-    return SparseLatticedTensor(physical, strides)
+    physical, basis = fix_dim_of_size_1(physical, basis)
+    physical, basis = fix_ungrouped_dims(physical, basis)
+    return SparseLatticedTensor(physical, basis)

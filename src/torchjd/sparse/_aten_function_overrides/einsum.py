@@ -165,7 +165,7 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
 @impl(aten.div.Tensor)
 def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    t2_ = SparseLatticedTensor(1.0 / t2_.physical, t2_.strides)
+    t2_ = SparseLatticedTensor(1.0 / t2_.physical, t2_.basis)
     all_dims = list(range(t1_.ndim))
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
@@ -177,7 +177,7 @@ def mul_Scalar(t: SparseLatticedTensor, scalar) -> SparseLatticedTensor:
 
     assert isinstance(t, SparseLatticedTensor)
     new_physical = aten.mul.Scalar(t.physical, scalar)
-    return SparseLatticedTensor(new_physical, t.strides)
+    return SparseLatticedTensor(new_physical, t.basis)
 
 
 @impl(aten.add.Tensor)
@@ -186,9 +186,9 @@ def add_Tensor(
 ) -> SparseLatticedTensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
 
-    if torch.equal(t1_.strides, t2_.strides):
+    if torch.equal(t1_.basis, t2_.basis):
         new_physical = t1_.physical + t2_.physical * alpha
-        return SparseLatticedTensor(new_physical, t1_.strides)
+        return SparseLatticedTensor(new_physical, t1_.basis)
     else:
         raise NotImplementedError()
 

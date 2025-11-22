@@ -176,8 +176,8 @@ class Engine:
 
             output_dims = list(range(output.ndim))
             identity = torch.eye(output.ndim, dtype=torch.int64)
-            strides = torch.concatenate([identity, identity], dim=0)
-            jac_output = make_sst(torch.ones_like(output), strides)
+            basis = torch.concatenate([identity, identity], dim=0)
+            jac_output = make_sst(torch.ones_like(output), basis)
 
             vmapped_diff = differentiation
             for _ in output_dims:
