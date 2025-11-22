@@ -10,7 +10,7 @@ from torch import Tensor, arange, meshgrid, stack, tensor, tensordot, zeros
 from torch.utils._pytree import tree_map
 
 
-class StructuredSparseTensor(Tensor):
+class SparseLatticedTensor(Tensor):
     _HANDLED_FUNCTIONS = dict[Callable, Callable]()
 
     @staticmethod
@@ -108,7 +108,7 @@ class StructuredSparseTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"StructuredSparseTensor(physical={self.physical}, strides={self.strides})"
+        return f"SparseLatticedTensor(physical={self.physical}, strides={self.strides})"
 
     def debug_info(self) -> str:
         info = (
@@ -130,13 +130,13 @@ class StructuredSparseTensor(Tensor):
         return decorator
 
 
-impl = StructuredSparseTensor.implements
+impl = SparseLatticedTensor.implements
 
 
 def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
         result = f"{t.__class__.__name__} - vshape: {t.shape}"
-        if isinstance(t, StructuredSparseTensor):
+        if isinstance(t, SparseLatticedTensor):
             result += f" - pshape: {t.physical.shape} - strides: {t.strides}"
 
         return result
@@ -206,8 +206,8 @@ def get_groupings(pshape: list[int], strides: Tensor) -> list[list[int]]:
     return new_columns
 
 
-def to_structured_sparse_tensor(t: Tensor) -> StructuredSparseTensor:
-    if isinstance(t, StructuredSparseTensor):
+def to_sparse_latticed_tensor(t: Tensor) -> SparseLatticedTensor:
+    if isinstance(t, SparseLatticedTensor):
         return t
     else:
         return make_sst(physical=t, strides=torch.eye(t.ndim, dtype=torch.int64))
@@ -219,13 +219,13 @@ def to_most_efficient_tensor(physical: Tensor, strides: Tensor) -> Tensor:
 
     if (strides.sum(dim=0) == 1).all():
         # TODO: this can be done more efficiently (without even creating the SST)
-        return StructuredSparseTensor(physical, strides).to_dense()
+        return SparseLatticedTensor(physical, strides).to_dense()
     else:
-        return StructuredSparseTensor(physical, strides)
+        return SparseLatticedTensor(physical, strides)
 
 
 def unwrap_to_dense(t: Tensor):
-    if isinstance(t, StructuredSparseTensor):
+    if isinstance(t, SparseLatticedTensor):
         return t.to_dense()
     else:
         return t
@@ -271,9 +271,9 @@ def fix_ungrouped_dims(physical: Tensor, strides: Tensor) -> tuple[Tensor, Tenso
     return nphysical, new_strides
 
 
-def make_sst(physical: Tensor, strides: Tensor) -> StructuredSparseTensor:
-    """Fix physical and strides and create a StructuredSparseTensor with them."""
+def make_sst(physical: Tensor, strides: Tensor) -> SparseLatticedTensor:
+    """Fix physical and strides and create a SparseLatticedTensor with them."""
 
     physical, strides = fix_dim_of_size_1(physical, strides)
     physical, strides = fix_ungrouped_dims(physical, strides)
-    return StructuredSparseTensor(physical, strides)
+    return SparseLatticedTensor(physical, strides)

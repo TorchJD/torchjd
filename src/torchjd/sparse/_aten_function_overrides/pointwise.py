@@ -1,6 +1,6 @@
 from torch.ops import aten  # type: ignore
 
-from torchjd.sparse._structured_sparse_tensor import StructuredSparseTensor, impl
+from torchjd.sparse._sparse_latticed_tensor import SparseLatticedTensor, impl
 
 # pointwise functions applied to one Tensor with `0.0 → 0`
 _POINTWISE_FUNCTIONS = [
@@ -69,17 +69,17 @@ _IN_PLACE_POINTWISE_FUNCTIONS = [
 
 def _override_pointwise(op):
     @impl(op)
-    def func_(t: StructuredSparseTensor) -> StructuredSparseTensor:
-        assert isinstance(t, StructuredSparseTensor)
-        return StructuredSparseTensor(op(t.physical), t.strides)
+    def func_(t: SparseLatticedTensor) -> SparseLatticedTensor:
+        assert isinstance(t, SparseLatticedTensor)
+        return SparseLatticedTensor(op(t.physical), t.strides)
 
     return func_
 
 
 def _override_inplace_pointwise(op):
     @impl(op)
-    def func_(t: StructuredSparseTensor) -> StructuredSparseTensor:
-        assert isinstance(t, StructuredSparseTensor)
+    def func_(t: SparseLatticedTensor) -> SparseLatticedTensor:
+        assert isinstance(t, SparseLatticedTensor)
         op(t.physical)
         return t
 
@@ -92,21 +92,21 @@ for pointwise_func in _IN_PLACE_POINTWISE_FUNCTIONS:
 
 
 @impl(aten.pow.Tensor_Scalar)
-def pow_Tensor_Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseTensor:
-    assert isinstance(t, StructuredSparseTensor)
+def pow_Tensor_Scalar(t: SparseLatticedTensor, exponent: float) -> SparseLatticedTensor:
+    assert isinstance(t, SparseLatticedTensor)
 
     if exponent <= 0.0:
         # Need to densify because we don't have pow(0.0, exponent) = 0.0
         return aten.pow.Tensor_Scalar(t.to_dense(), exponent)
 
     new_physical = aten.pow.Tensor_Scalar(t.physical, exponent)
-    return StructuredSparseTensor(new_physical, t.strides)
+    return SparseLatticedTensor(new_physical, t.strides)
 
 
 # Somehow there's no pow_.Tensor_Scalar and pow_.Scalar takes tensor and scalar.
 @impl(aten.pow_.Scalar)
-def pow__Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseTensor:
-    assert isinstance(t, StructuredSparseTensor)
+def pow__Scalar(t: SparseLatticedTensor, exponent: float) -> SparseLatticedTensor:
+    assert isinstance(t, SparseLatticedTensor)
 
     if exponent <= 0.0:
         # Need to densify because we don't have pow(0.0, exponent) = 0.0
@@ -118,8 +118,8 @@ def pow__Scalar(t: StructuredSparseTensor, exponent: float) -> StructuredSparseT
 
 
 @impl(aten.div.Scalar)
-def div_Scalar(t: StructuredSparseTensor, divisor: float) -> StructuredSparseTensor:
-    assert isinstance(t, StructuredSparseTensor)
+def div_Scalar(t: SparseLatticedTensor, divisor: float) -> SparseLatticedTensor:
+    assert isinstance(t, SparseLatticedTensor)
 
     new_physical = aten.div.Scalar(t.physical, divisor)
-    return StructuredSparseTensor(new_physical, t.strides)
+    return SparseLatticedTensor(new_physical, t.strides)

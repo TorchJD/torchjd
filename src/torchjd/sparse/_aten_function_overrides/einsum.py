@@ -2,15 +2,15 @@ import torch
 from torch import Tensor, tensor
 from torch.ops import aten  # type: ignore
 
-from torchjd.sparse._structured_sparse_tensor import (
-    StructuredSparseTensor,
+from torchjd.sparse._sparse_latticed_tensor import (
+    SparseLatticedTensor,
     impl,
     to_most_efficient_tensor,
-    to_structured_sparse_tensor,
+    to_sparse_latticed_tensor,
 )
 
 
-def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -> Tensor:
+def einsum(*args: tuple[SparseLatticedTensor, list[int]], output: list[int]) -> Tensor:
     raise NotImplementedError()
 
     # First part of the algorithm, determine how to cluster physical indices as well as the common
@@ -39,13 +39,13 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
     # [p_1, ..., p_k], then we have to create fresh sub-indices for each dimension.
     # For this reason, an index is decomposed into sub-indices that are then independently
     # clustered.
-    # So if an index i in args for some StructuredSparseTensor corresponds to a v_to_ps [j, k, l],
+    # So if an index i in args for some SparseLatticedTensor corresponds to a v_to_ps [j, k, l],
     # We will consider three indices (i, 0), (i, 1) and (i, 2).
     # If furthermore [k] correspond to the v_to_ps of some other tensor with index j, then
     # (i, 1) and (j, 0) will be clustered together (and end up being mapped to the same indice in
     # the resulting einsum).
     # Note that this is a problem if two virtual dimensions (from possibly different
-    # StructuredSparseTensors) have the same size but not the same decomposition into physical
+    # SparseLatticedTensors) have the same size but not the same decomposition into physical
     # dimension sizes. For now lets leave the responsibility to care about that in the calling
     # functions, if we can factor code later on we will.
 
@@ -71,7 +71,7 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
     physicals = list[Tensor]()
     indices_to_n_pdims = dict[int, int]()
     for t, indices in args:
-        assert isinstance(t, StructuredSparseTensor)
+        assert isinstance(t, SparseLatticedTensor)
         physicals.append(t.physical)
         for pdims, index in zip(t.v_to_ps, indices):
             if index in indices_to_n_pdims:
@@ -129,13 +129,13 @@ def einsum(*args: tuple[StructuredSparseTensor, list[int]], output: list[int]) -
 
 def prepare_for_elementwise_op(
     t1: Tensor | int | float, t2: Tensor | int | float
-) -> tuple[StructuredSparseTensor, StructuredSparseTensor]:
+) -> tuple[SparseLatticedTensor, SparseLatticedTensor]:
     """
     Prepares two SSTs of the same shape from two args, one of those being a SST, and the other being
     a SST, Tensor, int or float.
     """
 
-    assert isinstance(t1, StructuredSparseTensor) or isinstance(t2, StructuredSparseTensor)
+    assert isinstance(t1, SparseLatticedTensor) or isinstance(t2, SparseLatticedTensor)
 
     if isinstance(t1, int) or isinstance(t1, float):
         t1_ = tensor(t1, device=t2.device)
@@ -148,8 +148,8 @@ def prepare_for_elementwise_op(
         t2_ = t2
 
     t1_, t2_ = aten.broadcast_tensors.default([t1_, t2_])
-    t1_ = to_structured_sparse_tensor(t1_)
-    t2_ = to_structured_sparse_tensor(t2_)
+    t1_ = to_sparse_latticed_tensor(t1_)
+    t2_ = to_sparse_latticed_tensor(t2_)
 
     return t1_, t2_
 
@@ -165,37 +165,37 @@ def mul_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
 @impl(aten.div.Tensor)
 def div_Tensor(t1: Tensor | int | float, t2: Tensor | int | float) -> Tensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
-    t2_ = StructuredSparseTensor(1.0 / t2_.physical, t2_.strides)
+    t2_ = SparseLatticedTensor(1.0 / t2_.physical, t2_.strides)
     all_dims = list(range(t1_.ndim))
     return einsum((t1_, all_dims), (t2_, all_dims), output=all_dims)
 
 
 @impl(aten.mul.Scalar)
-def mul_Scalar(t: StructuredSparseTensor, scalar) -> StructuredSparseTensor:
+def mul_Scalar(t: SparseLatticedTensor, scalar) -> SparseLatticedTensor:
     # TODO: maybe it could be that scalar is a scalar SST and t is a normal tensor. Need to check
     #  that
 
-    assert isinstance(t, StructuredSparseTensor)
+    assert isinstance(t, SparseLatticedTensor)
     new_physical = aten.mul.Scalar(t.physical, scalar)
-    return StructuredSparseTensor(new_physical, t.strides)
+    return SparseLatticedTensor(new_physical, t.strides)
 
 
 @impl(aten.add.Tensor)
 def add_Tensor(
     t1: Tensor | int | float, t2: Tensor | int | float, alpha: Tensor | float = 1.0
-) -> StructuredSparseTensor:
+) -> SparseLatticedTensor:
     t1_, t2_ = prepare_for_elementwise_op(t1, t2)
 
     if torch.equal(t1_.strides, t2_.strides):
         new_physical = t1_.physical + t2_.physical * alpha
-        return StructuredSparseTensor(new_physical, t1_.strides)
+        return SparseLatticedTensor(new_physical, t1_.strides)
     else:
         raise NotImplementedError()
 
 
 @impl(aten.bmm.default)
 def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
-    assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
+    assert isinstance(mat1, SparseLatticedTensor) or isinstance(mat2, SparseLatticedTensor)
     assert (
         mat1.ndim == 3
         and mat2.ndim == 3
@@ -203,8 +203,8 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
         and mat1.shape[2] == mat2.shape[1]
     )
 
-    mat1_ = to_structured_sparse_tensor(mat1)
-    mat2_ = to_structured_sparse_tensor(mat2)
+    mat1_ = to_sparse_latticed_tensor(mat1)
+    mat2_ = to_sparse_latticed_tensor(mat2)
 
     # TODO: Verify that the dimension `0` of mat1_ and mat2_ have the same physical dimension sizes
     #  decompositions. If not, can reshape to common decomposition?
@@ -213,32 +213,32 @@ def bmm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
 
 @impl(aten.mm.default)
 def mm_default(mat1: Tensor, mat2: Tensor) -> Tensor:
-    assert isinstance(mat1, StructuredSparseTensor) or isinstance(mat2, StructuredSparseTensor)
+    assert isinstance(mat1, SparseLatticedTensor) or isinstance(mat2, SparseLatticedTensor)
     assert mat1.ndim == 2 and mat2.ndim == 2 and mat1.shape[1] == mat2.shape[0]
 
-    mat1_ = to_structured_sparse_tensor(mat1)
-    mat2_ = to_structured_sparse_tensor(mat2)
+    mat1_ = to_sparse_latticed_tensor(mat1)
+    mat2_ = to_sparse_latticed_tensor(mat2)
 
     return einsum((mat1_, [0, 1]), (mat2_, [1, 2]), output=[0, 2])
 
 
 @impl(aten.mean.default)
-def mean_default(t: StructuredSparseTensor) -> Tensor:
-    assert isinstance(t, StructuredSparseTensor)
+def mean_default(t: SparseLatticedTensor) -> Tensor:
+    assert isinstance(t, SparseLatticedTensor)
     return aten.sum.default(t.physical) / t.numel()
 
 
 @impl(aten.sum.default)
-def sum_default(t: StructuredSparseTensor) -> Tensor:
-    assert isinstance(t, StructuredSparseTensor)
+def sum_default(t: SparseLatticedTensor) -> Tensor:
+    assert isinstance(t, SparseLatticedTensor)
     return aten.sum.default(t.physical)
 
 
 @impl(aten.sum.dim_IntList)
 def sum_dim_IntList(
-    t: StructuredSparseTensor, dim: list[int], keepdim: bool = False, dtype=None
+    t: SparseLatticedTensor, dim: list[int], keepdim: bool = False, dtype=None
 ) -> Tensor:
-    assert isinstance(t, StructuredSparseTensor)
+    assert isinstance(t, SparseLatticedTensor)
 
     if dtype:
         raise NotImplementedError()
