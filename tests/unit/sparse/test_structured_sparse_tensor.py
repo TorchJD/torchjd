@@ -1,5 +1,5 @@
 import torch
-from pytest import mark, raises
+from pytest import mark
 from torch import Tensor, tensor
 from torch.ops import aten  # type: ignore
 from torch.testing import assert_close
@@ -12,7 +12,6 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
 )
 from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
 from torchjd.sparse._coalesce import fix_zero_stride_columns
-from torchjd.sparse._linalg import intdiv_c, mod_c
 from torchjd.sparse._structured_sparse_tensor import (
     StructuredSparseTensor,
     fix_ungrouped_dims,
@@ -421,49 +420,3 @@ def test_fix_zero_stride_columns(
     physical, strides = fix_zero_stride_columns(physical, strides)
     assert torch.equal(physical, expected_physical)
     assert torch.equal(strides, expected_strides)
-
-
-@mark.parametrize(
-    ["t1", "t2", "expected"],
-    [
-        (tensor([8, 12]), tensor([2, 3]), tensor([0, 0])),
-        (tensor([8, 12]), tensor([2, 4]), tensor([2, 0])),
-        (tensor([8, 12]), tensor([3, 3]), tensor([2, 6])),
-        (tensor([8, 12]), tensor([2, 0]), tensor([0, 12])),
-        (tensor([8, 12]), tensor([0, 2]), tensor([8, 0])),
-    ],
-)
-def test_mod_c(
-    t1: Tensor,
-    t2: Tensor,
-    expected: Tensor,
-):
-    assert torch.equal(mod_c(t1, t2), expected)
-
-
-def test_mod_c_by_0_raises():
-    with raises(ZeroDivisionError):
-        mod_c(tensor([3, 4]), tensor([0, 0]))
-
-
-@mark.parametrize(
-    ["t1", "t2", "expected"],
-    [
-        (tensor([8, 12]), tensor([2, 3]), 4),
-        (tensor([8, 12]), tensor([2, 4]), 3),
-        (tensor([8, 12]), tensor([3, 3]), 2),
-        (tensor([8, 12]), tensor([2, 0]), 4),
-        (tensor([8, 12]), tensor([0, 2]), 6),
-    ],
-)
-def test_intdiv_c(
-    t1: Tensor,
-    t2: Tensor,
-    expected: Tensor,
-):
-    assert intdiv_c(t1, t2) == expected
-
-
-def test_intdiv_c_by_0_raises():
-    with raises(ZeroDivisionError):
-        intdiv_c(tensor([3, 4]), tensor([0, 0]))
