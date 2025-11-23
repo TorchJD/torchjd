@@ -57,103 +57,69 @@ def hnf_decomposition(A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         V: (r x n) Right inverse Unimodular transform (H @ V = A)
     """
 
-    H = A.clone().to(dtype=torch.long)
+    H = A.clone()
     m, n = H.shape
 
-    U = torch.eye(n, dtype=torch.long)
-    V = torch.eye(n, dtype=torch.long)
+    U = torch.eye(n, dtype=A.dtype)
+    V = torch.eye(n, dtype=A.dtype)
 
-    row = 0
     col = 0
 
-    while row < m and col < n:
-        # --- 1. Pivot Selection ---
-        # Find first non-zero entry in current row from col onwards
-        pivot_idx = -1
+    for row in range(m):
+        if n <= col:
+            break
+        row_slice = H[row, col:n]
+        nonzero_indices = torch.nonzero(row_slice)
 
-        # We extract the row slice to CPU for faster scalar checks if on GPU
-        # or just iterate. For HNF, strictly sequential loop is often easiest.
-        for j in range(col, n):
-            if H[row, j] != 0:
-                pivot_idx = j
-                break
-
-        if pivot_idx == -1:
-            row += 1
+        if nonzero_indices.numel() > 0:
+            relative_pivot_idx = nonzero_indices[0][0].item()
+            pivot_idx = col + relative_pivot_idx
+        else:
             continue
 
-        # Swap to current column
         if pivot_idx != col:
-            # Swap Columns in H and U
             H[:, [col, pivot_idx]] = H[:, [pivot_idx, col]]
             U[:, [col, pivot_idx]] = U[:, [pivot_idx, col]]
-            # Swap ROWS in V
             V[[col, pivot_idx], :] = V[[pivot_idx, col], :]
 
-        # --- 2. Gaussian Elimination via GCD ---
         for j in range(col + 1, n):
             if H[row, j] != 0:
-                # Extract values as python ints for GCD logic
                 a_val = H[row, col].item()
                 b_val = H[row, j].item()
 
                 g, x, y = extended_gcd(a_val, b_val)
 
-                # Bezout: a*x + b*y = g
-                # c1 = -b // g, c2 = a // g
                 c1 = -b_val // g
                 c2 = a_val // g
 
-                # --- Update H (Column Ops) ---
-                # Important: Clone columns to avoid in-place modification issues during calc
-                col_c = H[:, col].clone()
-                col_j = H[:, j].clone()
+                H_col = H[:, col]
+                H_j = H[:, j]
 
-                H[:, col] = col_c * x + col_j * y
-                H[:, j] = col_c * c1 + col_j * c2
+                H[:, [col, j]] = torch.stack([H_col * x + H_j * y, H_col * c1 + H_j * c2], dim=1)
 
-                # --- Update U (Column Ops) ---
-                u_c = U[:, col].clone()
-                u_j = U[:, j].clone()
-                U[:, col] = u_c * x + u_j * y
-                U[:, j] = u_c * c1 + u_j * c2
+                U_col = U[:, col]
+                U_j = U[:, j]
+                U[:, [col, j]] = torch.stack([U_col * x + U_j * y, U_col * c1 + U_j * c2], dim=1)
 
-                # --- Update V (Inverse Row Ops) ---
-                # Inverse of [[x, c1], [y, c2]] is [[c2, -c1], [-y, x]]
-                v_r_c = V[col, :].clone()
-                v_r_j = V[j, :].clone()
-                V[col, :] = v_r_c * c2 - v_r_j * c1
-                V[j, :] = v_r_c * (-y) + v_r_j * x
+                V_row_c = V[col, :]
+                V_row_j = V[j, :]
+                V[[col, j], :] = torch.stack(
+                    [V_row_c * c2 - V_row_j * c1, V_row_c * (-y) + V_row_j * x], dim=0
+                )
 
-        # --- 3. Enforce Positive Diagonal ---
-        if H[row, col] < 0:
-            H[:, col] *= -1
-            U[:, col] *= -1
-            V[col, :] *= -1
+        pivot_val = H[row, col]
 
-        # --- 4. Canonical Reduction (Modulo) ---
-        # Ensure 0 <= H[row, k] < H[row, col] for k < col
-        pivot_val = H[row, col].clone()
         if pivot_val != 0:
-            for j in range(col):
-                # floor division
-                factor = torch.div(H[row, j], pivot_val, rounding_mode="floor")
+            H_row_prefix = H[row, 0:col]
+            factors = torch.div(H_row_prefix, pivot_val, rounding_mode="floor")
+            H[:, 0:col] -= factors.unsqueeze(0) * H[:, col].unsqueeze(1)
+            U[:, 0:col] -= factors.unsqueeze(0) * U[:, col].unsqueeze(1)
+            V[col, :] += factors @ V[0:col, :]
 
-                if factor != 0:
-                    H[:, j] -= factor * H[:, col]
-                    U[:, j] -= factor * U[:, col]
-                    V[col, :] += factor * V[j, :]
-
-        row += 1
         col += 1
 
     col_magnitudes = torch.sum(torch.abs(H), dim=0)
-    non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
-
-    if len(non_zero_indices) == 0:
-        rank = 0
-    else:
-        rank = non_zero_indices.max().item() + 1
+    rank = torch.count_nonzero(col_magnitudes).item()
 
     reduced_H = H[:, :rank]
     reduced_U = U[:, :rank]
