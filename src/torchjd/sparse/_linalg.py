@@ -42,15 +42,19 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
 
 def hnf_decomposition(A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     """
-    Computes the Hermite Normal Form decomposition using PyTorch.
+    Computes the reduced Hermite Normal Form decomposition using PyTorch. For a matrix A (m x n) of
+    rank r, computes the matrices H (m x r), U (n x r) and V (r x n) such that
+        V U = I_r
+        A = H V
+        H = A U
 
     Args:
         A: (m x n) torch.Tensor (dtype=torch.long)
 
     Returns:
-        H: (m x n) Canonical Lower Triangular HNF
-        U: (n x n) Unimodular transform (A @ U = H)
-        V: (n x n) Inverse Unimodular transform (H @ V = A)
+        H: (m x r) Canonical Lower Triangular HNF
+        U: (n x r) Unimodular transform (A @ U = H)
+        V: (r x n) Right inverse Unimodular transform (H @ V = A)
     """
 
     H = A.clone().to(dtype=torch.long)
@@ -143,7 +147,19 @@ def hnf_decomposition(A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         row += 1
         col += 1
 
-    return H, U, V
+    col_magnitudes = torch.sum(torch.abs(H), dim=0)
+    non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
+
+    if len(non_zero_indices) == 0:
+        rank = 0
+    else:
+        rank = non_zero_indices.max().item() + 1
+
+    reduced_H = H[:, :rank]
+    reduced_U = U[:, :rank]
+    reduced_V = V[:rank, :]
+
+    return reduced_H, reduced_U, reduced_V
 
 
 def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
@@ -151,20 +167,21 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     Computes the GCD and the projection factors. i.e.
     S1 = G @ K1
     S2 = G @ K2
+    with G having minimal rank.
 
     Args:
         S1, S2: torch.Tensors (m x n1), (m x n2)
 
     Returns:
-        G: (m x m) The Matrix GCD (Canonical Base)
-        K1: (m x n1) Factors for S1
-        K2: (m x n2) Factors for S2
+        G: (m x r) The Matrix GCD (Canonical Base)
+        K1: (r x n1) Factors for S1
+        K2: (r x n2) Factors for S2
     """
     assert S1.shape[0] == S2.shape[0], "Virtual dimension mismatch"
     m, n1 = S1.shape
 
     A = torch.cat([S1, S2], dim=1)
-    H, U, V = hnf_decomposition(A)
+    G, U, V = hnf_decomposition(A)
 
     # H = [S1 | S2] @ U
     # [S1 | S2] = H @ V
@@ -182,19 +199,8 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     # SLT(p1, S1) = SLT(SLT(p1, K1), G)
     # SLT(p2, S2) = SLT(SLT(p2, K2), G)
 
-    col_magnitudes = torch.sum(torch.abs(H), dim=0)
-    non_zero_indices = torch.nonzero(col_magnitudes, as_tuple=True)[0]
-
-    if len(non_zero_indices) == 0:
-        rank = 0
-    else:
-        rank = non_zero_indices.max().item() + 1
-
-    G = H[:, :rank]
-    V_active = V[:rank, :]
-
-    K1 = V_active[:, :n1]
-    K2 = V_active[:, n1:]
+    K1 = V[:, :n1]
+    K2 = V[:, n1:]
 
     return G, K1, K2
 
