@@ -223,7 +223,7 @@ def expand_default(t: SparseLatticedTensor, sizes: list[int]) -> SparseLatticedT
 
     # Add as many dimensions as needed at the beginning of the tensor (as torch.expand works)
     for _ in range(len(sizes) - t.ndim):
-        t = t.unsqueeze(0)
+        t = unsqueeze_default(t, 0)
 
     # Try to expand each dimension to its new size
     new_physical = t.physical
