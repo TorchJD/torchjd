@@ -1,8 +1,6 @@
 import itertools
-import operator
 from collections.abc import Callable
 from functools import wraps
-from itertools import accumulate
 from math import prod
 
 import torch
@@ -150,36 +148,6 @@ def print_fallback(func, args, kwargs) -> None:
         for k, v in kwargs.items():
             print(f"  > {k}: {v}")
     print()
-
-
-def strides_v2(p_dims: list[int], physical_shape: list[int]) -> list[int]:
-    """
-    From a list of physical dimensions corresponding to a virtual dimension, and from the physical
-    shape, get the stride indicating how moving on each physical dimension makes you move on the
-    virtual dimension.
-
-    Example:
-        Imagine a vector of size 3, and of value [1, 2, 3].
-        Imagine a SLT t of shape [3, 3] using this vector as physical and using [[0, 0]] as v_to_ps.
-        t.to_dense() is [1, 0, 0, 0, 2, 0, 0, 0, 3] (it's the flattening of the diagonal matrix
-        [[1, 0, 0], [0, 2, 0], [0, 0, 3]]).
-        When you move by 1 on physical dimension 0, you move by 4 on virtual dimension 0, i.e.
-        strides_v2([0, 0], [3]) = 4
-        In the 2D view, you'd move by 1 row (3 indices) and 1 column (1 index).
-
-    Example:
-        strides_v2([0, 0, 1], [3,4])  # [16, 1]
-        Moving by 1 on physical dimension 0 makes you move by 16 on the virtual dimension. Moving by
-        1 on physical dimension 1 makes you move by 1 on the virtual dimension.
-    """
-
-    strides_v1 = list(accumulate([1] + [physical_shape[d] for d in p_dims[:0:-1]], operator.mul))[
-        ::-1
-    ]
-    result = [0 for _ in range(len(physical_shape))]
-    for i, d in enumerate(p_dims):
-        result[d] += strides_v1[i]
-    return result
 
 
 def get_groupings(pshape: list[int], basis: Tensor) -> list[list[int]]:
