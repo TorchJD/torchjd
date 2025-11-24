@@ -40,16 +40,18 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
         return g, x - (b // a) * y, y
 
 
-def hnf_decomposition(A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]:
     """
-    Computes the reduced Hermite Normal Form decomposition using PyTorch. For a matrix A (m x n) of
-    rank r, computes the matrices H (m x r), U (n x r) and V (r x n) such that
+    Computes the reduced Hermite Normal Form decomposition using PyTorch. For a matrix A (m x n)
+    computes the matrices H (m x r), U (n x r) and V (r x n) such that
         V U = I_r
         A = H V
         H = A U
+    where r is the rank of A if reduced is True, and otherwise r is n.
 
     Args:
         A: (m x n) torch.Tensor (dtype=torch.long)
+        reduced: Reduce to rank if True.
 
     Returns:
         H: (m x r) Canonical Lower Triangular HNF
@@ -118,14 +120,15 @@ def hnf_decomposition(A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
 
         col += 1
 
-    col_magnitudes = torch.sum(torch.abs(H), dim=0)
-    rank = torch.count_nonzero(col_magnitudes).item()
+    if reduced:
+        col_magnitudes = torch.sum(torch.abs(H), dim=0)
+        rank = torch.count_nonzero(col_magnitudes).item()
 
-    reduced_H = H[:, :rank]
-    reduced_U = U[:, :rank]
-    reduced_V = V[:rank, :]
+        H = H[:, :rank]
+        U = U[:, :rank]
+        V = V[:rank, :]
 
-    return reduced_H, reduced_U, reduced_V
+    return H, U, V
 
 
 def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
@@ -157,7 +160,7 @@ def compute_gcd(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     m, n1 = S1.shape
 
     A = torch.cat([S1, S2], dim=1)
-    G, U, V = hnf_decomposition(A)
+    G, _, V = hnf_decomposition(A, True)
 
     K1 = V[:, :n1]
     K2 = V[:, n1:]
@@ -180,9 +183,7 @@ def compute_lcm(S1, S2):
 
     # 1. Kernel Setup: [S1 | -S2]
     B = torch.cat([S1, -S2], dim=1)
-
-    # 2. Decompose to find Kernel
-    H_B, U_B, _ = hnf_decomposition(B)
+    H_B, U_B, _ = hnf_decomposition(B, False)
 
     # 3. Find Zero Columns in H_B (Kernel basis)
     # Sum abs values down columns
@@ -205,6 +206,6 @@ def compute_lcm(S1, S2):
     # 6. Canonicalize L
     # The generators might be redundant or non-square.
     # Run HNF one last time to get the unique square LCM matrix.
-    L, _, _ = hnf_decomposition(L_generators)
+    L, _, _ = hnf_decomposition(L_generators, False)
 
     return L[:, :m]

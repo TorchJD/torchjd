@@ -21,7 +21,7 @@ def test_hnf_decomposition(shape: tuple[int, int], max_rank: int):
     U = torch.randint(-10, 11, [shape[0], max_rank], dtype=torch.int64)
     V = torch.randint(-10, 11, [max_rank, shape[1]], dtype=torch.int64)
     A = U @ V
-    H, U, V = hnf_decomposition(A)
+    H, U, V = hnf_decomposition(A, True)
 
     rank = H.shape[1]
 
