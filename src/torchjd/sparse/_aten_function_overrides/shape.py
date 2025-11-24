@@ -124,8 +124,8 @@ def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
     if any(not torch.equal(t.basis, ref_basis) for t in tensors_[1:]):
         raise NotImplementedError(
             "Override for aten.cat.default does not support SLTs that do not all have the same "
-            f"basis. Found the following tensors:\n{[t.debug_info() for t in tensors_]} and the "
-            f"following dim: {dim}."
+            f"basis. Found the following tensors:\n{[repr(t) for t in tensors_]} and the following "
+            f"dim: {dim}."
         )
 
     # We need to try to find the (pretty sure it either does not exist or is unique) physical

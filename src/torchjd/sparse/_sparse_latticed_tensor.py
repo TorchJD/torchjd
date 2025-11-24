@@ -105,10 +105,6 @@ class SparseLatticedTensor(Tensor):
     def __repr__(self, *, tensor_contents=None) -> str:
         return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis})"
 
-    def debug_info(self) -> str:
-        info = f"vshape: {self.shape}\n" f"pshape: {self.physical.shape}\n" f"basis: {self.basis}\n"
-        return info
-
     @classmethod
     def implements(cls, torch_function):
         """Register a torch function override for ScalarTensor"""
