@@ -217,11 +217,17 @@ def get_full_source(source: list[int], destination: list[int], ndim: int) -> lis
 
 
 def fix_dim_of_size_1(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]:
+    """
+    Removes physical dimensions of size one and returns the corresponding new physical and new basis
+    """
+
     is_of_size_1 = tensor([s == 1 for s in physical.shape], dtype=torch.bool)
     return physical.squeeze(), basis[:, ~is_of_size_1]
 
 
 def fix_ungrouped_dims(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]:
+    """Squash together physical dimensions that can be squashed."""
+
     groups = get_groupings(list(physical.shape), basis)
     nphysical = physical.reshape([prod([physical.shape[dim] for dim in group]) for group in groups])
     basis_mapping = torch.zeros(physical.ndim, nphysical.ndim, dtype=torch.int64)
