@@ -40,6 +40,14 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
         return g, x - (b // a) * y, y
 
 
+def _get_hermite_factor_rank(H: Tensor) -> int:
+    """
+    Computes the rank of a hermit factor matrix.
+    """
+    col_magnitudes = torch.sum(torch.abs(H), dim=0)
+    return torch.count_nonzero(col_magnitudes).item()
+
+
 def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]:
     """
     Computes the reduced Hermite Normal Form decomposition using PyTorch. For a matrix A (m x n)
@@ -121,8 +129,7 @@ def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]
         col += 1
 
     if reduced:
-        col_magnitudes = torch.sum(torch.abs(H), dim=0)
-        rank = torch.count_nonzero(col_magnitudes).item()
+        rank = _get_hermite_factor_rank(H)
 
         H = H[:, :rank]
         U = U[:, :rank]
