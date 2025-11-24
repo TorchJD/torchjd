@@ -55,7 +55,8 @@ def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]
         V U = I_r
         A = H V
         H = A U
-    where r is the rank of A if reduced is True, and otherwise r is n.
+    where r is the rank of A if reduced is True, and otherwise r is n. In the later case, this also
+    satisfies U V = I.
 
     Args:
         A: (m x n) torch.Tensor (dtype=torch.long)
