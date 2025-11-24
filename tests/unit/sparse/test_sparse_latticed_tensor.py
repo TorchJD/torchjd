@@ -10,7 +10,6 @@ from torchjd.sparse._aten_function_overrides.pointwise import (
     _IN_PLACE_POINTWISE_FUNCTIONS,
     _POINTWISE_FUNCTIONS,
 )
-from torchjd.sparse._aten_function_overrides.shape import unsquash_pdim
 from torchjd.sparse._coalesce import fix_zero_basis_vectors
 from torchjd.sparse._sparse_latticed_tensor import (
     SparseLatticedTensor,
@@ -310,43 +309,6 @@ def test_fix_ungrouped_dims(
 
     assert list(fixed_physical.shape) == expected_physical_shape
     assert torch.equal(fixed_basis, expected_basis)
-
-
-@mark.parametrize(
-    [
-        "physical_shape",
-        "basis",
-        "pdim",
-        "new_pdim_shape",
-        "expected_physical_shape",
-        "expected_basis",
-    ],
-    [
-        ([4], tensor([[1], [2]]), 0, [4], [4], tensor([[1], [2]])),  # trivial
-        ([4], tensor([[1], [2]]), 0, [2, 2], [2, 2], tensor([[2, 1], [4, 2]])),
-        (
-            [3, 4, 5],
-            tensor([[1, 2, 0], [1, 0, 1], [0, 1, 1]]),
-            1,
-            [2, 1, 1, 2],
-            [3, 2, 1, 1, 2, 5],
-            tensor([[1, 4, 4, 4, 2, 0], [1, 0, 0, 0, 0, 1], [0, 2, 2, 2, 1, 1]]),
-        ),
-    ],
-)
-def test_unsquash_pdim(
-    physical_shape: list[int],
-    basis: Tensor,
-    pdim: int,
-    new_pdim_shape: list[int],
-    expected_physical_shape: list[int],
-    expected_basis: Tensor,
-):
-    physical = randn_(physical_shape)
-    new_physical, new_basis = unsquash_pdim(physical, basis, pdim, new_pdim_shape)
-
-    assert list(new_physical.shape) == expected_physical_shape
-    assert torch.equal(new_basis, expected_basis)
 
 
 @mark.parametrize(

@@ -69,61 +69,6 @@ def infer_shape(shape: list[int], numel: int) -> list[int]:
     return [inferred if s == -1 else s for s in shape]
 
 
-def unsquash_pdim(
-    physical: Tensor, basis: Tensor, pdim: int, new_pdim_shape: list[int]
-) -> tuple[Tensor, Tensor]:
-    """
-    EXAMPLE:
-
-    physical = [
-        [1, 2, 3, 4, 5, 6],
-        [7, 8, 9, 10, 11, 12],
-        [13, 14, 15, 16, 17, 18],
-    ]
-    basis = [
-        [1, 1],
-        [0, 2],
-    ]
-
-    dim = 1
-    shape = [2, 3]
-
-    new_physical = [[
-        [1, 2, 3],
-        [4, 5, 6],
-    ], [
-        [7, 8, 9],
-        [10, 11, 12],
-    ], [
-        [13, 14, 15],
-        [16, 17, 18],
-    ]]
-
-    new_basis = [
-        [1, 3, 1],
-        [0, 6, 2]
-    """
-
-    # TODO: handle working with multiple dimensions at once
-
-    old_shape = list(physical.shape)
-    new_shape = old_shape[:pdim] + new_pdim_shape + old_shape[pdim + 1 :]
-    new_physical = physical.reshape(new_shape)
-
-    multipliers = tensor([prod(new_pdim_shape[i + 1 :]) for i in range(len(new_pdim_shape))])
-
-    new_basis = torch.concat(
-        [
-            basis[:, :pdim],
-            torch.outer(basis[:, pdim], multipliers),
-            basis[:, pdim + 1 :],
-        ],
-        dim=1,
-    )
-
-    return new_physical, new_basis
-
-
 @impl(aten._unsafe_view.default)
 def _unsafe_view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
     return view_default(
