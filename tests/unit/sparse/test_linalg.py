@@ -25,7 +25,18 @@ def test_hnf_decomposition(shape: tuple[int, int], max_rank: int):
 
     rank = H.shape[1]
 
+    # Note that with these assert, the rank is typically correct as it is at most max_rank, which it
+    # is with high probability, and we can reconstruct A=H @ V, so the rank of H is at least that of
+    # A, similarly, the rank of H is at most that of A.
     assert rank <= max_rank
     assert torch.equal(V @ U, torch.eye(rank, dtype=torch.int64))
     assert torch.equal(H @ V, A)
     assert torch.equal(A @ U, H)
+
+    # Check H is upper triangular
+    mask = torch.triu(torch.ones(shape[0], rank, dtype=torch.bool), diagonal=1)
+    assert torch.all(H[mask] == 0).item()
+
+    # Check pivots are positive
+    pivots = H.diag()[:rank]
+    return torch.all(pivots > 0).item()
