@@ -127,6 +127,17 @@ def cat_default(tensors: list[Tensor], dim: int = 0) -> Tensor:
             f"basis. Found the following tensors:\n{[repr(t) for t in tensors_]} and the following "
             f"dim: {dim}."
         )
+    if any(t.physical.shape != ref_tensor.physical.shape for t in tensors_[1:]):
+        # This can happen in the following example:
+        # t1 = SLT([1 2 3], [[2]])
+        # t2 = SLT([4 5 6 7], [[2]])
+        # The expected result would be 1 0 2 0 3 4 0 5 0 6 0 7, but this is not representable
+        # efficiently as an SLT (because there is no 0 between 3 and 4, and both physicals have a
+        # different shape so we can't just stack them).
+
+        # TODO: Maybe a partial densify is possible rather than a full densify.
+        print_fallback(aten.cat.default, (tensors, dim), {})
+        return aten.cat.default([unwrap_to_dense(t) for t in tensors])
 
     # We need to try to find the (pretty sure it either does not exist or is unique) physical
     # dimension that makes us only move on virtual dimension dim. It also needs to be such that
