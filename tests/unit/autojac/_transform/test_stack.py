@@ -2,9 +2,9 @@ from collections.abc import Iterable
 
 import torch
 from torch import Tensor
-from utils.dict_assertions import assert_tensor_dicts_are_close
-from utils.tensors import ones_, tensor_, zeros_
 
+from tests.utils.dict_assertions import assert_tensor_dicts_are_close
+from tests.utils.tensors import ones_, tensor_, zeros_
 from torchjd.autojac._transform import Stack, Transform
 from torchjd.autojac._transform._base import TensorDict
 

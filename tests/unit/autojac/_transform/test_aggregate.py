@@ -1,11 +1,11 @@
 import math
 
 import torch
-from device import DEVICE
 from pytest import mark, raises
-from utils.dict_assertions import assert_tensor_dicts_are_close
-from utils.tensors import rand_, tensor_, zeros_
 
+from tests.device import DEVICE
+from tests.utils.dict_assertions import assert_tensor_dicts_are_close
+from tests.utils.tensors import rand_, tensor_, zeros_
 from torchjd.aggregation import Random
 from torchjd.autojac._transform import OrderedSet, RequirementError
 from torchjd.autojac._transform._aggregate import _AggregateMatrices, _Matrixify, _Reshape

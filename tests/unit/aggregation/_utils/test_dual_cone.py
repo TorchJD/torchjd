@@ -2,8 +2,8 @@ import numpy as np
 import torch
 from pytest import mark, raises
 from torch.testing import assert_close
-from utils.tensors import rand_, randn_
 
+from tests.utils.tensors import rand_, randn_
 from torchjd.aggregation._utils.dual_cone import _project_weight_vector, project_weights
 
 

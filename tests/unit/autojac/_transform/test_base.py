@@ -1,7 +1,7 @@
 from pytest import raises
 from torch import Tensor
-from utils.tensors import empty_, randn_
 
+from tests.utils.tensors import empty_, randn_
 from torchjd.autojac._transform._base import Conjunction, RequirementError, TensorDict, Transform
 
 

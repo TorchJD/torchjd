@@ -1,8 +1,8 @@
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
-from utils.tensors import ones_, randn_
 
+from tests.utils.tensors import ones_, randn_
 from torchjd.aggregation import MGDA
 from torchjd.aggregation._mgda import MGDAWeighting
 from torchjd.aggregation._utils.gramian import compute_gramian

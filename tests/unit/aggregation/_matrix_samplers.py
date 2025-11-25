@@ -3,7 +3,8 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 from torch.nn.functional import normalize
-from utils.tensors import randint_, randn_, randperm_, zeros_
+
+from tests.utils.tensors import randint_, randn_, randperm_, zeros_
 
 
 class MatrixSampler(ABC):

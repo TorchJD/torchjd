@@ -2,8 +2,9 @@ import gc
 import time
 
 import torch
-from device import DEVICE
-from utils.architectures import (
+
+from tests.device import DEVICE
+from tests.utils.architectures import (
     AlexNet,
     Cifar10Model,
     FreeParam,
@@ -15,15 +16,14 @@ from utils.architectures import (
     SqueezeNet,
     WithTransformerLarge,
 )
-from utils.forward_backwards import (
+from tests.utils.forward_backwards import (
     autograd_forward_backward,
     autograd_gramian_forward_backward,
     autogram_forward_backward,
     autojac_forward_backward,
     make_mse_loss_fn,
 )
-from utils.tensors import make_inputs_and_targets
-
+from tests.utils.tensors import make_inputs_and_targets
 from torchjd.aggregation import Mean
 from torchjd.autogram import Engine
 

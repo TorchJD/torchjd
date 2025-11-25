@@ -2,11 +2,11 @@ import random as rand
 from contextlib import nullcontext
 
 import torch
-from device import DEVICE
 from pytest import RaisesExc, fixture, mark
 from torch import Tensor
-from utils.architectures import ModuleFactory
 
+from tests.device import DEVICE
+from tests.utils.architectures import ModuleFactory
 from torchjd.aggregation import Aggregator, Weighting
 
 

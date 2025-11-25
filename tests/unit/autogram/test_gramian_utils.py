@@ -1,8 +1,8 @@
 from pytest import mark
 from torch.testing import assert_close
-from utils.forward_backwards import compute_gramian
-from utils.tensors import randn_
 
+from tests.utils.forward_backwards import compute_gramian
+from tests.utils.tensors import randn_
 from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
 
 

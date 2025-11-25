@@ -3,9 +3,9 @@ from contextlib import nullcontext as does_not_raise
 import torch
 from pytest import mark, raises
 from torch import Tensor
-from utils.contexts import ExceptionContext
-from utils.tensors import ones_, tensor_
 
+from tests.utils.contexts import ExceptionContext
+from tests.utils.tensors import ones_, tensor_
 from torchjd.aggregation import Constant
 
 from ._asserts import (

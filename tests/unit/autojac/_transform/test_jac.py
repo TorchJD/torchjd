@@ -1,8 +1,8 @@
 import torch
 from pytest import mark, raises
-from utils.dict_assertions import assert_tensor_dicts_are_close
-from utils.tensors import eye_, ones_, tensor_, zeros_
 
+from tests.utils.dict_assertions import assert_tensor_dicts_are_close
+from tests.utils.tensors import eye_, ones_, tensor_, zeros_
 from torchjd.autojac._transform import Jac, OrderedSet, RequirementError
 
 

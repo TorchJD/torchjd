@@ -1,6 +1,6 @@
 from torch.autograd.graph import get_gradient_edge
-from utils.tensors import randn_
 
+from tests.utils.tensors import randn_
 from torchjd.autogram._edge_registry import EdgeRegistry
 
 

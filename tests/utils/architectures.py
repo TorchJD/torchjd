@@ -2,11 +2,12 @@ from functools import partial
 
 import torch
 import torchvision
-from device import DEVICE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
-from utils.contexts import fork_rng
+
+from tests.device import DEVICE
+from tests.utils.contexts import fork_rng
 
 
 class ModuleFactory:

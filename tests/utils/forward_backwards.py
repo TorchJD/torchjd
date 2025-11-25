@@ -5,9 +5,9 @@ from torch import Tensor, nn, vmap
 from torch.nn.functional import mse_loss
 from torch.utils._pytree import PyTree, tree_flatten, tree_map
 from torch.utils.hooks import RemovableHandle
-from utils.architectures import get_in_out_shapes
-from utils.contexts import fork_rng
 
+from tests.utils.architectures import get_in_out_shapes
+from tests.utils.contexts import fork_rng
 from torchjd.aggregation import Aggregator, Weighting
 from torchjd.autogram import Engine
 from torchjd.autojac import backward

@@ -1,11 +1,12 @@
 from functools import partial
 
 import torch
-from device import DEVICE
 from torch import nn
 from torch.utils._pytree import PyTree, tree_map
-from utils.architectures import get_in_out_shapes
-from utils.contexts import fork_rng
+
+from tests.device import DEVICE
+from tests.utils.architectures import get_in_out_shapes
+from tests.utils.contexts import fork_rng
 
 # Curried calls to torch functions that require a device so that we automatically fix the device
 # for code written in the tests, while not affecting code written in src (what

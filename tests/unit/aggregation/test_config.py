@@ -1,8 +1,8 @@
 import torch
 from pytest import mark
 from torch import Tensor
-from utils.tensors import ones_
 
+from tests.utils.tensors import ones_
 from torchjd.aggregation import ConFIG
 
 from ._asserts import (

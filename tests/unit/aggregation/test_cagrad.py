@@ -2,9 +2,9 @@ from contextlib import nullcontext as does_not_raise
 
 from pytest import mark, raises
 from torch import Tensor
-from utils.contexts import ExceptionContext
-from utils.tensors import ones_
 
+from tests.utils.contexts import ExceptionContext
+from tests.utils.tensors import ones_
 from torchjd.aggregation import CAGrad
 
 from ._asserts import assert_expected_structure, assert_non_conflicting, assert_non_differentiable

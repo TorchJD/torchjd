@@ -1,6 +1,7 @@
 import torch
-from device import DEVICE
-from utils.tensors import zeros_
+
+from tests.device import DEVICE
+from tests.utils.tensors import zeros_
 
 from ._matrix_samplers import NonWeakSampler, NormalSampler, StrictlyWeakSampler, StrongSampler
 

@@ -2,8 +2,8 @@ import torch
 from pytest import mark, raises
 from torch.autograd import grad
 from torch.testing import assert_close
-from utils.tensors import randn_, tensor_
 
+from tests.utils.tensors import randn_, tensor_
 from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 from torchjd.autojac import backward
 from torchjd.autojac._backward import _create_transform

@@ -7,8 +7,8 @@ import numpy as np
 import torch
 from dash import Dash, Input, Output, callback, dcc, html
 from plotly.graph_objs import Figure
-from plots._utils import Plotter, angle_to_coord, coord_to_angle
 
+from tests.plots._utils import Plotter, angle_to_coord, coord_to_angle
 from torchjd.aggregation import (
     IMTLG,
     MGDA,

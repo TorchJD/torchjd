@@ -10,7 +10,8 @@ from torch.nn import BatchNorm2d, InstanceNorm2d, Linear, Module, Parameter
 from torch.optim import SGD
 from torch.testing import assert_close
 from torch.utils._pytree import PyTree
-from utils.architectures import (
+
+from tests.utils.architectures import (
     AlexNet,
     Cifar10Model,
     FreeParam,
@@ -63,8 +64,8 @@ from utils.architectures import (
     WithTransformer,
     WithTransformerLarge,
 )
-from utils.dict_assertions import assert_tensor_dicts_are_close
-from utils.forward_backwards import (
+from tests.utils.dict_assertions import assert_tensor_dicts_are_close
+from tests.utils.forward_backwards import (
     CloneParams,
     autograd_forward_backward,
     autogram_forward_backward,
@@ -77,8 +78,7 @@ from utils.forward_backwards import (
     reduce_to_scalar,
     reduce_to_vector,
 )
-from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
-
+from tests.utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian

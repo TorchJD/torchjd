@@ -1,8 +1,8 @@
 from pytest import mark
 from torch import Tensor
 from torch.testing import assert_close
-from utils.tensors import ones_, zeros_
 
+from tests.utils.tensors import ones_, zeros_
 from torchjd.aggregation import IMTLG
 
 from ._asserts import (
