@@ -12,7 +12,13 @@ class SparseLatticedTensor(Tensor):
     _HANDLED_FUNCTIONS = dict[Callable, Callable]()
 
     @staticmethod
-    def __new__(cls, physical: Tensor, basis: Tensor):
+    def __new__(
+        cls,
+        physical: Tensor,
+        basis: Tensor,
+        offset: Tensor | None = None,
+        size: list[int] | tuple[int, ...] | torch.Size | Tensor | None = None,
+    ):
         assert basis.dtype == torch.int64
 
         # Note [Passing requires_grad=true tensors to subclasses]
@@ -25,13 +31,21 @@ class SparseLatticedTensor(Tensor):
         # (which is bad!)
         assert not physical.requires_grad or not torch.is_grad_enabled()
 
-        pshape = tensor(physical.shape, dtype=torch.int64)
-        vshape = basis @ (pshape - 1) + 1
+        if size is None:
+            pshape = tensor(physical.shape, dtype=torch.int64)
+            size = basis @ (pshape - 1) + 1
+
         return Tensor._make_wrapper_subclass(
-            cls, tuple(vshape.tolist()), dtype=physical.dtype, device=physical.device
+            cls, list(size), dtype=physical.dtype, device=physical.device
         )
 
-    def __init__(self, physical: Tensor, basis: Tensor):
+    def __init__(
+        self,
+        physical: Tensor,
+        basis: Tensor,
+        offset: Tensor | None,
+        size: list[int] | tuple[int, ...] | torch.Size | Tensor | None,
+    ):
         """
         This constructor is made for specifying physical and basis exactly. It should not modify
         it.
@@ -42,8 +56,17 @@ class SparseLatticedTensor(Tensor):
         :param physical: The dense tensor holding the actual data.
         :param basis: Integer (int64) tensor of shape [virtual_ndim, physical_ndim], representing
             the linear transformation between an index in the physical tensor and the corresponding
-            index in the virtual tensor, i.e. v_index = basis @ p_index.
+            index in the virtual tensor, i.e. v_index = basis @ p_index + offset.
+        :param offset: Offset for the virtual index, i.e. v_index = basis @ p_index + offset.
+        :param size: Size of the sparse tensor. If not provided, the size will be inferred as the
+            minimum size big enough to hold all non-zero elements.
+
+        # TODO: make a nicer interface where it's possible to provide lists or sizes instead of
+            always having to provide int tensors
         """
+
+        if offset is None:
+            offset = torch.zeros(len(self.shape))
 
         if any(s == 1 for s in physical.shape):
             raise ValueError(
@@ -71,6 +94,8 @@ class SparseLatticedTensor(Tensor):
 
         self.physical = physical
         self.basis = basis
+        self.offset = offset
+        self.size = tensor(size, dtype=torch.int64)
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -85,7 +110,7 @@ class SparseLatticedTensor(Tensor):
         p_indices_grid = stack(meshgrid(*p_index_ranges, indexing="ij"))
 
         # addmm_cuda not implemented for Long tensors => gotta have these tensors on cpu
-        v_indices_grid = tensordot(self.basis, p_indices_grid, dims=1)
+        v_indices_grid = tensordot(self.basis, p_indices_grid, dims=1) + self.offset
         res = zeros(self.shape, device=self.device, dtype=self.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
@@ -103,7 +128,7 @@ class SparseLatticedTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis})"
+        return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis}, offset={self.offset}, size={self.size})"
 
     @classmethod
     def implements(cls, torch_function):
@@ -122,9 +147,9 @@ impl = SparseLatticedTensor.implements
 
 def print_fallback(func, args, kwargs) -> None:
     def tensor_to_str(t: Tensor) -> str:
-        result = f"{t.__class__.__name__} - vshape: {t.shape}"
+        result = f"{t.__class__.__name__} - shape: {t.shape}"
         if isinstance(t, SparseLatticedTensor):
-            result += f" - pshape: {t.physical.shape} - basis: {t.basis}"
+            result += f" - pshape: {t.physical.shape} - basis: {t.basis} - offset: {t.offset}"
 
         return result
 
@@ -167,18 +192,26 @@ def to_sparse_latticed_tensor(t: Tensor) -> SparseLatticedTensor:
     if isinstance(t, SparseLatticedTensor):
         return t
     else:
-        return make_slt(physical=t, basis=torch.eye(t.ndim, dtype=torch.int64))
+        return make_slt(t, torch.eye(t.ndim, dtype=torch.int64), None, None)
 
 
-def to_most_efficient_tensor(physical: Tensor, basis: Tensor) -> Tensor:
+def to_most_efficient_tensor(
+    physical: Tensor,
+    basis: Tensor,
+    offset: Tensor | None,
+    size: list[int] | tuple[int, ...] | torch.Size | Tensor | None,
+) -> Tensor:
     physical, basis = fix_dim_of_size_1(physical, basis)
     physical, basis = fix_ungrouped_dims(physical, basis)
 
     if (basis.sum(dim=0) == 1).all():
+        print("Turning supposedly dense SLT into Tensor. This can be bugged and slow.")
+        # TODO: this condition is broken if basis is allowed to have negative values. It also only
+        #  works when size is the default and offset is 0.
         # TODO: this can be done more efficiently (without even creating the SLT)
-        return SparseLatticedTensor(physical, basis).to_dense()
+        return SparseLatticedTensor(physical, basis, offset, size).to_dense()
     else:
-        return SparseLatticedTensor(physical, basis)
+        return SparseLatticedTensor(physical, basis, offset, size)
 
 
 def unwrap_to_dense(t: Tensor):
@@ -234,9 +267,14 @@ def fix_ungrouped_dims(physical: Tensor, basis: Tensor) -> tuple[Tensor, Tensor]
     return nphysical, new_basis
 
 
-def make_slt(physical: Tensor, basis: Tensor) -> SparseLatticedTensor:
+def make_slt(
+    physical: Tensor,
+    basis: Tensor,
+    offset: Tensor | None,
+    size: list[int] | tuple[int, ...] | torch.Size | Tensor | None,
+) -> SparseLatticedTensor:
     """Fix physical and basis and create a SparseLatticedTensor with them."""
 
     physical, basis = fix_dim_of_size_1(physical, basis)
     physical, basis = fix_ungrouped_dims(physical, basis)
-    return SparseLatticedTensor(physical, basis)
+    return SparseLatticedTensor(physical, basis, offset, size)

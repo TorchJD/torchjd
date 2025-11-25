@@ -4,7 +4,7 @@ from math import prod
 from typing import cast
 
 import torch
-from torch import Tensor, arange, tensor
+from torch import Tensor, arange, cat, tensor
 from torch.ops import aten  # type: ignore
 
 from torchjd.sparse._sparse_latticed_tensor import (
@@ -84,15 +84,17 @@ def unsqueeze_default(t: SparseLatticedTensor, dim: int) -> SparseLatticedTensor
     if dim < 0:
         dim = t.ndim + dim + 1
 
-    new_basis = torch.concatenate(
-        [t.basis[:dim], torch.zeros(1, t.basis.shape[1], dtype=torch.int64), t.basis[dim:]]
-    )
-    return SparseLatticedTensor(t.physical, new_basis)
+    pdims = t.basis.shape[1]
+    new_basis = cat([t.basis[:dim], torch.zeros(1, pdims, dtype=torch.int64), t.basis[dim:]])
+    new_offset = cat([t.offset[:dim], torch.zeros(1, dtype=torch.int64), t.offset[dim:]])
+    new_size = cat([t.size[:dim], torch.zeros(1, dtype=torch.int64), t.size[dim:]])
+    return SparseLatticedTensor(t.physical, new_basis, new_offset, new_size)
 
 
 @impl(aten.squeeze.dims)
 def squeeze_dims(t: SparseLatticedTensor, dims: list[int] | int | None) -> Tensor:
     assert isinstance(t, SparseLatticedTensor)
+    # TODO: verify that the specified dimensions are of size 1.
 
     if dims is None:
         excluded = set(range(t.ndim))
@@ -103,13 +105,17 @@ def squeeze_dims(t: SparseLatticedTensor, dims: list[int] | int | None) -> Tenso
 
     is_row_kept = [i not in excluded for i in range(t.ndim)]
     new_basis = t.basis[is_row_kept]
-    return to_most_efficient_tensor(t.physical, new_basis)
+    new_offset = t.offset[is_row_kept]
+    new_size = t.size[is_row_kept]
+    return to_most_efficient_tensor(t.physical, new_basis, new_offset, new_size)
 
 
 @impl(aten.permute.default)
 def permute_default(t: SparseLatticedTensor, dims: list[int]) -> SparseLatticedTensor:
-    new_basis = t.basis[torch.tensor(dims)]
-    return SparseLatticedTensor(t.physical, new_basis)
+    new_basis = t.basis[dims]
+    new_offset = t.offset[dims]
+    new_size = t.size[dims]
+    return SparseLatticedTensor(t.physical, new_basis, new_offset, new_size)
 
 
 @impl(aten.cat.default)
@@ -173,6 +179,7 @@ def expand_default(t: SparseLatticedTensor, sizes: list[int]) -> SparseLatticedT
     # Try to expand each dimension to its new size
     new_physical = t.physical
     new_basis = t.basis
+    new_sizes = t.size
     for d, (v, orig_size, new_size) in enumerate(zip(t.basis, t.shape, sizes, strict=True)):
         if v.sum() > 0 and orig_size != new_size and new_size != -1:
             raise ValueError(
@@ -190,8 +197,9 @@ def expand_default(t: SparseLatticedTensor, sizes: list[int]) -> SparseLatticedT
             new_basis_vector = torch.zeros(t.ndim, 1, dtype=torch.int64)
             new_basis_vector[d, 0] = 1
             new_basis = torch.cat([new_basis, new_basis_vector], dim=1)
+            new_sizes[d] = new_size
 
-    return SparseLatticedTensor(new_physical, new_basis)
+    return SparseLatticedTensor(new_physical, new_basis, t.offset, new_sizes)
 
 
 @impl(aten.broadcast_tensors.default)
@@ -224,11 +232,13 @@ def broadcast_tensors_default(tensors: list[Tensor]) -> tuple[Tensor, Tensor]:
 @impl(aten.transpose.int)
 def transpose_int(t: SparseLatticedTensor, dim0: int, dim1: int) -> SparseLatticedTensor:
     assert isinstance(t, SparseLatticedTensor)
-    return SparseLatticedTensor(t.physical, _swap_rows(t.basis, dim0, dim1))
 
+    new_index = arange(t.basis.shape[0])
+    new_index[dim0] = dim1
+    new_index[dim1] = dim0
 
-def _swap_rows(matrix: Tensor, c0: int, c1: int) -> Tensor:
-    index = arange(matrix.shape[0])
-    index[c0] = c1
-    index[c1] = c0
-    return matrix[index]
+    new_basis = t.basis[new_index]
+    new_offset = t.offset[new_index]
+    new_shape = list(tensor(t.shape, dtype=torch.int64)[new_index])
+
+    return SparseLatticedTensor(t.physical, new_basis, new_offset, new_shape)
