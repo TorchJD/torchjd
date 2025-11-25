@@ -113,7 +113,7 @@ def permute_default(t: SparseLatticedTensor, dims: list[int]) -> SparseLatticedT
 
 
 @impl(aten.cat.default)
-def cat_default(tensors: list[Tensor], dim: int) -> Tensor:
+def cat_default(tensors: list[Tensor], dim: int = 0) -> Tensor:
     if any(not isinstance(t, SparseLatticedTensor) for t in tensors):
         print_fallback(aten.cat.default, (tensors, dim), {})
         return aten.cat.default([unwrap_to_dense(t) for t in tensors])
