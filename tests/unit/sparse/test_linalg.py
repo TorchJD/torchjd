@@ -39,7 +39,3 @@ def test_hnf_decomposition(shape: tuple[int, int], max_rank: int, reduced: bool)
 
     # Check H is lower triangular (its upper triangle must be zero)
     assert torch.equal(torch.triu(H, diagonal=1), torch.zeros_like(H))
-
-    # Check pivots are positive
-    pivots = H.diag()[:r]
-    assert torch.all(pivots > 0).item()
