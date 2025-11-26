@@ -332,21 +332,27 @@ def test_get_column_indices(source: list[int], destination: list[int], ndim: int
 
 
 @mark.parametrize(
-    ["slt_args", "dim"],
+    ["slt_args", "dim", "expected_densify"],
     [
-        ([([3], tensor([[1], [1]])), ([3], tensor([[1], [1]]))], 1),
-        ([([3, 2], tensor([[1, 0], [1, 3]])), ([3, 2], tensor([[1, 0], [1, 3]]))], 1),
+        ([([3], tensor([[1], [1]])), ([3], tensor([[1], [1]]))], 1, False),
+        ([([3], tensor([[2]])), ([4], tensor([[2]]))], 0, True),
+        ([([3, 2], tensor([[1, 0], [1, 3]])), ([3, 2], tensor([[1, 0], [1, 3]]))], 1, False),
     ],
 )
 def test_concatenate(
     slt_args: list[tuple[list[int], Tensor]],
     dim: int,
+    expected_densify: bool,
 ):
     tensors = [SparseLatticedTensor(randn_(pshape), basis) for pshape, basis in slt_args]
     res = aten.cat.default(tensors, dim)
     expected = aten.cat.default([t.to_dense() for t in tensors], dim)
 
-    assert isinstance(res, SparseLatticedTensor)
+    if expected_densify:
+        assert not isinstance(res, SparseLatticedTensor)
+    else:
+        assert isinstance(res, SparseLatticedTensor)
+
     assert torch.all(torch.eq(res.to_dense(), expected))
 
 
