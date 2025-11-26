@@ -1,7 +1,8 @@
 import torch
 from pytest import mark
+from torch import Tensor, tensor
 
-from torchjd.sparse._linalg import hnf_decomposition
+from torchjd.sparse._linalg import compute_lcm, hnf_decomposition
 
 
 @mark.parametrize(
@@ -39,3 +40,25 @@ def test_hnf_decomposition(shape: tuple[int, int], max_rank: int, reduced: bool)
 
     # Check H is lower triangular (its upper triangle must be zero)
     assert torch.equal(torch.triu(H, diagonal=1), torch.zeros_like(H))
+
+
+@mark.parametrize(
+    ["S1", "S2"],
+    [
+        (tensor([[8]]), tensor([[12]])),
+        (tensor([[8, 2]]), tensor([[12, 3]])),
+        (tensor([[8], [2]]), tensor([[12], [3]])),
+        (tensor([[8, 5]]), tensor([[12, 9]])),
+        (tensor([[8, 6], [4, 2]]), tensor([[16, 4], [2, 2]])),
+    ],
+)
+def test_compute_lcm(S1: Tensor, S2: Tensor):
+    L, M1, M2 = compute_lcm(S1, S2)
+
+    print()
+    print(L)
+    print(M1)
+    print(M2)
+
+    assert torch.equal(S1 @ M1, L)
+    assert torch.equal(S2 @ M2, L)
