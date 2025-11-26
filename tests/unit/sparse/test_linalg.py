@@ -43,4 +43,4 @@ def test_hnf_decomposition(shape: tuple[int, int], max_rank: int, reduced: bool)
 
     # Check pivots are positive
     pivots = H.diag()[:r]
-    return torch.all(pivots > 0).item()
+    assert torch.all(pivots > 0).item()
