@@ -126,6 +126,8 @@ PARAMETRIZATIONS = [
         32,
         marks=mark.filterwarnings("ignore:There is a performance drop"),
     ),
+    (ModuleFactory(ModelAlsoUsingSubmoduleParamsDirectly), 32),
+    (ModuleFactory(InterModuleParamReuse), 32),
     (ModuleFactory(FreeParam), 32),
     (ModuleFactory(NoFreeParam), 32),
     param(ModuleFactory(Cifar10Model), 16, marks=mark.slow),
@@ -183,7 +185,7 @@ def _get_losses_and_params_without_cross_terms(
     return losses, params
 
 
-_get_losses_and_params = _get_losses_and_params_with_cross_terms
+_get_losses_and_params = _get_losses_and_params_without_cross_terms
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
@@ -222,8 +224,6 @@ def test_compute_gramian_with_weird_modules(
     "factory",
     [
         ModuleFactory(ModelUsingSubmoduleParamsDirectly),
-        ModuleFactory(ModelAlsoUsingSubmoduleParamsDirectly),
-        ModuleFactory(InterModuleParamReuse),
     ],
 )
 @mark.parametrize("batch_size", [1, 3, 32])

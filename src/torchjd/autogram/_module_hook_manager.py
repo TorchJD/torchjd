@@ -123,8 +123,6 @@ class Hook:
             # require grad
             return outputs
 
-        self.gramian_computer.track_forward_call()
-
         # We only care about running the AutogramNode, so we need one of its child
         # edges (the edges of the original outputs of the model) as target. For memory
         # efficiency, we select the smallest one (that requires grad).
@@ -186,13 +184,12 @@ class AutogramNode(torch.autograd.Function):
         # For python > 3.10: -> tuple[None, None, None, None, None, *tuple[Tensor, ...]]
 
         if ctx.gramian_accumulation_phase:
-            optional_gramian = ctx.gramian_computer(
+            gramian = ctx.gramian_computer(
                 ctx.rg_outputs,
                 grad_outputs,
                 ctx.args,
                 ctx.kwargs,
             )
-            if optional_gramian is not None:
-                ctx.gramian_accumulator.accumulate_gramian(optional_gramian)
+            ctx.gramian_accumulator.accumulate_gramian(gramian)
 
         return None, None, None, None, None, *grad_outputs
