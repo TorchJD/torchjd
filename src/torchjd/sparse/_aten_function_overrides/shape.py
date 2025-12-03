@@ -40,7 +40,7 @@ def view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
 
     assert isinstance(t, SparseLatticedTensor)
 
-    if not torch.equal(t.padding, torch.zeros_like(t.padding)):
+    if not torch.equal(t.margin, torch.zeros_like(t.margin)):
         raise NotImplementedError()
 
     shape = infer_shape(shape, t.numel())

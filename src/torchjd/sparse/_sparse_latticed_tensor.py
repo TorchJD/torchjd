@@ -153,9 +153,9 @@ class SparseLatticedTensor(Tensor):
         return decorator
 
     @property
-    def start_padding(self) -> Tensor:
+    def start_margin(self) -> Tensor:
         """
-        Returns the number of zeros of padding at the start of each virtual dimension.
+        Returns the margin at the start of each virtual dimension. Can be negative.
 
         The result is an int tensor of shape [virtual_ndim].
         """
@@ -163,9 +163,9 @@ class SparseLatticedTensor(Tensor):
         return self.offset
 
     @property
-    def end_padding(self) -> Tensor:
+    def end_margin(self) -> Tensor:
         """
-        Returns the number of zeros of padding at the end of each virtual dimension.
+        Returns the margin at the end of each virtual dimension. Can be negative.
 
         The result is an int tensor of shape [virtual_ndim].
         """
@@ -173,14 +173,14 @@ class SparseLatticedTensor(Tensor):
         return self.shape_t - self.physical_image_size - self.offset
 
     @property
-    def padding(self) -> Tensor:
+    def margin(self) -> Tensor:
         """
-        Returns the number of zeros of padding at the start and end of each virtual dimension.
+         Returns the margin at the start and end of each virtual dimension. Can be negative.
 
         The result is an int tensor of shape [virtual_ndim, 2].
         """
 
-        return torch.stack([self.start_padding, self.end_padding], dim=1)
+        return torch.stack([self.start_margin, self.end_margin], dim=1)
 
     @property
     def min_natural_virtual_indices(self) -> Tensor:
