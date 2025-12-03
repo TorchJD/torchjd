@@ -17,7 +17,7 @@ class SparseLatticedTensor(Tensor):
         physical: Tensor,
         basis: Tensor,
         offset: Tensor | None = None,
-        size: list[int] | tuple[int, ...] | torch.Size | Tensor | None = None,
+        shape: list[int] | tuple[int, ...] | torch.Size | Tensor | None = None,
     ):
         assert basis.dtype == torch.int64
 
@@ -31,12 +31,12 @@ class SparseLatticedTensor(Tensor):
         # (which is bad!)
         assert not physical.requires_grad or not torch.is_grad_enabled()
 
-        if size is None:
+        if shape is None:
             pshape = tensor(physical.shape, dtype=torch.int64)
-            size = basis @ (pshape - 1) + 1
+            shape = basis @ (pshape - 1) + 1
 
         return Tensor._make_wrapper_subclass(
-            cls, list(size), dtype=physical.dtype, device=physical.device
+            cls, list(shape), dtype=physical.dtype, device=physical.device
         )
 
     def __init__(
@@ -44,7 +44,7 @@ class SparseLatticedTensor(Tensor):
         physical: Tensor,
         basis: Tensor,
         offset: Tensor | None,
-        size: list[int] | tuple[int, ...] | torch.Size | Tensor | None,
+        shape: list[int] | tuple[int, ...] | torch.Size | Tensor | None,
     ):
         """
         This constructor is made for specifying physical and basis exactly. It should not modify
@@ -58,7 +58,7 @@ class SparseLatticedTensor(Tensor):
             the linear transformation between an index in the physical tensor and the corresponding
             index in the virtual tensor, i.e. v_index = basis @ p_index + offset.
         :param offset: Offset for the virtual index, i.e. v_index = basis @ p_index + offset.
-        :param size: Size of the sparse tensor. If not provided, the size will be inferred as the
+        :param shape: Size of the sparse tensor. If not provided, the size will be inferred as the
             minimum size big enough to hold all non-zero elements.
 
         # TODO: make a nicer interface where it's possible to provide lists or sizes instead of
@@ -66,7 +66,7 @@ class SparseLatticedTensor(Tensor):
         """
 
         if offset is None:
-            offset = torch.zeros(len(self.shape))
+            offset = torch.zeros(len(self.shape), dtype=torch.int64)
 
         if any(s == 1 for s in physical.shape):
             raise ValueError(
@@ -95,7 +95,16 @@ class SparseLatticedTensor(Tensor):
         self.physical = physical
         self.basis = basis
         self.offset = offset
-        self.size = tensor(size, dtype=torch.int64)
+
+        if shape is None:
+            pshape = tensor(physical.shape, dtype=torch.int64)
+            shape = basis @ (pshape - 1) + 1
+        if isinstance(shape, torch.Tensor):
+            self.shape_t = shape
+        else:
+            self.shape_t = tensor(shape, dtype=torch.int64)
+
+        self.pshape_t = tensor(physical.shape, dtype=torch.int64)
 
     def to_dense(
         self, dtype: torch.dtype | None = None, *, masked_grad: bool | None = None
@@ -110,7 +119,9 @@ class SparseLatticedTensor(Tensor):
         p_indices_grid = stack(meshgrid(*p_index_ranges, indexing="ij"))
 
         # addmm_cuda not implemented for Long tensors => gotta have these tensors on cpu
-        v_indices_grid = tensordot(self.basis, p_indices_grid, dims=1) + self.offset
+        reshaped_offset = self.offset.reshape([-1] + [1] * self.physical.ndim)
+        v_indices_grid = tensordot(self.basis, p_indices_grid, dims=1) + reshaped_offset
+        # v_indices_grid is of shape [n_virtual_dims] + physical_shape
         res = zeros(self.shape, device=self.device, dtype=self.dtype)
         res[tuple(v_indices_grid)] = self.physical
         return res
@@ -128,7 +139,7 @@ class SparseLatticedTensor(Tensor):
         return func(*unwrapped_args, **unwrapped_kwargs)
 
     def __repr__(self, *, tensor_contents=None) -> str:
-        return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis}, offset={self.offset}, size={self.size})"
+        return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis}, offset={self.offset}, size={self.shape_t})"
 
     @classmethod
     def implements(cls, torch_function):
@@ -140,6 +151,61 @@ class SparseLatticedTensor(Tensor):
             return func
 
         return decorator
+
+    @property
+    def start_padding(self) -> Tensor:
+        """
+        Returns the number of zeros of padding at the start of each virtual dimension.
+
+        The result is an int tensor of shape [virtual_ndim].
+        """
+
+        return self.offset
+
+    @property
+    def end_padding(self) -> Tensor:
+        """
+        Returns the number of zeros of padding at the end of each virtual dimension.
+
+        The result is an int tensor of shape [virtual_ndim].
+        """
+
+        return self.shape_t - self.physical_image_size - self.offset
+
+    @property
+    def padding(self) -> Tensor:
+        """
+        Returns the number of zeros of padding at the start and end of each virtual dimension.
+
+        The result is an int tensor of shape [virtual_ndim, 2].
+        """
+
+        return torch.stack([self.start_padding, self.end_padding], dim=1)
+
+    @property
+    def min_natural_virtual_indices(self) -> Tensor:
+        # Basis where each positive element is replaced by 0
+        non_positive_basis = torch.min(self.basis, torch.zeros_like(self.basis))
+        max_physical_index = self.pshape_t - 1
+        return (non_positive_basis * max_physical_index.unsqueeze(0)).sum(dim=1)
+
+    @property
+    def max_natural_virtual_indices(self) -> Tensor:
+        # Basis where each negative element is replaced by 0
+        non_negative = torch.max(self.basis, torch.zeros_like(self.basis))
+        max_physical_index = self.pshape_t - 1
+        return (non_negative * max_physical_index.unsqueeze(0)).sum(dim=1)
+
+    @property
+    def physical_image_size(self) -> Tensor:
+        """
+        Returns the shape of the image of the physical through the basis transform.
+
+        The result is an int tensor of shape [virtual_ndim].
+        """
+
+        one = torch.ones(self.ndim, dtype=torch.int64)
+        return self.max_natural_virtual_indices - self.min_natural_virtual_indices + one
 
 
 impl = SparseLatticedTensor.implements

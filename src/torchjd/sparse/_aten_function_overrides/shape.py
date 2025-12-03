@@ -1,7 +1,6 @@
 import operator
 from itertools import accumulate
 from math import prod
-from typing import cast
 
 import torch
 from torch import Tensor, arange, cat, tensor
@@ -41,6 +40,9 @@ def view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
 
     assert isinstance(t, SparseLatticedTensor)
 
+    if not torch.equal(t.padding, torch.zeros_like(t.padding)):
+        raise NotImplementedError()
+
     shape = infer_shape(shape, t.numel())
 
     if prod(shape) != t.numel():
@@ -51,7 +53,9 @@ def view_default(t: SparseLatticedTensor, shape: list[int]) -> Tensor:
     c = _reverse_cumulative_product(vshape)
     c_prime = _reverse_cumulative_product(shape)
     new_basis = ((c @ S).unsqueeze(0) // c_prime.unsqueeze(1)) % tensor(shape).unsqueeze(1)
-    return to_most_efficient_tensor(t.physical, new_basis)
+
+    new_offset = torch.zeros(len(shape), dtype=torch.int64)
+    return to_most_efficient_tensor(t.physical, new_basis, new_offset, shape)
 
 
 def _reverse_cumulative_product(values: list[int]) -> Tensor:
@@ -87,7 +91,7 @@ def unsqueeze_default(t: SparseLatticedTensor, dim: int) -> SparseLatticedTensor
     pdims = t.basis.shape[1]
     new_basis = cat([t.basis[:dim], torch.zeros(1, pdims, dtype=torch.int64), t.basis[dim:]])
     new_offset = cat([t.offset[:dim], torch.zeros(1, dtype=torch.int64), t.offset[dim:]])
-    new_size = cat([t.size[:dim], torch.zeros(1, dtype=torch.int64), t.size[dim:]])
+    new_size = cat([t.shape_t[:dim], torch.ones(1, dtype=torch.int64), t.shape_t[dim:]])
     return SparseLatticedTensor(t.physical, new_basis, new_offset, new_size)
 
 
@@ -106,7 +110,7 @@ def squeeze_dims(t: SparseLatticedTensor, dims: list[int] | int | None) -> Tenso
     is_row_kept = [i not in excluded for i in range(t.ndim)]
     new_basis = t.basis[is_row_kept]
     new_offset = t.offset[is_row_kept]
-    new_size = t.size[is_row_kept]
+    new_size = t.shape_t[is_row_kept]
     return to_most_efficient_tensor(t.physical, new_basis, new_offset, new_size)
 
 
@@ -114,7 +118,7 @@ def squeeze_dims(t: SparseLatticedTensor, dims: list[int] | int | None) -> Tenso
 def permute_default(t: SparseLatticedTensor, dims: list[int]) -> SparseLatticedTensor:
     new_basis = t.basis[dims]
     new_offset = t.offset[dims]
-    new_size = t.size[dims]
+    new_size = t.shape_t[dims]
     return SparseLatticedTensor(t.physical, new_basis, new_offset, new_size)
 
 
@@ -124,56 +128,10 @@ def cat_default(tensors: list[Tensor], dim: int = 0) -> Tensor:
         print_fallback(aten.cat.default, (tensors, dim), {})
         return aten.cat.default([unwrap_to_dense(t) for t in tensors])
 
-    tensors_ = [cast(SparseLatticedTensor, t) for t in tensors]
-    ref_tensor = tensors_[0]
-    ref_basis = ref_tensor.basis
-    if any(not torch.equal(t.basis, ref_basis) for t in tensors_[1:]):
-        raise NotImplementedError(
-            "Override for aten.cat.default does not support SLTs that do not all have the same "
-            f"basis. Found the following tensors:\n{[repr(t) for t in tensors_]} and the following "
-            f"dim: {dim}."
-        )
-    if any(t.physical.shape != ref_tensor.physical.shape for t in tensors_[1:]):
-        # This can happen in the following example:
-        # t1 = SLT([1 2 3], [[2]])
-        # t2 = SLT([4 5 6 7], [[2]])
-        # The expected result would be 1 0 2 0 3 4 0 5 0 6 0 7, but this is not representable
-        # efficiently as an SLT (because there is no 0 between 3 and 4, and both physicals have a
-        # different shape so we can't just stack them).
+    print_fallback(aten.cat.default, (tensors, dim), {})
+    return aten.cat.default([unwrap_to_dense(t) for t in tensors])
 
-        # TODO: Maybe a partial densify is possible rather than a full densify.
-        print_fallback(aten.cat.default, (tensors, dim), {})
-        return aten.cat.default([unwrap_to_dense(t) for t in tensors])
-
-    # We need to try to find the (pretty sure it either does not exist or is unique) physical
-    # dimension that makes us only move on virtual dimension dim. It also needs to be such that
-    # traversing it entirely brings us exactly to the end of virtual dimension dim.
-
-    ref_virtual_dim_size = ref_tensor.shape[dim]
-    indices = torch.argwhere(
-        torch.eq(ref_basis[dim] * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
-        & torch.eq(ref_basis.sum(dim=0) * tensor(ref_tensor.physical.shape), ref_virtual_dim_size)
-    )
-    assert len(indices) <= 1
-
-    if len(indices) == 0:
-        # Add a physical dimension pdim on which we can concatenate the physicals such that this
-        # translates into a concatenation of the virtuals on virtual dimension dim.
-
-        pdim = ref_tensor.physical.ndim
-        physicals = [t.physical.unsqueeze(-1) for t in tensors_]
-        new_basis_vector = torch.zeros(ref_tensor.ndim, 1, dtype=torch.int64)
-        new_basis_vector[dim, 0] = ref_virtual_dim_size
-        new_basis = torch.concatenate([ref_tensor.basis, new_basis_vector], dim=1)
-    else:
-        # Such a physical dimension already exists. Note that an alternative implementation would be
-        # to simply always add the physical dimension, and squash it if it ends up being not needed.
-        physicals = [t.physical for t in tensors_]
-        pdim = cast(int, indices[0, 0].item())
-        new_basis = ref_tensor.basis
-
-    new_physical = aten.cat.default(physicals, dim=pdim)
-    return SparseLatticedTensor(new_physical, new_basis)
+    # TODO: add implementation based on adding some margin to tensors and summing them
 
 
 @impl(aten.expand.default)
@@ -190,7 +148,7 @@ def expand_default(t: SparseLatticedTensor, sizes: list[int]) -> SparseLatticedT
     # Try to expand each dimension to its new size
     new_physical = t.physical
     new_basis = t.basis
-    new_sizes = t.size
+    new_sizes = t.shape_t
     for d, (v, orig_size, new_size) in enumerate(zip(t.basis, t.shape, sizes, strict=True)):
         if v.sum() > 0 and orig_size != new_size and new_size != -1:
             raise ValueError(
