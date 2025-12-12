@@ -190,7 +190,7 @@ def compute_lcm(S1: Tensor, S2: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     H, U, _ = hnf_decomposition(B, False)
 
     rank = _get_hermite_factor_rank(H)
-    M2 = U[n1:, -rank:]
     M1 = U[:n1, -rank:]
+    M2 = U[n1:, -rank:]
     L = S1 @ M1
     return L, M1, M2
