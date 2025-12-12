@@ -125,7 +125,7 @@ class SparseLatticedTensor(Tensor):
         unwrapped_kwargs = tree_map(unwrap_to_dense, kwargs)
         return func(*unwrapped_args, **unwrapped_kwargs)
 
-    def __repr__(self, *, tensor_contents=None) -> str:
+    def __repr__(self, *, tensor_contents=None) -> str:  # type: ignore[override]
         return f"SparseLatticedTensor(physical={self.physical}, basis={self.basis}, margin={self.margin})"
 
     @classmethod

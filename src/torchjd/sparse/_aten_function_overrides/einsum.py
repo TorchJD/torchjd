@@ -138,12 +138,12 @@ def prepare_for_elementwise_op(
     assert isinstance(t1, SparseLatticedTensor) or isinstance(t2, SparseLatticedTensor)
 
     if isinstance(t1, int) or isinstance(t1, float):
-        t1_ = tensor(t1, device=t2.device)
+        t1_ = tensor(t1, device=t2.device)  # type: ignore[union-attr]
     else:
         t1_ = t1
 
     if isinstance(t2, int) or isinstance(t2, float):
-        t2_ = tensor(t2, device=t1.device)
+        t2_ = tensor(t2, device=t1.device)  # type: ignore[union-attr]
     else:
         t2_ = t2
 

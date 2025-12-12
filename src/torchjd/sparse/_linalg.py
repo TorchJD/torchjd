@@ -1,3 +1,5 @@
+from typing import cast
+
 import torch
 from torch import Tensor
 
@@ -23,7 +25,7 @@ def _get_hermite_factor_rank(H: Tensor) -> int:
     Computes the rank of a hermit factor matrix.
     """
     col_magnitudes = torch.sum(torch.abs(H), dim=0)
-    return torch.count_nonzero(col_magnitudes).item()
+    return cast(int, torch.count_nonzero(col_magnitudes).item())
 
 
 def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]:
@@ -73,8 +75,8 @@ def hnf_decomposition(A: Tensor, reduced: bool) -> tuple[Tensor, Tensor, Tensor]
 
         for j in range(col + 1, n):
             if H[row, j] != 0:
-                a_val = H[row, col].item()
-                b_val = H[row, j].item()
+                a_val = cast(int, H[row, col].item())
+                b_val = cast(int, H[row, j].item())
 
                 g, x, y = extended_gcd(a_val, b_val)
 
