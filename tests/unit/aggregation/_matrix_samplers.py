@@ -167,5 +167,14 @@ def _sample_semi_orthonormal_complement(Q: Tensor, rng: torch.Generator | None =
     # project A onto the orthogonal complement of Q
     A_proj = A - Q @ (Q.T @ A)
 
-    Q_prime, _ = torch.linalg.qr(A_proj)
+    try:
+        Q_prime, _ = torch.linalg.qr(A_proj)
+    except NotImplementedError:
+        # This will happen on MPS until they add support for aten::linalg_qr.out
+        # See status in https://github.com/pytorch/pytorch/issues/141287
+        # In this case, perform the qr on CPU and move back to the original device
+        original_device = A_proj.device
+        Q_prime, _ = torch.linalg.qr(A_proj.to(device="cpu"))
+        Q_prime = Q_prime.to(device=original_device)
+
     return Q_prime
