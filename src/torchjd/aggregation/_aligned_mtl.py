@@ -82,7 +82,17 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
 
     @staticmethod
     def _compute_balance_transformation(M: Tensor) -> Tensor:
-        lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
+        try:
+            lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
+        except NotImplementedError:
+            # This will happen on MPS until they add support for aten::_linalg_eigh.eigenvalues
+            # See status in https://github.com/pytorch/pytorch/issues/141287
+            # In this case, perform the qr on CPU and move back to the original device
+            original_device = M.device
+            lambda_, V = torch.linalg.eigh(M.cpu(), UPLO="U")
+            lambda_ = lambda_.to(device=original_device)
+            V = V.to(device=original_device)
+
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
         rank = sum(lambda_ > tol)
 
