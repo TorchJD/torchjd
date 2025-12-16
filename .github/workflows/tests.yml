@@ -37,7 +37,7 @@ jobs:
         run: uv pip install --python-version=${{ matrix.python-version }} -e '.[full]' --group test
       - name: Run unit and doc tests with coverage report
         run: |
-          PYTEST_TORCH_DEVICE=${{ matrix.device }} uv run pytest -W error tests/unit tests/doc
+          PYTEST_TORCH_DEVICE=${{ matrix.device }} uv run pytest -W error tests/unit tests/doc \
           --cov=src --cov-report=xml
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
