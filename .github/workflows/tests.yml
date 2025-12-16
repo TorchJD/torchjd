@@ -19,11 +19,13 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        device: [cpu]
-        include:
-          # Add the MPS device when the OS is macOS-latest.
-          - device: mps
-            os: macOS-latest
+        device: [cpu, mps]
+        exclude:
+          # Only test on MPS when the OS is macOS-latest.
+          - os: ubuntu-latest
+            device: mps
+          - os: windows-latest
+            device: mps
 
     steps:
       - uses: actions/checkout@v4
