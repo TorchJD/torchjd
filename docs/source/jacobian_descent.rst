@@ -30,10 +30,10 @@ and that we recommend for most problems is :doc:`UPGrad <docs/aggregation/upgrad
 
 **Which problems are multi-objective?**
 
-Many optimization problems are multi-objective. In multitask learning, for example, the loss of each
-task can be considered as a separate objective. More interestingly to us, many problems that are
-traditionally considered as single-objective can actually be seen as multi-objective. Here are a few
-examples:
+Many optimization problems are multi-objective. In multi-task learning, for example, the loss of
+each task can be considered as a separate objective. More interestingly to us, many problems that
+are traditionally considered as single-objective can actually be seen as multi-objective. Here are a
+few examples:
 
 - We can consider separately the loss of each element in the mini-batch, instead of averaging them.
   We call this paradigm instance-wise risk minimization (:doc:`IWRM <examples/iwrm>`).
