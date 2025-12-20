@@ -8,6 +8,8 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-11-13
+
 ### Added
 
 - Added the `autogram` package, with the `autogram.Engine`. This is an implementation of Algorithm 3
