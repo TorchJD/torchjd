@@ -46,7 +46,8 @@ few examples:
 
 JD should be used to try new approaches to train neural networks, where GD generally struggles due
 to gradient conflict. If you have an idea where JD could be interesting, you should start by
-verifying that the pairwise inner products between your gradients are sometimes negative. Then, you
+verifying that the pairwise inner products between your gradients are sometimes negative. To easily
+do that, you can start by following the :doc:`Monitoring <examples/monitoring>` examples. Then, you
 should use TorchJD to solve this conflict, and look at training and testing metrics to see if this
 helps to solve your problem.
 
