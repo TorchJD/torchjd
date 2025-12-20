@@ -49,7 +49,7 @@ they have a negative inner product).
     optimizer = SGD(params, lr=0.1)
     aggregator = UPGrad()
 
-    aggregator.weighting.register_forward_hook(print_weights)
+    aggregator.weighting.weighting.register_forward_hook(print_weights)
     aggregator.register_forward_hook(print_gd_similarity)
 
     inputs = torch.randn(8, 16, 10)  # 8 batches of 16 random input vectors of length 10
