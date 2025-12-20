@@ -61,6 +61,7 @@ TorchJD is open-source, under MIT License. The source code is available on
     :hidden:
 
     installation.md
+    jacobian_descent.md
     examples/index.rst
 
 .. toctree::
