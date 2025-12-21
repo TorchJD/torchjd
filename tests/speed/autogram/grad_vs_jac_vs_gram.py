@@ -1,7 +1,7 @@
 import gc
 
 import torch
-from device import DEVICE
+from settings import DEVICE
 from utils.architectures import (
     AlexNet,
     Cifar10Model,

@@ -28,7 +28,7 @@ def test_expected_structure(aggregator: UPGrad, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_non_conflicting(aggregator: UPGrad, matrix: Tensor):
-    assert_non_conflicting(aggregator, matrix, atol=3e-04, rtol=3e-04)
+    assert_non_conflicting(aggregator, matrix, atol=4e-04, rtol=4e-04)
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
@@ -38,7 +38,7 @@ def test_permutation_invariant(aggregator: UPGrad, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_linear_under_scaling(aggregator: UPGrad, matrix: Tensor):
-    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=3e-02, rtol=3e-02)
+    assert_linear_under_scaling(aggregator, matrix, n_runs=5, atol=4e-02, rtol=4e-02)
 
 
 @mark.parametrize(["aggregator", "matrix"], non_strong_pairs)

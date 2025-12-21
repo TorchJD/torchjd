@@ -2,7 +2,7 @@ from functools import partial
 
 import torch
 import torchvision
-from device import DEVICE
+from settings import DEVICE, DTYPE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
@@ -17,7 +17,7 @@ class ModuleFactory:
 
     def __call__(self) -> nn.Module:
         with fork_rng(seed=0):
-            return self.architecture(*self.args, **self.kwargs).to(device=DEVICE)
+            return self.architecture(*self.args, **self.kwargs).to(device=DEVICE, dtype=DTYPE)
 
     def __str__(self) -> str:
         args_string = ", ".join([str(arg) for arg in self.args])

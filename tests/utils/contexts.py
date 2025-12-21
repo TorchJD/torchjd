@@ -3,7 +3,7 @@ from contextlib import AbstractContextManager, contextmanager
 from typing import Any, TypeAlias
 
 import torch
-from device import DEVICE
+from settings import DEVICE
 
 ExceptionContext: TypeAlias = AbstractContextManager[Exception | None]
 

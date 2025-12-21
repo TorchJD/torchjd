@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
+from settings import DTYPE
 from torch import Tensor
 from torch.nn.functional import normalize
 from utils.tensors import randint_, randn_, randperm_, zeros_
@@ -9,7 +10,7 @@ from utils.tensors import randint_, randn_, randperm_, zeros_
 class MatrixSampler(ABC):
     """Abstract base class for sampling matrices of a given shape, rank and dtype."""
 
-    def __init__(self, m: int, n: int, rank: int, dtype: torch.dtype = torch.float32):
+    def __init__(self, m: int, n: int, rank: int, dtype: torch.dtype = DTYPE):
         self._check_params(m, n, rank, dtype)
         self.m = m
         self.n = n
