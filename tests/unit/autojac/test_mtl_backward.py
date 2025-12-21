@@ -1,5 +1,6 @@
 import torch
 from pytest import mark, raises
+from settings import DTYPE
 from torch.autograd import grad
 from torch.testing import assert_close
 from utils.tensors import arange_, rand_, randn_, tensor_
@@ -345,7 +346,7 @@ def test_various_feature_lists(shapes: list[tuple[int]]):
     """Tests that mtl_backward works correctly with various kinds of feature lists."""
 
     p0 = tensor_([1.0, 2.0], requires_grad=True)
-    p1 = arange_(len(shapes), dtype=torch.float32, requires_grad=True)
+    p1 = arange_(len(shapes), dtype=DTYPE, requires_grad=True)
     p2 = tensor_(5.0, requires_grad=True)
 
     features = [rand_(shape) @ p0 for shape in shapes]

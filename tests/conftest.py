@@ -2,8 +2,8 @@ import random as rand
 from contextlib import nullcontext
 
 import torch
-from device import DEVICE
 from pytest import RaisesExc, fixture, mark
+from settings import DEVICE
 from torch import Tensor
 from utils.architectures import ModuleFactory
 

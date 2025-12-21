@@ -1,7 +1,7 @@
 from functools import partial
 
 import torch
-from device import DEVICE
+from settings import DEVICE, DTYPE
 from torch import nn
 from torch.utils._pytree import PyTree, tree_map
 from utils.architectures import get_in_out_shapes
@@ -11,16 +11,19 @@ from utils.contexts import fork_rng
 # for code written in the tests, while not affecting code written in src (what
 # torch.set_default_device or what a too large `with torch.device(DEVICE)` context would have done).
 
+# Default device is most likely int.
 arange_ = partial(torch.arange, device=DEVICE)
-empty_ = partial(torch.empty, device=DEVICE)
-eye_ = partial(torch.eye, device=DEVICE)
-ones_ = partial(torch.ones, device=DEVICE)
-rand_ = partial(torch.rand, device=DEVICE)
 randint_ = partial(torch.randint, device=DEVICE)
-randn_ = partial(torch.randn, device=DEVICE)
 randperm_ = partial(torch.randperm, device=DEVICE)
-tensor_ = partial(torch.tensor, device=DEVICE)
-zeros_ = partial(torch.zeros, device=DEVICE)
+
+# Default device is most likely float. Set it to the right kind of float.
+empty_ = partial(torch.empty, device=DEVICE, dtype=DTYPE)
+eye_ = partial(torch.eye, device=DEVICE, dtype=DTYPE)
+ones_ = partial(torch.ones, device=DEVICE, dtype=DTYPE)
+rand_ = partial(torch.rand, device=DEVICE, dtype=DTYPE)
+randn_ = partial(torch.randn, device=DEVICE, dtype=DTYPE)
+tensor_ = partial(torch.tensor, device=DEVICE, dtype=DTYPE)
+zeros_ = partial(torch.zeros, device=DEVICE, dtype=DTYPE)
 
 
 def make_inputs_and_targets(model: nn.Module, batch_size: int) -> tuple[PyTree, PyTree]:

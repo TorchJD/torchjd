@@ -1,8 +1,8 @@
 import math
 
 import torch
-from device import DEVICE
 from pytest import mark, raises
+from settings import DEVICE
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import rand_, tensor_, zeros_
 
