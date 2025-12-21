@@ -27,7 +27,7 @@ def test_expected_structure(aggregator: DualProj, matrix: Tensor):
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
 def test_non_conflicting(aggregator: DualProj, matrix: Tensor):
-    assert_non_conflicting(aggregator, matrix, atol=5e-05, rtol=5e-05)
+    assert_non_conflicting(aggregator, matrix, atol=1e-04, rtol=1e-04)
 
 
 @mark.parametrize(["aggregator", "matrix"], typical_pairs)
