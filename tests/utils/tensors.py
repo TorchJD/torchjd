@@ -11,6 +11,7 @@ from utils.contexts import fork_rng
 # for code written in the tests, while not affecting code written in src (what
 # torch.set_default_device or what a too large `with torch.device(DEVICE)` context would have done).
 
+arange_ = partial(torch.arange, device=DEVICE)
 empty_ = partial(torch.empty, device=DEVICE)
 eye_ = partial(torch.eye, device=DEVICE)
 ones_ = partial(torch.ones, device=DEVICE)
