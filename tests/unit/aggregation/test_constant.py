@@ -18,7 +18,7 @@ from ._inputs import non_strong_matrices, scaled_matrices, typical_matrices
 
 def _make_aggregator(matrix: Tensor) -> Constant:
     n_rows = matrix.shape[0]
-    weights = tensor_([1.0 / n_rows] * n_rows, dtype=matrix.dtype)
+    weights = tensor_([1.0 / n_rows] * n_rows)
     return Constant(weights)
 
 
