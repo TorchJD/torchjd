@@ -67,10 +67,10 @@ def assert_linear_under_scaling(
     """Tests empirically that a given `Aggregator` satisfies the linear under scaling property."""
 
     for _ in range(n_runs):
-        c1 = rand_(matrix.shape[0], dtype=matrix.dtype)
-        c2 = rand_(matrix.shape[0], dtype=matrix.dtype)
-        alpha = rand_([], dtype=matrix.dtype)
-        beta = rand_([], dtype=matrix.dtype)
+        c1 = rand_(matrix.shape[0])
+        c2 = rand_(matrix.shape[0])
+        alpha = rand_([])
+        beta = rand_([])
 
         x1 = aggregator(torch.diag(c1) @ matrix)
         x2 = aggregator(torch.diag(c2) @ matrix)

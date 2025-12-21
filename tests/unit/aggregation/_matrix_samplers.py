@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-from settings import DTYPE
 from torch import Tensor
 from torch.nn.functional import normalize
 from utils.tensors import randint_, randn_, randperm_, zeros_
@@ -41,9 +40,9 @@ class NormalSampler(MatrixSampler):
     """Sampler for random normal matrices of shape [m, n] with provided rank."""
 
     def __call__(self, rng: torch.Generator | None = None) -> Tensor:
-        U = _sample_orthonormal_matrix(self.m, dtype=DTYPE, rng=rng)
-        Vt = _sample_orthonormal_matrix(self.n, dtype=DTYPE, rng=rng)
-        S = torch.diag(torch.abs(randn_([self.rank], dtype=DTYPE, generator=rng)))
+        U = _sample_orthonormal_matrix(self.m, rng=rng)
+        Vt = _sample_orthonormal_matrix(self.n, rng=rng)
+        S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
         A = U[:, : self.rank] @ S @ Vt[: self.rank, :]
         return A
 
@@ -65,11 +64,11 @@ class StrongSampler(MatrixSampler):
         assert 0 < rank <= min(m - 1, n)
 
     def __call__(self, rng: torch.Generator | None = None) -> Tensor:
-        v = torch.abs(randn_([self.m], dtype=DTYPE, generator=rng))
+        v = torch.abs(randn_([self.m], generator=rng))
         U1 = normalize(v, dim=0).unsqueeze(1)
         U2 = _sample_semi_orthonormal_complement(U1, rng=rng)
-        Vt = _sample_orthonormal_matrix(self.n, dtype=DTYPE, rng=rng)
-        S = torch.diag(torch.abs(randn_([self.rank], dtype=DTYPE, generator=rng)))
+        Vt = _sample_orthonormal_matrix(self.n, rng=rng)
+        S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
         A = U2[:, : self.rank] @ S @ Vt[: self.rank, :]
         return A
 
@@ -100,18 +99,18 @@ class StrictlyWeakSampler(MatrixSampler):
         assert 0 < rank <= min(m - 1, n)
 
     def __call__(self, rng: torch.Generator | None = None) -> Tensor:
-        u = torch.abs(randn_([self.m], dtype=DTYPE, generator=rng))
+        u = torch.abs(randn_([self.m], generator=rng))
         split_index = randint_(1, self.m, [], generator=rng).item()
         shuffled_range = randperm_(self.m, generator=rng)
-        v = zeros_(self.m, dtype=DTYPE)
+        v = zeros_(self.m)
         v[shuffled_range[:split_index]] = normalize(u[shuffled_range[:split_index]], dim=0)
-        v_prime = zeros_(self.m, dtype=DTYPE)
+        v_prime = zeros_(self.m)
         v_prime[shuffled_range[split_index:]] = normalize(u[shuffled_range[split_index:]], dim=0)
         U1 = torch.stack([v, v_prime]).T
         U2 = _sample_semi_orthonormal_complement(U1, rng=rng)
         U = torch.hstack([U1, U2])
-        Vt = _sample_orthonormal_matrix(self.n, dtype=DTYPE, rng=rng)
-        S = torch.diag(torch.abs(randn_([self.rank], dtype=DTYPE, generator=rng)))
+        Vt = _sample_orthonormal_matrix(self.n, rng=rng)
+        S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
         A = U[:, 1 : self.rank + 1] @ S @ Vt[: self.rank, :]
         return A
 
@@ -131,22 +130,20 @@ class NonWeakSampler(MatrixSampler):
         assert 0 < rank
 
     def __call__(self, rng: torch.Generator | None = None) -> Tensor:
-        u = torch.abs(randn_([self.m], dtype=DTYPE, generator=rng))
+        u = torch.abs(randn_([self.m], generator=rng))
         U1 = normalize(u, dim=0).unsqueeze(1)
         U2 = _sample_semi_orthonormal_complement(U1, rng=rng)
         U = torch.hstack([U1, U2])
-        Vt = _sample_orthonormal_matrix(self.n, dtype=DTYPE, rng=rng)
-        S = torch.diag(torch.abs(randn_([self.rank], dtype=DTYPE, generator=rng)))
+        Vt = _sample_orthonormal_matrix(self.n, rng=rng)
+        S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
         A = U[:, : self.rank] @ S @ Vt[: self.rank, :]
         return A
 
 
-def _sample_orthonormal_matrix(
-    dim: int, dtype: torch.dtype, rng: torch.Generator | None = None
-) -> Tensor:
+def _sample_orthonormal_matrix(dim: int, rng: torch.Generator | None = None) -> Tensor:
     """Uniformly samples a random orthonormal matrix of shape [dim, dim]."""
 
-    return _sample_semi_orthonormal_complement(zeros_([dim, 0], dtype=dtype), rng=rng)
+    return _sample_semi_orthonormal_complement(zeros_([dim, 0]), rng=rng)
 
 
 def _sample_semi_orthonormal_complement(Q: Tensor, rng: torch.Generator | None = None) -> Tensor:
@@ -157,9 +154,8 @@ def _sample_semi_orthonormal_complement(Q: Tensor, rng: torch.Generator | None =
     :param Q: A semi-orthonormal matrix (i.e. Q^T Q = I) of shape [m, k], with k <= m.
     """
 
-    dtype = Q.dtype
     m, k = Q.shape
-    A = randn_([m, m - k], dtype=dtype, generator=rng)
+    A = randn_([m, m - k], generator=rng)
 
     # project A onto the orthogonal complement of Q
     A_proj = A - Q @ (Q.T @ A)
