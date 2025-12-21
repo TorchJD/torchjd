@@ -59,7 +59,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   tests-float64:
-    name: Run tests with on float64 dtype
+    name: Run tests on float64 dtype
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
