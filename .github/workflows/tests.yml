@@ -58,6 +58,26 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  tests-float64:
+    name: Run tests with on float64 dtype
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install default (with full options) and test dependencies
+        run: uv pip install --python-version=${{ env.PYTHON_VERSION }} -e '.[full]' --group test
+      - name: Run unit and doc tests with coverage report
+        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
+        env:
+          PYTEST_TORCH_DTYPE: float64
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   build-doc:
     name: Build doc
     runs-on: ubuntu-latest
