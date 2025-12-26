@@ -80,12 +80,48 @@ from ._utils.check_dependencies import (
 )
 from ._weighting_bases import GeneralizedWeighting, Weighting
 
+__all__ = [
+    "Aggregator",
+    "AlignedMTL",
+    "AlignedMTLWeighting",
+    "ConFIG",
+    "Constant",
+    "ConstantWeighting",
+    "DualProj",
+    "DualProjWeighting",
+    "Flattening",
+    "GeneralizedWeighting",
+    "GradDrop",
+    "IMTLG",
+    "IMTLGWeighting",
+    "Krum",
+    "KrumWeighting",
+    "Mean",
+    "MeanWeighting",
+    "MGDA",
+    "MGDAWeighting",
+    "PCGrad",
+    "PCGradWeighting",
+    "Random",
+    "RandomWeighting",
+    "Sum",
+    "SumWeighting",
+    "TrimmedMean",
+    "UPGrad",
+    "UPGradWeighting",
+    "Weighting",
+]
+
 try:
     from ._cagrad import CAGrad, CAGradWeighting
+
+    __all__ += ["CAGrad", "CAGradWeighting"]
 except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass
 
 try:
     from ._nash_mtl import NashMTL
+
+    __all__ += ["NashMTL"]
 except _OptionalDepsNotInstalledError:  # The required dependencies are not installed
     pass

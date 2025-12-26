@@ -8,6 +8,10 @@ changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added `__all__` in the `__init__.py` of packages. This should prevent PyLance from triggering warnings when importing from `torchjd`.
+
 ## [0.8.0] - 2025-11-13
 
 ### Added

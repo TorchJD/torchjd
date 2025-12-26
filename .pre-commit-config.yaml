@@ -15,7 +15,6 @@ repos:
     -   id: flake8  # Check style and syntax. Does not modify code, issues have to be solved manually.
         args: [
             '--ignore=E501,E203,W503,E402',  # Ignore line length problems, space after colon problems, line break occurring before a binary operator problems, module level import not at top of file problems.
-            '--per-file-ignores=*/__init__.py:F401',  # Ignore module imported but unused problems in __init__.py files.
         ]
 
 -   repo: https://github.com/pycqa/isort

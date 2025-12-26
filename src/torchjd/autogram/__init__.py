@@ -28,3 +28,5 @@ The list of Weightings compatible with ``autogram`` is:
 """
 
 from ._engine import Engine
+
+__all__ = ["Engine"]
