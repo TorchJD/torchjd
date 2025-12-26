@@ -1,7 +1,6 @@
 autogram
 ========
 
-
 .. automodule:: torchjd.autogram
     :no-members:
 
