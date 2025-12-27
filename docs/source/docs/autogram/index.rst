@@ -1,9 +1,8 @@
 autogram
 ========
 
-
 .. automodule:: torchjd.autogram
-   :members:
+    :no-members:
 
 .. toctree::
     :hidden:

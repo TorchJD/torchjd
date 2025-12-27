@@ -2,8 +2,7 @@ autojac
 =======
 
 .. automodule:: torchjd.autojac
-   :members:
-
+   :no-members:
 
 .. toctree::
     :hidden:

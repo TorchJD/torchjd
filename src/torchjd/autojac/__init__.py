@@ -7,3 +7,5 @@ used.
 
 from ._backward import backward
 from ._mtl_backward import mtl_backward
+
+__all__ = ["backward", "mtl_backward"]
