@@ -5,7 +5,7 @@ inputs:
   options:
     description: 'Package options to install (space-separated, e.g., "full")'
     required: false
-    default: ''
+    default: 'full'
   groups:
     description: 'Dependency groups to install (space-separated, e.g., "test doc")'
     required: false

@@ -27,7 +27,6 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          options: full
           groups: doc
 
       - name: Determine deployment folder
