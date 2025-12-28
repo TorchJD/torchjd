@@ -1,5 +1,6 @@
 import random as rand
 from contextlib import nullcontext
+from importlib.util import find_spec
 
 import torch
 from pytest import RaisesExc, fixture, mark
@@ -30,16 +31,35 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: mark test as slow to run")
     config.addinivalue_line("markers", "xfail_if_cuda: mark test as xfail if running on cuda")
+    config.addinivalue_line(
+        "markers", "xfail_if_cagrad_not_installed: mark test as xfail if CAGrad is not installed"
+    )
+    config.addinivalue_line(
+        "markers",
+        "xfail_if_nashmtl_not_installed: mark test as xfail if NashMTL is not installed",
+    )
 
 
 def pytest_collection_modifyitems(config, items):
     skip_slow = mark.skip(reason="Slow test. Use --runslow to run it.")
     xfail_cuda = mark.xfail(reason=f"Test expected to fail on {DEVICE}")
+
+    # Check if optional dependencies are installed
+    cagrad_installed = all(find_spec(name) is not None for name in ["cvxpy", "clarabel"])
+    nashmtl_installed = all(find_spec(name) is not None for name in ["cvxpy", "ecos"])
+
+    xfail_cagrad = mark.xfail(reason="CAGrad dependencies not installed")
+    xfail_nashmtl = mark.xfail(reason="NashMTL dependencies not installed")
+
     for item in items:
         if "slow" in item.keywords and not config.getoption("--runslow"):
             item.add_marker(skip_slow)
         if "xfail_if_cuda" in item.keywords and str(DEVICE).startswith("cuda"):
             item.add_marker(xfail_cuda)
+        if "xfail_if_cagrad_not_installed" in item.keywords and not cagrad_installed:
+            item.add_marker(xfail_cagrad)
+        if "xfail_if_nashmtl_not_installed" in item.keywords and not nashmtl_installed:
+            item.add_marker(xfail_nashmtl)
 
 
 def pytest_make_parametrize_id(config, val, argname):

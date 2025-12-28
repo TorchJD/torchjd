@@ -10,6 +10,8 @@ from torchjd.aggregation import CAGrad
 from ._asserts import assert_expected_structure, assert_non_conflicting, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices
 
+pytestmark = mark.xfail_if_cagrad_not_installed
+
 scaled_pairs = [(CAGrad(c=0.5), matrix) for matrix in scaled_matrices]
 typical_pairs = [(CAGrad(c=0.5), matrix) for matrix in typical_matrices]
 requires_grad_pairs = [(CAGrad(c=0.5), ones_(3, 5, requires_grad=True))]

@@ -41,7 +41,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   tests-default-install:
-    name: Run (most) tests with default install
+    name: Run tests with default install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -54,8 +54,6 @@ jobs:
           groups: test
 
       - uses: ./.github/actions/run-tests
-        with:
-          ignores: tests/unit/aggregation/test_cagrad.py tests/unit/aggregation/test_nash_mtl.py tests/doc/test_aggregation.py
 
       - *upload-codecov
 
