@@ -11,24 +11,25 @@ env:
 
 jobs:
   tests:
-    name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }})
+    name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, options=[${{ matrix.options || 'full' }}])
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Default configuration
-          - {}
           # Python version variations
           - python-version: '3.10'
           - python-version: '3.11'
           - python-version: '3.12'
           - python-version: '3.13'
+          - python-version: '3.14'
           # OS variations
           - os: macOS-latest
           - os: windows-latest
           # dtype variation
           - dtype: float64
+          # Options variation
+          - options: ''
 
     steps:
       - name: Checkout repository
@@ -40,7 +41,7 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          options: full
+          options: ${{ matrix.options || 'full' }}
           groups: test
 
       - name: Run tests
@@ -53,24 +54,6 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  tests-default-install:
-    name: Run tests with default install
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-uv
-
-      - uses: ./.github/actions/install-deps
-        with:
-          groups: test
-
-      - name: Run tests
-        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
-
-      - *upload-codecov
 
   build-doc:
     name: Build doc
