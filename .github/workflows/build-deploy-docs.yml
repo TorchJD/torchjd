@@ -20,7 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.14'
 
       - uses: ./.github/actions/install-deps
         with:
