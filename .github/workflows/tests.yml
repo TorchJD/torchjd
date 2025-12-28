@@ -35,7 +35,11 @@ jobs:
       - name: Run unit and doc tests with coverage report
         run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
 
-      - uses: ./.github/actions/upload-codecov
+      - &upload-codecov
+        name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   tests-default-install:
     name: Run (most) tests with default install
@@ -58,7 +62,7 @@ jobs:
           --ignore tests/doc/test_aggregation.py \
           --cov=src --cov-report=xml
 
-      - uses: ./.github/actions/upload-codecov
+      - *upload-codecov
 
   tests-float64:
     name: Run tests on float64 dtype
@@ -79,7 +83,7 @@ jobs:
         env:
           PYTEST_TORCH_DTYPE: float64
 
-      - uses: ./.github/actions/upload-codecov
+      - *upload-codecov
 
   build-doc:
     name: Build doc
