@@ -87,22 +87,8 @@ WEIGHTING_PARAMETRIZATIONS = [
 try:
     from torchjd.aggregation import CAGrad, CAGradWeighting
 
-    AGGREGATOR_PARAMETRIZATIONS.append(
-        param(
-            CAGrad(c=0.5),
-            J_base,
-            tensor([0.1835, 1.2041, 1.2041]),
-            marks=mark.xfail_if_cagrad_not_installed,
-        )
-    )
-    WEIGHTING_PARAMETRIZATIONS.append(
-        param(
-            CAGradWeighting(c=0.5),
-            G_base,
-            tensor([0.7041, 0.5000]),
-            marks=mark.xfail_if_cagrad_not_installed,
-        )
-    )
+    AGGREGATOR_PARAMETRIZATIONS.append((CAGrad(c=0.5), J_base, tensor([0.1835, 1.2041, 1.2041])))
+    WEIGHTING_PARAMETRIZATIONS.append((CAGradWeighting(c=0.5), G_base, tensor([0.7041, 0.5000])))
 except ImportError:
     pass
 
@@ -114,10 +100,7 @@ try:
             NashMTL(n_tasks=2),
             J_base,
             tensor([0.0542, 0.7061, 0.7061]),
-            marks=[
-                mark.filterwarnings("ignore::UserWarning"),
-                mark.xfail_if_nashmtl_not_installed,
-            ],
+            marks=mark.filterwarnings("ignore::UserWarning"),
         )
     )
 

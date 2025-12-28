@@ -8,8 +8,6 @@ from torchjd.aggregation import NashMTL
 from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import nash_mtl_matrices
 
-pytestmark = mark.xfail_if_nashmtl_not_installed
-
 
 def _make_aggregator(matrix: Tensor) -> NashMTL:
     return NashMTL(n_tasks=matrix.shape[0])
