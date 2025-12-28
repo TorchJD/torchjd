@@ -10,21 +10,6 @@ env:
   UV_NO_SYNC: 1
   PYTHON_VERSION: 3.14
 
-x-common-steps:
-  - &checkout
-    name: Checkout repository
-    uses: actions/checkout@v4
-  - &setup-uv
-    name: Set up uv
-    uses: astral-sh/setup-uv@v5
-    with:
-      python-version: ${{ env.PYTHON_VERSION }}
-  - &upload-codecov
-    name: Upload results to Codecov
-    uses: codecov/codecov-action@v4
-    with:
-      token: ${{ secrets.CODECOV_TOKEN }}
-
 jobs:
   tests-full-install:
     name: Run tests with full install
@@ -38,13 +23,23 @@ jobs:
       PYTHON_VERSION: ${{ matrix.python-version }}  # Override the PYTHON_VERSION of the global env
 
     steps:
-      - *checkout
-      - *setup-uv
+      - &checkout
+        name: Checkout repository
+        uses: actions/checkout@v4
+      - &setup-uv
+        name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install default (with full options) and test dependencies
         run: uv pip install --python-version=${{ env.PYTHON_VERSION }} -e '.[full]' --group test
       - name: Run unit and doc tests with coverage report
         run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
-      - *upload-codecov
+      - &upload-codecov
+        name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   tests-default-install:
     name: Run (most) tests with default install
