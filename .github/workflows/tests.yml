@@ -12,6 +12,7 @@ env:
 
 x-common-steps:
   - &checkout
+    name: Checkout repository
     uses: actions/checkout@v4
   - &setup-uv
     name: Set up uv
