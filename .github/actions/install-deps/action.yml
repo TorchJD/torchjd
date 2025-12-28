@@ -1,0 +1,38 @@
+name: Install Dependencies
+description: Install package dependencies using uv
+
+inputs:
+  options:
+    description: 'Package options to install (space-separated, e.g., "full")'
+    required: false
+    default: ''
+  groups:
+    description: 'Dependency groups to install (space-separated, e.g., "test doc")'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies (options=[${{ inputs.options }}], groups=[${{ inputs.groups }}])
+      shell: bash
+      run: |
+        # Build the install command
+        cmd="uv pip install -e"
+
+        # Add options if provided
+        if [ -n "${{ inputs.options }}" ]; then
+          # Convert space-separated options to comma-separated for brackets
+          options=$(echo "${{ inputs.options }}" | tr ' ' ',')
+          cmd="$cmd '.[$options]'"
+        else
+          cmd="$cmd ."
+        fi
+
+        # Add groups
+        for group in ${{ inputs.groups }}; do
+          cmd="$cmd --group $group"
+        done
+
+        # Execute the command
+        eval $cmd

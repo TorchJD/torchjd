@@ -8,7 +8,6 @@ on:
 
 env:
   UV_NO_SYNC: 1
-  PYTHON_VERSION: '3.14'
 
 jobs:
   build-deploy-doc:
@@ -18,16 +17,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+      - uses: ./.github/actions/install-deps
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies (default with full options & doc)
-        run: uv pip install -e '.[full]' --group doc
+          options: full
+          groups: doc
 
       - name: Determine deployment folder
         id: deploy_folder

@@ -4,9 +4,6 @@ on:
   release:
     types: [published]
 
-env:
-  PYTHON_VERSION: 3.14
-
 jobs:
   pypi-publish:
     name: Publish to PyPI
@@ -16,13 +13,7 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: ./.github/actions/setup
 
       - name: Build
         run: uv build
