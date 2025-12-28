@@ -32,8 +32,7 @@ jobs:
           options: full
           groups: test
 
-      - name: Run unit and doc tests with coverage report
-        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
+      - uses: ./.github/actions/run-tests
 
       - &upload-codecov
         name: Upload results to Codecov
@@ -54,13 +53,9 @@ jobs:
         with:
           groups: test
 
-      - name: Run unit and doc tests with coverage report
-        run: |
-          uv run pytest -W error tests/unit tests/doc \
-          --ignore tests/unit/aggregation/test_cagrad.py \
-          --ignore tests/unit/aggregation/test_nash_mtl.py \
-          --ignore tests/doc/test_aggregation.py \
-          --cov=src --cov-report=xml
+      - uses: ./.github/actions/run-tests
+        with:
+          ignores: tests/unit/aggregation/test_cagrad.py tests/unit/aggregation/test_nash_mtl.py tests/doc/test_aggregation.py
 
       - *upload-codecov
 
@@ -78,10 +73,9 @@ jobs:
           options: full
           groups: test
 
-      - name: Run unit and doc tests with coverage report
-        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
-        env:
-          PYTEST_TORCH_DTYPE: float64
+      - uses: ./.github/actions/run-tests
+        with:
+          dtype: float64
 
       - *upload-codecov
 

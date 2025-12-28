@@ -1,0 +1,41 @@
+name: Run Tests
+description: Run unit and doc tests with coverage
+
+inputs:
+  ignores:
+    description: 'Space-separated list of test files to ignore'
+    required: false
+    default: ''
+  dtype:
+    description: 'Torch dtype to use for tests'
+    required: false
+    default: 'float32'
+  device:
+    description: 'Torch device to use for tests'
+    required: false
+    default: 'cpu'
+
+runs:
+  using: composite
+  steps:
+    - name: Run unit and doc tests with coverage report
+      shell: bash
+      env:
+        PYTEST_TORCH_DTYPE: ${{ inputs.dtype }}
+        PYTEST_TORCH_DEVICE: ${{ inputs.device }}
+      run: |
+        # Build the pytest command
+        cmd="uv run pytest -W error tests/unit tests/doc"
+
+        # Add ignore flags for each file
+        if [ -n "${{ inputs.ignores }}" ]; then
+          for file in ${{ inputs.ignores }}; do
+            cmd="$cmd --ignore $file"
+          done
+        fi
+
+        # Add coverage options
+        cmd="$cmd --cov=src --cov-report=xml"
+
+        # Execute the command
+        eval $cmd
