@@ -32,7 +32,8 @@ jobs:
           options: full
           groups: test
 
-      - uses: ./.github/actions/run-tests
+      - name: Run tests
+        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
 
       - &upload-codecov
         name: Upload results to Codecov
@@ -41,7 +42,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   tests-default-install:
-    name: Run (most) tests with default install
+    name: Run tests with default install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -53,7 +54,8 @@ jobs:
         with:
           groups: test
 
-      - uses: ./.github/actions/run-tests
+      - name: Run tests
+        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
 
       - *upload-codecov
 
@@ -71,9 +73,10 @@ jobs:
           options: full
           groups: test
 
-      - uses: ./.github/actions/run-tests
-        with:
-          dtype: float64
+      - name: Run tests
+        run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
+        env:
+          PYTEST_TORCH_DTYPE: float64
 
       - *upload-codecov
 
