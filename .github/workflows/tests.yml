@@ -20,7 +20,10 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-      - uses: ./.github/actions/setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-uv
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -38,7 +41,10 @@ jobs:
     name: Run (most) tests with default install
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
@@ -58,7 +64,10 @@ jobs:
     name: Run tests on float64 dtype
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
@@ -76,7 +85,10 @@ jobs:
     name: Build doc
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
@@ -91,7 +103,10 @@ jobs:
     name: Run mypy
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
