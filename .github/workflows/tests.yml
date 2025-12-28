@@ -19,15 +19,17 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         os: [ubuntu-latest, macOS-latest, windows-latest]
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}  # Override the PYTHON_VERSION of the global env
 
     steps:
       - uses: actions/checkout@v4
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install default (with full options) and test dependencies
-        run: uv pip install --python-version=${{ matrix.python-version }} -e '.[full]' --group test
+        run: uv pip install --python-version=${{ env.PYTHON_VERSION }} -e '.[full]' --group test
       - name: Run unit and doc tests with coverage report
         run: uv run pytest -W error tests/unit tests/doc --cov=src --cov-report=xml
       - name: Upload results to Codecov
