@@ -17,6 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Default configuration
+          - {}
           # Python version variations
           - python-version: '3.10'
           - python-version: '3.11'
