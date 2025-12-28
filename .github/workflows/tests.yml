@@ -11,6 +11,8 @@ env:
 
 jobs:
   tests:
+    # Default config: py3.14, ubuntu-latest, float32, full options.
+    # The idea is to make each of those params vary one by one, to limit the number of tests to run.
     name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, options=[${{ matrix.options == 'none' && '' || (matrix.options || 'full') }}])
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
@@ -22,7 +24,7 @@ jobs:
           - python-version: '3.11'
           - python-version: '3.12'
           - python-version: '3.13'
-          - python-version: '3.14'
+          - python-version: '3.14'  # To actually run the default config
           # OS variations
           - os: macOS-latest
           - os: windows-latest
