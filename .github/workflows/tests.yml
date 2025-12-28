@@ -55,7 +55,7 @@ jobs:
 
       - uses: ./.github/actions/run-tests
         with:
-          ignores: tests/unit/aggregation/test_cagrad.py tests/unit/aggregation/test_nash_mtl.py tests/doc/test_aggregation.py
+          ignores: tests/unit/aggregation/test_cagrad.py tests/unit/aggregation/test_nash_mtl.py
 
       - *upload-codecov
 
