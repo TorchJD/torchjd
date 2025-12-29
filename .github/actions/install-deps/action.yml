@@ -3,7 +3,9 @@ description: Install package dependencies using uv
 
 inputs:
   options:
-    description: 'Package options to install (space-separated, e.g., "full"). "none is an alias for empty string.'
+    # We can't directly provide the empty string for no options because it would be mapped to the
+    # default value thanks to github's weird logic (https://github.com/actions/toolkit/issues/940)
+    description: 'Package options to install (space-separated, e.g., "full"). Use "none" for no options.'
     required: false
     default: 'full'
   groups:
@@ -17,7 +19,7 @@ runs:
     - name: Install dependencies (options=[${{ inputs.options }}], groups=[${{ inputs.groups }}])
       shell: bash
       run: |
-        # Handle "none" as alias for empty string
+        # Map "none" to the empty string
         options_input="${{ inputs.options }}"
         if [ "$options_input" = "none" ]; then
           options_input=""
