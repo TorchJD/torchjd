@@ -26,14 +26,10 @@ runs:
         # Build the install command
         cmd="uv pip install -e"
 
-        # Add options if provided
-        if [ -n "$options_input" ]; then
-          # Convert space-separated options to comma-separated for brackets
-          options=$(echo "$options_input" | tr ' ' ',')
-          cmd="$cmd '.[$options]'"
-        else
-          cmd="$cmd ."
-        fi
+        # Convert space-separated options to comma-separated for brackets
+        # E.g. "abc def" => '.[abc,def]'
+        options=$(echo "$options_input" | tr ' ' ',')
+        cmd="$cmd '.[$options]'"
 
         # Add groups
         for group in ${{ inputs.groups }}; do
