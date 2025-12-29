@@ -38,5 +38,6 @@ runs:
           cmd="$cmd --group $group"
         done
 
-        # Execute the command
+        # Print and execute the command
+        echo $cmd
         eval $cmd
