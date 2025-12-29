@@ -3,7 +3,7 @@ description: Install package dependencies using uv
 
 inputs:
   options:
-    description: 'Package options to install (space-separated, e.g., "full"). "none is an alias for empty string.'
+    description: 'Package options to install (space-separated, e.g., "full").'
     required: false
     default: 'full'
   groups:
@@ -17,18 +17,12 @@ runs:
     - name: Install dependencies (options=[${{ inputs.options }}], groups=[${{ inputs.groups }}])
       shell: bash
       run: |
-        # Handle "none" as alias for empty string
-        options_input="${{ inputs.options }}"
-        if [ "$options_input" = "none" ]; then
-          options_input=""
-        fi
-
         # Build the install command
         cmd="uv pip install -e"
 
         # Convert space-separated options to comma-separated for brackets
         # E.g. "abc def" => '.[abc,def]'
-        options=$(echo "$options_input" | tr ' ' ',')
+        options=$(echo "${{ inputs.options }}" | tr ' ' ',')
         cmd="$cmd '.[$options]'"
 
         # Add groups

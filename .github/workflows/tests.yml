@@ -13,7 +13,7 @@ jobs:
   tests:
     # Default config: py3.14, ubuntu-latest, float32, full options.
     # The idea is to make each of those params vary one by one, to limit the number of tests to run.
-    name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, ${{ matrix.options || 'full' }})
+    name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, ${{ matrix.options == null && 'full' || matrix.options }})
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
@@ -31,7 +31,7 @@ jobs:
           # dtype variations
           - dtype: float64
           # Installation options variations
-          - options: 'none'
+          - options: ''
 
     steps:
       - name: Checkout repository
@@ -44,7 +44,7 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          options: ${{ matrix.options || 'full' }}
+          options: ${{ matrix.options == null && 'full' || matrix.options }}
           groups: test
 
       - name: Run tests
