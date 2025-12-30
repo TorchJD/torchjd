@@ -3,7 +3,12 @@ from torch import Tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
-from torchjd.aggregation import NashMTL
+try:
+    from torchjd.aggregation import NashMTL
+except ImportError:
+    import pytest
+
+    pytest.skip("NashMTL dependencies not installed", allow_module_level=True)
 
 from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import nash_mtl_matrices

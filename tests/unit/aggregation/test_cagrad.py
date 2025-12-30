@@ -5,7 +5,12 @@ from torch import Tensor
 from utils.contexts import ExceptionContext
 from utils.tensors import ones_
 
-from torchjd.aggregation import CAGrad
+try:
+    from torchjd.aggregation import CAGrad
+except ImportError:
+    import pytest
+
+    pytest.skip("CAGrad dependencies not installed", allow_module_level=True)
 
 from ._asserts import assert_expected_structure, assert_non_conflicting, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices
