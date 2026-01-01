@@ -4,6 +4,7 @@
 [![Static Badge](https://img.shields.io/badge/%F0%9F%92%AC_ChatBot-chat.torchjd.org-blue?logo=%F0%9F%92%AC)](https://chat.torchjd.org)
 [![Tests](https://github.com/SimplexLab/torchjd/actions/workflows/tests.yml/badge.svg)](https://github.com/SimplexLab/torchjd/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/SimplexLab/torchjd/graph/badge.svg?token=8AUCZE76QH)](https://codecov.io/gh/SimplexLab/torchjd)
+[![mypy](https://img.shields.io/github/actions/workflow/status/SimplexLab/torchjd/tests.yml?label=mypy)](https://github.com/SimplexLab/torchjd/actions/workflows/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SimplexLab/torchjd/main.svg)](https://results.pre-commit.ci/latest/github/SimplexLab/torchjd/main)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/torchjd)](https://pypi.org/project/torchjd/)
 [![Static Badge](https://img.shields.io/badge/Discord%20-%20community%20-%20%235865F2?logo=discord&logoColor=%23FFFFFF&label=Discord)](https://discord.gg/76KkRnb3nk)

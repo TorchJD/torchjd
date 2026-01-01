@@ -1,0 +1,43 @@
+name: Install Dependencies
+description: Install package dependencies using uv
+
+inputs:
+  options:
+    # We can't directly provide the empty string for no options because it would be mapped to the
+    # default value thanks to github's weird logic (https://github.com/actions/toolkit/issues/940)
+    description: 'Package options to install (space-separated, e.g., "full"). Use "none" for no options.'
+    required: false
+    default: 'full'
+  groups:
+    description: 'Dependency groups to install (space-separated, e.g., "test doc")'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies (options=[${{ inputs.options }}], groups=[${{ inputs.groups }}])
+      shell: bash
+      run: |
+        # Map "none" to the empty string
+        options_input="${{ inputs.options }}"
+        if [ "$options_input" = "none" ]; then
+          options_input=""
+        fi
+
+        # Build the install command
+        cmd="uv pip install -e"
+
+        # Convert space-separated options to comma-separated for brackets
+        # E.g. "abc def" => '.[abc,def]'
+        options=$(echo "$options_input" | tr ' ' ',')
+        cmd="$cmd '.[$options]'"
+
+        # Add groups
+        for group in ${{ inputs.groups }}; do
+          cmd="$cmd --group $group"
+        done
+
+        # Print and execute the command
+        echo $cmd
+        eval $cmd
