@@ -10,3 +10,4 @@ autojac
 
     backward.rst
     mtl_backward.rst
+    jac.rst
