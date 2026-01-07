@@ -23,10 +23,11 @@ def jac(
 ) -> tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of all values in ``outputs`` with respect to all ``inputs``. Returns the
-    result as a tuple, with one element per input tensor.
+    result as a tuple, with one Jacobian per input tensor. The returned Jacobian with respect to
+    input `t` have shape `[m] + t.shape`.
 
-    :param outputs: The tensor or tensors to differentiate. Should be non-empty. The Jacobian
-        matrices will have one row for each value of each of these tensors.
+    :param outputs: The tensor or tensors to differentiate. Should be non-empty. The Jacobians will
+        have one row for each value of each of these tensors.
     :param inputs: The tensors with respect to which the Jacobian must be computed. These must have
         their ``requires_grad`` flag set to ``True``. If not provided, defaults to the leaf tensors
         that were used to compute the ``outputs`` parameter.
@@ -37,6 +38,11 @@ def jac(
         parallel at once. If set to ``1``, all coordinates will be differentiated sequentially. A
         larger value results in faster differentiation, but also higher memory usage. Defaults to
         ``None``.
+
+    .. note::
+        The only difference between this function and :func:`torchjd.autojac.backward`, is that it
+        returns the Jacobians as a tuple, while :func:`torchjd.autojac.backward` stores them in the
+        ``.jac`` fields of the inputs.
 
     .. admonition::
         Example
@@ -58,8 +64,41 @@ def jac(
             (tensor([-1., 1.],
                     [ 2., 4.]]),)
 
-        The returned tuple contains a single tensor (because there is a single param), that is the
-        Jacobian of :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
+    .. admonition::
+        Example
+
+        The following example shows how to compute jacobians, combine them into a single Jacobian
+        matrix, and compute its Gramian.
+
+            >>> import torch
+            >>>
+            >>> from torchjd.autojac import jac
+            >>>
+            >>> weight = torch.tensor([[1., 2.], [3., 4.]], requires_grad=True)  # shape: [2, 2]
+            >>> bias = torch.tensor([0.5, -0.5], requires_grad=True)  # shape: [2]
+            >>> # Compute arbitrary quantities that are function of weight and bias
+            >>> input_vec = torch.tensor([1., -1.])
+            >>> y1 = weight @ input_vec + bias  # shape: [2]
+            >>> y2 = (weight ** 2).sum() + (bias ** 2).sum()  # shape: [] (scalar)
+            >>>
+            >>> jacobians = jac([y1, y2], [weight, bias])  # shapes: [3, 2, 2], [3, 2]
+            >>> jacobian_matrices = tuple(J.flatten(1) for J in jacobians)  # shapes: [3, 4], [3, 2]
+            >>> combined_jacobian_matrix = torch.concat(jacobian_matrices, dim=1)  # shape: [3, 6]
+            >>> gramian = combined_jacobian_matrix @ combined_jacobian_matrix.T  # shape: [3, 3]
+            >>> gramian
+            tensor([[  3.,   0.,  -1.],
+                    [  0.,   3.,  -3.],
+                    [ -1.,  -3., 122.]])
+
+        The obtained gramian is a symmetric matrix containing the dot products between all pairs of
+        gradients. It's a strong indicator of gradient norm (the diagonal elements are the squared
+        norms of the gradients) and conflict (a negative off-diagonal value means that the gradients
+        conflict). In fact, most aggregators base their decision entirely on the gramian.
+
+        In this case, we can see that the first two gradients (those of y1) both have a squared norm
+        of 3, while the third gradient (that of y2) has a squared norm of 122. The first two
+        gradients are exactly orthogonal (they have an inner product of 0), but they conflict with
+        the third gradient (inner product of -1 and -3).
 
     .. warning::
         To differentiate in parallel, ``jac`` relies on ``torch.vmap``, which has some
