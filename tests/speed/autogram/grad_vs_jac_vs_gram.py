@@ -107,7 +107,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
     autojac_times = time_call(fn_autojac, init_fn_autojac, pre_fn, post_fn, n_runs)
     print_times("autojac", autojac_times)
 
-    engine = Engine(model, batch_dim=0)
+    engine = Engine(model)
     autogram_times = time_call(fn_autogram, init_fn_autogram, pre_fn, post_fn, n_runs)
     print_times("autogram", autogram_times)
 
