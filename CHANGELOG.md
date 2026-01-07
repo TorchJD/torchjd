@@ -3,8 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
-changes that do not affect the user.
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This
+changelog does not include internal changes that do not affect the user.
 
 ## [Unreleased]
 
@@ -12,7 +12,8 @@ changes that do not affect the user.
 
 ### Added
 
-- Added `__all__` in the `__init__.py` of packages. This should prevent PyLance from triggering warnings when importing from `torchjd`.
+- Added `__all__` in the `__init__.py` of packages. This should prevent PyLance from triggering
+  warnings when importing from `torchjd`.
 
 ## [0.8.0] - 2025-11-13
 
