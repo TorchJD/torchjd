@@ -45,11 +45,12 @@ def test_multiple_accumulation(iterations: int):
     value1 = ones_([])
     value2 = ones_([1])
     value3 = ones_([2, 3])
-    input = {key1: value1, key2: value2, key3: value3}
 
     accumulate = Accumulate()
 
     for i in range(iterations):
+        # Clone values to ensure that we accumulate values that are not ever used afterwards
+        input = {key1: value1.clone(), key2: value2.clone(), key3: value3.clone()}
         accumulate(input)
 
     grads = {key1: key1.grad, key2: key2.grad, key3: key3.grad}

@@ -15,11 +15,16 @@ class Accumulate(Transform):
             if hasattr(key, "grad") and key.grad is not None:
                 key.grad += gradients[key]
             else:
-                # We clone the value because we do not want subsequent accumulations to also affect
-                # this value (in case it is still used outside). We do not detach from the
-                # computation graph because the value can have grad_fn that we want to keep track of
-                # (in case it was obtained via create_graph=True and a differentiable aggregator).
-                key.grad = gradients[key].clone()
+                # We do not clone the value to save memory and time, so subsequent modifications of
+                # the value of key.grad (subsequent accumulations) will also affect the value of
+                # gradients[key] and outside changes to the value of gradients[key] will also affect
+                # the value of key.grad. So to be safe, the values of gradients should not be used
+                # anymore after being passed to this function.
+                #
+                # We do not detach from the computation graph because the value can have grad_fn
+                # that we want to keep track of (in case it was obtained via create_graph=True and a
+                # differentiable aggregator).
+                key.grad = gradients[key]
 
         return {}
 
