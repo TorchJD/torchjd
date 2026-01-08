@@ -42,10 +42,10 @@ def test_amp():
             loss2 = loss_fn(output2, target2)
 
         scaled_losses = scaler.scale([loss1, loss2])
-        optimizer.zero_grad()
         mtl_backward(losses=scaled_losses, features=features, aggregator=aggregator)
         scaler.step(optimizer)
         scaler.update()
+        optimizer.zero_grad()
 
 
 def test_basic_usage():
@@ -69,9 +69,9 @@ def test_basic_usage():
     loss1 = loss_fn(output[:, 0], target1)
     loss2 = loss_fn(output[:, 1], target2)
 
-    optimizer.zero_grad()
     autojac.backward([loss1, loss2], aggregator)
     optimizer.step()
+    optimizer.zero_grad()
 
 
 def test_iwmtl():
@@ -114,10 +114,10 @@ def test_iwmtl():
         # Obtain the weights that lead to no conflict between reweighted gradients
         weights = weighting(gramian)  # shape: [16, 2]
 
-        optimizer.zero_grad()
         # Do the standard backward pass, but weighted using the obtained weights
         losses.backward(weights)
         optimizer.step()
+        optimizer.zero_grad()
 
 
 def test_iwrm():
@@ -138,9 +138,9 @@ def test_iwrm():
         for x, y in zip(X, Y):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             loss = loss_fn(y_hat, y)  # shape: [] (scalar)
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            optimizer.zero_grad()
 
     def test_autojac():
         import torch
@@ -163,9 +163,9 @@ def test_iwrm():
         for x, y in zip(X, Y):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             losses = loss_fn(y_hat, y)  # shape: [16]
-            optimizer.zero_grad()
             backward(losses, aggregator)
             optimizer.step()
+            optimizer.zero_grad()
 
     def test_autogram():
         import torch
@@ -189,11 +189,11 @@ def test_iwrm():
         for x, y in zip(X, Y):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             losses = loss_fn(y_hat, y)  # shape: [16]
-            optimizer.zero_grad()
             gramian = engine.compute_gramian(losses)  # shape: [16, 16]
             weights = weighting(gramian)  # shape: [16]
             losses.backward(weights)
             optimizer.step()
+            optimizer.zero_grad()
 
     test_autograd()
     test_autojac()
@@ -240,9 +240,9 @@ def test_lightning_integration():
             loss2 = mse_loss(output2, target2)
 
             opt = self.optimizers()
-            opt.zero_grad()
             mtl_backward(losses=[loss1, loss2], features=features, aggregator=UPGrad())
             opt.step()
+            opt.zero_grad()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:
             optimizer = Adam(self.parameters(), lr=1e-3)
@@ -314,9 +314,9 @@ def test_monitoring():
         loss1 = loss_fn(output1, target1)
         loss2 = loss_fn(output2, target2)
 
-        optimizer.zero_grad()
         mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
         optimizer.step()
+        optimizer.zero_grad()
 
 
 def test_mtl():
@@ -351,9 +351,9 @@ def test_mtl():
         loss1 = loss_fn(output1, target1)
         loss2 = loss_fn(output2, target2)
 
-        optimizer.zero_grad()
         mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
         optimizer.step()
+        optimizer.zero_grad()
 
 
 def test_partial_jd():
@@ -382,11 +382,11 @@ def test_partial_jd():
     for x, y in zip(X, Y):
         y_hat = model(x).squeeze(dim=1)  # shape: [16]
         losses = loss_fn(y_hat, y)  # shape: [16]
-        optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)
         weights = weighting(gramian)
         losses.backward(weights)
         optimizer.step()
+        optimizer.zero_grad()
 
 
 def test_rnn():
@@ -408,6 +408,6 @@ def test_rnn():
         output, _ = rnn(input)  # output is of shape [5, 3, 20].
         losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
 
-        optimizer.zero_grad()
         backward(losses, aggregator, parallel_chunk_size=1)
         optimizer.step()
+        optimizer.zero_grad()

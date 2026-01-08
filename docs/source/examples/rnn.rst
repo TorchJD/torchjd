@@ -6,7 +6,7 @@ element of the output sequences. If the gradients of these losses are likely to 
 descent can be leveraged to enhance optimization.
 
 .. code-block:: python
-    :emphasize-lines: 5-6, 10, 17, 20
+    :emphasize-lines: 5-6, 10, 17, 19
 
     import torch
     from torch.nn import RNN
@@ -26,9 +26,9 @@ descent can be leveraged to enhance optimization.
         output, _ = rnn(input)  # output is of shape [5, 3, 20].
         losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
 
-        optimizer.zero_grad()
         backward(losses, aggregator, parallel_chunk_size=1)
         optimizer.step()
+        optimizer.zero_grad()
 
 .. note::
     At the time of writing, there seems to be an incompatibility between ``torch.vmap`` and

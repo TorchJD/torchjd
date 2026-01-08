@@ -59,12 +59,6 @@ We can now compute the losses associated to each element of the batch.
 
 The last steps are similar to gradient descent-based optimization, but using the two losses.
 
-Reset the ``.grad`` field of each model parameter:
-
-.. code-block:: python
-
-    optimizer.zero_grad()
-
 Perform the Jacobian descent backward pass:
 
 .. code-block:: python
@@ -81,3 +75,9 @@ Update each parameter based on its ``.grad`` field, using the ``optimizer``:
     optimizer.step()
 
 The model's parameters have been updated!
+
+As usual, you should now reset the ``.grad`` field of each model parameter:
+
+.. code-block:: python
+
+    optimizer.zero_grad()
