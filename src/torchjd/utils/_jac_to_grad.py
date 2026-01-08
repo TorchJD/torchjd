@@ -37,7 +37,8 @@ def jac_to_grad(
 
     jacobians = [p.jac for p in params_]
 
-    # TODO: check that the Jacobian shapes match
+    if not all([jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]]):
+        raise ValueError("All Jacobians should have the same number of rows.")
 
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
