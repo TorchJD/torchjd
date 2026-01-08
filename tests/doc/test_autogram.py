@@ -26,8 +26,8 @@ def test_engine():
         output = model(input).squeeze(dim=1)  # shape: [16]
         losses = criterion(output, target)  # shape: [16]
 
-        optimizer.zero_grad()
         gramian = engine.compute_gramian(losses)  # shape: [16, 16]
         weights = weighting(gramian)  # shape: [16]
         losses.backward(weights)
         optimizer.step()
+        optimizer.zero_grad()
