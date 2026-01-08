@@ -9,6 +9,9 @@ class AccumulateGrad(Transform):
     """
     Transform from Gradients to {} that accumulates gradients with respect to keys into their
     ``grad`` field.
+
+    The Gradients are not cloned and may be modified in-place by subsequent accumulations, so they
+    should not be used elsewhere.
     """
 
     def __call__(self, gradients: TensorDict) -> TensorDict:
@@ -23,6 +26,9 @@ class AccumulateJac(Transform):
     """
     Transform from Jacobians to {} that accumulates jacobians with respect to keys into their
     ``jac`` field.
+
+    The Jacobians are not cloned and may be modified in-place by subsequent accumulations, so they
+    should not be used elsewhere.
     """
 
     def __call__(self, jacobians: TensorDict) -> TensorDict:
