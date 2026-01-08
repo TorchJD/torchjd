@@ -9,6 +9,15 @@ from torchjd.utils._tensor_with_jac import TensorWithJac
 def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
         _check_expects_grad(param)
+        # We that the shape is correct to be consistent with torch, that checks that the grad
+        # shape is correct before assigning it.
+        if jac.shape[1:] != param.shape:
+            raise RuntimeError(
+                f"attempting to assign a jacobian of size '{list(jac.shape)}' to a tensor of "
+                f"size '{list(param.shape)}'. Please ensure that the tensor and each row of the"
+                " jacobian are the same size"
+            )
+
         if hasattr(param, "jac"):  # No check for None because jac cannot be None
             param_ = cast(TensorWithJac, param)
             param_.jac += jac
@@ -22,17 +31,6 @@ def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> N
             # We do not detach from the computation graph because the value can have grad_fn
             # that we want to keep track of (in case it was obtained via create_graph=True and a
             # differentiable aggregator).
-            #
-            # We also check that the shape is correct to be consistent with torch, that checks that
-            # the grad shape is correct before assigning it.
-
-            if jac.shape[1:] != param.shape:
-                raise RuntimeError(
-                    f"attempting to assign a jacobian of size '{list(jac.shape)}' to a tensor of "
-                    f"size '{list(param.shape)}'. Please ensure that the tensor and each row of the"
-                    " jacobian are the same size"
-                )
-
             param.__setattr__("jac", jac)
 
 
