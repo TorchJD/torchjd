@@ -15,7 +15,7 @@ Jacobian descent is doing something different than gradient descent. With
 they have a negative inner product).
 
 .. code-block:: python
-    :emphasize-lines: 9-11, 13-18, 33-34
+    :emphasize-lines: 10-12, 14-19, 34-35
 
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -24,6 +24,7 @@ they have a negative inner product).
 
     from torchjd.aggregation import UPGrad
     from torchjd.autojac import mtl_backward
+    from torchjd.utils import jac_to_grad
 
     def print_weights(_, __, weights: torch.Tensor) -> None:
         """Prints the extracted weights."""
@@ -63,6 +64,7 @@ they have a negative inner product).
         loss1 = loss_fn(output1, target1)
         loss2 = loss_fn(output2, target2)
 
-        optimizer.zero_grad()
-        mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
+        mtl_backward(losses=[loss1, loss2], features=features)
+        jac_to_grad(shared_module.parameters(), aggregator)
         optimizer.step()
+        optimizer.zero_grad()

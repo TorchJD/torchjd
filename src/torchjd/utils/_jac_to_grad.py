@@ -1,0 +1,75 @@
+from collections.abc import Iterable
+
+import torch
+from torch import Tensor
+
+from torchjd.aggregation import Aggregator
+from torchjd.utils._accumulation import _accumulate_grads
+
+
+def jac_to_grad(
+    params: Iterable[Tensor], aggregator: Aggregator, retain_jacs: bool = False
+) -> None:
+    """
+    Aggregates the Jacobians stored in the ``.jac`` fields of ``params`` and accumulates the result
+    into their ``.grad`` fields.
+
+    :param params: The parameters whose ``.jac`` fields should be aggregated. All Jacobians must
+        have the same first dimension (number of outputs).
+    :param aggregator: The aggregator used to reduce the Jacobians into gradients.
+    :param retain_jacs: Whether to preserve the ``.jac`` fields of the parameters.
+    """
+
+    params_ = list(params)
+
+    if len(params_) == 0:
+        return
+
+    if not all([hasattr(p, "jac") and p.jac is not None for p in params_]):
+        raise ValueError(
+            "Some `jac` fields were not populated. Did you use `autojac.backward` before calling "
+            "`jac_to_grad`?"
+        )
+
+    jacobians = [p.jac for p in params_]
+
+    # TODO: check that the Jacobian shapes match
+
+    jacobian_matrix = _unite_jacobians(jacobians)
+    gradient_vector = aggregator(jacobian_matrix)
+    gradients = _disunite_gradient(gradient_vector, jacobians, params_)
+    _accumulate_grads(params_, gradients)
+
+    if not retain_jacs:
+        _free_jacs(params_)
+
+
+def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
+    jacobian_matrices = [jacobian.reshape(jacobian.shape[0], -1) for jacobian in jacobians]
+    jacobian_matrix = torch.concat(jacobian_matrices, dim=1)
+    return jacobian_matrix
+
+
+def _disunite_gradient(
+    gradient_vector: Tensor, jacobians: list[Tensor], params: list[Tensor]
+) -> list[Tensor]:
+    gradient_vectors = []
+    start = 0
+    for jacobian in jacobians:
+        end = start + jacobian[0].numel()
+        current_gradient_vector = gradient_vector[start:end]
+        gradient_vectors.append(current_gradient_vector)
+        start = end
+    gradients = [g.view(param.shape) for param, g in zip(params, gradient_vectors, strict=True)]
+    return gradients
+
+
+def _free_jacs(params: Iterable[Tensor]) -> None:
+    """
+    Clears the ``.jac`` fields of the provided parameters by setting them to ``None``.
+
+    :param params: The parameters whose ``.jac`` fields should be cleared.
+    """
+
+    for p in params:
+        p.jac = None
