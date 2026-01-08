@@ -1,10 +1,12 @@
 from collections.abc import Iterable
+from typing import cast
 
 import torch
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 from torchjd.utils._accumulation import _accumulate_grads
+from torchjd.utils._tensor_with_jac import TensorWithJac
 
 
 def jac_to_grad(
@@ -20,16 +22,18 @@ def jac_to_grad(
     :param retain_jacs: Whether to preserve the ``.jac`` fields of the parameters.
     """
 
-    params_ = list(params)
+    params_ = list[TensorWithJac]()
+    for p in params:
+        if not hasattr(p, "jac"):
+            raise ValueError(
+                "Some `jac` fields were not populated. Did you use `autojac.backward` before"
+                "calling `jac_to_grad`?"
+            )
+        p_ = cast(TensorWithJac, p)
+        params_.append(p_)
 
     if len(params_) == 0:
         return
-
-    if not all([hasattr(p, "jac") and p.jac is not None for p in params_]):
-        raise ValueError(
-            "Some `jac` fields were not populated. Did you use `autojac.backward` before calling "
-            "`jac_to_grad`?"
-        )
 
     jacobians = [p.jac for p in params_]
 
@@ -51,7 +55,7 @@ def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
 
 
 def _disunite_gradient(
-    gradient_vector: Tensor, jacobians: list[Tensor], params: list[Tensor]
+    gradient_vector: Tensor, jacobians: list[Tensor], params: list[TensorWithJac]
 ) -> list[Tensor]:
     gradient_vectors = []
     start = 0
@@ -64,7 +68,7 @@ def _disunite_gradient(
     return gradients
 
 
-def _free_jacs(params: Iterable[Tensor]) -> None:
+def _free_jacs(params: Iterable[TensorWithJac]) -> None:
     """
     Deletes the ``.jac`` field of the provided parameters.
 

@@ -1,20 +1,24 @@
 from collections.abc import Iterable
+from typing import cast
 
 from torch import Tensor
+
+from torchjd.utils._tensor_with_jac import TensorWithJac
 
 
 def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
         _check_expects_grad(param)
-        if hasattr(param, "jac"):
-            param.jac += jac
+        if hasattr(param, "jac"):  # No check for None because jac cannot be None
+            param_ = cast(TensorWithJac, param)
+            param_.jac += jac
         else:
             # TODO: this could be a serious memory issue
             # We clone the value because we do not want subsequent accumulations to also affect
             # this value (in case it is still used outside). We do not detach from the
             # computation graph because the value can have grad_fn that we want to keep track of
             # (in case it was obtained via create_graph=True and a differentiable aggregator).
-            param.jac = jac.clone()
+            param.__setattr__("jac", jac.clone())
 
 
 def _accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> None:
