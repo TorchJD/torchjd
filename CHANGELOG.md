@@ -10,6 +10,31 @@ changelog does not include internal changes that do not affect the user.
 
 ### Changed
 
+- **BREAKING**: Removed from `backward` and `mtl_backward` the responsibility to aggregate the
+  Jacobian. Now, these functions compute and populate the `.jac` fields of the parameters, and a new
+  function `torchjd.utils.jac_to_grad` should then be called to aggregate those `.jac` fields into
+  `.grad` fields.
+  This means that users now have more control on what they do with the Jacobians (they can easily
+  aggregate them group by group or even param by param if they want), but it now requires an extra
+  line of code to do the Jacobian descent step. To update, please change:
+  ```python
+  backward(losses, aggregator)
+  ```
+  to
+  ```python
+  backward(losses)
+  jac_to_grad(model.parameters(), aggregator)
+  ```
+  and
+  ```python
+  mtl_backward(losses, features, aggregator)
+  ```
+  to
+  ```python
+  mtl_backward(losses, features)
+  jac_to_grad(shared_module.parameters(), aggregator)
+  ```
+
 - Removed an unnecessary internal cloning of gradient. This should slightly improve the memory
   efficiency of `autojac`.
 
