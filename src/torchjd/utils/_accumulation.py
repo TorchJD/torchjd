@@ -6,7 +6,7 @@ from torch import Tensor
 def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
         _check_expects_grad(param)
-        if hasattr(param, "jac") and param.jac is not None:
+        if hasattr(param, "jac"):
             param.jac += jac
         else:
             # TODO: this could be a serious memory issue

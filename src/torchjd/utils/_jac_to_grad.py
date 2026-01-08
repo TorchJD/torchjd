@@ -66,10 +66,10 @@ def _disunite_gradient(
 
 def _free_jacs(params: Iterable[Tensor]) -> None:
     """
-    Clears the ``.jac`` fields of the provided parameters by setting them to ``None``.
+    Deletes the ``.jac`` field of the provided parameters.
 
     :param params: The parameters whose ``.jac`` fields should be cleared.
     """
 
     for p in params:
-        p.jac = None
+        del p.jac
