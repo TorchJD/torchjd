@@ -54,6 +54,7 @@ following example shows the resulting code for a multi-task learning use-case.
         scaler.step(optimizer)
         scaler.update()
         optimizer.zero_grad()
+        optimizer.zero_grad()
 
 .. hint::
     Within the ``torch.autocast`` context, some operations may be done in ``float16`` type. For

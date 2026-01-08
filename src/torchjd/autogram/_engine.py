@@ -77,7 +77,7 @@ class Engine:
         Train a model using Gramian-based Jacobian descent.
 
         .. code-block:: python
-            :emphasize-lines: 5-6, 15-16, 18-19, 26-28
+            :emphasize-lines: 5-6, 15-16, 18-19, 26-29
 
             import torch
             from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -103,11 +103,11 @@ class Engine:
                 output = model(input).squeeze(dim=1)  # shape: [16]
                 losses = criterion(output, target)  # shape: [16]
 
-                optimizer.zero_grad()
                 gramian = engine.compute_gramian(losses)  # shape: [16, 16]
                 weights = weighting(gramian)  # shape: [16]
                 losses.backward(weights)
                 optimizer.step()
+                optimizer.zero_grad()
 
         This is equivalent to just calling ``torchjd.autojac.backward(losses, UPGrad())``. However,
         since the Jacobian never has to be entirely in memory, it is often much more
