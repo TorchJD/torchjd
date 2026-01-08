@@ -8,6 +8,11 @@ changelog does not include internal changes that do not affect the user.
 
 ## [Unreleased]
 
+### Changed
+
+- Removed an unnecessary internal cloning of gradient. This should slightly improve the memory
+  efficiency of `autojac`.
+
 ## [0.8.1] - 2026-01-07
 
 ### Added
