@@ -13,12 +13,16 @@ def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> N
             param_ = cast(TensorWithJac, param)
             param_.jac += jac
         else:
-            # TODO: this could be a serious memory issue
-            # We clone the value because we do not want subsequent accumulations to also affect
-            # this value (in case it is still used outside). We do not detach from the
-            # computation graph because the value can have grad_fn that we want to keep track of
-            # (in case it was obtained via create_graph=True and a differentiable aggregator).
-            param.__setattr__("jac", jac.clone())
+            # We do not clone the value to save memory and time, so subsequent modifications of
+            # the value of key.grad (subsequent accumulations) will also affect the value of
+            # gradients[key] and outside changes to the value of gradients[key] will also affect
+            # the value of key.grad. So to be safe, the values of gradients should not be used
+            # anymore after being passed to this function.
+            #
+            # We do not detach from the computation graph because the value can have grad_fn
+            # that we want to keep track of (in case it was obtained via create_graph=True and a
+            # differentiable aggregator).
+            param.__setattr__("jac", jac)
 
 
 def _accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> None:
@@ -27,7 +31,7 @@ def _accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> 
         if hasattr(param, "grad") and param.grad is not None:
             param.grad += grad
         else:
-            param.grad = grad.clone()
+            param.grad = grad
 
 
 def _check_expects_grad(tensor: Tensor) -> None:
