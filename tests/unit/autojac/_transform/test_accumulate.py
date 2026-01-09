@@ -2,12 +2,12 @@ from pytest import mark, raises
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import ones_, tensor_, zeros_
 
-from torchjd.autojac._transform import Accumulate
+from torchjd.autojac._transform import AccumulateGrad
 
 
 def test_single_accumulation():
     """
-    Tests that the Accumulate transform correctly accumulates gradients in .grad fields when run
+    Tests that the AccumulateGrad transform correctly accumulates gradients in .grad fields when run
     once.
     """
 
@@ -19,7 +19,7 @@ def test_single_accumulation():
     value3 = ones_([2, 3])
     input = {key1: value1, key2: value2, key3: value3}
 
-    accumulate = Accumulate()
+    accumulate = AccumulateGrad()
 
     output = accumulate(input)
     expected_output = {}
@@ -35,7 +35,7 @@ def test_single_accumulation():
 @mark.parametrize("iterations", [1, 2, 4, 10, 13])
 def test_multiple_accumulation(iterations: int):
     """
-    Tests that the Accumulate transform correctly accumulates gradients in .grad fields when run
+    Tests that the AccumulateGrad transform correctly accumulates gradients in .grad fields when run
     `iterations` times.
     """
 
@@ -46,7 +46,7 @@ def test_multiple_accumulation(iterations: int):
     value2 = ones_([1])
     value3 = ones_([2, 3])
 
-    accumulate = Accumulate()
+    accumulate = AccumulateGrad()
 
     for i in range(iterations):
         # Clone values to ensure that we accumulate values that are not ever used afterwards
@@ -65,7 +65,7 @@ def test_multiple_accumulation(iterations: int):
 
 def test_no_requires_grad_fails():
     """
-    Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
+    Tests that the AccumulateGrad transform raises an error when it tries to populate a .grad of a
     tensor that does not require grad.
     """
 
@@ -73,7 +73,7 @@ def test_no_requires_grad_fails():
     value = ones_([1])
     input = {key: value}
 
-    accumulate = Accumulate()
+    accumulate = AccumulateGrad()
 
     with raises(ValueError):
         accumulate(input)
@@ -81,7 +81,7 @@ def test_no_requires_grad_fails():
 
 def test_no_leaf_and_no_retains_grad_fails():
     """
-    Tests that the Accumulate transform raises an error when it tries to populate a .grad of a
+    Tests that the AccumulateGrad transform raises an error when it tries to populate a .grad of a
     tensor that is not a leaf and that does not retain grad.
     """
 
@@ -89,7 +89,7 @@ def test_no_leaf_and_no_retains_grad_fails():
     value = ones_([1])
     input = {key: value}
 
-    accumulate = Accumulate()
+    accumulate = AccumulateGrad()
 
     with raises(ValueError):
         accumulate(input)
@@ -99,7 +99,7 @@ def test_check_keys():
     """Tests that the `check_keys` method works correctly."""
 
     key = tensor_([1.0], requires_grad=True)
-    accumulate = Accumulate()
+    accumulate = AccumulateGrad()
 
     output_keys = accumulate.check_keys({key})
     assert output_keys == set()

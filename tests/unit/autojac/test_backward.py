@@ -1,13 +1,12 @@
 import torch
 from pytest import mark, raises
-from torch.autograd import grad
-from torch.testing import assert_close
 from utils.tensors import randn_, tensor_
 
-from torchjd.aggregation import MGDA, Aggregator, Mean, Random, Sum, UPGrad
 from torchjd.autojac import backward
 from torchjd.autojac._backward import _create_transform
 from torchjd.autojac._transform import OrderedSet
+
+from ._asserts import assert_has_jac, assert_has_no_jac, assert_jac_close
 
 
 def test_check_create_transform():
@@ -21,7 +20,6 @@ def test_check_create_transform():
 
     transform = _create_transform(
         tensors=OrderedSet([y1, y2]),
-        aggregator=Mean(),
         inputs=OrderedSet([a1, a2]),
         retain_graph=False,
         parallel_chunk_size=None,
@@ -31,8 +29,7 @@ def test_check_create_transform():
     assert output_keys == set()
 
 
-@mark.parametrize("aggregator", [Mean(), UPGrad(), MGDA(), Random()])
-def test_various_aggregators(aggregator: Aggregator):
+def test_shape_is_correct():
     """Tests that backward works for various aggregators."""
 
     a1 = tensor_([1.0, 2.0], requires_grad=True)
@@ -41,24 +38,22 @@ def test_various_aggregators(aggregator: Aggregator):
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator)
+    backward([y1, y2])
 
     for a in [a1, a2]:
-        assert (a.grad is not None) and (a.shape == a.grad.shape)
+        assert_has_jac(a)
 
 
-@mark.parametrize("aggregator", [Mean(), UPGrad()])
 @mark.parametrize("shape", [(1, 3), (2, 3), (2, 6), (5, 8), (20, 55)])
 @mark.parametrize("manually_specify_inputs", [True, False])
 @mark.parametrize("chunk_size", [1, 2, None])
 def test_value_is_correct(
-    aggregator: Aggregator,
     shape: tuple[int, int],
     manually_specify_inputs: bool,
     chunk_size: int | None,
 ):
     """
-    Tests that the .grad value filled by backward is correct in a simple example of matrix-vector
+    Tests that the .jac value filled by backward is correct in a simple example of matrix-vector
     product.
     """
 
@@ -73,16 +68,15 @@ def test_value_is_correct(
 
     backward(
         [output],
-        aggregator,
         inputs=inputs,
         parallel_chunk_size=chunk_size,
     )
 
-    assert_close(input.grad, aggregator(J))
+    assert_jac_close(input, J)
 
 
 def test_empty_inputs():
-    """Tests that backward does not fill the .grad values if no input is specified."""
+    """Tests that backward does not fill the .jac values if no input is specified."""
 
     a1 = tensor_([1.0, 2.0], requires_grad=True)
     a2 = tensor_([3.0, 4.0], requires_grad=True)
@@ -90,15 +84,15 @@ def test_empty_inputs():
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], Mean(), inputs=[])
+    backward([y1, y2], inputs=[])
 
     for a in [a1, a2]:
-        assert a.grad is None
+        assert_has_no_jac(a)
 
 
 def test_partial_inputs():
     """
-    Tests that backward fills the right .grad values when only a subset of the actual inputs are
+    Tests that backward fills the right .jac values when only a subset of the actual inputs are
     specified as inputs.
     """
 
@@ -108,10 +102,10 @@ def test_partial_inputs():
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], Mean(), inputs=[a1])
+    backward([y1, y2], inputs=[a1])
 
-    assert (a1.grad is not None) and (a1.shape == a1.grad.shape)
-    assert a2.grad is None
+    assert_has_jac(a1)
+    assert_has_no_jac(a2)
 
 
 def test_empty_tensors_fails():
@@ -121,7 +115,7 @@ def test_empty_tensors_fails():
     a2 = tensor_([3.0, 4.0], requires_grad=True)
 
     with raises(ValueError):
-        backward([], UPGrad(), inputs=[a1, a2])
+        backward([], inputs=[a1, a2])
 
 
 def test_multiple_tensors():
@@ -130,8 +124,6 @@ def test_multiple_tensors():
     containing the all the values of the original tensors.
     """
 
-    aggregator = UPGrad()
-
     a1 = tensor_([1.0, 2.0], requires_grad=True)
     a2 = tensor_([3.0, 4.0], requires_grad=True)
     inputs = [a1, a2]
@@ -139,16 +131,17 @@ def test_multiple_tensors():
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], aggregator, retain_graph=True)
+    # TODO: improve that
+    backward([y1, y2], retain_graph=True)
 
-    input_to_grad = {a: a.grad for a in inputs}
+    input_to_jac = {a: a.jac for a in inputs}
     for a in inputs:
-        a.grad = None
+        del a.jac
 
-    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]), aggregator)
+    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]))
 
     for a in inputs:
-        assert (a.grad == input_to_grad[a]).all()
+        assert_jac_close(a, input_to_jac[a])
 
 
 @mark.parametrize("chunk_size", [None, 1, 2, 4])
@@ -161,10 +154,10 @@ def test_various_valid_chunk_sizes(chunk_size):
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
+    backward([y1, y2], parallel_chunk_size=chunk_size)
 
     for a in [a1, a2]:
-        assert (a.grad is not None) and (a.shape == a.grad.shape)
+        assert_has_jac(a)
 
 
 @mark.parametrize("chunk_size", [0, -1])
@@ -178,7 +171,7 @@ def test_non_positive_chunk_size_fails(chunk_size: int):
     y2 = (a1**2).sum() + a2.norm()
 
     with raises(ValueError):
-        backward([y1, y2], UPGrad(), parallel_chunk_size=chunk_size)
+        backward([y1, y2], parallel_chunk_size=chunk_size)
 
 
 def test_input_retaining_grad_fails():
@@ -192,8 +185,13 @@ def test_input_retaining_grad_fails():
     b.retain_grad()
     y = 3 * b
 
+    # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
+    # (and it also fills b.jac with the correct Jacobian)
+    backward(tensors=y, inputs=[b])
+
     with raises(RuntimeError):
-        backward(tensors=y, aggregator=UPGrad(), inputs=[b])
+        # Using such a BatchedTensor should result in an error
+        _ = -b.grad
 
 
 def test_non_input_retaining_grad_fails():
@@ -208,7 +206,7 @@ def test_non_input_retaining_grad_fails():
     y = 3 * b
 
     # backward itself doesn't raise the error, but it fills b.grad with a BatchedTensor
-    backward(tensors=y, aggregator=UPGrad(), inputs=[a])
+    backward(tensors=y, inputs=[a])
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
@@ -227,18 +225,12 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
     c = a * b
     d = a * c
     e = a * d
-    aggregator = UPGrad()
 
-    backward([d, e], aggregator=aggregator, parallel_chunk_size=chunk_size)
+    backward([d, e], parallel_chunk_size=chunk_size)
 
-    expected_jacobian = tensor_(
-        [
-            [2.0 * 3.0 * (a**2).item()],
-            [2.0 * 4.0 * (a**3).item()],
-        ],
-    )
+    expected_jacobian = tensor_([2.0 * 3.0 * (a**2).item(), 2.0 * 4.0 * (a**3).item()])
 
-    assert_close(a.grad, aggregator(expected_jacobian).squeeze())
+    assert_jac_close(a, expected_jacobian)
 
 
 def test_repeated_tensors():
@@ -257,7 +249,7 @@ def test_repeated_tensors():
     y2 = (a1**2).sum() + (a2**2).sum()
 
     with raises(ValueError):
-        backward([y1, y1, y2], Sum())
+        backward([y1, y1, y2])
 
 
 def test_repeated_inputs():
@@ -273,10 +265,10 @@ def test_repeated_inputs():
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + (a2**2).sum()
 
-    expected_grad_wrt_a1 = grad([y1, y2], a1, retain_graph=True)[0]
-    expected_grad_wrt_a2 = grad([y1, y2], a2, retain_graph=True)[0]
+    J1 = tensor_([[-1.0, 1.0], [2.0, 4.0]])
+    J2 = tensor_([[1.0, 1.0], [6.0, 8.0]])
 
-    backward([y1, y2], Sum(), inputs=[a1, a1, a2])
+    backward([y1, y2], inputs=[a1, a1, a2])
 
-    assert_close(a1.grad, expected_grad_wrt_a1)
-    assert_close(a2.grad, expected_grad_wrt_a2)
+    assert_jac_close(a1, J1)
+    assert_jac_close(a2, J2)
