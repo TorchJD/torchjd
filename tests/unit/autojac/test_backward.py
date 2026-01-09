@@ -121,27 +121,35 @@ def test_empty_tensors_fails():
 def test_multiple_tensors():
     """
     Tests that giving multiple tensors to backward is equivalent to giving a single tensor
-    containing the all the values of the original tensors.
+    containing all the values of the original tensors.
     """
 
+    J1 = tensor_([[-1.0, 1.0], [2.0, 4.0]])
+    J2 = tensor_([[1.0, 1.0], [0.6, 0.8]])
+
+    # First computation graph: multiple tensors
     a1 = tensor_([1.0, 2.0], requires_grad=True)
     a2 = tensor_([3.0, 4.0], requires_grad=True)
-    inputs = [a1, a2]
 
     y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
     y2 = (a1**2).sum() + a2.norm()
 
-    # TODO: improve that
-    backward([y1, y2], retain_graph=True)
+    backward([y1, y2])
 
-    input_to_jac = {a: a.jac for a in inputs}
-    for a in inputs:
-        del a.jac
+    assert_jac_close(a1, J1)
+    assert_jac_close(a2, J2)
 
-    backward(torch.cat([y1.reshape(-1), y2.reshape(-1)]))
+    # Second computation graph: single concatenated tensor
+    b1 = tensor_([1.0, 2.0], requires_grad=True)
+    b2 = tensor_([3.0, 4.0], requires_grad=True)
 
-    for a in inputs:
-        assert_jac_close(a, input_to_jac[a])
+    z1 = tensor_([-1.0, 1.0]) @ b1 + b2.sum()
+    z2 = (b1**2).sum() + b2.norm()
+
+    backward(torch.cat([z1.reshape(-1), z2.reshape(-1)]))
+
+    assert_jac_close(b1, J1)
+    assert_jac_close(b2, J2)
 
 
 @mark.parametrize("chunk_size", [None, 1, 2, 4])
