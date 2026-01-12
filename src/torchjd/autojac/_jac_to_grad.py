@@ -9,9 +9,7 @@ from torchjd.aggregation import Aggregator
 from ._accumulation import TensorWithJac, accumulate_grads
 
 
-def jac_to_grad(
-    params: Iterable[Tensor], aggregator: Aggregator, retain_jacs: bool = False
-) -> None:
+def jac_to_grad(params: Iterable[Tensor], aggregator: Aggregator, retain_jac: bool = False) -> None:
     """
     Aggregates the Jacobians stored in the ``.jac`` fields of ``params`` and accumulates the result
     into their ``.grad`` fields.
@@ -19,7 +17,7 @@ def jac_to_grad(
     :param params: The parameters whose ``.jac`` fields should be aggregated. All Jacobians must
         have the same first dimension (number of outputs).
     :param aggregator: The aggregator used to reduce the Jacobians into gradients.
-    :param retain_jacs: Whether to preserve the ``.jac`` fields of the parameters.
+    :param retain_jac: Whether to preserve the ``.jac`` fields of the parameters.
     """
 
     params_ = list[TensorWithJac]()
@@ -45,7 +43,7 @@ def jac_to_grad(
     gradients = _disunite_gradient(gradient_vector, jacobians, params_)
     accumulate_grads(params_, gradients)
 
-    if not retain_jacs:
+    if not retain_jac:
         _free_jacs(params_)
 
 
