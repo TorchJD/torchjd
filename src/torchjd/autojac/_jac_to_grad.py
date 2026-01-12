@@ -12,7 +12,7 @@ from ._accumulation import TensorWithJac, accumulate_grads
 def jac_to_grad(
     tensors: Iterable[Tensor], aggregator: Aggregator, retain_jac: bool = False
 ) -> None:
-    """
+    r"""
     Aggregates the Jacobians stored in the ``.jac`` fields of ``tensors`` and accumulates the result
     into their ``.grad`` fields.
 
@@ -20,6 +20,29 @@ def jac_to_grad(
         have the same first dimension (number of outputs).
     :param aggregator: The aggregator used to reduce the Jacobians into gradients.
     :param retain_jac: Whether to preserve the ``.jac`` fields of the tensors.
+
+    .. admonition::
+        Example
+
+        This example shows how to use ``jac_to_grad`` after a call to ``backward``
+
+            >>> import torch
+            >>>
+            >>> from torchjd.autojac import backward, jac_to_grad
+            >>> from torchjd.aggregation import UPGrad
+            >>>
+            >>> param = torch.tensor([1., 2.], requires_grad=True)
+            >>> # Compute arbitrary quantities that are function of param
+            >>> y1 = torch.tensor([-1., 1.]) @ param
+            >>> y2 = (param ** 2).sum()
+            >>>
+            >>> backward([y1, y2])
+            >>> jac_to_grad([param], aggregator=UPGrad())
+            >>> param.grad
+            tensor([-1.,  1.])
+
+        The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
+        :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
     """
 
     tensors_ = list[TensorWithJac]()
