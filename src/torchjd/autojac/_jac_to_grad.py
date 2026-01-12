@@ -9,42 +9,44 @@ from torchjd.aggregation import Aggregator
 from ._accumulation import TensorWithJac, accumulate_grads
 
 
-def jac_to_grad(params: Iterable[Tensor], aggregator: Aggregator, retain_jac: bool = False) -> None:
+def jac_to_grad(
+    tensors: Iterable[Tensor], aggregator: Aggregator, retain_jac: bool = False
+) -> None:
     """
-    Aggregates the Jacobians stored in the ``.jac`` fields of ``params`` and accumulates the result
+    Aggregates the Jacobians stored in the ``.jac`` fields of ``tensors`` and accumulates the result
     into their ``.grad`` fields.
 
-    :param params: The parameters whose ``.jac`` fields should be aggregated. All Jacobians must
+    :param tensors: The tensors whose ``.jac`` fields should be aggregated. All Jacobians must
         have the same first dimension (number of outputs).
     :param aggregator: The aggregator used to reduce the Jacobians into gradients.
-    :param retain_jac: Whether to preserve the ``.jac`` fields of the parameters.
+    :param retain_jac: Whether to preserve the ``.jac`` fields of the tensors.
     """
 
-    params_ = list[TensorWithJac]()
-    for p in params:
-        if not hasattr(p, "jac"):
+    tensors_ = list[TensorWithJac]()
+    for t in tensors:
+        if not hasattr(t, "jac"):
             raise ValueError(
                 "Some `jac` fields were not populated. Did you use `autojac.backward` before"
                 "calling `jac_to_grad`?"
             )
-        p_ = cast(TensorWithJac, p)
-        params_.append(p_)
+        t_ = cast(TensorWithJac, t)
+        tensors_.append(t_)
 
-    if len(params_) == 0:
+    if len(tensors_) == 0:
         return
 
-    jacobians = [p.jac for p in params_]
+    jacobians = [t.jac for t in tensors_]
 
     if not all([jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]]):
         raise ValueError("All Jacobians should have the same number of rows.")
 
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
-    gradients = _disunite_gradient(gradient_vector, jacobians, params_)
-    accumulate_grads(params_, gradients)
+    gradients = _disunite_gradient(gradient_vector, jacobians, tensors_)
+    accumulate_grads(tensors_, gradients)
 
     if not retain_jac:
-        _free_jacs(params_)
+        _free_jacs(tensors_)
 
 
 def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
@@ -54,7 +56,7 @@ def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
 
 
 def _disunite_gradient(
-    gradient_vector: Tensor, jacobians: list[Tensor], params: list[TensorWithJac]
+    gradient_vector: Tensor, jacobians: list[Tensor], tensors: list[TensorWithJac]
 ) -> list[Tensor]:
     gradient_vectors = []
     start = 0
@@ -63,16 +65,16 @@ def _disunite_gradient(
         current_gradient_vector = gradient_vector[start:end]
         gradient_vectors.append(current_gradient_vector)
         start = end
-    gradients = [g.view(param.shape) for param, g in zip(params, gradient_vectors, strict=True)]
+    gradients = [g.view(t.shape) for t, g in zip(tensors, gradient_vectors, strict=True)]
     return gradients
 
 
-def _free_jacs(params: Iterable[TensorWithJac]) -> None:
+def _free_jacs(tensors: Iterable[TensorWithJac]) -> None:
     """
-    Deletes the ``.jac`` field of the provided parameters.
+    Deletes the ``.jac`` field of the provided tensors.
 
-    :param params: The parameters whose ``.jac`` fields should be cleared.
+    :param tensors: The tensors whose ``.jac`` fields should be cleared.
     """
 
-    for p in params:
-        del p.jac
+    for t in tensors:
+        del t.jac
