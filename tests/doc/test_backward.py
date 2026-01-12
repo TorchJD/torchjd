@@ -1,6 +1,6 @@
 """
 This file contains the test of the backward usage example, with a verification of the value of the
-obtained `.grad` field.
+obtained `.jac` field.
 """
 
 from torch.testing import assert_close
