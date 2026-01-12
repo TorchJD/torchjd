@@ -5,8 +5,8 @@ import torch
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
-from torchjd.utils._accumulation import _accumulate_grads
-from torchjd.utils._tensor_with_jac import TensorWithJac
+
+from ._accumulation import TensorWithJac, accumulate_grads
 
 
 def jac_to_grad(
@@ -43,7 +43,7 @@ def jac_to_grad(
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
     gradients = _disunite_gradient(gradient_vector, jacobians, params_)
-    _accumulate_grads(params_, gradients)
+    accumulate_grads(params_, gradients)
 
     if not retain_jacs:
         _free_jacs(params_)

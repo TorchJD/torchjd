@@ -50,7 +50,6 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
 
 
-
             X = torch.randn(8, 16, 10)
             Y = torch.randn(8, 16)
 
@@ -78,15 +77,14 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
     .. tab-item:: autojac
 
         .. code-block:: python
-            :emphasize-lines: 5-7, 13, 17, 22-24
+            :emphasize-lines: 5-6, 12, 16, 21-23
 
             import torch
             from torch.nn import Linear, MSELoss, ReLU, Sequential
             from torch.optim import SGD
 
             from torchjd.aggregation import UPGrad
-            from torchjd.autojac import backward
-            from torchjd.utils import jac_to_grad
+            from torchjd.autojac import backward, jac_to_grad
 
             X = torch.randn(8, 16, 10)
             Y = torch.randn(8, 16)
@@ -115,7 +113,7 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
     .. tab-item:: autogram (recommended)
 
         .. code-block:: python
-            :emphasize-lines: 5-6, 13, 17-18, 22-25
+            :emphasize-lines: 5-6, 12, 16-17, 21-24
 
             import torch
             from torch.nn import Linear, MSELoss, ReLU, Sequential
@@ -123,7 +121,6 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
             from torchjd.aggregation import UPGradWeighting
             from torchjd.autogram import Engine
-
 
             X = torch.randn(8, 16, 10)
             Y = torch.randn(8, 16)

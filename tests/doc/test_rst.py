@@ -14,8 +14,7 @@ def test_amp():
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import jac_to_grad, mtl_backward
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)
@@ -58,7 +57,7 @@ def test_basic_usage():
 
     from torchjd import autojac
     from torchjd.aggregation import UPGrad
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import jac_to_grad
 
     model = Sequential(Linear(10, 5), ReLU(), Linear(5, 2))
     optimizer = SGD(model.parameters(), lr=0.1)
@@ -155,8 +154,7 @@ def test_iwrm():
         from torch.optim import SGD
 
         from torchjd.aggregation import UPGrad
-        from torchjd.autojac import backward
-        from torchjd.utils import jac_to_grad
+        from torchjd.autojac import backward, jac_to_grad
 
         X = torch.randn(8, 16, 10)
         Y = torch.randn(8, 16)
@@ -229,8 +227,7 @@ def test_lightning_integration():
     from torch.utils.data import DataLoader, TensorDataset
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import jac_to_grad, mtl_backward
 
     class Model(LightningModule):
         def __init__(self):
@@ -287,8 +284,7 @@ def test_monitoring():
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import jac_to_grad, mtl_backward
 
     def print_weights(_, __, weights: torch.Tensor) -> None:
         """Prints the extracted weights."""
@@ -340,8 +336,7 @@ def test_mtl():
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import jac_to_grad, mtl_backward
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)
@@ -413,8 +408,7 @@ def test_rnn():
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import backward, jac_to_grad
 
     rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
     optimizer = SGD(rnn.parameters(), lr=0.1)

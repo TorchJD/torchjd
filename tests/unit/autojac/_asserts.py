@@ -3,7 +3,7 @@ from typing import cast
 import torch
 from torch.testing import assert_close
 
-from torchjd.utils._tensor_with_jac import TensorWithJac
+from torchjd.autojac._accumulation import TensorWithJac
 
 
 def assert_has_jac(t: torch.Tensor) -> None:

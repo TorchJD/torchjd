@@ -3,10 +3,18 @@ from typing import cast
 
 from torch import Tensor
 
-from torchjd.utils._tensor_with_jac import TensorWithJac
+
+class TensorWithJac(Tensor):
+    """
+    Tensor known to have a populated jac field.
+
+    Should not be directly instantiated, but can be used as a type hint and can be casted to.
+    """
+
+    jac: Tensor
 
 
-def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
+def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
         _check_expects_grad(param)
         # We that the shape is correct to be consistent with torch, that checks that the grad
@@ -34,7 +42,7 @@ def _accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> N
             param.__setattr__("jac", jac)
 
 
-def _accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> None:
+def accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> None:
     for param, grad in zip(params, gradients, strict=True):
         _check_expects_grad(param)
         if hasattr(param, "grad") and param.grad is not None:

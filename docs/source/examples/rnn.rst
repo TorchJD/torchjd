@@ -6,15 +6,14 @@ element of the output sequences. If the gradients of these losses are likely to 
 descent can be leveraged to enhance optimization.
 
 .. code-block:: python
-    :emphasize-lines: 5-7, 11, 18, 20-21
+    :emphasize-lines: 5-6, 10, 17, 19-20
 
     import torch
     from torch.nn import RNN
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import backward, jac_to_grad
 
     rnn = RNN(input_size=10, hidden_size=20, num_layers=2)
     optimizer = SGD(rnn.parameters(), lr=0.1)

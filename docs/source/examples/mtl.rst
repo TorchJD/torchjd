@@ -19,15 +19,14 @@ vectors of dimension 10, and their corresponding scalar labels for both tasks.
 
 
 .. code-block:: python
-    :emphasize-lines: 5-7, 20, 33-34
+    :emphasize-lines: 5-6, 19, 32-33
 
     import torch
     from torch.nn import Linear, MSELoss, ReLU, Sequential
     from torch.optim import SGD
 
     from torchjd.aggregation import UPGrad
-    from torchjd.autojac import mtl_backward
-    from torchjd.utils import jac_to_grad
+    from torchjd.autojac import mtl_backward, jac_to_grad
 
     shared_module = Sequential(Linear(10, 5), ReLU(), Linear(5, 3), ReLU())
     task1_module = Linear(3, 1)

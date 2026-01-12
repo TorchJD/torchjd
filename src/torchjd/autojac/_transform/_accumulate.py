@@ -1,7 +1,6 @@
 from torch import Tensor
 
-from torchjd.utils._accumulation import _accumulate_grads, _accumulate_jacs
-
+from .._accumulation import accumulate_grads, accumulate_jacs
 from ._base import TensorDict, Transform
 
 
@@ -15,7 +14,7 @@ class AccumulateGrad(Transform):
     """
 
     def __call__(self, gradients: TensorDict) -> TensorDict:
-        _accumulate_grads(gradients.keys(), gradients.values())
+        accumulate_grads(gradients.keys(), gradients.values())
         return {}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
@@ -32,7 +31,7 @@ class AccumulateJac(Transform):
     """
 
     def __call__(self, jacobians: TensorDict) -> TensorDict:
-        _accumulate_jacs(jacobians.keys(), jacobians.values())
+        accumulate_jacs(jacobians.keys(), jacobians.values())
         return {}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
