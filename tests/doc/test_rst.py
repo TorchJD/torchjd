@@ -47,7 +47,6 @@ def test_amp():
         scaler.step(optimizer)
         scaler.update()
         optimizer.zero_grad()
-        optimizer.zero_grad()
 
 
 def test_basic_usage():
@@ -122,7 +121,6 @@ def test_iwmtl():
         losses.backward(weights)
         optimizer.step()
         optimizer.zero_grad()
-        optimizer.zero_grad()
 
 
 def test_iwrm():
@@ -145,7 +143,6 @@ def test_iwrm():
             loss = loss_fn(y_hat, y)  # shape: [] (scalar)
             loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
             optimizer.zero_grad()
 
     def test_autojac():
@@ -200,7 +197,6 @@ def test_iwrm():
             weights = weighting(gramian)  # shape: [16]
             losses.backward(weights)
             optimizer.step()
-            optimizer.zero_grad()
             optimizer.zero_grad()
 
     test_autograd()
@@ -398,7 +394,6 @@ def test_partial_jd():
         weights = weighting(gramian)
         losses.backward(weights)
         optimizer.step()
-        optimizer.zero_grad()
         optimizer.zero_grad()
 
 

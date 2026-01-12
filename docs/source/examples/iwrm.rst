@@ -69,7 +69,6 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
                 optimizer.step()
                 optimizer.zero_grad()
-                optimizer.zero_grad()
 
         In this baseline example, the update may negatively affect the loss of some elements of the
         batch.
@@ -105,7 +104,6 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
 
                 optimizer.step()
                 optimizer.zero_grad()
-                optimizer.zero_grad()
 
         Here, we compute the Jacobian of the per-sample losses with respect to the model parameters
         and use it to update the model such that no loss from the batch is (locally) increased.
@@ -140,7 +138,6 @@ batch of data. When minimizing per-instance losses (IWRM), we use either autojac
                 weights = weighting(gramian)  # shape: [16]
                 losses.backward(weights)
                 optimizer.step()
-                optimizer.zero_grad()
                 optimizer.zero_grad()
 
         Here, the per-sample gradients are never fully stored in memory, leading to large
