@@ -36,8 +36,8 @@ def jac_to_grad(
             >>> y1 = torch.tensor([-1., 1.]) @ param
             >>> y2 = (param ** 2).sum()
             >>>
-            >>> backward([y1, y2])
-            >>> jac_to_grad([param], aggregator=UPGrad())
+            >>> backward([y1, y2])  # param now has a .jac field
+            >>> jac_to_grad([param], aggregator=UPGrad())  # param now has a .grad field
             >>> param.grad
             tensor([-1.,  1.])
 

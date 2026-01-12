@@ -16,7 +16,7 @@ def test_jac_to_grad():
     # Compute arbitrary quantities that are function of param
     y1 = torch.tensor([-1.0, 1.0]) @ param
     y2 = (param**2).sum()
-    backward([y1, y2])
-    jac_to_grad([param], aggregator=UPGrad())
+    backward([y1, y2])  # param now has a .jac field
+    jac_to_grad([param], aggregator=UPGrad())  # param now has a .grad field
 
     assert_close(param.grad, torch.tensor([0.5000, 2.5000]), rtol=0.0, atol=1e-04)
