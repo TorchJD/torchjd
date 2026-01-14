@@ -19,7 +19,8 @@ Import several classes from ``torch`` and ``torchjd``:
     from torch.optim import SGD
 
     from torchjd import autojac
-    from torchjd.aggregation import UPGrad, jac_to_grad
+    from torchjd.aggregation import UPGrad
+    from torchjd.autojac import jac_to_grad
 
 Define the model and the optimizer, as usual:
 
