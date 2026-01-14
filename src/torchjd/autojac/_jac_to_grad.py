@@ -17,9 +17,10 @@ def jac_to_grad(
     into their ``.grad`` fields.
 
     :param tensors: The tensors whose ``.jac`` fields should be aggregated. All Jacobians must
-        have the same first dimension (number of outputs).
+        have the same first dimension (e.g. number of losses).
     :param aggregator: The aggregator used to reduce the Jacobians into gradients.
-    :param retain_jac: Whether to preserve the ``.jac`` fields of the tensors.
+    :param retain_jac: Whether to preserve the ``.jac`` fields of the tensors after they have been
+        used. Defaults to ``False``.
 
     .. note::
         This function starts by "flattening" the ``.jac`` fields into matrices (i.e. flattening all
