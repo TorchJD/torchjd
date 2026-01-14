@@ -20,6 +20,7 @@ Import several classes from ``torch`` and ``torchjd``:
 
     from torchjd import autojac
     from torchjd.aggregation import UPGrad
+    from torchjd.autojac import jac_to_grad
 
 Define the model and the optimizer, as usual:
 
@@ -63,10 +64,12 @@ Perform the Jacobian descent backward pass:
 
 .. code-block:: python
 
-    autojac.backward([loss1, loss2], aggregator)
+    autojac.backward([loss1, loss2])
+    jac_to_grad(model.parameters(), aggregator)
 
-This will populate the ``.grad`` field of each model parameter with the corresponding aggregated
-Jacobian matrix.
+The first function will populate the ``.jac`` field of each model parameter with the corresponding
+Jacobian, and the second one will aggregate these Jacobians and store the result in the ``.grad``
+field of the parameters. It also deletes the ``.jac`` fields save some memory.
 
 Update each parameter based on its ``.grad`` field, using the ``optimizer``:
 
