@@ -21,6 +21,12 @@ def jac_to_grad(
     :param aggregator: The aggregator used to reduce the Jacobians into gradients.
     :param retain_jac: Whether to preserve the ``.jac`` fields of the tensors.
 
+    .. note::
+        This function starts by "flattening" the ``.jac`` fields into matrices (i.e. flattening all
+        of their dimensions except the first one), then concatenates those matrices into a combined
+        Jacobian matrix. The aggregator is then used on this matrix, which returns a combined
+        gradient vector, that is split and reshaped to fit into the ``.grad`` fields of the tensors.
+
     .. admonition::
         Example
 
