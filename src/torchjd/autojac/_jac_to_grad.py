@@ -35,8 +35,8 @@ def jac_to_grad(
 
             >>> import torch
             >>>
-            >>> from torchjd.autojac import backward, jac_to_grad
             >>> from torchjd.aggregation import UPGrad
+            >>> from torchjd.autojac import backward, jac_to_grad
             >>>
             >>> param = torch.tensor([1., 2.], requires_grad=True)
             >>> # Compute arbitrary quantities that are function of param
@@ -48,7 +48,7 @@ def jac_to_grad(
             >>> param.grad
             tensor([-1.,  1.])
 
-        The ``.grad`` field of ``param`` now contains the aggregation of the Jacobian of
+        The ``.grad`` field of ``param`` now contains the aggregation (by UPGrad) of the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
     """
 
@@ -56,8 +56,8 @@ def jac_to_grad(
     for t in tensors:
         if not hasattr(t, "jac"):
             raise ValueError(
-                "Some `jac` fields were not populated. Did you use `autojac.backward` before"
-                "calling `jac_to_grad`?"
+                "Some `jac` fields were not populated. Did you use `autojac.backward` or "
+                "`autojac.mtl_backward` before calling `jac_to_grad`?"
             )
         t_ = cast(TensorWithJac, t)
         tensors_.append(t_)
