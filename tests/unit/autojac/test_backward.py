@@ -28,8 +28,8 @@ def test_check_create_transform():
     assert output_keys == set()
 
 
-def test_shape_is_correct():
-    """Tests that backward works for various aggregators."""
+def test_jac_is_populated():
+    """Tests that backward correctly fills the .jac field."""
 
     a1 = tensor_([1.0, 2.0], requires_grad=True)
     a2 = tensor_([3.0, 4.0], requires_grad=True)
