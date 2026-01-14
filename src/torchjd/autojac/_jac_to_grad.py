@@ -70,13 +70,13 @@ def jac_to_grad(
     if not all([jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]]):
         raise ValueError("All Jacobians should have the same number of rows.")
 
+    if not retain_jac:
+        _free_jacs(tensors_)
+
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
     gradients = _disunite_gradient(gradient_vector, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
-
-    if not retain_jac:
-        _free_jacs(tensors_)
 
 
 def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
