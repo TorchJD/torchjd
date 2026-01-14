@@ -16,7 +16,7 @@ class TensorWithJac(Tensor):
 
 def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
-        _check_expects_grad(param)
+        _check_expects_grad(param, field_name=".jac")
         # We that the shape is correct to be consistent with torch, that checks that the grad
         # shape is correct before assigning it.
         if jac.shape[1:] != param.shape:
@@ -43,17 +43,17 @@ def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> No
 
 def accumulate_grads(params: Iterable[Tensor], gradients: Iterable[Tensor]) -> None:
     for param, grad in zip(params, gradients, strict=True):
-        _check_expects_grad(param)
+        _check_expects_grad(param, field_name=".grad")
         if hasattr(param, "grad") and param.grad is not None:
             param.grad += grad
         else:
             param.grad = grad
 
 
-def _check_expects_grad(tensor: Tensor) -> None:
+def _check_expects_grad(tensor: Tensor, field_name: str) -> None:
     if not _expects_grad(tensor):
         raise ValueError(
-            "Cannot populate the .grad field of a Tensor that does not satisfy:"
+            f"Cannot populate the {field_name} field of a Tensor that does not satisfy:\n"
             "`tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)`."
         )
 
