@@ -88,14 +88,13 @@ def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
 def _disunite_gradient(
     gradient_vector: Tensor, jacobians: list[Tensor], tensors: list[TensorWithJac]
 ) -> list[Tensor]:
-    gradient_vectors = []
+    gradients = list[Tensor]()
     start = 0
-    for jacobian in jacobians:
+    for jacobian, t in zip(jacobians, tensors, strict=True):
         end = start + jacobian[0].numel()
         current_gradient_vector = gradient_vector[start:end]
-        gradient_vectors.append(current_gradient_vector)
+        gradients.append(current_gradient_vector.view(t.shape))
         start = end
-    gradients = [g.view(t.shape) for t, g in zip(tensors, gradient_vectors, strict=True)]
     return gradients
 
 
