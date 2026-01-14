@@ -236,9 +236,9 @@ def test_tensor_used_multiple_times(chunk_size: int | None):
 
     backward([d, e], parallel_chunk_size=chunk_size)
 
-    expected_jacobian = tensor_([2.0 * 3.0 * (a**2).item(), 2.0 * 4.0 * (a**3).item()])
+    J = tensor_([2.0 * 3.0 * (a**2).item(), 2.0 * 4.0 * (a**3).item()])
 
-    assert_jac_close(a, expected_jacobian)
+    assert_jac_close(a, J)
 
 
 def test_repeated_tensors():
