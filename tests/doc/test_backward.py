@@ -3,7 +3,7 @@ This file contains the test of the backward usage example, with a verification o
 obtained `.jac` field.
 """
 
-from torch.testing import assert_close
+from utils.asserts import assert_jac_close
 
 
 def test_backward():
@@ -18,4 +18,4 @@ def test_backward():
 
     backward([y1, y2])
 
-    assert_close(param.jac, torch.tensor([[-1.0, 1.0], [2.0, 4.0]]), rtol=0.0, atol=1e-04)
+    assert_jac_close(param, torch.tensor([[-1.0, 1.0], [2.0, 4.0]]), rtol=0.0, atol=1e-04)

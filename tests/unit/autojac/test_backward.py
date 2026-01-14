@@ -1,12 +1,11 @@
 import torch
 from pytest import mark, raises
+from utils.asserts import assert_has_jac, assert_has_no_jac, assert_jac_close
 from utils.tensors import randn_, tensor_
 
 from torchjd.autojac import backward
 from torchjd.autojac._backward import _create_transform
 from torchjd.autojac._transform import OrderedSet
-
-from ._asserts import assert_has_jac, assert_has_no_jac, assert_jac_close
 
 
 def test_check_create_transform():

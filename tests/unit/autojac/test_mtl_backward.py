@@ -2,13 +2,7 @@ import torch
 from pytest import mark, raises
 from settings import DTYPE
 from torch.autograd import grad
-from utils.tensors import arange_, rand_, randn_, tensor_
-
-from torchjd.autojac import mtl_backward
-from torchjd.autojac._mtl_backward import _create_transform
-from torchjd.autojac._transform import OrderedSet
-
-from ._asserts import (
+from utils.asserts import (
     assert_grad_close,
     assert_has_grad,
     assert_has_jac,
@@ -16,6 +10,11 @@ from ._asserts import (
     assert_has_no_jac,
     assert_jac_close,
 )
+from utils.tensors import arange_, rand_, randn_, tensor_
+
+from torchjd.autojac import mtl_backward
+from torchjd.autojac._mtl_backward import _create_transform
+from torchjd.autojac._transform import OrderedSet
 
 
 def test_check_create_transform():

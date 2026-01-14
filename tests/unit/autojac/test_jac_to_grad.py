@@ -1,5 +1,5 @@
 from pytest import mark, raises
-from unit.autojac._asserts import assert_grad_close, assert_has_jac, assert_has_no_jac
+from utils.asserts import assert_grad_close, assert_has_jac, assert_has_no_jac
 from utils.tensors import tensor_
 
 from torchjd.aggregation import Aggregator, Mean, PCGrad, UPGrad

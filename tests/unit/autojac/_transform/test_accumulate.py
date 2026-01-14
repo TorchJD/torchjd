@@ -1,5 +1,5 @@
 from pytest import mark, raises
-from unit.autojac._asserts import assert_grad_close, assert_jac_close
+from utils.asserts import assert_grad_close, assert_jac_close
 from utils.dict_assertions import assert_tensor_dicts_are_close
 from utils.tensors import ones_, tensor_, zeros_
 
