@@ -14,7 +14,7 @@ def backward(
 ) -> None:
     r"""
     Computes the Jacobians of all values in ``tensors`` with respect to all ``inputs`` and
-    accumulates them in the `.jac` fields of the `inputs`.
+    accumulates them in the ``.jac`` fields of the ``inputs``.
 
     :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobians will
         have one row for each value of each of these tensors.
