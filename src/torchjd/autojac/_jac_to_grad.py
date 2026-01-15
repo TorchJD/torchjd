@@ -73,10 +73,18 @@ def jac_to_grad(
     if not retain_jac:
         _free_jacs(tensors_)
 
+    gradients = _jacobian_based(aggregator, jacobians, tensors_)
+
+    accumulate_grads(tensors_, gradients)
+
+
+def _jacobian_based(
+    aggregator: Aggregator, jacobians: list[Tensor], tensors: list[TensorWithJac]
+) -> list[Tensor]:
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
-    gradients = _disunite_gradient(gradient_vector, jacobians, tensors_)
-    accumulate_grads(tensors_, gradients)
+    gradients = _disunite_gradient(gradient_vector, jacobians, tensors)
+    return gradients
 
 
 def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
