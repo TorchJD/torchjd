@@ -52,8 +52,7 @@ jobs:
         env:
           PYTEST_TORCH_DTYPE: ${{ matrix.dtype || 'float32' }}
 
-      - &upload-codecov
-        name: Upload results to Codecov
+      - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
