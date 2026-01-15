@@ -12,11 +12,19 @@ jobs:
 
       - name: Scan for TODO strings
         run: |
+          echo "Scanning codebase for TODOs..."
 
-          if git grep -E "TODO" -- .; then
-            echo "Error: Found TODOs in the codebase. Please resolve them or create issues."
+          git grep -nE "TODO" -- . ':(exclude).github/workflows/*' > todos_found.txt || true
+
+          # Check if the file is not empty
+          if [ -s todos_found.txt ]; then
+            echo "❌ ERROR: Found TODOs in the following files:"
+            echo "-------------------------------------------"
+            cat todos_found.txt
+            echo "-------------------------------------------"
+            echo "Please resolve these TODOs or track them in an issue before merging."
             exit 1
           else
-            echo "No TODOs found!"
+            echo "✅ No TODOs found. Codebase is clean!"
             exit 0
           fi
