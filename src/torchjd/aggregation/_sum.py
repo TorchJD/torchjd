@@ -1,8 +1,9 @@
 import torch
 from torch import Tensor
 
+from .._utils.compute_gramian import Matrix
 from ._aggregator_bases import WeightedAggregator
-from ._weighting_bases import Matrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class Sum(WeightedAggregator):

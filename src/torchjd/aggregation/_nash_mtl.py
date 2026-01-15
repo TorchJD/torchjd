@@ -25,8 +25,9 @@
 
 # mypy: ignore-errors
 
+from .._utils.compute_gramian import Matrix
 from ._utils.check_dependencies import check_dependencies_are_installed
-from ._weighting_bases import Matrix, Weighting
+from ._weighting_bases import Weighting
 
 check_dependencies_are_installed(["cvxpy", "ecos"])
 

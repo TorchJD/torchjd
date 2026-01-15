@@ -1,7 +1,8 @@
 from torch import Tensor
 
+from torchjd._utils.compute_gramian import Matrix
 from torchjd.aggregation._constant import ConstantWeighting
-from torchjd.aggregation._weighting_bases import Matrix, Weighting
+from torchjd.aggregation._weighting_bases import Weighting
 
 from .str import vector_to_str
 

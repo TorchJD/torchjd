@@ -1,8 +1,13 @@
+from typing import Annotated, cast
+
 import torch
 from torch import Tensor
 
+Matrix = Annotated[Tensor, "ndim=2"]
+PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
-def compute_gramian(generalized_matrix: Tensor) -> Tensor:
+
+def compute_gramian(generalized_matrix: Tensor) -> PSDMatrix:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given
     generalized matrix. Specifically, this is equivalent to
@@ -12,4 +17,9 @@ def compute_gramian(generalized_matrix: Tensor) -> Tensor:
     """
     dims = list(range(1, generalized_matrix.ndim))
     gramian = torch.tensordot(generalized_matrix, generalized_matrix, dims=(dims, dims))
-    return gramian
+    return cast(PSDMatrix, gramian)
+
+
+def compute_gramian_sum(generalized_matrices: list[Tensor]) -> PSDMatrix:
+    gramian = sum([compute_gramian(matrix) for matrix in generalized_matrices])
+    return cast(PSDMatrix, gramian)

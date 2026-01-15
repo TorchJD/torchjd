@@ -2,9 +2,12 @@ from collections.abc import Iterable
 from typing import cast
 
 import torch
-from torch import Tensor
+from torch import Tensor, tensordot
 
+from torchjd._utils import PSDMatrix, compute_gramian_sum
 from torchjd.aggregation import Aggregator
+from torchjd.aggregation._aggregator_bases import GramianWeightedAggregator
+from torchjd.aggregation._weighting_bases import Weighting
 
 from ._accumulation import TensorWithJac, accumulate_grads
 
@@ -73,9 +76,21 @@ def jac_to_grad(
     if not retain_jac:
         _free_jacs(tensors_)
 
-    gradients = _jacobian_based(aggregator, jacobians, tensors_)
+    if isinstance(aggregator, GramianWeightedAggregator):
+        gradients = _gramian_based(aggregator.psd_weighting, jacobians, tensors_)
+    else:
+        gradients = _jacobian_based(aggregator, jacobians, tensors_)
 
     accumulate_grads(tensors_, gradients)
+
+
+def _gramian_based(
+    weighting: Weighting[PSDMatrix], jacobians: list[Tensor], tensors: list[TensorWithJac]
+) -> list[Tensor]:
+    gramian = compute_gramian_sum(jacobians)
+    weights = weighting(gramian)
+    gradients = [tensordot(weights, jacobian, dims=1) for jacobian in jacobians]
+    return gradients
 
 
 def _jacobian_based(

@@ -1,8 +1,9 @@
 import torch
 from torch import Tensor
 
+from .._utils.compute_gramian import PSDMatrix
 from ._aggregator_bases import GramianWeightedAggregator
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class MGDA(GramianWeightedAggregator):

@@ -2,7 +2,8 @@ from math import prod
 
 from torch import Tensor
 
-from torchjd.aggregation._weighting_bases import GeneralizedWeighting, PSDMatrix, Weighting
+from torchjd._utils.compute_gramian import PSDMatrix
+from torchjd.aggregation._weighting_bases import GeneralizedWeighting, Weighting
 from torchjd.autogram._gramian_utils import reshape_gramian
 
 
