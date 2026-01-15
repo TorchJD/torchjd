@@ -25,7 +25,7 @@ jobs:
 
             while IFS=: read -r file line content; do
               echo "::error file=$file,line=$line::Found a TODO that must be resolved: $content"
-            done < todos.txt
+            done < todos_found.txt
 
             exit 1
           else
