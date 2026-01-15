@@ -24,6 +24,3 @@ def __getattr__(name: str) -> Callable:
         )
         return _deprecated_items[name][1]
     raise AttributeError(f"module {__name__} has no attribute {name}")
-
-
-# TODO: Just a stupid todo to test ci
