@@ -21,7 +21,7 @@ jobs:
             echo "-------------------------------------------"
 
             while IFS=: read -r file line content; do
-              echo "::error file=$file,line=$line::TODO must be resolved:\n $content"
+              echo "::error file=$file,line=$line::TODO must be resolved:%0A$content"
             done < todos_found.txt
 
             echo "-------------------------------------------"
