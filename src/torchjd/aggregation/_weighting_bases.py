@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Annotated, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from torch import Tensor, nn
 
 _T = TypeVar("_T", contravariant=True)
 _FnInputT = TypeVar("_FnInputT")
 _FnOutputT = TypeVar("_FnOutputT")
-Matrix = Annotated[Tensor, "ndim=2"]
-PSDMatrix = Annotated[Matrix, "Positive semi-definite"]
 
 
 class Weighting(Generic[_T], nn.Module, ABC):

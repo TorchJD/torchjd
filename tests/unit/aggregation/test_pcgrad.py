@@ -3,10 +3,10 @@ from torch import Tensor
 from torch.testing import assert_close
 from utils.tensors import ones_, randn_
 
+from torchjd._utils.compute_gramian import compute_gramian
 from torchjd.aggregation import PCGrad
 from torchjd.aggregation._pcgrad import PCGradWeighting
 from torchjd.aggregation._upgrad import UPGradWeighting
-from torchjd.aggregation._utils.gramian import compute_gramian
 
 from ._asserts import assert_expected_structure, assert_non_differentiable
 from ._inputs import scaled_matrices, typical_matrices

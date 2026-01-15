@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 
 from torch import Tensor, nn
 
-from ._utils.gramian import compute_gramian
-from ._weighting_bases import Matrix, PSDMatrix, Weighting
+from torchjd._utils import Matrix, PSDMatrix, compute_gramian
+
+from ._weighting_bases import Weighting
 
 
 class Aggregator(nn.Module, ABC):
@@ -79,3 +80,4 @@ class GramianWeightedAggregator(WeightedAggregator):
 
     def __init__(self, weighting: Weighting[PSDMatrix]):
         super().__init__(weighting << compute_gramian)
+        self.psd_weighting = weighting
