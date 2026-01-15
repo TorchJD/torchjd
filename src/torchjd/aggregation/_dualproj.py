@@ -2,7 +2,8 @@ from typing import Literal
 
 from torch import Tensor
 
-from .._utils.compute_gramian import PSDMatrix
+from torchjd._utils.compute_gramian import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import MeanWeighting
 from ._utils.dual_cone import project_weights

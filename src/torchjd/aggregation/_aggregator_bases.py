@@ -2,9 +2,8 @@ from abc import ABC, abstractmethod
 
 from torch import Tensor, nn
 
-from torchjd._utils import compute_gramian
+from torchjd._utils import Matrix, PSDMatrix, compute_gramian
 
-from .._utils.compute_gramian import Matrix, PSDMatrix
 from ._weighting_bases import Weighting
 
 

@@ -2,7 +2,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .._utils.compute_gramian import Matrix
+from torchjd._utils.compute_gramian import Matrix
+
 from ._aggregator_bases import WeightedAggregator
 from ._weighting_bases import Weighting
 
