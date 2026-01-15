@@ -1,0 +1,22 @@
+name: "Check for TODOs"
+
+on:
+  pull_request:
+
+jobs:
+  check-todos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for TODO strings
+        run: |
+
+          if git grep -E "TODO" -- .; then
+            echo "Error: Found TODOs in the codebase. Please resolve them or create issues."
+            exit 1
+          else
+            echo "No TODOs found!"
+            exit 0
+          fi
