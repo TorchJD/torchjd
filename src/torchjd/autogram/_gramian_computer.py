@@ -4,6 +4,7 @@ from typing import Optional
 from torch import Tensor
 from torch.utils._pytree import PyTree
 
+from torchjd._utils import compute_gramian
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
 
@@ -28,10 +29,6 @@ class GramianComputer(ABC):
 class JacobianBasedGramianComputer(GramianComputer, ABC):
     def __init__(self, jacobian_computer):
         self.jacobian_computer = jacobian_computer
-
-    @staticmethod
-    def _to_gramian(jacobian: Tensor) -> Tensor:
-        return jacobian @ jacobian.T
 
 
 class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
@@ -71,7 +68,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         self.remaining_counter -= 1
 
         if self.remaining_counter == 0:
-            gramian = self._to_gramian(self.summed_jacobian)
+            gramian = compute_gramian(self.summed_jacobian)
             del self.summed_jacobian
             return gramian
         else:
