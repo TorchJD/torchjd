@@ -27,7 +27,7 @@ class PCGradWeighting(Weighting[PSDMatrix]):
     :class:`~torchjd.aggregation.PCGrad`.
     """
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         # Move all computations on cpu to avoid moving memory between cpu and gpu at each iteration
         device = gramian.device
         dtype = gramian.dtype

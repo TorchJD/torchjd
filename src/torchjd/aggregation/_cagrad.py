@@ -75,7 +75,7 @@ class CAGradWeighting(Weighting[PSDMatrix]):
         self.c = c
         self.norm_eps = norm_eps
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         U, S, _ = torch.svd(normalize(gramian, self.norm_eps))
 
         reduced_matrix = U @ S.sqrt().diag()

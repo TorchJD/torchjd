@@ -88,7 +88,7 @@ class DualProjWeighting(Weighting[PSDMatrix]):
         self.reg_eps = reg_eps
         self.solver = solver
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         u = self.weighting(gramian)
         G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         w = project_weights(u, G, self.solver)

@@ -5,6 +5,7 @@ from torch import Tensor
 from torch.utils._pytree import PyTree
 
 from torchjd._linalg import compute_gramian
+from torchjd._linalg.matrix import PSDMatrix
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
 
@@ -16,7 +17,7 @@ class GramianComputer(ABC):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[Tensor]:
+    ) -> Optional[PSDMatrix]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
     def track_forward_call(self) -> None:
@@ -55,7 +56,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[Tensor]:
+    ) -> Optional[PSDMatrix]:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
         jacobian_matrix = self.jacobian_computer(rg_outputs, grad_outputs, args, kwargs)

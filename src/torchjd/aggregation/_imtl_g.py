@@ -29,7 +29,7 @@ class IMTLGWeighting(Weighting[PSDMatrix]):
     :class:`~torchjd.aggregation.IMTLG`.
     """
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         d = torch.sqrt(torch.diagonal(gramian))
         v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()
