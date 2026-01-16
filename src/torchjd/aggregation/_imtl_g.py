@@ -1,9 +1,11 @@
 import torch
 from torch import Tensor
 
+from torchjd._linalg import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class IMTLG(GramianWeightedAggregator):

@@ -2,8 +2,10 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from torchjd._linalg import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class Krum(GramianWeightedAggregator):

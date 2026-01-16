@@ -28,10 +28,12 @@
 import torch
 from torch import Tensor
 
+from torchjd._linalg import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import MeanWeighting
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class AlignedMTL(GramianWeightedAggregator):
