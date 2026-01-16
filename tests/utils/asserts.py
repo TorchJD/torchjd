@@ -3,6 +3,7 @@ from typing import cast
 import torch
 from torch.testing import assert_close
 
+from torchjd._linalg.matrix import PSDMatrix
 from torchjd.autojac._accumulation import TensorWithJac
 
 
@@ -33,3 +34,15 @@ def assert_has_no_grad(t: torch.Tensor) -> None:
 def assert_grad_close(t: torch.Tensor, expected_grad: torch.Tensor, **kwargs) -> None:
     assert t.grad is not None
     assert_close(t.grad, expected_grad, **kwargs)
+
+
+def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
+
+    assert_close(matrix, matrix.mH, **kwargs, msg="Matrix is not symmetric/Hermitian")
+
+    eig_vals = torch.linalg.eigvalsh(matrix)
+    expected_eig_vals = eig_vals.clamp(min=0.0)
+
+    assert_close(
+        eig_vals, expected_eig_vals, **kwargs, msg="Matrix has significant negative eigenvalues"
+    )
