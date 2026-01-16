@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 
 from torch import Tensor, nn
 
-from ._utils.gramian import compute_gramian
-from ._weighting_bases import Matrix, PSDMatrix, Weighting
+from torchjd._linalg import Matrix, PSDMatrix, compute_gramian
+
+from ._weighting_bases import Weighting
 
 
 class Aggregator(nn.Module, ABC):
