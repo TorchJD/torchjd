@@ -31,7 +31,7 @@ def autojac_forward_backward(
 ) -> None:
     losses = forward_pass(model, inputs, loss_fn, reduce_to_vector)
     backward(losses)
-    jac_to_grad(model.parameters(), aggregator)
+    jac_to_grad(list(model.parameters()), aggregator)
 
 
 def autograd_gramian_forward_backward(

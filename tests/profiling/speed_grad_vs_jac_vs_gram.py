@@ -1,7 +1,9 @@
 import gc
+import time
 
 import torch
 from settings import DEVICE
+from torch import Tensor
 from utils.architectures import (
     AlexNet,
     Cifar10Model,
@@ -23,7 +25,6 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets
 
-from tests.speed.utils import print_times, time_call
 from torchjd.aggregation import Mean
 from torchjd.autogram import Engine
 
@@ -38,6 +39,12 @@ PARAMETRIZATIONS = [
     (ModuleFactory(SqueezeNet), 4),
     (ModuleFactory(InstanceNormMobileNetV2), 2),
 ]
+
+
+def main():
+    for factory, batch_size in PARAMETRIZATIONS:
+        compare_autograd_autojac_and_autogram_speed(factory, batch_size)
+        print("\n")
 
 
 def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_size: int):
@@ -85,7 +92,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
         fn_autogram()
 
     def optionally_cuda_sync():
-        if str(DEVICE).startswith("cuda"):
+        if DEVICE.type == "cuda":
             torch.cuda.synchronize()
 
     def pre_fn():
@@ -112,10 +119,29 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
     print_times("autogram", autogram_times)
 
 
-def main():
-    for factory, batch_size in PARAMETRIZATIONS:
-        compare_autograd_autojac_and_autogram_speed(factory, batch_size)
-        print("\n")
+def noop():
+    pass
+
+
+def time_call(fn, init_fn=noop, pre_fn=noop, post_fn=noop, n_runs: int = 10) -> Tensor:
+    init_fn()
+
+    times = []
+    for _ in range(n_runs):
+        pre_fn()
+        start = time.perf_counter()
+        fn()
+        post_fn()
+        elapsed_time = time.perf_counter() - start
+        times.append(elapsed_time)
+
+    return torch.tensor(times)
+
+
+def print_times(name: str, times: Tensor) -> None:
+    print(f"{name} times (avg = {times.mean():.5f}, std = {times.std():.5f}")
+    print(times)
+    print()
 
 
 if __name__ == "__main__":
