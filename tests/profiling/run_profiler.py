@@ -1,5 +1,6 @@
 import gc
 from pathlib import Path
+from typing import Callable
 
 import torch
 from settings import DEVICE
@@ -36,115 +37,95 @@ PARAMETRIZATIONS = [
 ]
 
 
+def profile_method(
+    method_name: str,
+    forward_backward_fn: Callable,
+    factory: ModuleFactory,
+    batch_size: int,
+) -> None:
+    """
+    Profiles memory and computation time of a forward and backward pass.
+
+    :param method_name: Name of the method being profiled (for output paths)
+    :param forward_backward_fn: Function to execute the forward and backward pass.
+    :param factory: A ModuleFactory that creates the model to profile.
+    :param batch_size: The batch size to use for profiling.
+    """
+    print(f"{method_name}: {factory} with batch_size={batch_size} on {DEVICE}:")
+
+    _clear_unused_memory()
+    model = factory()
+    inputs, targets = make_inputs_and_targets(model, batch_size)
+    loss_fn = make_mse_loss_fn(targets)
+
+    activities = _get_profiler_activities()
+
+    # Warmup run
+    forward_backward_fn(model, inputs, loss_fn)
+    model.zero_grad()
+    _clear_unused_memory()
+
+    # Profiled run
+    with profile(
+        activities=activities,
+        profile_memory=True,
+        record_shapes=True,
+        with_stack=True,
+    ) as prof:
+        forward_backward_fn(model, inputs, loss_fn)
+
+    _save_and_print_trace(prof, method_name, factory, batch_size)
+
+
+def _clear_unused_memory() -> None:
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def _get_profiler_activities() -> list[ProfilerActivity]:
+    activities = [ProfilerActivity.CPU]
+    if DEVICE.type == "cuda":
+        activities.append(ProfilerActivity.CUDA)
+    return activities
+
+
+def _save_and_print_trace(
+    prof: profile, method_name: str, factory: ModuleFactory, batch_size: int
+) -> None:
+    filename = f"{factory}-bs{batch_size}-{DEVICE.type}.json"
+    torchjd_dir = Path(__file__).parent.parent.parent
+    traces_dir = torchjd_dir / "traces" / method_name
+    traces_dir.mkdir(parents=True, exist_ok=True)
+    trace_path = traces_dir / filename
+
+    prof.export_chrome_trace(str(trace_path))
+    print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=20))
+
+
+def profile_autojac(factory: ModuleFactory, batch_size: int) -> None:
+    def forward_backward_fn(model, inputs, loss_fn):
+        aggregator = Mean()
+        autojac_forward_backward(model, inputs, loss_fn, aggregator)
+
+    profile_method("autojac", forward_backward_fn, factory, batch_size)
+
+
+def profile_autogram(factory: ModuleFactory, batch_size: int) -> None:
+    def forward_backward_fn(model, inputs, loss_fn):
+        engine = Engine(model, batch_dim=0)
+        weighting = MeanWeighting()
+        autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
+
+    profile_method("autogram", forward_backward_fn, factory, batch_size)
+
+
 def main():
     for factory, batch_size in PARAMETRIZATIONS:
         profile_autojac(factory, batch_size)
         print("\n" + "=" * 80 + "\n")
         profile_autogram(factory, batch_size)
         print("\n" + "=" * 80 + "\n")
-
-
-def profile_autojac(factory: ModuleFactory, batch_size: int) -> None:
-    """
-    Profiles memory and computation time of autojac forward and backward pass for a given
-    architecture.
-
-    Prints the result and saves it in the traces folder. The saved traces be viewed using chrome at
-    chrome://tracing.
-
-    :param factory: A ModuleFactory that creates the model to profile.
-    :param batch_size: The batch size to use for profiling.
-    """
-
-    print(f"autojac: {factory} with batch_size={batch_size} on {DEVICE}:")
-
-    gc.collect()
-    torch.cuda.empty_cache() if torch.cuda.is_available() else None
-
-    model = factory()
-    inputs, targets = make_inputs_and_targets(model, batch_size)
-    loss_fn = make_mse_loss_fn(targets)
-    aggregator = Mean()
-
-    activities = [ProfilerActivity.CPU]
-    if DEVICE.type == "cuda":
-        activities.append(ProfilerActivity.CUDA)
-
-    # Warmup run
-    autojac_forward_backward(model, inputs, loss_fn, aggregator)
-    gc.collect()
-    torch.cuda.empty_cache() if torch.cuda.is_available() else None
-
-    # Profiled run
-    model.zero_grad()
-    with profile(
-        activities=activities,
-        profile_memory=True,
-        record_shapes=True,
-        with_stack=True,
-    ) as prof:
-        autojac_forward_backward(model, inputs, loss_fn, aggregator)
-
-    filename = f"{factory}-bs{batch_size}-{DEVICE.type}.json"
-    torchjd_dir = Path(__file__).parent.parent.parent
-    traces_dir = torchjd_dir / "traces" / "autojac"
-    traces_dir.mkdir(parents=True, exist_ok=True)
-    trace_path = traces_dir / filename
-
-    prof.export_chrome_trace(str(trace_path))
-    print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=20))
-
-
-def profile_autogram(factory: ModuleFactory, batch_size: int) -> None:
-    """
-    Profiles memory and computation time of autogram forward and backward pass for a given
-    architecture.
-
-    Prints the result and saves it in the traces folder. The saved traces be viewed using chrome at
-    chrome://tracing.
-
-    :param factory: A ModuleFactory that creates the model to profile.
-    :param batch_size: The batch size to use for profiling.
-    """
-
-    print(f"autogram: {factory} with batch_size={batch_size} on {DEVICE}:")
-
-    gc.collect()
-    torch.cuda.empty_cache() if torch.cuda.is_available() else None
-
-    model = factory()
-    inputs, targets = make_inputs_and_targets(model, batch_size)
-    loss_fn = make_mse_loss_fn(targets)
-    engine = Engine(model, batch_dim=0)
-    weighting = MeanWeighting()
-
-    activities = [ProfilerActivity.CPU]
-    if DEVICE.type == "cuda":
-        activities.append(ProfilerActivity.CUDA)
-
-    # Warmup run
-    autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
-    gc.collect()
-    torch.cuda.empty_cache() if torch.cuda.is_available() else None
-
-    # Profiled run
-    model.zero_grad()
-    with profile(
-        activities=activities,
-        profile_memory=True,
-        record_shapes=True,
-        with_stack=True,
-    ) as prof:
-        autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
-
-    filename = f"{factory}-bs{batch_size}-{DEVICE.type}.json"
-    torchjd_dir = Path(__file__).parent.parent.parent
-    traces_dir = torchjd_dir / "traces" / "autogram"
-    traces_dir.mkdir(parents=True, exist_ok=True)
-    trace_path = traces_dir / filename
-
-    prof.export_chrome_trace(str(trace_path))
-    print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=20))
 
 
 if __name__ == "__main__":
