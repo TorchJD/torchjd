@@ -1,6 +1,6 @@
 import torch
 
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import PSDMatrix, is_psd_matrix
 
 
 def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
@@ -13,9 +13,11 @@ def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     """
     squared_frobenius_norm = gramian.diagonal().sum()
     if squared_frobenius_norm < eps:
-        return torch.zeros_like(gramian)
+        output = torch.zeros_like(gramian)
     else:
-        return gramian / squared_frobenius_norm
+        output = gramian / squared_frobenius_norm
+    assert is_psd_matrix(output)
+    return output
 
 
 def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
@@ -30,4 +32,6 @@ def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     regularization_matrix = eps * torch.eye(
         gramian.shape[0], dtype=gramian.dtype, device=gramian.device
     )
-    return gramian + regularization_matrix
+    output = gramian + regularization_matrix
+    assert is_psd_matrix(output)
+    return output

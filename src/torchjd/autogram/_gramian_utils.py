@@ -1,7 +1,9 @@
-from torchjd._linalg.matrix import PSDMatrix
+from torch import Tensor
+
+from torchjd._linalg import PSDQuadraticForm, is_psd_quadratic_form
 
 
-def reshape_gramian(gramian: PSDMatrix, half_shape: list[int]) -> PSDMatrix:
+def reshape_gramian(gramian: PSDQuadraticForm, half_shape: list[int]) -> PSDQuadraticForm:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
     must be done from the left, while the reshape of the second half must be done from the right.
@@ -18,20 +20,24 @@ def reshape_gramian(gramian: PSDMatrix, half_shape: list[int]) -> PSDMatrix:
     # Example 2: `gramian` of shape [24, 24] and `shape` of [4, 3, 2]:
     # [24, 24] -(movedim)-> [24, 24] -(reshape)-> [4, 3, 2, 4, 3, 2] -(movedim)-> [4, 3, 2, 2, 3, 4]
 
-    return _revert_last_dims(_revert_last_dims(gramian).reshape(half_shape + half_shape))
+    reshaped_gramian = _revert_last_dims(
+        _revert_last_dims(gramian).reshape(half_shape + half_shape)
+    )
+    assert is_psd_quadratic_form(reshaped_gramian)
+    return reshaped_gramian
 
 
-def _revert_last_dims(gramian: PSDMatrix) -> PSDMatrix:
-    """Inverts the order of the last half of the dimensions of the input generalized Gramian."""
+def _revert_last_dims(t: Tensor) -> Tensor:
+    """Inverts the order of the last half of the dimensions of the input Tensor."""
 
-    half_ndim = gramian.ndim // 2
+    half_ndim = t.ndim // 2
     last_dims = [half_ndim + i for i in range(half_ndim)]
-    return gramian.movedim(last_dims, last_dims[::-1])
+    return t.movedim(last_dims, last_dims[::-1])
 
 
 def movedim_gramian(
-    gramian: PSDMatrix, half_source: list[int], half_destination: list[int]
-) -> PSDMatrix:
+    gramian: PSDQuadraticForm, half_source: list[int], half_destination: list[int]
+) -> PSDQuadraticForm:
     """
     Moves the dimensions of a Gramian from some source dimensions to destination dimensions. This
     must be done simultaneously on the first half of the dimensions and on the second half of the
@@ -62,4 +68,5 @@ def movedim_gramian(
     source = half_source_ + [last_dim - i for i in half_source_]
     destination = half_destination_ + [last_dim - i for i in half_destination_]
     moved_gramian = gramian.movedim(source, destination)
+    assert is_psd_quadratic_form(moved_gramian)
     return moved_gramian

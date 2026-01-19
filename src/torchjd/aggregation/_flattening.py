@@ -2,7 +2,7 @@ from math import prod
 
 from torch import Tensor
 
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import PSDMatrix, PSDQuadraticForm, is_psd_matrix
 from torchjd.aggregation._weighting_bases import GeneralizedWeighting, Weighting
 from torchjd.autogram._gramian_utils import reshape_gramian
 
@@ -26,11 +26,12 @@ class Flattening(GeneralizedWeighting):
         super().__init__()
         self.weighting = weighting
 
-    def forward(self, generalized_gramian: Tensor) -> Tensor:
+    def forward(self, generalized_gramian: PSDQuadraticForm) -> Tensor:
         k = generalized_gramian.ndim // 2
         shape = generalized_gramian.shape[:k]
         m = prod(shape)
         square_gramian = reshape_gramian(generalized_gramian, [m])
+        assert is_psd_matrix(square_gramian)
         weights_vector = self.weighting(square_gramian)
         weights = weights_vector.reshape(shape)
         return weights

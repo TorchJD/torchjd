@@ -4,8 +4,7 @@ from typing import Optional
 from torch import Tensor
 from torch.utils._pytree import PyTree
 
-from torchjd._linalg import compute_gramian
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import Matrix, PSDMatrix, compute_gramian, is_matrix
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
 
@@ -23,12 +22,12 @@ class GramianComputer(ABC):
     def track_forward_call(self) -> None:
         """Track that the module's forward was called. Necessary in some implementations."""
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset state if any. Necessary in some implementations."""
 
 
 class JacobianBasedGramianComputer(GramianComputer, ABC):
-    def __init__(self, jacobian_computer):
+    def __init__(self, jacobian_computer: JacobianComputer):
         self.jacobian_computer = jacobian_computer
 
 
@@ -41,7 +40,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     def __init__(self, jacobian_computer: JacobianComputer):
         super().__init__(jacobian_computer)
         self.remaining_counter = 0
-        self.summed_jacobian: Optional[Tensor] = None
+        self.summed_jacobian: Optional[Matrix] = None
 
     def reset(self) -> None:
         self.remaining_counter = 0
@@ -64,7 +63,9 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         if self.summed_jacobian is None:
             self.summed_jacobian = jacobian_matrix
         else:
-            self.summed_jacobian += jacobian_matrix
+            jacobians_sum = self.summed_jacobian + jacobian_matrix
+            assert is_matrix(jacobians_sum)
+            self.summed_jacobian = jacobians_sum
 
         self.remaining_counter -= 1
 

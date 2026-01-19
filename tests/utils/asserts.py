@@ -3,7 +3,7 @@ from typing import cast
 import torch
 from torch.testing import assert_close
 
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import PSDMatrix
 from torchjd.autojac._accumulation import TensorWithJac
 
 
