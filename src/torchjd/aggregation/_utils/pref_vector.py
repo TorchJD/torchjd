@@ -7,7 +7,6 @@ from torchjd.aggregation._weighting_bases import Weighting
 from .str import vector_to_str
 
 
-# TODO: Note that `PSDMatrix` is not a subtype of `Matrix` anymore.
 def pref_vector_to_weighting(
     pref_vector: Tensor | None, default: Weighting[Matrix]
 ) -> Weighting[Matrix]:
