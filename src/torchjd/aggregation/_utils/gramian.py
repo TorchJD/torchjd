@@ -17,6 +17,7 @@ def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     else:
         output = gramian / squared_frobenius_norm
     assert is_psd_matrix(output)
+    # TODO: Need a test for PSD property
     return output
 
 
@@ -34,4 +35,5 @@ def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     )
     output = gramian + regularization_matrix
     assert is_psd_matrix(output)
+    # TODO: Need a test for PSD property
     return output

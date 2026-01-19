@@ -1,7 +1,8 @@
 import torch
 from torch.testing import assert_close
 
-from torchjd._linalg import PSDMatrix
+from torchjd._linalg import PSDMatrix, PSDQuadraticForm
+from torchjd.autogram._gramian_utils import flatten_gramian
 from torchjd.autojac._accumulation import is_tensor_with_jac
 
 
@@ -33,7 +34,6 @@ def assert_grad_close(t: torch.Tensor, expected_grad: torch.Tensor, **kwargs) ->
 
 
 def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
-
     assert_close(matrix, matrix.mH, **kwargs, msg="Matrix is not symmetric/Hermitian")
 
     eig_vals = torch.linalg.eigvalsh(matrix)
@@ -42,3 +42,8 @@ def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
     assert_close(
         eig_vals, expected_eig_vals, **kwargs, msg="Matrix has significant negative eigenvalues"
     )
+
+
+def assert_psd_quadratic_form(t: PSDQuadraticForm, **kwargs) -> None:
+    matrix = flatten_gramian(t)
+    assert_psd_matrix(matrix)

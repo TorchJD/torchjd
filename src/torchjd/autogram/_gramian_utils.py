@@ -1,6 +1,8 @@
+from math import prod
+
 from torch import Tensor
 
-from torchjd._linalg import PSDQuadraticForm, is_psd_quadratic_form
+from torchjd._linalg import PSDMatrix, PSDQuadraticForm, is_psd_matrix, is_psd_quadratic_form
 
 
 def reshape_gramian(gramian: PSDQuadraticForm, half_shape: list[int]) -> PSDQuadraticForm:
@@ -24,7 +26,19 @@ def reshape_gramian(gramian: PSDQuadraticForm, half_shape: list[int]) -> PSDQuad
         _revert_last_dims(gramian).reshape(half_shape + half_shape)
     )
     assert is_psd_quadratic_form(reshaped_gramian)
+    # TODO: Need a test for PSD property
     return reshaped_gramian
+
+
+def flatten_gramian(gramian: PSDQuadraticForm) -> PSDMatrix:
+    k = gramian.ndim // 2
+    shape = gramian.shape[:k]
+    m = prod(shape)
+    square_gramian = reshape_gramian(gramian, [m])
+    assert is_psd_matrix(square_gramian)
+    # TODO: Need a test for PSD property
+    # TODO: This requires a test (reshape of generalized gramian into ndim 2 gives PSDMatrix)
+    return square_gramian
 
 
 def _revert_last_dims(t: Tensor) -> Tensor:
@@ -69,4 +83,5 @@ def movedim_gramian(
     destination = half_destination_ + [last_dim - i for i in half_destination_]
     moved_gramian = gramian.movedim(source, destination)
     assert is_psd_quadratic_form(moved_gramian)
+    # TODO: Need a test for PSD property
     return moved_gramian
