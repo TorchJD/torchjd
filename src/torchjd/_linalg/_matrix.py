@@ -28,10 +28,8 @@ def is_matrix(t: Tensor) -> TypeGuard[Matrix]:
 
 
 def is_psd_quadratic_form(t: Tensor) -> TypeGuard[PSDQuadraticForm]:
-    if t.ndim % 2 != 0:
-        return False
     half_dim = t.ndim // 2
-    return t.shape[:half_dim] == t.shape[: half_dim - 1 : -1]
+    return t.ndim % 2 != 0 and t.shape[:half_dim] == t.shape[: half_dim - 1 : -1]
     # We do not check that t is PSD as it is expensive, but this must be checked in the tests of
     # every function that use this TypeGuard.
     # TODO: Say with what assert we check that
