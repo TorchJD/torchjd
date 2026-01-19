@@ -69,7 +69,7 @@ def profile_method(
     with profile(
         activities=activities,
         profile_memory=True,
-        record_shapes=True,
+        record_shapes=False,  # Otherwise some tensors may be referenced longer than normal
         with_stack=True,
     ) as prof:
         forward_backward_fn(model, inputs, loss_fn)
