@@ -1,12 +1,11 @@
 from collections.abc import Iterable
-from typing import cast
 
 import torch
 from torch import Tensor
 
 from torchjd.aggregation import Aggregator
 
-from ._accumulation import TensorWithJac, accumulate_grads
+from ._accumulation import TensorWithJac, accumulate_grads, is_tensor_with_jac
 
 
 def jac_to_grad(
@@ -54,13 +53,12 @@ def jac_to_grad(
 
     tensors_ = list[TensorWithJac]()
     for t in tensors:
-        if not hasattr(t, "jac"):
+        if not is_tensor_with_jac(t):
             raise ValueError(
                 "Some `jac` fields were not populated. Did you use `autojac.backward` or "
                 "`autojac.mtl_backward` before calling `jac_to_grad`?"
             )
-        t_ = cast(TensorWithJac, t)
-        tensors_.append(t_)
+        tensors_.append(t)
 
     if len(tensors_) == 0:
         return

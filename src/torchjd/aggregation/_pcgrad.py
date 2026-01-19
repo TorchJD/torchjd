@@ -1,9 +1,11 @@
 import torch
 from torch import Tensor
 
+from torchjd._linalg import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class PCGrad(GramianWeightedAggregator):
@@ -25,7 +27,7 @@ class PCGradWeighting(Weighting[PSDMatrix]):
     :class:`~torchjd.aggregation.PCGrad`.
     """
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         # Move all computations on cpu to avoid moving memory between cpu and gpu at each iteration
         device = gramian.device
         dtype = gramian.dtype

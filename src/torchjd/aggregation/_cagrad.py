@@ -1,7 +1,9 @@
 from typing import cast
 
+from torchjd._linalg import PSDMatrix
+
 from ._utils.check_dependencies import check_dependencies_are_installed
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 check_dependencies_are_installed(["cvxpy", "clarabel"])
 
@@ -73,7 +75,7 @@ class CAGradWeighting(Weighting[PSDMatrix]):
         self.c = c
         self.norm_eps = norm_eps
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         U, S, _ = torch.svd(normalize(gramian, self.norm_eps))
 
         reduced_matrix = U @ S.sqrt().diag()

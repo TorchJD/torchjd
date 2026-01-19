@@ -2,8 +2,10 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from torchjd._linalg import Matrix
+
 from ._aggregator_bases import WeightedAggregator
-from ._weighting_bases import Matrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class Random(WeightedAggregator):

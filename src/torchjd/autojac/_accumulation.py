@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import cast
+from typing import TypeGuard
 
 from torch import Tensor
 
@@ -14,6 +14,10 @@ class TensorWithJac(Tensor):
     jac: Tensor
 
 
+def is_tensor_with_jac(t: Tensor) -> TypeGuard[TensorWithJac]:
+    return hasattr(t, "jac")
+
+
 def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> None:
     for param, jac in zip(params, jacobians, strict=True):
         _check_expects_grad(param, field_name=".jac")
@@ -26,9 +30,8 @@ def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> No
                 " jacobian are the same size"
             )
 
-        if hasattr(param, "jac"):  # No check for None because jac cannot be None
-            param_ = cast(TensorWithJac, param)
-            param_.jac += jac
+        if is_tensor_with_jac(param):
+            param.jac += jac
         else:
             # We do not clone the value to save memory and time, so subsequent modifications of
             # the value of key.jac (subsequent accumulations) will also affect the value of

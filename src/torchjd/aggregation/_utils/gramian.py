@@ -1,16 +1,9 @@
 import torch
-from torch import Tensor
+
+from torchjd._linalg.matrix import PSDMatrix
 
 
-def compute_gramian(matrix: Tensor) -> Tensor:
-    """
-    Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
-    """
-
-    return matrix @ matrix.T
-
-
-def normalize(gramian: Tensor, eps: float) -> Tensor:
+def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     """
     Normalizes the gramian `G=AA^T` with respect to the Frobenius norm of `A`.
 
@@ -25,7 +18,7 @@ def normalize(gramian: Tensor, eps: float) -> Tensor:
         return gramian / squared_frobenius_norm
 
 
-def regularize(gramian: Tensor, eps: float) -> Tensor:
+def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     """
     Adds a regularization term to the gramian to enforce positive definiteness.
 

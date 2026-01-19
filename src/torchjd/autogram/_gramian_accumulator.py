@@ -1,6 +1,6 @@
 from typing import Optional
 
-from torch import Tensor
+from torchjd._linalg.matrix import PSDMatrix
 
 
 class GramianAccumulator:
@@ -13,19 +13,19 @@ class GramianAccumulator:
     """
 
     def __init__(self) -> None:
-        self._gramian: Optional[Tensor] = None
+        self._gramian: Optional[PSDMatrix] = None
 
     def reset(self) -> None:
         self._gramian = None
 
-    def accumulate_gramian(self, gramian: Tensor) -> None:
+    def accumulate_gramian(self, gramian: PSDMatrix) -> None:
         if self._gramian is not None:
             self._gramian.add_(gramian)
         else:
             self._gramian = gramian
 
     @property
-    def gramian(self) -> Optional[Tensor]:
+    def gramian(self) -> Optional[PSDMatrix]:
         """
         Get the Gramian matrix accumulated so far.
 
