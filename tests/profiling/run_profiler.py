@@ -22,8 +22,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets
 
-from torchjd.aggregation import Mean
-from torchjd.aggregation._mean import MeanWeighting
+from torchjd.aggregation import UPGrad, UPGradWeighting
 from torchjd.autogram import Engine
 
 PARAMETRIZATIONS = [
@@ -105,7 +104,7 @@ def _save_and_print_trace(
 
 def profile_autojac(factory: ModuleFactory, batch_size: int) -> None:
     def forward_backward_fn(model, inputs, loss_fn):
-        aggregator = Mean()
+        aggregator = UPGrad()
         autojac_forward_backward(model, inputs, loss_fn, aggregator)
 
     profile_method("autojac", forward_backward_fn, factory, batch_size)
@@ -114,7 +113,7 @@ def profile_autojac(factory: ModuleFactory, batch_size: int) -> None:
 def profile_autogram(factory: ModuleFactory, batch_size: int) -> None:
     def forward_backward_fn(model, inputs, loss_fn):
         engine = Engine(model, batch_dim=0)
-        weighting = MeanWeighting()
+        weighting = UPGradWeighting()
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
 
     profile_method("autogram", forward_backward_fn, factory, batch_size)
