@@ -30,7 +30,7 @@ def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> No
                 " jacobian are the same size"
             )
 
-        if is_tensor_with_jac(param):  # No check for None because jac cannot be None
+        if is_tensor_with_jac(param):
             param.jac += jac
         else:
             # We do not clone the value to save memory and time, so subsequent modifications of
