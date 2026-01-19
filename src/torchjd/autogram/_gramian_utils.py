@@ -1,7 +1,7 @@
-from torch import Tensor
+from torchjd._linalg.matrix import PSDMatrix
 
 
-def reshape_gramian(gramian: Tensor, half_shape: list[int]) -> Tensor:
+def reshape_gramian(gramian: PSDMatrix, half_shape: list[int]) -> PSDMatrix:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
     must be done from the left, while the reshape of the second half must be done from the right.
@@ -21,7 +21,7 @@ def reshape_gramian(gramian: Tensor, half_shape: list[int]) -> Tensor:
     return _revert_last_dims(_revert_last_dims(gramian).reshape(half_shape + half_shape))
 
 
-def _revert_last_dims(gramian: Tensor) -> Tensor:
+def _revert_last_dims(gramian: PSDMatrix) -> PSDMatrix:
     """Inverts the order of the last half of the dimensions of the input generalized Gramian."""
 
     half_ndim = gramian.ndim // 2
@@ -29,7 +29,9 @@ def _revert_last_dims(gramian: Tensor) -> Tensor:
     return gramian.movedim(last_dims, last_dims[::-1])
 
 
-def movedim_gramian(gramian: Tensor, half_source: list[int], half_destination: list[int]) -> Tensor:
+def movedim_gramian(
+    gramian: PSDMatrix, half_source: list[int], half_destination: list[int]
+) -> PSDMatrix:
     """
     Moves the dimensions of a Gramian from some source dimensions to destination dimensions. This
     must be done simultaneously on the first half of the dimensions and on the second half of the

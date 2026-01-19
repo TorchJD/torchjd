@@ -4,6 +4,8 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
+from torchjd._linalg.matrix import PSDMatrix
+
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
@@ -232,6 +234,7 @@ class Engine:
                     f"`batch_dim=None` when creating the engine."
                 )
 
+    # Currently, the type PSDMatrix is hidden from users, so Tensor is correct.
     def compute_gramian(self, output: Tensor) -> Tensor:
         r"""
         Computes the Gramian of the Jacobian of ``output`` with respect to the direct parameters of
@@ -305,7 +308,7 @@ class Engine:
 
         return gramian
 
-    def _compute_square_gramian(self, output: Tensor, has_non_batch_dim: bool) -> Tensor:
+    def _compute_square_gramian(self, output: Tensor, has_non_batch_dim: bool) -> PSDMatrix:
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
 
         def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:
@@ -330,6 +333,6 @@ class Engine:
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.
-        gramian = cast(Tensor, self._gramian_accumulator.gramian)
+        gramian = cast(PSDMatrix, self._gramian_accumulator.gramian)
 
         return gramian
