@@ -12,12 +12,12 @@ from ._matrix import (
 
 __all__ = [
     "compute_gramian",
-    "PSDQuadraticForm",
     "GeneralizedMatrix",
     "Matrix",
     "PSDMatrix",
+    "PSDQuadraticForm",
     "is_generalized_matrix",
     "is_matrix",
-    "is_psd_quadratic_form",
     "is_psd_matrix",
+    "is_psd_quadratic_form",
 ]
