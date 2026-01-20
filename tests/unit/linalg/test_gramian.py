@@ -12,6 +12,7 @@ from torchjd._linalg import compute_gramian, is_matrix
         [4, 4],
         [4, 3],
         [6, 7],
+        [5, 0],
     ],
 )
 def test_gramian_is_psd(shape: list[int]):
