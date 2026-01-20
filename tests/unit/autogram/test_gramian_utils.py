@@ -25,7 +25,7 @@ from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
         ([6, 7, 9], [6, 7, 9]),
     ],
 )
-def test_reshape_gramian(original_shape: list[int], target_shape: list[int]):
+def test_reshape_gramian_equivarience(original_shape: list[int], target_shape: list[int]):
     """Tests that reshape_gramian is such that compute_gramian is equivariant to a reshape."""
 
     original_matrix = randn_(original_shape + [2])
@@ -57,7 +57,7 @@ def test_reshape_gramian(original_shape: list[int], target_shape: list[int]):
         ([2, 2, 3], [0, 2, 1], [1, 0, 2]),
     ],
 )
-def test_movedim_gramian(shape: list[int], source: list[int], destination: list[int]):
+def test_movedim_gramian_equivariance(shape: list[int], source: list[int], destination: list[int]):
     """Tests that movedim_gramian is such that compute_gramian is equivariant to a movedim."""
 
     original_matrix = randn_(shape + [2])
