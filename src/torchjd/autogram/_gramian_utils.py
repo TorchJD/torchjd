@@ -10,7 +10,7 @@ from torchjd._linalg import (
 )
 
 
-def reshape_gramian(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
+def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
     must be done from the left, while the reshape of the second half must be done from the right.
@@ -35,11 +35,11 @@ def reshape_gramian(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSD
     return reshaped_gramian
 
 
-def flatten_gramian(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
+def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
     k = gramian.ndim // 2
     shape = gramian.shape[:k]
     m = prod(shape)
-    square_gramian = reshape_gramian(gramian, [m])
+    square_gramian = reshape(gramian, [m])
     assert is_psd_matrix(square_gramian)
     # TODO: Need a test for PSD property
     # TODO: This requires a test (reshape of generalized gramian into ndim 2 gives PSDMatrix)
@@ -54,7 +54,7 @@ def _revert_last_dims(t: Tensor) -> Tensor:
     return t.movedim(last_dims, last_dims[::-1])
 
 
-def movedim_gramian(
+def movedim(
     gramian: PSDGeneralizedMatrix, half_source: list[int], half_destination: list[int]
 ) -> PSDGeneralizedMatrix:
     """

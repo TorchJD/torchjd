@@ -3,7 +3,7 @@ from torch.testing import assert_close
 from utils.forward_backwards import compute_gramian
 from utils.tensors import randn_
 
-from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
+from torchjd.autogram._gramian_utils import movedim, reshape
 
 
 @mark.parametrize(
@@ -25,7 +25,7 @@ from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
         ([6, 7, 9], [6, 7, 9]),
     ],
 )
-def test_reshape_gramian_equivarience(original_shape: list[int], target_shape: list[int]):
+def test_reshape_equivarience(original_shape: list[int], target_shape: list[int]):
     """Tests that reshape_gramian is such that compute_gramian is equivariant to a reshape."""
 
     original_matrix = randn_(original_shape + [2])
@@ -34,7 +34,7 @@ def test_reshape_gramian_equivarience(original_shape: list[int], target_shape: l
     original_gramian = compute_gramian(original_matrix)
     target_gramian = compute_gramian(target_matrix)
 
-    reshaped_gramian = reshape_gramian(original_gramian, target_shape)
+    reshaped_gramian = reshape(original_gramian, target_shape)
 
     assert_close(reshaped_gramian, target_gramian)
 
@@ -57,7 +57,7 @@ def test_reshape_gramian_equivarience(original_shape: list[int], target_shape: l
         ([2, 2, 3], [0, 2, 1], [1, 0, 2]),
     ],
 )
-def test_movedim_gramian_equivariance(shape: list[int], source: list[int], destination: list[int]):
+def test_movedim_equivariance(shape: list[int], source: list[int], destination: list[int]):
     """Tests that movedim_gramian is such that compute_gramian is equivariant to a movedim."""
 
     original_matrix = randn_(shape + [2])
@@ -66,6 +66,6 @@ def test_movedim_gramian_equivariance(shape: list[int], source: list[int], desti
     original_gramian = compute_gramian(original_matrix)
     target_gramian = compute_gramian(target_matrix)
 
-    moveddim_gramian = movedim_gramian(original_gramian, source, destination)
+    moveddim_gramian = movedim(original_gramian, source, destination)
 
     assert_close(moveddim_gramian, target_gramian)

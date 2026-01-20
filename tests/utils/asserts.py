@@ -2,7 +2,7 @@ import torch
 from torch.testing import assert_close
 
 from torchjd._linalg import PSDGeneralizedMatrix, PSDMatrix
-from torchjd.autogram._gramian_utils import flatten_gramian
+from torchjd.autogram._gramian_utils import flatten
 from torchjd.autojac._accumulation import is_tensor_with_jac
 
 
@@ -45,5 +45,5 @@ def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
 
 
 def assert_psd_generalized_matrix(t: PSDGeneralizedMatrix, **kwargs) -> None:
-    matrix = flatten_gramian(t)
+    matrix = flatten(t)
     assert_psd_matrix(matrix)
