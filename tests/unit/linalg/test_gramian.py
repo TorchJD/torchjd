@@ -2,8 +2,7 @@ from pytest import mark
 from utils.asserts import assert_psd_matrix
 from utils.tensors import randn_
 
-from torchjd._linalg import is_matrix
-from torchjd._linalg._gramian import compute_gramian
+from torchjd._linalg import compute_gramian, is_matrix
 
 
 @mark.parametrize(
