@@ -46,4 +46,4 @@ def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
 
 def assert_psd_generalized_matrix(t: PSDGeneralizedMatrix, **kwargs) -> None:
     matrix = flatten(t)
-    assert_psd_matrix(matrix)
+    assert_psd_matrix(matrix, **kwargs)

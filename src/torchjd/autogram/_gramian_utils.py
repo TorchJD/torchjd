@@ -1,13 +1,9 @@
 from math import prod
+from typing import cast
 
 from torch import Tensor
 
-from torchjd._linalg import (
-    PSDGeneralizedMatrix,
-    PSDMatrix,
-    is_psd_generalized_matrix,
-    is_psd_matrix,
-)
+from torchjd._linalg import PSDGeneralizedMatrix, PSDMatrix
 
 
 def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
@@ -30,9 +26,7 @@ def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGenerali
     reshaped_gramian = _revert_last_dims(
         _revert_last_dims(gramian).reshape(half_shape + half_shape)
     )
-    assert is_psd_generalized_matrix(reshaped_gramian)
-    # TODO: Need a test for PSD property
-    return reshaped_gramian
+    return cast(PSDGeneralizedMatrix, reshaped_gramian)
 
 
 def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
@@ -40,10 +34,7 @@ def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
     shape = gramian.shape[:k]
     m = prod(shape)
     square_gramian = reshape(gramian, [m])
-    assert is_psd_matrix(square_gramian)
-    # TODO: Need a test for PSD property
-    # TODO: This requires a test (reshape of generalized gramian into ndim 2 gives PSDMatrix)
-    return square_gramian
+    return cast(PSDMatrix, square_gramian)
 
 
 def _revert_last_dims(t: Tensor) -> Tensor:
@@ -87,6 +78,4 @@ def movedim(
     source = half_source_ + [last_dim - i for i in half_source_]
     destination = half_destination_ + [last_dim - i for i in half_destination_]
     moved_gramian = gramian.movedim(source, destination)
-    assert is_psd_generalized_matrix(moved_gramian)
-    # TODO: Need a test for PSD property
-    return moved_gramian
+    return cast(PSDGeneralizedMatrix, moved_gramian)
