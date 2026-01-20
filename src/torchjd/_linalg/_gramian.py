@@ -1,4 +1,6 @@
-from ._matrix import Matrix, PSDMatrix, is_psd_matrix
+from typing import cast
+
+from ._matrix import Matrix, PSDMatrix
 
 
 def compute_gramian(matrix: Matrix) -> PSDMatrix:
@@ -7,5 +9,4 @@ def compute_gramian(matrix: Matrix) -> PSDMatrix:
     """
 
     gramian = matrix @ matrix.T
-    assert is_psd_matrix(gramian)
-    return gramian
+    return cast(PSDMatrix, gramian)

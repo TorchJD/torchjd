@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, cast
 
 from torch import Tensor
 from torch.utils._pytree import PyTree
 
-from torchjd._linalg import Matrix, PSDMatrix, compute_gramian, is_matrix
+from torchjd._linalg import Matrix, PSDMatrix, compute_gramian
 from torchjd.autogram._jacobian_computer import JacobianComputer
 
 
@@ -63,9 +63,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         if self.summed_jacobian is None:
             self.summed_jacobian = jacobian_matrix
         else:
-            jacobians_sum = self.summed_jacobian + jacobian_matrix
-            assert is_matrix(jacobians_sum)
-            self.summed_jacobian = jacobians_sum
+            self.summed_jacobian = cast(Matrix, self.summed_jacobian + jacobian_matrix)
 
         self.remaining_counter -= 1
 

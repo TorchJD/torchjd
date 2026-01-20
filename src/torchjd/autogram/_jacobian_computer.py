@@ -7,7 +7,7 @@ from torch import Tensor, nn
 from torch.nn import Parameter
 from torch.utils._pytree import PyTree, tree_flatten, tree_map, tree_map_only
 
-from torchjd._linalg import Matrix, is_matrix
+from torchjd._linalg import Matrix
 
 # Note about import from protected _pytree module:
 # PyTorch maintainers plan to make pytree public (see
@@ -83,8 +83,7 @@ class FunctionalJacobianComputer(JacobianComputer):
         vmapped_vjp = torch.vmap(self._call_on_one_instance, in_dims=in_dims)
 
         jacobian = vmapped_vjp(grad_outputs, args, kwargs)
-        assert is_matrix(jacobian)
-        return jacobian
+        return cast(Matrix, jacobian)
 
     def _call_on_one_instance(
         self,
@@ -146,8 +145,7 @@ class AutogradJacobianComputer(JacobianComputer):
         )
         flattened_grads = torch.cat([g.reshape(-1) for g in grads])
         jacobian = flattened_grads.unsqueeze(0)
-        assert is_matrix(jacobian)
-        return jacobian
+        return cast(Matrix, jacobian)
 
 
 class ComputeModuleJacobians(torch.autograd.Function):
@@ -185,8 +183,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
         )
         shape = generalized_jacobian.shape
         jacobian = generalized_jacobian.reshape([shape[0] * shape[1], -1])
-        assert is_matrix(jacobian)
-        return jacobian, None
+        return cast(Matrix, jacobian), None
 
     @staticmethod
     def setup_context(*_) -> None:
