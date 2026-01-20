@@ -12,8 +12,9 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from torchjd._linalg import normalize
+
 from ._aggregator_bases import GramianWeightedAggregator
-from ._utils.gramian import normalize
 from ._utils.non_differentiable import raise_non_differentiable_error
 
 

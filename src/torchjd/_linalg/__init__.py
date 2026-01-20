@@ -1,4 +1,4 @@
-from ._gramian import compute_gramian
+from ._gramian import compute_gramian, normalize, regularize
 from ._matrix import (
     GeneralizedMatrix,
     Matrix,
@@ -12,6 +12,8 @@ from ._matrix import (
 
 __all__ = [
     "compute_gramian",
+    "normalize",
+    "regularize",
     "GeneralizedMatrix",
     "Matrix",
     "PSDMatrix",
