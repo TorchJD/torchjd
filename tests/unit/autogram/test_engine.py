@@ -68,7 +68,6 @@ from utils.forward_backwards import (
     CloneParams,
     autograd_forward_backward,
     autogram_forward_backward,
-    compute_gramian,
     compute_gramian_with_autograd,
     forward_pass,
     make_mse_loss_fn,
@@ -79,6 +78,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
+from torchjd._linalg._gramian import compute_gramian
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim, reshape
