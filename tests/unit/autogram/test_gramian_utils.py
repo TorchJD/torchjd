@@ -1,10 +1,10 @@
 from pytest import mark
 from torch.testing import assert_close
 from utils.asserts import assert_psd_generalized_matrix, assert_psd_matrix
+from utils.forward_backwards import compute_gramian
 from utils.tensors import randn_
 
 from torchjd._linalg import is_psd_generalized_matrix, is_psd_matrix
-from torchjd._linalg._gramian import compute_gramian
 from torchjd.autogram._gramian_utils import flatten, movedim, reshape
 
 

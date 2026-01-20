@@ -1,15 +1,12 @@
 from typing import cast
 
-import torch
-
-from ._matrix import GeneralizedMatrix, PSDMatrix
+from ._matrix import Matrix, PSDMatrix
 
 
-def compute_gramian(matrix: GeneralizedMatrix) -> PSDMatrix:
+def compute_gramian(matrix: Matrix) -> PSDMatrix:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
     """
 
-    indices = list(range(1, matrix.ndim))
-    gramian = torch.tensordot(matrix, matrix, dims=(indices, indices))
+    gramian = matrix @ matrix.T
     return cast(PSDMatrix, gramian)
