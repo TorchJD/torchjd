@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from torchjd._linalg import PSDGeneralizedMatrix, PSDMatrix
+from torchjd._linalg import PSDGeneralizedMatrix
 from torchjd.aggregation._weighting_bases import GeneralizedWeighting, Weighting
 from torchjd.autogram._gramian_utils import flatten_gramian
 
@@ -20,7 +20,7 @@ class Flattening(GeneralizedWeighting):
     :param weighting: The weighting to apply to the Gramian matrix.
     """
 
-    def __init__(self, weighting: Weighting[PSDMatrix]):
+    def __init__(self, weighting: Weighting):
         super().__init__()
         self.weighting = weighting
 
