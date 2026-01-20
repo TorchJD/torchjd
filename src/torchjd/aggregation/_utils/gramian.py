@@ -1,6 +1,8 @@
+from typing import cast
+
 import torch
 
-from torchjd._linalg import PSDMatrix, is_psd_matrix
+from torchjd._linalg import PSDMatrix
 
 
 def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
@@ -16,9 +18,7 @@ def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
         output = torch.zeros_like(gramian)
     else:
         output = gramian / squared_frobenius_norm
-    assert is_psd_matrix(output)
-    # TODO: Need a test for PSD property
-    return output
+    return cast(PSDMatrix, output)
 
 
 def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
@@ -34,6 +34,4 @@ def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
         gramian.shape[0], dtype=gramian.dtype, device=gramian.device
     )
     output = gramian + regularization_matrix
-    assert is_psd_matrix(output)
-    # TODO: Need a test for PSD property
-    return output
+    return cast(PSDMatrix, output)
