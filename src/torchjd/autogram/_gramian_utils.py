@@ -2,10 +2,15 @@ from math import prod
 
 from torch import Tensor
 
-from torchjd._linalg import PSDMatrix, PSDQuadraticForm, is_psd_matrix, is_psd_quadratic_form
+from torchjd._linalg import (
+    PSDGeneralizedMatrix,
+    PSDMatrix,
+    is_psd_generalized_matrix,
+    is_psd_matrix,
+)
 
 
-def reshape_gramian(gramian: PSDQuadraticForm, half_shape: list[int]) -> PSDQuadraticForm:
+def reshape_gramian(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
     must be done from the left, while the reshape of the second half must be done from the right.
@@ -25,12 +30,12 @@ def reshape_gramian(gramian: PSDQuadraticForm, half_shape: list[int]) -> PSDQuad
     reshaped_gramian = _revert_last_dims(
         _revert_last_dims(gramian).reshape(half_shape + half_shape)
     )
-    assert is_psd_quadratic_form(reshaped_gramian)
+    assert is_psd_generalized_matrix(reshaped_gramian)
     # TODO: Need a test for PSD property
     return reshaped_gramian
 
 
-def flatten_gramian(gramian: PSDQuadraticForm) -> PSDMatrix:
+def flatten_gramian(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
     k = gramian.ndim // 2
     shape = gramian.shape[:k]
     m = prod(shape)
@@ -50,8 +55,8 @@ def _revert_last_dims(t: Tensor) -> Tensor:
 
 
 def movedim_gramian(
-    gramian: PSDQuadraticForm, half_source: list[int], half_destination: list[int]
-) -> PSDQuadraticForm:
+    gramian: PSDGeneralizedMatrix, half_source: list[int], half_destination: list[int]
+) -> PSDGeneralizedMatrix:
     """
     Moves the dimensions of a Gramian from some source dimensions to destination dimensions. This
     must be done simultaneously on the first half of the dimensions and on the second half of the
@@ -82,6 +87,6 @@ def movedim_gramian(
     source = half_source_ + [last_dim - i for i in half_source_]
     destination = half_destination_ + [last_dim - i for i in half_destination_]
     moved_gramian = gramian.movedim(source, destination)
-    assert is_psd_quadratic_form(moved_gramian)
+    assert is_psd_generalized_matrix(moved_gramian)
     # TODO: Need a test for PSD property
     return moved_gramian

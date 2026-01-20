@@ -2,12 +2,12 @@ from ._gramian import compute_gramian
 from ._matrix import (
     GeneralizedMatrix,
     Matrix,
+    PSDGeneralizedMatrix,
     PSDMatrix,
-    PSDQuadraticForm,
     is_generalized_matrix,
     is_matrix,
+    is_psd_generalized_matrix,
     is_psd_matrix,
-    is_psd_quadratic_form,
 )
 
 __all__ = [
@@ -15,9 +15,9 @@ __all__ = [
     "GeneralizedMatrix",
     "Matrix",
     "PSDMatrix",
-    "PSDQuadraticForm",
+    "PSDGeneralizedMatrix",
     "is_generalized_matrix",
     "is_matrix",
     "is_psd_matrix",
-    "is_psd_quadratic_form",
+    "is_psd_generalized_matrix",
 ]
