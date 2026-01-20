@@ -34,14 +34,12 @@ def assert_grad_close(t: torch.Tensor, expected_grad: torch.Tensor, **kwargs) ->
 
 
 def assert_psd_matrix(matrix: PSDMatrix, **kwargs) -> None:
-    assert_close(matrix, matrix.mH, **kwargs, msg="Matrix is not symmetric/Hermitian")
+    assert_close(matrix, matrix.mH, **kwargs)
 
     eig_vals = torch.linalg.eigvalsh(matrix)
     expected_eig_vals = eig_vals.clamp(min=0.0)
 
-    assert_close(
-        eig_vals, expected_eig_vals, **kwargs, msg="Matrix has significant negative eigenvalues"
-    )
+    assert_close(eig_vals, expected_eig_vals, **kwargs)
 
 
 def assert_psd_generalized_matrix(t: PSDGeneralizedMatrix, **kwargs) -> None:
