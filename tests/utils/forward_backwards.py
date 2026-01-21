@@ -8,6 +8,7 @@ from torch.utils.hooks import RemovableHandle
 from utils.architectures import get_in_out_shapes
 from utils.contexts import fork_rng
 
+from torchjd._linalg import PSDGeneralizedMatrix
 from torchjd.aggregation import Aggregator, Weighting
 from torchjd.autogram import Engine
 from torchjd.autojac import backward
@@ -116,7 +117,7 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
 def compute_gramian_with_autograd(
     output: Tensor, params: list[nn.Parameter], retain_graph: bool = False
-) -> Tensor:
+) -> PSDGeneralizedMatrix:
     """
     Computes the Gramian of the Jacobian of the outputs with respect to the params using vmapped
     calls to the autograd engine.
@@ -141,7 +142,7 @@ def compute_gramian_with_autograd(
     return gramian
 
 
-def compute_gramian(matrix: Tensor) -> Tensor:
+def compute_gramian(matrix: Tensor) -> PSDGeneralizedMatrix:
     """Contracts the last dimension of matrix to make it into a Gramian."""
 
     indices = list(range(matrix.ndim))
