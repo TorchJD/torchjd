@@ -27,7 +27,6 @@ class Weighting(Generic[_T], nn.Module, ABC):
     def forward(self, stat: _T) -> Tensor:
         """Computes the vector of weights from the input stat."""
 
-    # Override to make type hints and documentation more specific
     def __call__(self, stat: _T) -> Tensor:
         """Computes the vector of weights from the input stat and applies all registered hooks."""
 
@@ -69,7 +68,6 @@ class GeneralizedWeighting(nn.Module, ABC):
     def forward(self, generalized_gramian: PSDGeneralizedMatrix) -> Tensor:
         """Computes the vector of weights from the input generalized Gramian."""
 
-    # Override to make type hints and documentation more specific
     def __call__(self, generalized_gramian: Tensor) -> Tensor:
         """
         Computes the tensor of weights from the input generalized Gramian and applies all registered

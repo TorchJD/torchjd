@@ -28,8 +28,6 @@ class Aggregator(nn.Module, ABC):
     def forward(self, matrix: Matrix) -> Tensor:
         """Computes the aggregation from the input matrix."""
 
-    # Override to make type hints and documentation more specific, note that `Matrix` type isn't
-    # public
     def __call__(self, matrix: Tensor) -> Tensor:
         """Computes the aggregation from the input matrix and applies all registered hooks."""
         Aggregator._check_is_matrix(matrix)
