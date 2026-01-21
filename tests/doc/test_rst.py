@@ -205,7 +205,9 @@ def test_iwrm():
 
 
 @mark.filterwarnings(
-    "ignore::DeprecationWarning", "ignore::lightning.fabric.utilities.warnings.PossibleUserWarning"
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+    "ignore::lightning.fabric.utilities.warnings.PossibleUserWarning",
 )
 def test_lightning_integration():
     # Extra ----------------------------------------------------------------------------------------
