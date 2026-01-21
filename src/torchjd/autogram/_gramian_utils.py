@@ -6,6 +6,24 @@ from torch import Tensor
 from torchjd._linalg import PSDGeneralizedMatrix, PSDMatrix
 
 
+def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
+    """
+    Flattens a generalized Gramian into a square matrix. The first half of the dimensions are
+    flattened into the first dimension, and the second half are flattened into the second.
+
+    :param gramian: Gramian to flatten. Can be a generalized Gramian.
+    """
+
+    # Example: `gramian` of shape [2, 3, 4, 4, 3, 2]:
+    # [2, 3, 4, 4, 3, 2] yields a gramian of shape [24, 24]
+
+    k = gramian.ndim // 2
+    shape = gramian.shape[:k]
+    m = prod(shape)
+    square_gramian = reshape(gramian, [m])
+    return cast(PSDMatrix, square_gramian)
+
+
 def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
@@ -23,18 +41,8 @@ def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGenerali
     # Example 2: `gramian` of shape [24, 24] and `half_shape` of [4, 3, 2]:
     # [24, 24] -(movedim)-> [24, 24] -(reshape)-> [4, 3, 2, 4, 3, 2] -(movedim)-> [4, 3, 2, 2, 3, 4]
 
-    reshaped_gramian = _revert_last_dims(
-        _revert_last_dims(gramian).reshape(half_shape + half_shape)
-    )
-    return cast(PSDGeneralizedMatrix, reshaped_gramian)
-
-
-def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
-    k = gramian.ndim // 2
-    half_shape = gramian.shape[:k]
-    m = prod(half_shape)
-    square_gramian = reshape(gramian, [m])
-    return cast(PSDMatrix, square_gramian)
+    result = _revert_last_dims(_revert_last_dims(gramian).reshape(half_shape + half_shape))
+    return cast(PSDGeneralizedMatrix, result)
 
 
 def _revert_last_dims(t: Tensor) -> Tensor:
