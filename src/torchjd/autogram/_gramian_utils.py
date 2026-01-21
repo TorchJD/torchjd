@@ -16,11 +16,11 @@ def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGenerali
         `shape + shape[::-1]`.
     """
 
-    # Example 1: `gramian` of shape [4, 3, 2, 2, 3, 4] and `shape` of [8, 3]:
+    # Example 1: `gramian` of shape [4, 3, 2, 2, 3, 4] and `half_shape` of [8, 3]:
     # [4, 3, 2, 2, 3, 4] -(movedim)-> [4, 3, 2, 4, 3, 2] -(reshape)-> [8, 3, 8, 3] -(movedim)->
     # [8, 3, 3, 8]
     #
-    # Example 2: `gramian` of shape [24, 24] and `shape` of [4, 3, 2]:
+    # Example 2: `gramian` of shape [24, 24] and `half_shape` of [4, 3, 2]:
     # [24, 24] -(movedim)-> [24, 24] -(reshape)-> [4, 3, 2, 4, 3, 2] -(movedim)-> [4, 3, 2, 2, 3, 4]
 
     reshaped_gramian = _revert_last_dims(
@@ -31,8 +31,8 @@ def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGenerali
 
 def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
     k = gramian.ndim // 2
-    shape = gramian.shape[:k]
-    m = prod(shape)
+    half_shape = gramian.shape[:k]
+    m = prod(half_shape)
     square_gramian = reshape(gramian, [m])
     return cast(PSDMatrix, square_gramian)
 
