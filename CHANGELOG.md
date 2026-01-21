@@ -35,10 +35,8 @@ changelog does not include internal changes that do not affect the user.
   jac_to_grad(shared_module.parameters(), aggregator)
   ```
 
-- Removed an unnecessary memory duplication. This should significantly improve the memory efficiency
-  of `autojac`.
-- Removed an unnecessary internal cloning of gradient. This should slightly improve the memory
-  efficiency of `autojac`.
+- Removed several unnecessary memory duplications. This should significantly improve the memory
+  efficiency and speed of `autojac`.
 
 ## [0.8.1] - 2026-01-07
 
