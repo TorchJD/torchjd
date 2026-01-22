@@ -68,7 +68,6 @@ from utils.forward_backwards import (
     CloneParams,
     autograd_forward_backward,
     autogram_forward_backward,
-    compute_gramian,
     compute_gramian_with_autograd,
     forward_pass,
     make_mse_loss_fn,
@@ -79,6 +78,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
+from torchjd._linalg import compute_gramian
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim, reshape
@@ -418,9 +418,9 @@ def test_compute_gramian_manual():
     weight_jacobian = zeros_([out_dims, model.weight.numel()])
     for j in range(out_dims):
         weight_jacobian[j, j * in_dims : (j + 1) * in_dims] = input
-    weight_gramian = compute_gramian(weight_jacobian)
+    weight_gramian = compute_gramian(weight_jacobian, 1)
     bias_jacobian = torch.diag(ones_(out_dims))
-    bias_gramian = compute_gramian(bias_jacobian)
+    bias_gramian = compute_gramian(bias_jacobian, 1)
     expected_gramian = weight_gramian + bias_gramian
 
     assert_close(gramian, expected_gramian)

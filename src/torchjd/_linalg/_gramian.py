@@ -1,18 +1,40 @@
-from typing import cast
+from typing import Literal, cast, overload
 
 import torch
 
-from ._matrix import GeneralizedMatrix, PSDMatrix
+from ._matrix import GeneralizedMatrix, PSDGeneralizedMatrix, PSDMatrix
 
 
+@overload
 def compute_gramian(matrix: GeneralizedMatrix) -> PSDMatrix:
+    pass
+
+
+@overload
+def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: Literal[-1]) -> PSDMatrix:
+    pass
+
+
+@overload
+def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: int) -> PSDGeneralizedMatrix:
+    pass
+
+
+def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: int = -1) -> PSDGeneralizedMatrix:
     """
-    Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of a given matrix.
+    Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of the input.
+
+    `contracted_dims` specifies the number of trailing dimensions to contract. If negative,
+    it indicates the number of leading dimensions to preserve (e.g., ``-1`` preserves the
+    first dimension).
     """
 
-    indices = list(range(1, matrix.ndim))
-    gramian = torch.tensordot(matrix, matrix, dims=(indices, indices))
-    return cast(PSDMatrix, gramian)
+    contracted_dims = contracted_dims if 0 <= contracted_dims else contracted_dims + matrix.ndim
+    indices_source = list(range(matrix.ndim - contracted_dims))
+    indices_dest = list(range(matrix.ndim - 1, contracted_dims - 1, -1))
+    transposed_matrix = matrix.movedim(indices_source, indices_dest)
+    gramian = torch.tensordot(matrix, transposed_matrix, dims=contracted_dims)
+    return cast(PSDGeneralizedMatrix, gramian)
 
 
 def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
