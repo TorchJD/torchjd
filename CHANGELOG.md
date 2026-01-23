@@ -8,6 +8,11 @@ changelog does not include internal changes that do not affect the user.
 
 ## [Unreleased]
 
+### Added
+
+- Added a `scale_mode` parameter to `AlignedMTL` and `AlignedMTLWeighting`, allowing to choose
+  between `"min"`, `"median"`, and `"rmse"` scaling.
+
 ### Changed
 
 - **BREAKING**: Removed from `backward` and `mtl_backward` the responsibility to aggregate the
