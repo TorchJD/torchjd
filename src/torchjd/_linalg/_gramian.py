@@ -16,11 +16,6 @@ def compute_gramian(matrix: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
     pass
 
 
-@overload
-def compute_gramian(matrix: Tensor, contracted_dims: int) -> PSDTensor:
-    pass
-
-
 def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDTensor:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of the input.
