@@ -3,7 +3,7 @@ from typing import Literal, cast, overload
 import torch
 from torch import Tensor
 
-from ._matrix import PSDMatrix, PSDTensor
+from ._matrix import Matrix, PSDMatrix, PSDTensor
 
 
 @overload
@@ -13,6 +13,11 @@ def compute_gramian(t: Tensor) -> PSDMatrix:
 
 @overload
 def compute_gramian(t: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
+    pass
+
+
+@overload
+def compute_gramian(t: Matrix, contracted_dims: Literal[1]) -> PSDMatrix:
     pass
 
 
