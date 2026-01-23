@@ -7,16 +7,16 @@ from ._matrix import PSDMatrix, PSDTensor
 
 
 @overload
-def compute_gramian(matrix: Tensor) -> PSDMatrix:
+def compute_gramian(t: Tensor) -> PSDMatrix:
     pass
 
 
 @overload
-def compute_gramian(matrix: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
+def compute_gramian(t: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
     pass
 
 
-def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDTensor:
+def compute_gramian(t: Tensor, contracted_dims: int = -1) -> PSDTensor:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of the input.
 
@@ -25,11 +25,11 @@ def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDTensor:
     first dimension).
     """
 
-    contracted_dims = contracted_dims if 0 <= contracted_dims else contracted_dims + matrix.ndim
-    indices_source = list(range(matrix.ndim - contracted_dims))
-    indices_dest = list(range(matrix.ndim - 1, contracted_dims - 1, -1))
-    transposed_matrix = matrix.movedim(indices_source, indices_dest)
-    gramian = torch.tensordot(matrix, transposed_matrix, dims=contracted_dims)
+    contracted_dims = contracted_dims if 0 <= contracted_dims else contracted_dims + t.ndim
+    indices_source = list(range(t.ndim - contracted_dims))
+    indices_dest = list(range(t.ndim - 1, contracted_dims - 1, -1))
+    transposed = t.movedim(indices_source, indices_dest)
+    gramian = torch.tensordot(t, transposed, dims=contracted_dims)
     return cast(PSDTensor, gramian)
 
 
