@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from torchjd._linalg import PSDGeneralizedMatrix
+from torchjd._linalg import PSDTensor
 from torchjd.aggregation._weighting_bases import GeneralizedWeighting, Weighting
 from torchjd.autogram._gramian_utils import flatten
 
@@ -24,7 +24,7 @@ class Flattening(GeneralizedWeighting):
         super().__init__()
         self.weighting = weighting
 
-    def forward(self, generalized_gramian: PSDGeneralizedMatrix) -> Tensor:
+    def forward(self, generalized_gramian: PSDTensor) -> Tensor:
         k = generalized_gramian.ndim // 2
         shape = generalized_gramian.shape[:k]
         square_gramian = flatten(generalized_gramian)

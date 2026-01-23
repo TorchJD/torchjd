@@ -3,10 +3,10 @@ from typing import cast
 
 from torch import Tensor
 
-from torchjd._linalg import PSDGeneralizedMatrix, PSDMatrix
+from torchjd._linalg import PSDMatrix, PSDTensor
 
 
-def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
+def flatten(gramian: PSDTensor) -> PSDMatrix:
     """
     Flattens a generalized Gramian into a square matrix. The first half of the dimensions are
     flattened into the first dimension, and the second half are flattened into the second.
@@ -24,7 +24,7 @@ def flatten(gramian: PSDGeneralizedMatrix) -> PSDMatrix:
     return cast(PSDMatrix, square_gramian)
 
 
-def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGeneralizedMatrix:
+def reshape(gramian: PSDTensor, half_shape: list[int]) -> PSDTensor:
     """
     Reshapes a Gramian to a provided shape. The reshape of the first half of the target dimensions
     must be done from the left, while the reshape of the second half must be done from the right.
@@ -42,7 +42,7 @@ def reshape(gramian: PSDGeneralizedMatrix, half_shape: list[int]) -> PSDGenerali
     # [24, 24] -(movedim)-> [24, 24] -(reshape)-> [4, 3, 2, 4, 3, 2] -(movedim)-> [4, 3, 2, 2, 3, 4]
 
     result = _revert_last_dims(_revert_last_dims(gramian).reshape(half_shape + half_shape))
-    return cast(PSDGeneralizedMatrix, result)
+    return cast(PSDTensor, result)
 
 
 def _revert_last_dims(t: Tensor) -> Tensor:
@@ -53,9 +53,7 @@ def _revert_last_dims(t: Tensor) -> Tensor:
     return t.movedim(last_dims, last_dims[::-1])
 
 
-def movedim(
-    gramian: PSDGeneralizedMatrix, half_source: list[int], half_destination: list[int]
-) -> PSDGeneralizedMatrix:
+def movedim(gramian: PSDTensor, half_source: list[int], half_destination: list[int]) -> PSDTensor:
     """
     Moves the dimensions of a Gramian from some source dimensions to destination dimensions. This
     must be done simultaneously on the first half of the dimensions and on the second half of the
@@ -86,4 +84,4 @@ def movedim(
     source = half_source_ + [last_dim - i for i in half_source_]
     destination = half_destination_ + [last_dim - i for i in half_destination_]
     moved_gramian = gramian.movedim(source, destination)
-    return cast(PSDGeneralizedMatrix, moved_gramian)
+    return cast(PSDTensor, moved_gramian)

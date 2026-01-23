@@ -1,6 +1,6 @@
 from pytest import mark
 from torch.testing import assert_close
-from utils.asserts import assert_is_psd_generalized_matrix, assert_is_psd_matrix
+from utils.asserts import assert_is_psd_matrix, assert_is_psd_tensor
 from utils.tensors import randn_
 
 from torchjd._linalg import compute_gramian, is_psd_matrix
@@ -59,7 +59,7 @@ def test_reshape_yields_psd(original_shape: list[int], target_shape: list[int]):
     matrix = randn_(original_shape + [2])
     gramian = compute_gramian(matrix, 1)
     reshaped_gramian = reshape(gramian, target_shape)
-    assert_is_psd_generalized_matrix(reshaped_gramian, atol=1e-04, rtol=0.0)
+    assert_is_psd_tensor(reshaped_gramian, atol=1e-04, rtol=0.0)
 
 
 @mark.parametrize(
@@ -150,4 +150,4 @@ def test_movedim_yields_psd(shape: list[int], source: list[int], destination: li
     matrix = randn_(shape + [2])
     gramian = compute_gramian(matrix, 1)
     moveddim_gramian = movedim(gramian, source, destination)
-    assert_is_psd_generalized_matrix(moveddim_gramian)
+    assert_is_psd_tensor(moveddim_gramian)

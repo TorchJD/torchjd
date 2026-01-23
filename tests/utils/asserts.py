@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from torch.testing import assert_close
 
-from torchjd._linalg import is_psd_generalized_matrix, is_psd_matrix
+from torchjd._linalg import is_psd_matrix, is_psd_tensor
 from torchjd.autogram._gramian_utils import flatten
 from torchjd.autojac._accumulation import is_tensor_with_jac
 
@@ -44,7 +44,7 @@ def assert_is_psd_matrix(matrix: Tensor, **kwargs) -> None:
     assert_close(eig_vals, expected_eig_vals, **kwargs)
 
 
-def assert_is_psd_generalized_matrix(t: Tensor, **kwargs) -> None:
-    assert is_psd_generalized_matrix(t)
+def assert_is_psd_tensor(t: Tensor, **kwargs) -> None:
+    assert is_psd_tensor(t)
     matrix = flatten(t)
     assert_is_psd_matrix(matrix, **kwargs)

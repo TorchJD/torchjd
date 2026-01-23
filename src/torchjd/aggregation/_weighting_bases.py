@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 
 from torch import Tensor, nn
 
-from torchjd._linalg import PSDGeneralizedMatrix, is_psd_generalized_matrix
+from torchjd._linalg import PSDTensor, is_psd_tensor
 
 _T = TypeVar("_T", contravariant=True)
 _FnInputT = TypeVar("_FnInputT")
@@ -65,7 +65,7 @@ class GeneralizedWeighting(nn.Module, ABC):
         super().__init__()
 
     @abstractmethod
-    def forward(self, generalized_gramian: PSDGeneralizedMatrix) -> Tensor:
+    def forward(self, generalized_gramian: PSDTensor) -> Tensor:
         """Computes the vector of weights from the input generalized Gramian."""
 
     def __call__(self, generalized_gramian: Tensor) -> Tensor:
@@ -74,5 +74,5 @@ class GeneralizedWeighting(nn.Module, ABC):
         hooks.
         """
 
-        assert is_psd_generalized_matrix(generalized_gramian)
+        assert is_psd_tensor(generalized_gramian)
         return super().__call__(generalized_gramian)

@@ -3,7 +3,7 @@ from typing import Literal, cast, overload
 import torch
 from torch import Tensor
 
-from ._matrix import PSDGeneralizedMatrix, PSDMatrix
+from ._matrix import PSDMatrix, PSDTensor
 
 
 @overload
@@ -17,11 +17,11 @@ def compute_gramian(matrix: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
 
 
 @overload
-def compute_gramian(matrix: Tensor, contracted_dims: int) -> PSDGeneralizedMatrix:
+def compute_gramian(matrix: Tensor, contracted_dims: int) -> PSDTensor:
     pass
 
 
-def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDGeneralizedMatrix:
+def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDTensor:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of the input.
 
@@ -35,7 +35,7 @@ def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDGeneralized
     indices_dest = list(range(matrix.ndim - 1, contracted_dims - 1, -1))
     transposed_matrix = matrix.movedim(indices_source, indices_dest)
     gramian = torch.tensordot(matrix, transposed_matrix, dims=contracted_dims)
-    return cast(PSDGeneralizedMatrix, gramian)
+    return cast(PSDTensor, gramian)
 
 
 def normalize(gramian: PSDMatrix, eps: float) -> PSDMatrix:

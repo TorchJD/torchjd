@@ -1,12 +1,5 @@
 from ._gramian import compute_gramian, normalize, regularize
-from ._matrix import (
-    Matrix,
-    PSDGeneralizedMatrix,
-    PSDMatrix,
-    is_matrix,
-    is_psd_generalized_matrix,
-    is_psd_matrix,
-)
+from ._matrix import Matrix, PSDMatrix, PSDTensor, is_matrix, is_psd_matrix, is_psd_tensor
 
 __all__ = [
     "compute_gramian",
@@ -14,8 +7,8 @@ __all__ = [
     "regularize",
     "Matrix",
     "PSDMatrix",
-    "PSDGeneralizedMatrix",
+    "PSDTensor",
     "is_matrix",
     "is_psd_matrix",
-    "is_psd_generalized_matrix",
+    "is_psd_tensor",
 ]
