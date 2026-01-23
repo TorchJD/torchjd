@@ -1,10 +1,9 @@
 import torch
 from pytest import mark, raises
 from torch import Tensor
+from utils.tensors import ones_
 
 from torchjd.aggregation import AlignedMTL
-
-from utils.tensors import ones_
 
 from ._asserts import assert_expected_structure, assert_permutation_invariant
 from ._inputs import scaled_matrices, typical_matrices
