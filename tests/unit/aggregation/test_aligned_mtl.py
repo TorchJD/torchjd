@@ -23,9 +23,9 @@ def test_permutation_invariant(aggregator: AlignedMTL, matrix: Tensor):
 
 def test_representations():
     A = AlignedMTL(pref_vector=None)
-    assert repr(A) == "AlignedMTL(pref_vector=None)"
+    assert repr(A) == "AlignedMTL(pref_vector=None, scale_mode='min')"
     assert str(A) == "AlignedMTL"
 
     A = AlignedMTL(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"))
-    assert repr(A) == "AlignedMTL(pref_vector=tensor([1., 2., 3.]))"
+    assert repr(A) == "AlignedMTL(pref_vector=tensor([1., 2., 3.]), scale_mode='min')"
     assert str(A) == "AlignedMTL([1., 2., 3.])"
