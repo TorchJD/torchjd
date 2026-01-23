@@ -2,6 +2,10 @@ from typing import TypeGuard
 
 from torch import Tensor
 
+# Note: we're using classes and inherittance instead of NewType because it's possible to have
+# multiple inherittance but there is no type intersection. However, these classes should never be
+# instantiated: they're only used for static type checking.
+
 
 class Matrix(Tensor):
     """Tensor with exactly 2 dimensions."""
