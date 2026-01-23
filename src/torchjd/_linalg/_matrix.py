@@ -3,11 +3,7 @@ from typing import TypeGuard
 from torch import Tensor
 
 
-class GeneralizedMatrix(Tensor):
-    """Tensor with a least 1 dimension."""
-
-
-class Matrix(GeneralizedMatrix):
+class Matrix(Tensor):
     """Tensor with exactly 2 dimensions."""
 
 
@@ -21,10 +17,6 @@ class PSDGeneralizedMatrix(Tensor):
 
 class PSDMatrix(PSDGeneralizedMatrix, Matrix):
     """Positive semi-definite matrix."""
-
-
-def is_generalized_matrix(t: Tensor) -> TypeGuard[GeneralizedMatrix]:
-    return t.ndim >= 1
 
 
 def is_matrix(t: Tensor) -> TypeGuard[Matrix]:

@@ -2,7 +2,7 @@ from pytest import mark
 from utils.asserts import assert_is_psd_matrix
 from utils.tensors import randn_
 
-from torchjd._linalg import compute_gramian, is_generalized_matrix, is_matrix, normalize, regularize
+from torchjd._linalg import compute_gramian, is_matrix, normalize, regularize
 
 
 @mark.parametrize(
@@ -21,7 +21,6 @@ from torchjd._linalg import compute_gramian, is_generalized_matrix, is_matrix, n
 )
 def test_gramian_is_psd(shape: list[int]):
     matrix = randn_(shape)
-    assert is_generalized_matrix(matrix)
     gramian = compute_gramian(matrix)
     assert_is_psd_matrix(gramian)
 

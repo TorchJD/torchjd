@@ -1,26 +1,27 @@
 from typing import Literal, cast, overload
 
 import torch
+from torch import Tensor
 
-from ._matrix import GeneralizedMatrix, PSDGeneralizedMatrix, PSDMatrix
+from ._matrix import PSDGeneralizedMatrix, PSDMatrix
 
 
 @overload
-def compute_gramian(matrix: GeneralizedMatrix) -> PSDMatrix:
+def compute_gramian(matrix: Tensor) -> PSDMatrix:
     pass
 
 
 @overload
-def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: Literal[-1]) -> PSDMatrix:
+def compute_gramian(matrix: Tensor, contracted_dims: Literal[-1]) -> PSDMatrix:
     pass
 
 
 @overload
-def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: int) -> PSDGeneralizedMatrix:
+def compute_gramian(matrix: Tensor, contracted_dims: int) -> PSDGeneralizedMatrix:
     pass
 
 
-def compute_gramian(matrix: GeneralizedMatrix, contracted_dims: int = -1) -> PSDGeneralizedMatrix:
+def compute_gramian(matrix: Tensor, contracted_dims: int = -1) -> PSDGeneralizedMatrix:
     """
     Computes the `Gramian matrix <https://en.wikipedia.org/wiki/Gram_matrix>`_ of the input.
 
