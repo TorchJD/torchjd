@@ -1,14 +1,21 @@
 import torch
-from pytest import mark
+from pytest import mark, raises
 from torch import Tensor
 
 from torchjd.aggregation import AlignedMTL
 
+from utils.tensors import ones_
+
 from ._asserts import assert_expected_structure, assert_permutation_invariant
 from ._inputs import scaled_matrices, typical_matrices
 
-scaled_pairs = [(AlignedMTL(), matrix) for matrix in scaled_matrices]
-typical_pairs = [(AlignedMTL(), matrix) for matrix in typical_matrices]
+aggregators = [
+    AlignedMTL(),
+    AlignedMTL(scale_mode="median"),
+    AlignedMTL(scale_mode="rmse"),
+]
+scaled_pairs = [(aggregator, matrix) for aggregator in aggregators for matrix in scaled_matrices]
+typical_pairs = [(aggregator, matrix) for aggregator in aggregators for matrix in typical_matrices]
 
 
 @mark.parametrize(["aggregator", "matrix"], scaled_pairs + typical_pairs)
@@ -29,3 +36,10 @@ def test_representations():
     A = AlignedMTL(pref_vector=torch.tensor([1.0, 2.0, 3.0], device="cpu"))
     assert repr(A) == "AlignedMTL(pref_vector=tensor([1., 2., 3.]), scale_mode='min')"
     assert str(A) == "AlignedMTL([1., 2., 3.])"
+
+
+def test_invalid_scale_mode():
+    aggregator = AlignedMTL(scale_mode="test")  # type: ignore[arg-type]
+    matrix = ones_(3, 4)
+    with raises(ValueError, match=r"Invalid scale_mode=.*Expected"):
+        aggregator(matrix)
