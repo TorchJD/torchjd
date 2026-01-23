@@ -3,6 +3,8 @@ from collections.abc import Callable
 import torch
 from torch import Tensor
 
+from torchjd._linalg import Matrix
+
 from ._aggregator_bases import Aggregator
 from ._utils.non_differentiable import raise_non_differentiable_error
 
@@ -38,8 +40,7 @@ class GradDrop(Aggregator):
         # This prevents computing gradients that can be very wrong.
         self.register_full_backward_pre_hook(raise_non_differentiable_error)
 
-    def forward(self, matrix: Tensor) -> Tensor:
-        self._check_is_matrix(matrix)
+    def forward(self, matrix: Matrix) -> Tensor:
         self._check_matrix_has_enough_rows(matrix)
 
         if matrix.shape[0] == 0 or matrix.shape[1] == 0:

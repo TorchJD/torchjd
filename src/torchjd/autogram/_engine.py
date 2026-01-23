@@ -4,12 +4,12 @@ import torch
 from torch import Tensor, nn, vmap
 from torch.autograd.graph import get_gradient_edge
 
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import PSDMatrix
 
 from ._edge_registry import EdgeRegistry
 from ._gramian_accumulator import GramianAccumulator
 from ._gramian_computer import GramianComputer, JacobianBasedGramianComputerWithCrossTerms
-from ._gramian_utils import movedim_gramian, reshape_gramian
+from ._gramian_utils import movedim, reshape
 from ._jacobian_computer import (
     AutogradJacobianComputer,
     FunctionalJacobianComputer,
@@ -299,10 +299,10 @@ class Engine:
             for gramian_computer in self._gramian_computers.values():
                 gramian_computer.reset()
 
-        unordered_gramian = reshape_gramian(square_gramian, ordered_shape)
+        unordered_gramian = reshape(square_gramian, ordered_shape)
 
         if self._batch_dim is not None:
-            gramian = movedim_gramian(unordered_gramian, [-1], [self._batch_dim])
+            gramian = movedim(unordered_gramian, [-1], [self._batch_dim])
         else:
             gramian = unordered_gramian
 

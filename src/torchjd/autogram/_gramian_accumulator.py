@@ -1,6 +1,6 @@
 from typing import Optional
 
-from torchjd._linalg.matrix import PSDMatrix
+from torchjd._linalg import PSDMatrix
 
 
 class GramianAccumulator:

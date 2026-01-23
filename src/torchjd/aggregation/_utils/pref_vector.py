@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from torchjd._linalg.matrix import Matrix
+from torchjd._linalg import Matrix
 from torchjd.aggregation._constant import ConstantWeighting
 from torchjd.aggregation._weighting_bases import Weighting
 
