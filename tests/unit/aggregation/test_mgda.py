@@ -226,6 +226,16 @@ def test_loss_normalization_validates_size():
         weighting(gramian)
 
 
+def test_loss_plus_normalization_validates_size():
+    """Test that loss+ normalization validates losses size matches gramian."""
+    weighting = MGDAWeighting(norm_type="loss+")
+    weighting.set_losses(torch.tensor([1.0, 2.0, 3.0]))  # 3 losses
+    gramian = torch.tensor([[4.0, 2.0], [2.0, 9.0]])  # 2x2 gramian
+
+    with raises(ValueError, match=r"Number of losses .* must match"):
+        weighting(gramian)
+
+
 def test_loss_normalization_weights_sum_to_one():
     """Test that loss normalization produces weights that sum to 1."""
     weighting = MGDAWeighting(norm_type="loss")
