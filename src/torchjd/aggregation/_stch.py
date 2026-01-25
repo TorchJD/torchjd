@@ -190,9 +190,9 @@ class STCHWeighting(Weighting[PSDMatrix]):
                 if self.nadir_accumulator is None:
                     self.nadir_accumulator = grad_norms.detach().clone()
                 else:
-                    self.nadir_accumulator = self.nadir_accumulator.to(
-                        device=device, dtype=dtype
-                    ) + grad_norms.detach()
+                    self.nadir_accumulator = (
+                        self.nadir_accumulator.to(device=device, dtype=dtype) + grad_norms.detach()
+                    )
 
                 self.step += 1
 
