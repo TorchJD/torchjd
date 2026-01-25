@@ -219,8 +219,11 @@ def test_warmup_step_counter():
     weighting(gramian)
     assert weighting.step == 3
 
-    weighting(gramian)
+    weighting(gramian)  # First step after warmup: nadir_vector gets computed
     assert weighting.step == 4
+
+    weighting(gramian)  # Steady-state: nadir_vector is already set
+    assert weighting.step == 5
 
 
 def test_warmup_with_varying_gramians():
