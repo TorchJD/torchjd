@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, cast
 
 import torch
 from torch import Tensor
@@ -223,7 +223,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         """
         grad_norms = torch.sqrt(torch.diag(gramian).clamp(min=1e-20))
         norm_matrix = grad_norms.unsqueeze(1) * grad_norms.unsqueeze(0)
-        return gramian / norm_matrix
+        return cast(PSDMatrix, gramian / norm_matrix)
 
     def _normalize_gramian_loss(self, gramian: PSDMatrix) -> PSDMatrix:
         """
@@ -247,7 +247,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
 
         losses = self._losses.to(device=gramian.device, dtype=gramian.dtype).clamp(min=1e-20)
         norm_matrix = losses.unsqueeze(1) * losses.unsqueeze(0)
-        return gramian / norm_matrix
+        return cast(PSDMatrix, gramian / norm_matrix)
 
     def _normalize_gramian_loss_plus(self, gramian: PSDMatrix) -> PSDMatrix:
         """
@@ -273,4 +273,4 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         grad_norms = torch.sqrt(torch.diag(gramian).clamp(min=1e-20))
         combined_norms = losses * grad_norms
         norm_matrix = combined_norms.unsqueeze(1) * combined_norms.unsqueeze(0)
-        return gramian / norm_matrix
+        return cast(PSDMatrix, gramian / norm_matrix)

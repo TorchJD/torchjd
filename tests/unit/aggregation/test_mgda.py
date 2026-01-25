@@ -246,6 +246,25 @@ def test_loss_plus_normalization_weights_sum_to_one():
     assert torch.isclose(weights.sum(), torch.tensor(1.0), atol=1e-6)
 
 
+def test_identity_gramian_triggers_no_progress_branch():
+    """Test that an identity gramian triggers the gamma=0.0 branch in Frank-Wolfe.
+
+    For an identity gramian [[1, 0], [0, 1]] with initial alpha = [0.5, 0.5]:
+    - gramian @ alpha = [0.5, 0.5], so t = 0 (argmin)
+    - a = alpha @ (gramian @ e_t) = 0.5
+    - b = alpha @ (gramian @ alpha) = 0.5
+    - c = e_t @ (gramian @ e_t) = 1
+    Since c > a and b <= a, this hits the gamma = 0.0 branch.
+    """
+    weighting = MGDAWeighting()
+    gramian = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+    weights = weighting(gramian)
+
+    # For identity gramian, uniform weights [0.5, 0.5] should be optimal
+    assert torch.isclose(weights[0], torch.tensor(0.5), atol=1e-6)
+    assert torch.isclose(weights[1], torch.tensor(0.5), atol=1e-6)
+
+
 def test_loss_normalization_balances_by_loss():
     """Test that loss normalization balances tasks with different loss values."""
     # Two orthogonal gradients with equal norms but different losses
