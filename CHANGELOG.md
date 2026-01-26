@@ -3,8 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog does not include internal
-changes that do not affect the user.
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This
+changelog does not include internal changes that do not affect the user.
 
 ## [Unreleased]
 
@@ -13,7 +13,47 @@ changes that do not affect the user.
 - Added the function `torchjd.autojac.jac` to compute the Jacobian of some outputs with respect to
   some inputs, without doing any aggregation. Its interface is very similar to
   `torch.autograd.grad`.
-- Added `__all__` in the `__init__.py` of packages. This should prevent PyLance from triggering warnings when importing from `torchjd`.
+- Added a `scale_mode` parameter to `AlignedMTL` and `AlignedMTLWeighting`, allowing to choose
+  between `"min"`, `"median"`, and `"rmse"` scaling.
+
+### Changed
+
+- **BREAKING**: Removed from `backward` and `mtl_backward` the responsibility to aggregate the
+  Jacobian. Now, these functions compute and populate the `.jac` fields of the parameters, and a new
+  function `torchjd.autojac.jac_to_grad` should then be called to aggregate those `.jac` fields into
+  `.grad` fields.
+  This means that users now have more control on what they do with the Jacobians (they can easily
+  aggregate them group by group or even param by param if they want), but it now requires an extra
+  line of code to do the Jacobian descent step. To update, please change:
+  ```python
+  backward(losses, aggregator)
+  ```
+  to
+  ```python
+  backward(losses)
+  jac_to_grad(model.parameters(), aggregator)
+  ```
+  and
+  ```python
+  mtl_backward(losses, features, aggregator)
+  ```
+  to
+  ```python
+  mtl_backward(losses, features)
+  jac_to_grad(shared_module.parameters(), aggregator)
+  ```
+
+- Removed an unnecessary memory duplication. This should significantly improve the memory efficiency
+  of `autojac`.
+- Removed an unnecessary internal cloning of gradient. This should slightly improve the memory
+  efficiency of `autojac`.
+
+## [0.8.1] - 2026-01-07
+
+### Added
+
+- Added `__all__` in the `__init__.py` of packages. This should prevent PyLance from triggering
+  warnings when importing from `torchjd`.
 
 ## [0.8.0] - 2025-11-13
 

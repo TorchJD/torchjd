@@ -111,11 +111,11 @@ using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/).
       loss1 = loss_fn(output1, target1)
       loss2 = loss_fn(output2, target2)
 
-      optimizer.zero_grad()
 -     loss = loss1 + loss2
 -     loss.backward()
 +     mtl_backward(losses=[loss1, loss2], features=features, aggregator=aggregator)
       optimizer.step()
+      optimizer.zero_grad()
 ```
 
 > [!NOTE]
@@ -150,12 +150,12 @@ Jacobian descent using [UPGrad](https://torchjd.org/stable/docs/aggregation/upgr
 -     loss = loss_fn(output, target)  # shape [1]
 +     losses = loss_fn(output, target)  # shape [16]
 
-      optimizer.zero_grad()
 -     loss.backward()
 +     gramian = engine.compute_gramian(losses)  # shape: [16, 16]
 +     weights = weighting(gramian)  # shape: [16]
 +     losses.backward(weights)
       optimizer.step()
+      optimizer.zero_grad()
 ```
 
 Lastly, you can even combine the two approaches by considering multiple tasks and each element of
@@ -201,10 +201,10 @@ for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
     # Obtain the weights that lead to no conflict between reweighted gradients
     weights = weighting(gramian)  # shape: [16, 2]
 
-    optimizer.zero_grad()
     # Do the standard backward pass, but weighted using the obtained weights
     losses.backward(weights)
     optimizer.step()
+    optimizer.zero_grad()
 ```
 
 > [!NOTE]

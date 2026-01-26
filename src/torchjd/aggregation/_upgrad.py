@@ -3,13 +3,14 @@ from typing import Literal
 import torch
 from torch import Tensor
 
+from torchjd._linalg import PSDMatrix, normalize, regularize
+
 from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import MeanWeighting
 from ._utils.dual_cone import project_weights
-from ._utils.gramian import normalize, regularize
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class UPGrad(GramianWeightedAggregator):
@@ -87,7 +88,7 @@ class UPGradWeighting(Weighting[PSDMatrix]):
         self.reg_eps = reg_eps
         self.solver = solver
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         U = torch.diag(self.weighting(gramian))
         G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         W = project_weights(U, G, self.solver)

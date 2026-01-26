@@ -68,7 +68,6 @@ from utils.forward_backwards import (
     CloneParams,
     autograd_forward_backward,
     autogram_forward_backward,
-    compute_gramian,
     compute_gramian_with_autograd,
     forward_pass,
     make_mse_loss_fn,
@@ -79,9 +78,10 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
+from torchjd._linalg import compute_gramian
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
-from torchjd.autogram._gramian_utils import movedim_gramian, reshape_gramian
+from torchjd.autogram._gramian_utils import movedim, reshape
 
 PARAMETRIZATIONS = [
     (ModuleFactory(OverlyNested), 32),
@@ -284,7 +284,7 @@ def test_compute_gramian_various_output_shapes(
     # Go back to a vector so that compute_gramian_with_autograd works
     loss_vector = reshaped_losses.reshape([-1])
     autograd_gramian = compute_gramian_with_autograd(loss_vector, params)
-    expected_gramian = reshape_gramian(autograd_gramian, list(reshaped_losses.shape))
+    expected_gramian = reshape(autograd_gramian, list(reshaped_losses.shape))
 
     engine = Engine(model_autogram, batch_dim=batch_dim)
     losses = forward_pass(model_autogram, inputs, loss_fn, reduction)
@@ -345,7 +345,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
         loss_fn = make_mse_loss_fn(targets)
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
         optimizer.step()
-        model.zero_grad()
+        optimizer.zero_grad()
 
 
 @mark.parametrize(["factory", "batch_size"], PARAMETRIZATIONS)
@@ -418,9 +418,9 @@ def test_compute_gramian_manual():
     weight_jacobian = zeros_([out_dims, model.weight.numel()])
     for j in range(out_dims):
         weight_jacobian[j, j * in_dims : (j + 1) * in_dims] = input
-    weight_gramian = compute_gramian(weight_jacobian)
+    weight_gramian = compute_gramian(weight_jacobian, 1)
     bias_jacobian = torch.diag(ones_(out_dims))
-    bias_gramian = compute_gramian(bias_jacobian)
+    bias_gramian = compute_gramian(bias_jacobian, 1)
     expected_gramian = weight_gramian + bias_gramian
 
     assert_close(gramian, expected_gramian)
@@ -458,7 +458,7 @@ def test_reshape_equivariance(shape: list[int]):
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input)
     gramian = engine1.compute_gramian(output)
-    expected_reshaped_gramian = reshape_gramian(gramian, shape[1:])
+    expected_reshaped_gramian = reshape(gramian, shape[1:])
 
     engine2 = Engine(model2, batch_dim=None)
     reshaped_output = model2(input).reshape(shape[1:])
@@ -496,7 +496,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input).reshape(shape[1:])
     gramian = engine1.compute_gramian(output)
-    expected_moved_gramian = movedim_gramian(gramian, source, destination)
+    expected_moved_gramian = movedim(gramian, source, destination)
 
     engine2 = Engine(model2, batch_dim=None)
     moved_output = model2(input).reshape(shape[1:]).movedim(source, destination)

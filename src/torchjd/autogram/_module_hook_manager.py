@@ -173,7 +173,7 @@ class AutogramNode(torch.autograd.Function):
         ctx,
         inputs: tuple,
         _,
-    ):
+    ) -> None:
         ctx.gramian_accumulation_phase = inputs[0]
         ctx.gramian_computer = inputs[1]
         ctx.args = inputs[2]

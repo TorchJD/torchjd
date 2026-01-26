@@ -91,7 +91,12 @@ class Jac(Differentiate):
         jacs_chunks.append(_get_jacs_chunk(jac_outputs_chunk, get_vjp_last))
 
         n_inputs = len(self.inputs)
-        jacs = tuple(torch.cat([chunks[i] for chunks in jacs_chunks]) for i in range(n_inputs))
+        if len(jacs_chunks) == 1:
+            # Avoid using cat to avoid doubling memory usage, if it's not needed
+            jacs = jacs_chunks[0]
+        else:
+            jacs = tuple(torch.cat([chunks[i] for chunks in jacs_chunks]) for i in range(n_inputs))
+
         return jacs
 
 

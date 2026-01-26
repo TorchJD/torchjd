@@ -1,8 +1,10 @@
 import torch
 from torch import Tensor
 
+from torchjd._linalg import PSDMatrix
+
 from ._aggregator_bases import GramianWeightedAggregator
-from ._weighting_bases import PSDMatrix, Weighting
+from ._weighting_bases import Weighting
 
 
 class MGDA(GramianWeightedAggregator):
@@ -40,7 +42,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def forward(self, gramian: Tensor) -> Tensor:
+    def forward(self, gramian: PSDMatrix) -> Tensor:
         """
         This is the Frank-Wolfe solver in Algorithm 2 of `Multi-Task Learning as Multi-Objective
         Optimization
