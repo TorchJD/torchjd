@@ -111,18 +111,15 @@ def jac(
     """
 
     check_optional_positive_chunk_size(parallel_chunk_size)
+
     outputs_ = as_checked_ordered_set(outputs, "outputs")
+    if len(outputs_) == 0:
+        raise ValueError("`outputs` cannot be empty")
 
     if inputs is None:
         inputs_ = get_leaf_tensors(tensors=outputs_, excluded=set())
     else:
         inputs_ = OrderedSet(inputs)
-
-    if len(outputs_) == 0:
-        raise ValueError("`outputs` cannot be empty")
-
-    if len(inputs_) == 0:
-        raise ValueError("`inputs` cannot be empty")
 
     jac_transform = _create_transform(
         outputs=outputs_,
