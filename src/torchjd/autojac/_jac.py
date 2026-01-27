@@ -24,7 +24,7 @@ def jac(
     r"""
     Computes the Jacobian of all values in ``outputs`` with respect to all ``inputs``. Returns the
     result as a tuple, with one Jacobian per input tensor. The returned Jacobian with respect to
-    input `t` have shape `[m] + t.shape`.
+    input ``t`` has shape ``[m] + t.shape``.
 
     :param outputs: The tensor or tensors to differentiate. Should be non-empty. The Jacobians will
         have one row for each value of each of these tensors.
