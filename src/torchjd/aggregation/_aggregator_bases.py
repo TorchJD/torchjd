@@ -78,3 +78,4 @@ class GramianWeightedAggregator(WeightedAggregator):
 
     def __init__(self, weighting: Weighting[PSDMatrix]):
         super().__init__(weighting << compute_gramian)
+        self.gramian_weighting = weighting
