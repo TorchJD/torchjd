@@ -42,6 +42,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version || '3.14' }}
           enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
 
       - uses: ./.github/actions/install-deps
         with:
@@ -70,6 +71,7 @@ jobs:
         with:
           python-version: '3.14'
           enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
 
       - uses: ./.github/actions/install-deps
         with:
@@ -91,6 +93,7 @@ jobs:
         with:
           python-version: '3.14'
           enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
 
       - uses: ./.github/actions/install-deps
         with:
