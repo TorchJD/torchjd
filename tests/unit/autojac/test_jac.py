@@ -261,9 +261,9 @@ def test_repeated_tensors():
 
 def test_repeated_inputs():
     """
-    Tests that jac correctly works when some inputs are repeated. This behaviour is different than
-    torch.autograd.grad, which would repeat the output gradients as many times as the inputs are
-    repeated.
+    Tests that jac correctly works when some inputs are repeated. In this case, since
+    torch.autograd.grad repeats the output gradients, it is natural for autojac to also repeat the
+    output jacobians.
     """
 
     a1 = tensor_([1.0, 2.0], requires_grad=True)
@@ -276,6 +276,7 @@ def test_repeated_inputs():
     J2 = tensor_([[1.0, 1.0], [6.0, 8.0]])
 
     jacobians = jac([y1, y2], inputs=[a1, a1, a2])
-    assert len(jacobians) == 2
+    assert len(jacobians) == 3
     assert_close(jacobians[0], J1)
-    assert_close(jacobians[1], J2)
+    assert_close(jacobians[1], J1)
+    assert_close(jacobians[2], J2)

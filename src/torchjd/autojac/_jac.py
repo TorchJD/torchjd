@@ -118,8 +118,10 @@ def jac(
 
     if inputs is None:
         inputs_ = get_leaf_tensors(tensors=outputs_, excluded=set())
+        inputs_with_repetition = list(inputs_)
     else:
-        inputs_ = OrderedSet(inputs)
+        inputs_with_repetition = list(inputs)  # Create a list to avoid emptying generator
+        inputs_ = OrderedSet(inputs_with_repetition)
 
     jac_transform = _create_transform(
         outputs=outputs_,
@@ -129,7 +131,7 @@ def jac(
     )
 
     result = jac_transform({})
-    return tuple(val for val in result.values())
+    return tuple(result[input] for input in inputs_with_repetition)
 
 
 def _create_transform(
