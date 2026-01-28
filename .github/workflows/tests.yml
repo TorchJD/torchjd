@@ -37,12 +37,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+      - uses: ./.github/actions/setup-uv
         with:
           python-version: ${{ matrix.python-version || '3.14' }}
-          enable-cache: true
-          cache-dependency-glob: "**/pyproject.toml"
 
       - uses: ./.github/actions/install-deps
         with:
@@ -66,12 +63,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: '3.14'
-          enable-cache: true
-          cache-dependency-glob: "**/pyproject.toml"
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
@@ -88,12 +80,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: '3.14'
-          enable-cache: true
-          cache-dependency-glob: "**/pyproject.toml"
+      - uses: ./.github/actions/setup-uv
 
       - uses: ./.github/actions/install-deps
         with:
