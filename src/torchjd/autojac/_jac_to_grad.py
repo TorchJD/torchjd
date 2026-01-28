@@ -78,7 +78,7 @@ def jac_to_grad(
     if isinstance(aggregator, GramianWeightedAggregator):
         # When it's possible, avoid the concatenation of the jacobians that can be very costly in
         # memory.
-        gradients = _gramian_based(aggregator.weighting.weighting, jacobians, tensors_)
+        gradients = _gramian_based(aggregator.gramian_weighting, jacobians, tensors_)
     else:
         gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
