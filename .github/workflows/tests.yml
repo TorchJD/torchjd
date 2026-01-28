@@ -41,6 +41,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version || '3.14' }}
+          enable-cache: true
 
       - uses: ./.github/actions/install-deps
         with:
@@ -68,6 +69,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.14'
+          enable-cache: true
 
       - uses: ./.github/actions/install-deps
         with:
@@ -88,6 +90,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: '3.14'
+          enable-cache: true
 
       - uses: ./.github/actions/install-deps
         with:
