@@ -73,8 +73,10 @@ class GramianWeightedAggregator(WeightedAggregator):
     WeightedAggregator that computes the gramian of the input jacobian matrix before applying a
     Weighting to it.
 
-    :param weighting: The object responsible for extracting the vector of weights from the gramian.
+    :param gramian_weighting: The object responsible for extracting the vector of weights from the
+        gramian.
     """
 
-    def __init__(self, weighting: Weighting[PSDMatrix]):
-        super().__init__(weighting << compute_gramian)
+    def __init__(self, gramian_weighting: Weighting[PSDMatrix]):
+        super().__init__(gramian_weighting << compute_gramian)
+        self.gramian_weighting = gramian_weighting
