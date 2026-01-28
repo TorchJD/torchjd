@@ -10,6 +10,9 @@ changelog does not include internal changes that do not affect the user.
 
 ### Added
 
+- Added the function `torchjd.autojac.jac`. It's the same as `torchjd.autojac.backward` except that
+  it returns the Jacobians as a tuple instead of storing them in the `.jac` fields of the inputs.
+  Its interface is analog to that of `torch.autograd.grad`.
 - Added a `scale_mode` parameter to `AlignedMTL` and `AlignedMTLWeighting`, allowing to choose
   between `"min"`, `"median"`, and `"rmse"` scaling.
 - Added an attribute `gramian_weighting` to all aggregators that use a gramian-based `Weighting`.

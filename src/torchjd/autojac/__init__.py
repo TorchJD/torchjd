@@ -6,7 +6,8 @@ used.
 """
 
 from ._backward import backward
+from ._jac import jac
 from ._jac_to_grad import jac_to_grad
 from ._mtl_backward import mtl_backward
 
-__all__ = ["backward", "jac_to_grad", "mtl_backward"]
+__all__ = ["backward", "jac", "jac_to_grad", "mtl_backward"]
