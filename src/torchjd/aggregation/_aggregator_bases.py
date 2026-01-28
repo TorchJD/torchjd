@@ -6,7 +6,7 @@ from torchjd._linalg import Matrix, PSDMatrix, compute_gramian, is_matrix
 
 from ._weighting_bases import Weighting
 
-# Add something that just to be able to make a PR
+# Add something that just to be able to make a PR. Change.
 
 
 class Aggregator(nn.Module, ABC):
