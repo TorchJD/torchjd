@@ -1,4 +1,5 @@
 import random as rand
+import warnings
 from contextlib import nullcontext
 
 import torch
@@ -6,6 +7,12 @@ from pytest import RaisesExc, fixture, mark
 from settings import DEVICE
 from torch import Tensor
 from utils.architectures import ModuleFactory
+
+# Because of a SyntaxWarning raised when compiling highspy, we have to filter SyntaxWarning here.
+# It seems that the standard ways of ignoring warnings in pytest do not work, because the problem
+# is already triggered in the conftest.py itself. This line could be removed when
+# https://github.com/ERGO-Code/HiGHS/issues/2777 is fixed and the fix is released.
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 from torchjd.aggregation import Aggregator, Weighting
 
