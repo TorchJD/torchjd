@@ -12,6 +12,9 @@ changelog does not include internal changes that do not affect the user.
 
 - Added a `scale_mode` parameter to `AlignedMTL` and `AlignedMTLWeighting`, allowing to choose
   between `"min"`, `"median"`, and `"rmse"` scaling.
+- Added an attribute `gramian_weighting` to all aggregators that use a gramian-based `Weighting`.
+  Usage is still the same, `aggregator.gramian_weighting` is just an alias for the (quite confusing)
+  `aggregator.weighting.weighting` field.
 
 ### Changed
 
