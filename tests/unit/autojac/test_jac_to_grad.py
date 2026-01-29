@@ -2,8 +2,28 @@ from pytest import mark, raises
 from utils.asserts import assert_grad_close, assert_has_jac, assert_has_no_jac
 from utils.tensors import tensor_
 
-from torchjd.aggregation import Aggregator, Mean, PCGrad, UPGrad
-from torchjd.autojac._jac_to_grad import _has_forward_hook, jac_to_grad
+from torchjd.aggregation import (
+    IMTLG,
+    MGDA,
+    Aggregator,
+    AlignedMTL,
+    ConFIG,
+    Constant,
+    DualProj,
+    GradDrop,
+    Krum,
+    Mean,
+    PCGrad,
+    Random,
+    Sum,
+    TrimmedMean,
+    UPGrad,
+)
+from torchjd.autojac._jac_to_grad import (
+    _can_skip_jacobian_combination,
+    _has_forward_hook,
+    jac_to_grad,
+)
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), PCGrad()])
@@ -146,3 +166,51 @@ def test_has_forward_hook():
     assert _has_forward_hook(module)
     handle4.remove()
     assert not _has_forward_hook(module)
+
+
+_PARAMETRIZATIONS = [
+    (AlignedMTL(), True),
+    (DualProj(), True),
+    (IMTLG(), True),
+    (Krum(n_byzantine=1), True),
+    (MGDA(), True),
+    (PCGrad(), True),
+    (UPGrad(), True),
+    (ConFIG(), False),
+    (Constant(tensor_([0.5, 0.5])), False),
+    (GradDrop(), False),
+    (Mean(), False),
+    (Random(), False),
+    (Sum(), False),
+    (TrimmedMean(trim_number=1), False),
+]
+
+try:
+    from torchjd.aggregation import CAGrad
+
+    _PARAMETRIZATIONS.append((CAGrad(c=0.5), True))
+except ImportError:
+    pass
+
+try:
+    from torchjd.aggregation import NashMTL
+
+    _PARAMETRIZATIONS.append((NashMTL(n_tasks=2), False))
+except ImportError:
+    pass
+
+
+@mark.parametrize("aggregator, expected", _PARAMETRIZATIONS)
+def test_can_skip_jacobian_combination(aggregator: Aggregator, expected: bool):
+    """
+    Tests that _can_skip_jacobian_combination correctly identifies when optimization can be used.
+    """
+
+    assert _can_skip_jacobian_combination(aggregator) == expected
+    handle = aggregator.register_forward_hook(lambda module, input, output: output)
+    assert not _can_skip_jacobian_combination(aggregator)
+    handle.remove()
+    handle = aggregator.register_forward_pre_hook(lambda module, input: input)
+    assert not _can_skip_jacobian_combination(aggregator)
+    handle.remove()
+    assert _can_skip_jacobian_combination(aggregator) == expected
