@@ -74,7 +74,7 @@ def test_compute_gramian_matrix_input_1():
 def test_compute_gramian_matrix_input_2():
     t = tensor_([[1.0, 2.0], [3.0, 4.0]])
     gramian = compute_gramian(t, contracted_dims=2)
-    expected = tensor_(29.0)
+    expected = tensor_(30.0)
 
     assert_close(gramian, expected)
 
