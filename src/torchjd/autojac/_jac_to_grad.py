@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 
 from torchjd._linalg import PSDMatrix, compute_gramian
-from torchjd.aggregation import Aggregator, Weighting
+from torchjd.aggregation import Aggregator
 from torchjd.aggregation._aggregator_bases import GramianWeightedAggregator
 
 from ._accumulation import TensorWithJac, accumulate_grads, is_tensor_with_jac
@@ -78,7 +78,7 @@ def jac_to_grad(
     if isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator):
         # When it's possible, avoid the concatenation of the jacobians that can be very costly in
         # memory.
-        gradients = _gramian_based(aggregator.gramian_weighting, jacobians, tensors_)
+        gradients = _gramian_based(aggregator, jacobians, tensors_)
     else:
         gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
@@ -99,8 +99,9 @@ def _jacobian_based(
 
 
 def _gramian_based(
-    weighting: Weighting[PSDMatrix], jacobians: deque[Tensor], tensors: list[TensorWithJac]
+    aggregator: GramianWeightedAggregator, jacobians: deque[Tensor], tensors: list[TensorWithJac]
 ) -> list[Tensor]:
+    weighting = aggregator.gramian_weighting
     gramian = _compute_gramian_sum(jacobians)
     weights = weighting(gramian)
 
