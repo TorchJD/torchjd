@@ -3,7 +3,7 @@ from utils.asserts import assert_grad_close, assert_has_jac, assert_has_no_jac
 from utils.tensors import tensor_
 
 from torchjd.aggregation import Aggregator, Mean, PCGrad, UPGrad
-from torchjd.autojac._jac_to_grad import jac_to_grad
+from torchjd.autojac._jac_to_grad import _has_forward_hook, jac_to_grad
 
 
 @mark.parametrize("aggregator", [Mean(), UPGrad(), PCGrad()])
@@ -101,3 +101,48 @@ def test_jacs_are_freed(retain_jac: bool):
     check = assert_has_jac if retain_jac else assert_has_no_jac
     check(t1)
     check(t2)
+
+
+def test_has_forward_hook():
+    """Tests that _has_forward_hook correctly detects the presence of forward hooks."""
+
+    module = UPGrad()
+
+    def dummy_forward_hook(_module, _input, _output):
+        return _output
+
+    def dummy_forward_pre_hook(_module, _input):
+        return _input
+
+    def dummy_backward_hook(_module, _grad_input, _grad_output):
+        return _grad_input
+
+    def dummy_backward_pre_hook(_module, _grad_output):
+        return _grad_output
+
+    # Module with no hooks or backward hooks only should return False
+    assert not _has_forward_hook(module)
+    module.register_full_backward_hook(dummy_backward_hook)
+    assert not _has_forward_hook(module)
+    module.register_full_backward_pre_hook(dummy_backward_pre_hook)
+    assert not _has_forward_hook(module)
+
+    # Module with forward hook should return True
+    handle1 = module.register_forward_hook(dummy_forward_hook)
+    assert _has_forward_hook(module)
+    handle2 = module.register_forward_hook(dummy_forward_hook)
+    assert _has_forward_hook(module)
+    handle1.remove()
+    assert _has_forward_hook(module)
+    handle2.remove()
+    assert not _has_forward_hook(module)
+
+    # Module with forward pre-hook should return True
+    handle3 = module.register_forward_pre_hook(dummy_forward_pre_hook)
+    assert _has_forward_hook(module)
+    handle4 = module.register_forward_pre_hook(dummy_forward_pre_hook)
+    assert _has_forward_hook(module)
+    handle3.remove()
+    assert _has_forward_hook(module)
+    handle4.remove()
+    assert not _has_forward_hook(module)

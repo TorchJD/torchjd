@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from typing import cast
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchjd._linalg import PSDMatrix, compute_gramian
 from torchjd.aggregation import Aggregator, Weighting
@@ -75,13 +75,18 @@ def jac_to_grad(
     if not retain_jac:
         _free_jacs(tensors_)
 
-    if isinstance(aggregator, GramianWeightedAggregator):
+    if isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator):
         # When it's possible, avoid the concatenation of the jacobians that can be very costly in
         # memory.
         gradients = _gramian_based(aggregator.gramian_weighting, jacobians, tensors_)
     else:
         gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
+
+
+def _has_forward_hook(module: nn.Module) -> bool:
+    """Return whether the module has any forward hook registered."""
+    return len(module._forward_hooks) > 0 or len(module._forward_pre_hooks) > 0
 
 
 def _jacobian_based(
