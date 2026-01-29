@@ -75,13 +75,15 @@ def jac_to_grad(
     if not retain_jac:
         _free_jacs(tensors_)
 
-    if isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator):
-        # When it's possible, avoid the concatenation of the jacobians that can be very costly in
-        # memory.
-        gradients = _gramian_based(aggregator, jacobians, tensors_)
+    if _can_skip_jacobian_combination(aggregator):
+        gradients = _gramian_based(cast(GramianWeightedAggregator, aggregator), jacobians, tensors_)
     else:
         gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
+
+
+def _can_skip_jacobian_combination(aggregator: Aggregator) -> bool:
+    return isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator)
 
 
 def _has_forward_hook(module: nn.Module) -> bool:
