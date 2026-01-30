@@ -1,6 +1,6 @@
 from collections import deque
 from collections.abc import Iterable
-from typing import cast
+from typing import cast, TypeGuard
 
 import torch
 from torch import Tensor, nn
@@ -76,13 +76,13 @@ def jac_to_grad(
         _free_jacs(tensors_)
 
     if _can_skip_jacobian_combination(aggregator):
-        gradients = _gramian_based(cast(GramianWeightedAggregator, aggregator), jacobians, tensors_)
+        gradients = _gramian_based(aggregator, jacobians, tensors_)
     else:
         gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
 
 
-def _can_skip_jacobian_combination(aggregator: Aggregator) -> bool:
+def _can_skip_jacobian_combination(aggregator: Aggregator) -> TypeGuard[GramianWeightedAggregator]:
     return isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator)
 
 
