@@ -81,6 +81,19 @@ jobs:
         working-directory: docs
         run: uv run make dirhtml
 
+  linkChecker:
+    name: Check links in Markdown files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v1.9.0
+        with:
+          args: --verbose --no-progress "README.md" "CONTRIBUTING.md" "CHANGELOG.md"
+          fail: true
+
   mypy:
     name: Run mypy
     runs-on: ubuntu-latest
