@@ -43,6 +43,10 @@ jobs:
             echo "TORCHJD_VERSION=main" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check documentation links
+        working-directory: docs
+        run: uv run make linkcheck
+
       - name: Build Documentation
         working-directory: docs
         run: uv run make dirhtml
