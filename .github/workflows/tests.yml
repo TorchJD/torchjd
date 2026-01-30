@@ -73,10 +73,6 @@ jobs:
         with:
           groups: doc
 
-      - name: Check documentation links
-        working-directory: docs
-        run: uv run make linkcheck
-
       - name: Build Documentation
         working-directory: docs
         run: uv run make dirhtml
@@ -91,8 +87,11 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress "README.md" "CONTRIBUTING.md" "CHANGELOG.md"
+          args: --verbose --no-progress "."
           fail: true
+        env:
+          # This reduces false positive due to rate limits
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mypy:
     name: Run mypy
