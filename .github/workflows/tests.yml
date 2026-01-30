@@ -73,6 +73,10 @@ jobs:
         with:
           groups: doc
 
+      - name: Check documentation links
+        working-directory: docs
+        run: uv run make linkcheck
+
       - name: Build Documentation
         working-directory: docs
         run: uv run make dirhtml
