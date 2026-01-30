@@ -299,7 +299,7 @@ Informed Neural Networks](https://arxiv.org/pdf/2408.11104).
   - `Aggregator` base class to aggregate Jacobian matrices.
   - `AlignedMTL` from [Independent Component
       Alignment for Multi-Task Learning](
-      https://openaccess.thecvf.com/content/CVPR2023/html/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.html>).
+      https://openaccess.thecvf.com/content/CVPR2023/papers/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.pdf).
   - `CAGrad` from [Conflict-Averse Gradient Descent for Multi-task
       Learning](https://arxiv.org/pdf/2110.14048.pdf).
   - `Constant` to aggregate with constant weights.
