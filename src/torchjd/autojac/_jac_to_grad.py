@@ -1,6 +1,6 @@
 from collections import deque
 from collections.abc import Iterable
-from typing import cast, TypeGuard
+from typing import TypeGuard, cast
 
 import torch
 from torch import Tensor, nn
