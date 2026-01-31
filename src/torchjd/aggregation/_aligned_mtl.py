@@ -51,8 +51,8 @@ class AlignedMTL(GramianWeightedAggregator):
         uses the mean eigenvalue (as in the original implementation).
 
     .. note::
-        This implementation was adapted from the official implementation, the repository was
-        deleted.
+        This implementation was adapted from the official implementation of SamsungLabs/MTL,
+        which is not available anymore at the time of writing.
     """
 
     def __init__(
