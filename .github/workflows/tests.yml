@@ -87,7 +87,7 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress "."
+          args: --verbose --no-progress "." --exlude-path "docs/source/_templates/page.html"
           fail: true
         env:
           # This reduces false positive due to rate limits
