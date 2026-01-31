@@ -85,9 +85,9 @@ jobs:
         uses: actions/checkout@v4
 
       # This will restore the cache for the current commit if it exists, or the most recent lychee
-      # cache otherwise (including those saved for the main branch). It will also save the cache at
-      # for the current commit if none existed for it, and only if the link check succeeded. We
-      # don't want to save a cache when the action failed, because the reason for failure might be
+      # cache otherwise (including those saved for the main branch). It will also save the cache for
+      # the current commit if none existed for it, and only if the link check succeeded. We don't
+      # want to save a cache when the action failed, because the reason for failure might be
       # temporary (rate limiting, network issue, etc.), and we always want to retry those links
       # everytime this action is run.
       - name: Restore lychee cache
