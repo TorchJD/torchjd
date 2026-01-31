@@ -84,10 +84,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # This will restore the cache for the current commit if it exists, or the most recent lychee
+      # cache otherwise (including those saved for the main branch). It will also save the cache at
+      # for the current commit if none existed for it, and only if the link check succeeded. We
+      # don't want to save a cache when the action failed, because the reason for failure might be
+      # temporary (rate limiting, network issue, etc.), and we always want to retry those links
+      # everytime this action is run.
+      - name: Restore lychee cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress "." --exclude-path "docs/source/_templates/page.html"
+          args: --verbose --no-progress --cache --max-cache-age 1d "." --exclude-path "docs/source/_templates/page.html"
           fail: true
         env:
           # This reduces false positive due to rate limits
