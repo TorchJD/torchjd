@@ -13,7 +13,7 @@ jobs:
   tests:
     # Default config: py3.14, ubuntu-latest, float32, full options.
     # The idea is to make each of those params vary one by one, to limit the number of tests to run.
-    name: Run tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, ${{ matrix.options || 'full' }})
+    name: Tests (py${{ matrix.python-version || '3.14' }}, ${{ matrix.os || 'ubuntu-latest' }}, ${{ matrix.dtype || 'float32' }}, ${{ matrix.options || 'full' }})
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
@@ -58,7 +58,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   build-doc:
-    name: Build doc
+    name: Build documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -78,7 +78,7 @@ jobs:
         run: uv run make dirhtml
 
   check-links:
-    name: Check no link is broken
+    name: Link correctness
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -106,8 +106,8 @@ jobs:
           # This reduces false positives due to rate limits
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  mypy:
-    name: Run mypy
+  typing:
+    name: Typing correctness
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -126,6 +126,7 @@ jobs:
         run: uv run mypy src/torchjd
 
   check-todos:
+    name: Absence of TODOs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
