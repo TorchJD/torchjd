@@ -77,6 +77,22 @@ jobs:
         working-directory: docs
         run: uv run make dirhtml
 
+  linkChecker:
+    name: Check links in Markdown files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress "." --exclude-path "docs/source/_templates/page.html"
+          fail: true
+        env:
+          # This reduces false positive due to rate limits
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   mypy:
     name: Run mypy
     runs-on: ubuntu-latest

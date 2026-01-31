@@ -63,13 +63,13 @@ There are two main ways to use TorchJD. The first one is to replace the usual ca
 [`torchjd.autojac.mtl_backward`](https://torchjd.org/stable/docs/autojac/mtl_backward/), depending
 on the use-case. This will compute the Jacobian of the vector of losses with respect to the model
 parameters, and aggregate it with the specified
-[`Aggregator`](https://torchjd.org/stable/docs/aggregation/index.html#torchjd.aggregation.Aggregator).
+[`Aggregator`](https://torchjd.org/stable/docs/aggregation#torchjd.aggregation.Aggregator).
 Whenever you want to optimize the vector of per-sample losses, you should rather use the
-[`torchjd.autogram.Engine`](https://torchjd.org/stable/docs/autogram/engine.html). Instead of
+[`torchjd.autogram.Engine`](https://torchjd.org/stable/docs/autogram/engine/). Instead of
 computing the full Jacobian at once, it computes the Gramian of this Jacobian, layer by layer, in a
 memory-efficient way. A vector of weights (one per element of the batch) can then be extracted from
 this Gramian, using a
-[`Weighting`](https://torchjd.org/stable/docs/aggregation/index.html#torchjd.aggregation.Weighting),
+[`Weighting`](https://torchjd.org/stable/docs/aggregation#torchjd.aggregation.Weighting),
 and used to combine the losses of the batch. Assuming each element of the batch is
 processed independently from the others, this approach is equivalent to
 [`torchjd.autojac.backward`](https://torchjd.org/stable/docs/autojac/backward/) while being
@@ -210,7 +210,7 @@ for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
 > [!NOTE]
 > Here,  because the losses are a matrix instead of a simple vector, we compute a *generalized
 > Gramian* and we extract weights from it using a
-> [GeneralizedWeighting](https://torchjd.org/docs/aggregation/index.html#torchjd.aggregation.GeneralizedWeighting).
+> [GeneralizedWeighting](https://torchjd.org/stable/docs/aggregation/#torchjd.aggregation.GeneralizedWeighting).
 
 More usage examples can be found [here](https://torchjd.org/stable/examples/).
 
@@ -220,7 +220,7 @@ TorchJD provides many existing aggregators from the literature, listed in the fo
 <!-- recommended aggregators first, then alphabetical order -->
 | Aggregator                                                                                                 | Weighting                                                                                                              | Publication                                                                                                                                                          |
 |------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad.html#torchjd.aggregation.UPGrad) (recommended) | [UPGradWeighting](https://torchjd.org/stable/docs/aggregation/upgrad#torchjd.aggregation.UPGradWeighting)              | [Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232)                                                                                |
+| [UPGrad](https://torchjd.org/stable/docs/aggregation/upgrad/#torchjd.aggregation.UPGrad) (recommended) | [UPGradWeighting](https://torchjd.org/stable/docs/aggregation/upgrad/#torchjd.aggregation.UPGradWeighting)              | [Jacobian Descent For Multi-Objective Optimization](https://arxiv.org/pdf/2406.16232)                                                                                |
 | [AlignedMTL](https://torchjd.org/stable/docs/aggregation/aligned_mtl#torchjd.aggregation.AlignedMTL)       | [AlignedMTLWeighting](https://torchjd.org/stable/docs/aggregation/aligned_mtl#torchjd.aggregation.AlignedMTLWeighting) | [Independent Component Alignment for Multi-Task Learning](https://arxiv.org/pdf/2305.19000)                                                                          |
 | [CAGrad](https://torchjd.org/stable/docs/aggregation/cagrad#torchjd.aggregation.CAGrad)                    | [CAGradWeighting](https://torchjd.org/stable/docs/aggregation/cagrad#torchjd.aggregation.CAGradWeighting)              | [Conflict-Averse Gradient Descent for Multi-task Learning](https://arxiv.org/pdf/2110.14048)                                                                         |
 | [ConFIG](https://torchjd.org/stable/docs/aggregation/config#torchjd.aggregation.ConFIG)                    | -                                                                                                                      | [ConFIG: Towards Conflict-free Training of Physics Informed Neural Networks](https://arxiv.org/pdf/2408.11104)                                                       |
