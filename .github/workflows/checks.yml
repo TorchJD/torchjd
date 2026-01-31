@@ -124,3 +124,32 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy src/torchjd
+
+  check-todos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Scan for TODO strings
+        run: |
+          echo "Scanning codebase for TODOs..."
+
+          git grep -nE "TODO" -- . ':(exclude).github/workflows/*' > todos_found.txt || true
+
+          if [ -s todos_found.txt ]; then
+            echo "❌ ERROR: Found TODOs in the following files:"
+            echo "-------------------------------------------"
+
+            while IFS=: read -r file line content; do
+              echo "::error file=$file,line=$line::TODO found at $file:$line - must be resolved before merge:%0A$content"
+            done < todos_found.txt
+
+            echo "-------------------------------------------"
+            echo "Please resolve these TODOs or track them in an issue before merging."
+
+            exit 1
+          else
+            echo "✅ No TODOs found. Codebase is clean!"
+            exit 0
+          fi
