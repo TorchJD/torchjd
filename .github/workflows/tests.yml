@@ -97,13 +97,13 @@ jobs:
           key: cache-lychee-${{ github.sha }}
           restore-keys: cache-lychee-
 
-      - name: Link Checker
+      - name: Run lychee
         uses: lycheeverse/lychee-action@v2
         with:
           args: --verbose --no-progress --cache --max-cache-age 1d "." --exclude-path "docs/source/_templates/page.html"
           fail: true
         env:
-          # This reduces false positive due to rate limits
+          # This reduces false positives due to rate limits
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mypy:
