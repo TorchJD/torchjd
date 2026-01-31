@@ -77,8 +77,8 @@ jobs:
         working-directory: docs
         run: uv run make dirhtml
 
-  linkChecker:
-    name: Check links in Markdown files
+  check-links:
+    name: Check no link is broken
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
