@@ -1,6 +1,6 @@
 """
 Script to plot memory timeline evolution from profiling traces.
-Reads memory traces from CSV files and plots them on a single graph.
+Reads memory traces from json files and plots them on a single graph.
 """
 
 import argparse
@@ -17,7 +17,6 @@ from paths import TRACES_DIR
 class MemoryFrame:
     timestamp: int
     total_allocated: int  # in bytes
-    current_allocation: int  # in bytes
 
     @staticmethod
     def from_event(event: dict):
@@ -25,7 +24,6 @@ class MemoryFrame:
         return MemoryFrame(
             timestamp=event["ts"],
             total_allocated=args.get("Total Allocated"),
-            current_allocation=args.get("Bytes"),
         )
 
 
@@ -44,12 +42,11 @@ def extract_memory_timeline(path: Path) -> np.ndarray:
 
     timestamp_list = [frame.timestamp for frame in frames]
     total_allocated_list = [frame.total_allocated for frame in frames]
-    current_allocation_list = [frame.current_allocation for frame in frames]
 
-    return np.array([timestamp_list, total_allocated_list, current_allocation_list]).T
+    return np.array([timestamp_list, total_allocated_list]).T
 
 
-def plot_memory_timeline(experiment: str, folders: list[str]) -> None:
+def plot_memory_timelines(experiment: str, folders: list[str]) -> None:
     timelines = list[np.ndarray]()
     for folder in folders:
         path = TRACES_DIR / folder / f"{experiment}.json"
@@ -93,7 +90,7 @@ def main():
 
     args = parser.parse_args()
 
-    return plot_memory_timeline(args.experiment, args.folders)
+    return plot_memory_timelines(args.experiment, args.folders)
 
 
 if __name__ == "__main__":
