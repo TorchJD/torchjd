@@ -1,5 +1,3 @@
-from typing import Literal
-
 import torch
 from torch import Tensor
 
@@ -7,7 +5,7 @@ from torchjd._linalg import PSDMatrix, normalize, regularize
 
 from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import MeanWeighting
-from ._utils.dual_cone import project_weights
+from ._utils.dual_cone import SUPPORTED_SOLVER, project_weights
 from ._utils.non_differentiable import raise_non_differentiable_error
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import Weighting
@@ -35,7 +33,7 @@ class UPGrad(GramianWeightedAggregator):
         pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
-        solver: Literal["quadprog"] = "quadprog",
+        solver: SUPPORTED_SOLVER = "quadprog",
     ):
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
@@ -79,7 +77,7 @@ class UPGradWeighting(Weighting[PSDMatrix]):
         pref_vector: Tensor | None = None,
         norm_eps: float = 0.0001,
         reg_eps: float = 0.0001,
-        solver: Literal["quadprog"] = "quadprog",
+        solver: SUPPORTED_SOLVER = "quadprog",
     ):
         super().__init__()
         self._pref_vector = pref_vector
