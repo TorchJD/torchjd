@@ -38,7 +38,7 @@ class UPGrad(GramianWeightedAggregator):
         self._pref_vector = pref_vector
         self._norm_eps = norm_eps
         self._reg_eps = reg_eps
-        self._solver = solver
+        self._solver: SUPPORTED_SOLVER = solver
 
         super().__init__(
             UPGradWeighting(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
@@ -84,7 +84,7 @@ class UPGradWeighting(Weighting[PSDMatrix]):
         self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
         self.norm_eps = norm_eps
         self.reg_eps = reg_eps
-        self.solver = solver
+        self.solver: SUPPORTED_SOLVER = solver
 
     def forward(self, gramian: PSDMatrix) -> Tensor:
         U = torch.diag(self.weighting(gramian))
