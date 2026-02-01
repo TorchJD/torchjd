@@ -11,8 +11,9 @@ class MGDA(GramianWeightedAggregator):
     r"""
     :class:`~torchjd.aggregation._aggregator_bases.Aggregator` performing the gradient aggregation
     step of `Multiple-gradient descent algorithm (MGDA) for multiobjective optimization
-    <https://www.sciencedirect.com/science/article/pii/S1631073X12000738>`_. The implementation is
-    based on Algorithm 2 of `Multi-Task Learning as Multi-Objective Optimization
+    <https://comptes-rendus.academie-sciences.fr/mathematique/articles/10.1016/j.crma.2012.03.014/>`_.
+    The implementation is based on Algorithm 2 of `Multi-Task Learning as Multi-Objective
+    Optimization
     <https://proceedings.neurips.cc/paper_files/paper/2018/file/432aca3a1e345e339f35a30c8f65edce-Paper.pdf>`_.
 
     :param epsilon: The value of :math:`\hat{\gamma}` below which we stop the optimization.
