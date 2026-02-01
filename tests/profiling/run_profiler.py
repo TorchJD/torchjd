@@ -1,5 +1,4 @@
 import gc
-from pathlib import Path
 from typing import Callable
 
 import torch
@@ -22,6 +21,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets
 
+from tests.paths import TRACES_DIR
 from torchjd.aggregation import UPGrad, UPGradWeighting
 from torchjd.autogram import Engine
 
@@ -93,10 +93,9 @@ def _save_and_print_trace(
     prof: profile, method_name: str, factory: ModuleFactory, batch_size: int
 ) -> None:
     filename = f"{factory}-bs{batch_size}-{DEVICE.type}.json"
-    torchjd_dir = Path(__file__).parent.parent.parent
-    traces_dir = torchjd_dir / "traces" / method_name
-    traces_dir.mkdir(parents=True, exist_ok=True)
-    trace_path = traces_dir / filename
+    output_dir = TRACES_DIR / method_name
+    output_dir.mkdir(parents=True, exist_ok=True)
+    trace_path = output_dir / filename
 
     prof.export_chrome_trace(str(trace_path))
     print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=20))
