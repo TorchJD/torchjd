@@ -41,7 +41,7 @@ class Transform(ABC):
         return type(self).__name__
 
     @abstractmethod
-    def __call__(self, input: TensorDict) -> TensorDict:
+    def __call__(self, input: TensorDict, /) -> TensorDict:
         """Applies the transform to the input."""
 
     @abstractmethod
