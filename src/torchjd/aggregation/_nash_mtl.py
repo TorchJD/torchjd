@@ -142,7 +142,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         self.prvs_alpha = np.ones(self.n_tasks, dtype=np.float32)
 
     def _stop_criteria(self, gtg: np.ndarray, alpha_t: np.ndarray) -> bool:
-        return (
+        return bool(
             (self.alpha_param.value is None)
             or (np.linalg.norm(gtg @ alpha_t - 1 / (alpha_t + 1e-10)) < 1e-3)
             or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
