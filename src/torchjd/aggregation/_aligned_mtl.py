@@ -25,7 +25,7 @@
 # SOFTWARE.
 
 
-from typing import Literal
+from typing import Literal, TypeAlias
 
 import torch
 from torch import Tensor
@@ -36,6 +36,8 @@ from ._aggregator_bases import GramianWeightedAggregator
 from ._mean import MeanWeighting
 from ._utils.pref_vector import pref_vector_to_str_suffix, pref_vector_to_weighting
 from ._weighting_bases import Weighting
+
+SUPPORTED_SCALE_MODE: TypeAlias = Literal["min", "median", "rmse"]
 
 
 class AlignedMTL(GramianWeightedAggregator):
@@ -58,10 +60,10 @@ class AlignedMTL(GramianWeightedAggregator):
     def __init__(
         self,
         pref_vector: Tensor | None = None,
-        scale_mode: Literal["min", "median", "rmse"] = "min",
+        scale_mode: SUPPORTED_SCALE_MODE = "min",
     ):
         self._pref_vector = pref_vector
-        self._scale_mode = scale_mode
+        self._scale_mode: SUPPORTED_SCALE_MODE = scale_mode
         super().__init__(AlignedMTLWeighting(pref_vector, scale_mode=scale_mode))
 
     def __repr__(self) -> str:
@@ -89,11 +91,11 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
     def __init__(
         self,
         pref_vector: Tensor | None = None,
-        scale_mode: Literal["min", "median", "rmse"] = "min",
+        scale_mode: SUPPORTED_SCALE_MODE = "min",
     ):
         super().__init__()
         self._pref_vector = pref_vector
-        self._scale_mode = scale_mode
+        self._scale_mode: SUPPORTED_SCALE_MODE = scale_mode
         self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
 
     def forward(self, gramian: PSDMatrix) -> Tensor:
@@ -105,7 +107,7 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
 
     @staticmethod
     def _compute_balance_transformation(
-        M: Tensor, scale_mode: Literal["min", "median", "rmse"] = "min"
+        M: Tensor, scale_mode: SUPPORTED_SCALE_MODE = "min"
     ) -> Tensor:
         lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
