@@ -32,6 +32,9 @@ jobs:
           - dtype: float64
           # Installation options variations
           - options: 'none'
+          # Lower-bounds of all dependencies and Python version.
+          - python-version: '3.10.0'
+            options: 'ci_dependency_lower_bounds'
 
     steps:
       - name: Checkout repository
