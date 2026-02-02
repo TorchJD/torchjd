@@ -26,7 +26,7 @@ class RandomWeighting(Weighting[Matrix]):
     at each call.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
+    def forward(self, matrix: Tensor, /) -> Tensor:
         random_vector = torch.randn(matrix.shape[0], device=matrix.device, dtype=matrix.dtype)
         weights = F.softmax(random_vector, dim=-1)
         return weights

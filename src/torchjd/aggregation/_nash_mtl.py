@@ -198,7 +198,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         obj = cp.Minimize(cp.sum(G_alpha) + self.phi_alpha / self.normalization_factor_param)
         self.prob = cp.Problem(obj, constraint)
 
-    def forward(self, matrix: Tensor) -> Tensor:
+    def forward(self, matrix: Tensor, /) -> Tensor:
         if self.step == 0:
             self._init_optim_problem()
 
