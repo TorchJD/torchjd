@@ -114,3 +114,7 @@ exclude_lines = [
     "pragma: not covered",
     "@overload",
 ]
+
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = ["src/torchjd/aggregation/_nash_mtl.py"]
