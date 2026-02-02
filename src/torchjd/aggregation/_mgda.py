@@ -65,7 +65,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
             elif b <= a:
                 gamma = 0.0
             else:
-                gamma = (b - a) / (b + c - 2 * a)  # type: ignore[assignment]
+                gamma = (b - a) / (b + c - 2 * a)
             alpha = (1 - gamma) * alpha + gamma * e_t
             if gamma < self.epsilon:
                 break
