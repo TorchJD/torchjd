@@ -24,6 +24,7 @@
 # SOFTWARE.
 
 # mypy: ignore-errors
+from typing import cast
 
 from torchjd._linalg import Matrix
 
@@ -96,7 +97,7 @@ class NashMTL(WeightedAggregator):
 
     def reset(self) -> None:
         """Resets the internal state of the algorithm."""
-        self.weighting.reset()
+        cast(_NashMTLWeighting, self.weighting).reset()
 
     def __repr__(self) -> str:
         return (
