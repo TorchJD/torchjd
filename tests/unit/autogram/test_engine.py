@@ -263,7 +263,7 @@ def test_compute_gramian_unsupported_architectures(
     ],
 )
 def test_compute_gramian_various_output_shapes(
-    batch_size: int | None,
+    batch_size: int,
     reduction: Callable[[list[Tensor]], Tensor],
     batch_dim: int | None,
     movedim_source: list[int],
