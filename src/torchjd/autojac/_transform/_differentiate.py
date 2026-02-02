@@ -37,7 +37,7 @@ class Differentiate(Transform, ABC):
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
-    def __call__(self, tensors: TensorDict) -> TensorDict:
+    def __call__(self, tensors: TensorDict, /) -> TensorDict:
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)
