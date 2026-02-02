@@ -122,8 +122,8 @@ jobs:
         with:
           groups: check
 
-      - name: Run mypy
-        run: uv run mypy src/torchjd
+      - name: Run ty
+        run: uv run ty src/torchjd
 
   check-todos:
     name: Absence of TODOs

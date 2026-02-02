@@ -66,7 +66,7 @@ Changelog = "https://github.com/TorchJD/torchjd/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 check = [
-    "mypy>=1.16.0",
+    "ty>=0.0.14",
     "pre-commit>=2.9.2",  # isort doesn't work before 2.9.2
 ]
 
