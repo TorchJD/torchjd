@@ -45,7 +45,7 @@ class Differentiate(Transform, ABC):
         return type(tensors)(new_differentiations)
 
     @abstractmethod
-    def _differentiate(self, tensor_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+    def _differentiate(self, tensor_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:
         """
         Abstract method for differentiating the outputs with respect to the inputs, and applying the
         linear transformations represented by the tensor_outputs to the results.
