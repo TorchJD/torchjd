@@ -76,6 +76,7 @@ class FunctionalJacobianComputer(JacobianComputer):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
+        /,
     ) -> Matrix:
         grad_outputs_in_dims = (0,) * len(grad_outputs)
         args_in_dims = tree_map(lambda t: 0 if isinstance(t, Tensor) else None, args)
@@ -134,6 +135,7 @@ class AutogradJacobianComputer(JacobianComputer):
         grad_outputs: tuple[Tensor, ...],
         _: tuple[PyTree, ...],
         __: dict[str, PyTree],
+        /,
     ) -> Matrix:
         flat_rg_params, ___ = tree_flatten(self.rg_params)
         grads = torch.autograd.grad(
