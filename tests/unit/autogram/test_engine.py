@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from itertools import combinations
 from math import prod
+from typing import cast
 
 import pytest
 import torch
@@ -78,7 +79,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
-from torchjd._linalg import compute_gramian
+from torchjd._linalg import PSDMatrix, compute_gramian
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim, reshape
@@ -457,7 +458,7 @@ def test_reshape_equivariance(shape: list[int]):
 
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input)
-    gramian = engine1.compute_gramian(output)
+    gramian = cast(PSDMatrix, engine1.compute_gramian(output))
     expected_reshaped_gramian = reshape(gramian, shape[1:])
 
     engine2 = Engine(model2, batch_dim=None)
@@ -495,7 +496,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
 
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input).reshape(shape[1:])
-    gramian = engine1.compute_gramian(output)
+    gramian = cast(PSDMatrix, engine1.compute_gramian(output))
     expected_moved_gramian = movedim(gramian, source, destination)
 
     engine2 = Engine(model2, batch_dim=None)
