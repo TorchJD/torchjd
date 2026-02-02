@@ -123,7 +123,7 @@ jobs:
           groups: check
 
       - name: Run ty
-        run: uv run ty src/torchjd
+        run: uv run ty check src/torchjd
 
   check-todos:
     name: Absence of TODOs
