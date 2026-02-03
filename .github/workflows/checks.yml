@@ -106,8 +106,8 @@ jobs:
           # This reduces false positives due to rate limits
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  typing:
-    name: Typing correctness
+  check-code:
+    name: Check code correctness
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -124,3 +124,6 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy src/torchjd
+
+      - name: Run ruff
+        run: uv run ruff check --output-format=github
