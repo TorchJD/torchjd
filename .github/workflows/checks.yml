@@ -120,10 +120,10 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          groups: check
+          groups: check test plot
 
-      - name: Run mypy
-        run: uv run mypy src/torchjd
+      - name: Run ty
+        run: uv run ty check --output-format=github
 
       - name: Run ruff
         run: uv run ruff check --output-format=github

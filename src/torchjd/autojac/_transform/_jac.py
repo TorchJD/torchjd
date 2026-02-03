@@ -42,7 +42,7 @@ class Jac(Differentiate):
         super().__init__(outputs, inputs, retain_graph, create_graph)
         self.chunk_size = chunk_size
 
-    def _differentiate(self, jac_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+    def _differentiate(self, jac_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:
         """
         Computes the jacobian of each output with respect to each input, and applies the linear
         transformations represented by the jac_outputs to the results.

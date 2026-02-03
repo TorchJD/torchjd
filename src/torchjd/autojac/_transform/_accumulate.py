@@ -13,7 +13,7 @@ class AccumulateGrad(Transform):
     should not be used elsewhere.
     """
 
-    def __call__(self, gradients: TensorDict) -> TensorDict:
+    def __call__(self, gradients: TensorDict, /) -> TensorDict:
         accumulate_grads(gradients.keys(), gradients.values())
         return {}
 
@@ -30,7 +30,7 @@ class AccumulateJac(Transform):
     should not be used elsewhere.
     """
 
-    def __call__(self, jacobians: TensorDict) -> TensorDict:
+    def __call__(self, jacobians: TensorDict, /) -> TensorDict:
         accumulate_jacs(jacobians.keys(), jacobians.values())
         return {}
 

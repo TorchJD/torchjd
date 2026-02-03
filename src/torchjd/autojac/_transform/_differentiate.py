@@ -37,7 +37,7 @@ class Differentiate(Transform, ABC):
         self.retain_graph = retain_graph
         self.create_graph = create_graph
 
-    def __call__(self, tensors: TensorDict) -> TensorDict:
+    def __call__(self, tensors: TensorDict, /) -> TensorDict:
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)
@@ -45,7 +45,7 @@ class Differentiate(Transform, ABC):
         return type(tensors)(new_differentiations)
 
     @abstractmethod
-    def _differentiate(self, tensor_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+    def _differentiate(self, tensor_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:
         """
         Abstract method for differentiating the outputs with respect to the inputs, and applying the
         linear transformations represented by the tensor_outputs to the results.

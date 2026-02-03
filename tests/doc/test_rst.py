@@ -4,6 +4,8 @@ of the documentation. When there are multiple examples within a single `.rst` fi
 functions here to test them.
 """
 
+from typing import no_type_check
+
 from pytest import mark
 
 
@@ -209,6 +211,7 @@ def test_iwrm():
     "ignore::FutureWarning",
     "ignore::lightning.fabric.utilities.warnings.PossibleUserWarning",
 )
+@no_type_check  # Typing is annoying with Lightning, which would make the example too hard to read.
 def test_lightning_integration():
     # Extra ----------------------------------------------------------------------------------------
     import logging

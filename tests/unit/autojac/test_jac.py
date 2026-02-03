@@ -197,7 +197,7 @@ def test_input_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -b.grad
+        _ = -b.grad  # type: ignore[unsupported-operator]
 
 
 def test_non_input_retaining_grad_fails():
@@ -216,7 +216,7 @@ def test_non_input_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -b.grad
+        _ = -b.grad  # type: ignore[unsupported-operator]
 
 
 @mark.parametrize("chunk_size", [1, 3, None])

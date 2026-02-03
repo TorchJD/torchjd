@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Generic, TypeVar
 
 import torch
 import torchvision
@@ -9,14 +10,16 @@ from torch.utils._pytree import PyTree
 
 from utils.contexts import fork_rng
 
+_T = TypeVar("_T", bound=nn.Module)
 
-class ModuleFactory:
-    def __init__(self, architecture: type[nn.Module], *args, **kwargs):
-        self.architecture = architecture
+
+class ModuleFactory(Generic[_T]):
+    def __init__(self, architecture: type[_T], *args, **kwargs):
+        self.architecture: type[_T] = architecture
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self) -> nn.Module:
+    def __call__(self) -> _T:
         with fork_rng(seed=0):
             return self.architecture(*self.args, **self.kwargs).to(device=DEVICE, dtype=DTYPE)
 

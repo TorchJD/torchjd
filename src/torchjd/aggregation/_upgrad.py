@@ -86,7 +86,7 @@ class UPGradWeighting(Weighting[PSDMatrix]):
         self.reg_eps = reg_eps
         self.solver: SUPPORTED_SOLVER = solver
 
-    def forward(self, gramian: PSDMatrix) -> Tensor:
+    def forward(self, gramian: PSDMatrix, /) -> Tensor:
         U = torch.diag(self.weighting(gramian))
         G = regularize(normalize(gramian, self.norm_eps), self.reg_eps)
         W = project_weights(U, G, self.solver)
