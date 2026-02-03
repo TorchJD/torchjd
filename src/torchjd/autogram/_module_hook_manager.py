@@ -141,7 +141,7 @@ class Hook:
             *rg_outputs,
         )
 
-        for idx, output in zip(rg_output_indices, autograd_fn_rg_outputs):
+        for idx, output in zip(rg_output_indices, autograd_fn_rg_outputs, strict=False):
             flat_outputs[idx] = output
 
         return tree_unflatten(flat_outputs, output_spec)

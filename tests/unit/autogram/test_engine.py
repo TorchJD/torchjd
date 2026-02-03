@@ -340,7 +340,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
     engine = Engine(model, batch_dim=batch_dim)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
-    for i in range(n_iter):
+    for _i in range(n_iter):
         inputs, targets = make_inputs_and_targets(model, batch_size)
         loss_fn = make_mse_loss_fn(targets)
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)

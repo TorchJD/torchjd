@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, cast
+from typing import cast
 
 from torch import Tensor
 from torch.utils._pytree import PyTree
@@ -16,12 +16,14 @@ class GramianComputer(ABC):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[PSDMatrix]:
+    ) -> PSDMatrix | None:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
+    @abstractmethod
     def track_forward_call(self) -> None:
         """Track that the module's forward was called. Necessary in some implementations."""
 
+    @abstractmethod
     def reset(self) -> None:
         """Reset state if any. Necessary in some implementations."""
 
@@ -40,7 +42,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
     def __init__(self, jacobian_computer: JacobianComputer):
         super().__init__(jacobian_computer)
         self.remaining_counter = 0
-        self.summed_jacobian: Optional[Matrix] = None
+        self.summed_jacobian: Matrix | None = None
 
     def reset(self) -> None:
         self.remaining_counter = 0
@@ -55,7 +57,7 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
         grad_outputs: tuple[Tensor, ...],
         args: tuple[PyTree, ...],
         kwargs: dict[str, PyTree],
-    ) -> Optional[PSDMatrix]:
+    ) -> PSDMatrix | None:
         """Compute what we can for a module and optionally return the gramian if it's ready."""
 
         jacobian_matrix = self.jacobian_computer(rg_outputs, grad_outputs, args, kwargs)

@@ -28,7 +28,7 @@ class MemoryFrame:
 
 
 def extract_memory_timeline(path: Path) -> np.ndarray:
-    with open(path, "r") as f:
+    with open(path) as f:
         data = json.load(f)
 
     events = data["traceEvents"]
@@ -53,7 +53,7 @@ def plot_memory_timelines(experiment: str, folders: list[str]) -> None:
         timelines.append(extract_memory_timeline(path))
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    for folder, timeline in zip(folders, timelines):
+    for folder, timeline in zip(folders, timelines, strict=False):
         time = (timeline[:, 0] - timeline[0, 0]) // 1000  # Make time start at 0 and convert to ms.
         memory = timeline[:, 1]
         ax.plot(time, memory, label=folder, linewidth=1.5)

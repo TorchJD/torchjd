@@ -16,7 +16,7 @@ def materialize(
     """
 
     tensors = []
-    for optional_tensor, input in zip(optional_tensors, inputs):
+    for optional_tensor, input in zip(optional_tensors, inputs, strict=False):
         if optional_tensor is None:
             tensors.append(torch.zeros_like(input))
         else:

@@ -4,6 +4,7 @@ import torch
 from settings import DEVICE, DTYPE
 from torch import nn
 from torch.utils._pytree import PyTree, tree_map
+
 from utils.architectures import get_in_out_shapes
 from utils.contexts import fork_rng
 

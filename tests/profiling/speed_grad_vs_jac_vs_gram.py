@@ -55,9 +55,7 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
     A = Mean()
     W = A.weighting
 
-    print(
-        f"\nTimes for forward + backward on {factory} with BS={batch_size}, A={A}" f" on {DEVICE}."
-    )
+    print(f"\nTimes for forward + backward on {factory} with BS={batch_size}, A={A} on {DEVICE}.")
 
     def fn_autograd():
         autograd_forward_backward(model, inputs, loss_fn)

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from torchjd._linalg import PSDMatrix
 
 
@@ -13,7 +11,7 @@ class GramianAccumulator:
     """
 
     def __init__(self) -> None:
-        self._gramian: Optional[PSDMatrix] = None
+        self._gramian: PSDMatrix | None = None
 
     def reset(self) -> None:
         self._gramian = None
@@ -25,7 +23,7 @@ class GramianAccumulator:
             self._gramian = gramian
 
     @property
-    def gramian(self) -> Optional[PSDMatrix]:
+    def gramian(self) -> PSDMatrix | None:
         """
         Get the Gramian matrix accumulated so far.
 

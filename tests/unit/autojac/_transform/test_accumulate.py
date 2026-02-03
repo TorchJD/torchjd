@@ -15,14 +15,14 @@ def test_single_grad_accumulation():
     shapes = [[], [1], [2, 3]]
     keys = [zeros_(shape, requires_grad=True) for shape in shapes]
     values = [ones_(shape) for shape in shapes]
-    input = dict(zip(keys, values))
+    input = dict(zip(keys, values, strict=False))
 
     accumulate = AccumulateGrad()
 
     output = accumulate(input)
     assert_tensor_dicts_are_close(output, {})
 
-    for key, value in zip(keys, values):
+    for key, value in zip(keys, values, strict=False):
         assert_grad_close(key, value)
 
 
@@ -38,12 +38,12 @@ def test_multiple_grad_accumulations(iterations: int):
     values = [ones_(shape) for shape in shapes]
     accumulate = AccumulateGrad()
 
-    for i in range(iterations):
+    for _i in range(iterations):
         # Clone values to ensure that we accumulate values that are not ever used afterwards
-        input = {key: value.clone() for key, value in zip(keys, values)}
+        input = {key: value.clone() for key, value in zip(keys, values, strict=False)}
         accumulate(input)
 
-    for key, value in zip(keys, values):
+    for key, value in zip(keys, values, strict=False):
         assert_grad_close(key, iterations * value)
 
 
@@ -98,14 +98,14 @@ def test_single_jac_accumulation():
     shapes = [[], [1], [2, 3]]
     keys = [zeros_(shape, requires_grad=True) for shape in shapes]
     values = [ones_([4] + shape) for shape in shapes]
-    input = dict(zip(keys, values))
+    input = dict(zip(keys, values, strict=False))
 
     accumulate = AccumulateJac()
 
     output = accumulate(input)
     assert_tensor_dicts_are_close(output, {})
 
-    for key, value in zip(keys, values):
+    for key, value in zip(keys, values, strict=False):
         assert_jac_close(key, value)
 
 
@@ -122,12 +122,12 @@ def test_multiple_jac_accumulations(iterations: int):
 
     accumulate = AccumulateJac()
 
-    for i in range(iterations):
+    for _i in range(iterations):
         # Clone values to ensure that we accumulate values that are not ever used afterwards
-        input = {key: value.clone() for key, value in zip(keys, values)}
+        input = {key: value.clone() for key, value in zip(keys, values, strict=False)}
         accumulate(input)
 
-    for key, value in zip(keys, values):
+    for key, value in zip(keys, values, strict=False):
         assert_jac_close(key, iterations * value)
 
 
