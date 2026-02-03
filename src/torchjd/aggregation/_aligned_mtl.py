@@ -98,7 +98,7 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
         self._scale_mode: SUPPORTED_SCALE_MODE = scale_mode
         self.weighting = pref_vector_to_weighting(pref_vector, default=MeanWeighting())
 
-    def forward(self, gramian: PSDMatrix) -> Tensor:
+    def forward(self, gramian: PSDMatrix, /) -> Tensor:
         w = self.weighting(gramian)
         B = self._compute_balance_transformation(gramian, self._scale_mode)
         alpha = B @ w

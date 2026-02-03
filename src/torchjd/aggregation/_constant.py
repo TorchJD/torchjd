@@ -45,7 +45,7 @@ class ConstantWeighting(Weighting[Matrix]):
         super().__init__()
         self.weights = weights
 
-    def forward(self, matrix: Tensor) -> Tensor:
+    def forward(self, matrix: Tensor, /) -> Tensor:
         self._check_matrix_shape(matrix)
         return self.weights
 
