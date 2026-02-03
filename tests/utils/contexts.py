@@ -7,8 +7,6 @@ from settings import DEVICE
 
 ExceptionContext: TypeAlias = AbstractContextManager[Exception | None]
 
-# TODO: Test todos
-
 
 @contextmanager
 def fork_rng(seed: int = 0) -> Generator[Any, None, None]:
