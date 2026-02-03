@@ -107,7 +107,7 @@ full = [
 ]
 
 # Optional dependencies allowing to easily pin version of the core dependencies to the lower bound.
-# This is not intended to be installed by users: only the CI should every install this.
+# This is not intended to be installed by users: only the CI should ever install this.
 ci_dependency_lower_bounds = [
     "torch==2.4.0",
     "numpy==1.23.0",
