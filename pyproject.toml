@@ -92,6 +92,13 @@ plot = [
     "kaleido==0.2.1",  # Only works with locked version
     "matplotlib>=3.10.0",  # Recent version to avoid problems, could be relaxed
 ]
+# Dependency group allowing to easily resolve version of the core dependencies to the lower bound.
+lower_bounds = [
+    "torch==2.4.0",
+    "numpy==1.23.0",
+    "quadprog==0.1.9",
+    "qpsolvers==1.0.1",
+]
 
 [project.optional-dependencies]
 nash_mtl = [
@@ -104,15 +111,6 @@ cagrad = [
 full = [
     "cvxpy>=1.3.0",  # No Clarabel solver before 1.3.0
     "ecos>=2.0.14",  # Does not work before 2.0.14
-]
-
-# Optional dependencies allowing to easily pin version of the core dependencies to the lower bound.
-# This is not intended to be installed by users: only the CI should ever install this.
-ci_dependency_lower_bounds = [
-    "torch==2.4.0",
-    "numpy==1.23.0",
-    "quadprog==0.1.9",
-    "qpsolvers==1.0.1",
 ]
 
 [tool.pytest.ini_options]
