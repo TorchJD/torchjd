@@ -18,7 +18,7 @@ class GramianAccumulator:
     def reset(self) -> None:
         self._gramian = None
 
-    def accumulate_gramian(self, gramian: PSDMatrix) -> None:
+    def accumulate_gramian(self, gramian: PSDMatrix) -> PSDMatrix:
         if self._gramian is not None:
             self._gramian.add_(gramian)
         else:
