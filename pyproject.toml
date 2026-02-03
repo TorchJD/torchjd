@@ -128,6 +128,7 @@ select = [
     "I",   # isort
     "UP",  # pyupgrade
     "B",   # flake8-bugbear
+    "FIX",  # flake8-fixme
 ]
 
 ignore = [
