@@ -16,7 +16,7 @@ class Init(Transform):
     def __init__(self, values: Set[Tensor]):
         self.values = values
 
-    def __call__(self, input: TensorDict) -> TensorDict:
+    def __call__(self, input: TensorDict, /) -> TensorDict:
         return {value: torch.ones_like(value) for value in self.values}
 
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:

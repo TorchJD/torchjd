@@ -111,11 +111,12 @@ uv run pre-commit install
      uv run make clean
      ```
 
-## Running `mypy`
+## Type checking
 
-From the root of the repo, run:
+We use [ty](https://docs.astral.sh/ty/) for type-checking. If you're on VSCode, we recommend using
+the `ty` extension. You can also run it from the root of the repo with:
 ```bash
-uv run mypy src/torchjd
+uv run ty check
 ```
 
 ## Development guidelines

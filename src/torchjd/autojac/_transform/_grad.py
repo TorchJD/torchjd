@@ -34,7 +34,7 @@ class Grad(Differentiate):
     ):
         super().__init__(outputs, inputs, retain_graph, create_graph)
 
-    def _differentiate(self, grad_outputs: Sequence[Tensor]) -> tuple[Tensor, ...]:
+    def _differentiate(self, grad_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:
         """
         Computes the gradient of each output element with respect to each input tensor, and applies
         the linear transformations represented by the grad_outputs to the results.

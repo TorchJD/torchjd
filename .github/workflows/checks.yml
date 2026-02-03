@@ -123,10 +123,10 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          groups: check
+          groups: check test plot
 
-      - name: Run mypy
-        run: uv run mypy src/torchjd
+      - name: Run ty
+        run: uv run ty check
 
   check-todos:
     name: Absence of TODOs
