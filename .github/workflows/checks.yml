@@ -120,7 +120,7 @@ jobs:
 
       - uses: ./.github/actions/install-deps
         with:
-          groups: check
+          groups: check, test
 
       - name: Run ty
         run: uv run ty check
