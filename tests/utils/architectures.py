@@ -7,6 +7,7 @@ from settings import DEVICE, DTYPE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+
 from utils.contexts import fork_rng
 
 _T = TypeVar("_T", bound=nn.Module)
@@ -47,7 +48,7 @@ def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
 
-    elif isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+    elif isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
         HEIGHT = 6  # Arbitrary choice
         WIDTH = 6  # Arbitrary choice
         shape = (module.num_features, HEIGHT, WIDTH)

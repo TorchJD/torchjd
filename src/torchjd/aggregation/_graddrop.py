@@ -74,5 +74,5 @@ class GradDrop(Aggregator):
         if self.leak is None:
             leak_str = ""
         else:
-            leak_str = f"([{', '.join(['{:.2f}'.format(l_).rstrip('0') for l_ in self.leak])}])"
+            leak_str = f"([{', '.join([f'{l_:.2f}'.rstrip('0') for l_ in self.leak])}])"
         return f"GradDrop{leak_str}"

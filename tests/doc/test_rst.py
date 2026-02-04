@@ -35,7 +35,7 @@ def test_amp():
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
 
-    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets, strict=False):
         with torch.autocast(device_type="cpu", dtype=torch.float16):
             features = shared_module(input)
             output1 = task1_module(features)
@@ -105,7 +105,7 @@ def test_iwmtl():
     task1_targets = torch.randn(8, 16)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16)  # 8 batches of 16 targets for the second task
 
-    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets, strict=False):
         features = shared_module(input)  # shape: [16, 3]
         out1 = task1_module(features).squeeze(1)  # shape: [16]
         out2 = task2_module(features).squeeze(1)  # shape: [16]
@@ -140,7 +140,7 @@ def test_iwrm():
         params = model.parameters()
         optimizer = SGD(params, lr=0.1)
 
-        for x, y in zip(X, Y):
+        for x, y in zip(X, Y, strict=False):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             loss = loss_fn(y_hat, y)  # shape: [] (scalar)
             loss.backward()
@@ -165,7 +165,7 @@ def test_iwrm():
         optimizer = SGD(params, lr=0.1)
         aggregator = UPGrad()
 
-        for x, y in zip(X, Y):
+        for x, y in zip(X, Y, strict=False):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             losses = loss_fn(y_hat, y)  # shape: [16]
             backward(losses)
@@ -192,7 +192,7 @@ def test_iwrm():
         weighting = UPGradWeighting()
         engine = Engine(model, batch_dim=0)
 
-        for x, y in zip(X, Y):
+        for x, y in zip(X, Y, strict=False):
             y_hat = model(x).squeeze(dim=1)  # shape: [16]
             losses = loss_fn(y_hat, y)  # shape: [16]
             gramian = engine.compute_gramian(losses)  # shape: [16, 16]
@@ -318,7 +318,7 @@ def test_monitoring():
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
 
-    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets, strict=False):
         features = shared_module(input)
         output1 = task1_module(features)
         output2 = task2_module(features)
@@ -356,7 +356,7 @@ def test_mtl():
     task1_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the first task
     task2_targets = torch.randn(8, 16, 1)  # 8 batches of 16 targets for the second task
 
-    for input, target1, target2 in zip(inputs, task1_targets, task2_targets):
+    for input, target1, target2 in zip(inputs, task1_targets, task2_targets, strict=False):
         features = shared_module(input)
         output1 = task1_module(features)
         output2 = task2_module(features)
@@ -392,7 +392,7 @@ def test_partial_jd():
     params = model.parameters()
     optimizer = SGD(params, lr=0.1)
 
-    for x, y in zip(X, Y):
+    for x, y in zip(X, Y, strict=False):
         y_hat = model(x).squeeze(dim=1)  # shape: [16]
         losses = loss_fn(y_hat, y)  # shape: [16]
         gramian = engine.compute_gramian(losses)
@@ -417,7 +417,7 @@ def test_rnn():
     inputs = torch.randn(8, 5, 3, 10)  # 8 batches of 3 sequences of length 5 and of dim 10.
     targets = torch.randn(8, 5, 3, 20)  # 8 batches of 3 sequences of length 5 and of dim 20.
 
-    for input, target in zip(inputs, targets):
+    for input, target in zip(inputs, targets, strict=False):
         output, _ = rnn(input)  # output is of shape [5, 3, 20].
         losses = ((output - target) ** 2).mean(dim=[1, 2])  # 1 loss per sequence element.
 

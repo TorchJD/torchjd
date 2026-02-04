@@ -66,6 +66,7 @@ Changelog = "https://github.com/TorchJD/torchjd/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 check = [
+    "ruff>=0.14.14",
     "ty>=0.0.14",
     "pre-commit>=2.9.2",  # isort doesn't work before 2.9.2
 ]
@@ -121,6 +122,32 @@ exclude_lines = [
     "pragma: not covered",
     "@overload",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle Error
+    "F",   # Pyflakes
+    "W",   # pycodestyle Warning
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "FIX",  # flake8-fixme
+]
+
+ignore = [
+    "E501", # line-too-long (handled by the formatter)
+    "E402", # module-import-not-at-top-of-file
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.ty.src]
 include = ["src", "tests"]

@@ -42,7 +42,7 @@ def test_jac():
     jacobians = jac(outputs, inputs)
 
     assert len(jacobians) == len([a1, a2])
-    for jacobian, a in zip(jacobians, [a1, a2]):
+    for jacobian, a in zip(jacobians, [a1, a2], strict=True):
         assert jacobian.shape[0] == len([y1, y2])
         assert jacobian.shape[1:] == a.shape
 

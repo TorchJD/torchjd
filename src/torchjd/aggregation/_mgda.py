@@ -53,7 +53,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         dtype = gramian.dtype
 
         alpha = torch.ones(gramian.shape[0], device=device, dtype=dtype) / gramian.shape[0]
-        for i in range(self.max_iters):
+        for _ in range(self.max_iters):
             t = torch.argmin(gramian @ alpha)
             e_t = torch.zeros(gramian.shape[0], device=device, dtype=dtype)
             e_t[t] = 1.0
