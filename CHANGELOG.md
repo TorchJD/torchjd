@@ -51,7 +51,7 @@ changelog does not include internal changes that do not affect the user.
 - Removed an unnecessary internal cloning of gradient. This should slightly improve the memory
   efficiency of `autojac`.
 - Increased the lower bounds of the torch (from 2.0.0 to 2.4.0) and numpy (from 1.21.0
-  to 1.23.0) dependencies to reflect what really works with torchjd. We now also run torchjd's tests
+  to 1.21.2) dependencies to reflect what really works with torchjd. We now also run torchjd's tests
   with the dependency lower-bounds specified in `pyproject.toml`, so we should now always accurately
   reflect the actual lower-bounds.
 
