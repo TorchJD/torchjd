@@ -1,5 +1,4 @@
-from collections.abc import Sequence
-from typing import Iterable
+from collections.abc import Iterable, Sequence
 
 from torch import Tensor
 

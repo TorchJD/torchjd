@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Generic, TypeVar
 
 import torch
 import torchvision
@@ -6,16 +7,19 @@ from settings import DEVICE, DTYPE
 from torch import Tensor, nn
 from torch.nn import Flatten, ReLU
 from torch.utils._pytree import PyTree
+
 from utils.contexts import fork_rng
 
+_T = TypeVar("_T", bound=nn.Module)
 
-class ModuleFactory:
-    def __init__(self, architecture: type[nn.Module], *args, **kwargs):
-        self.architecture = architecture
+
+class ModuleFactory(Generic[_T]):
+    def __init__(self, architecture: type[_T], *args, **kwargs):
+        self.architecture: type[_T] = architecture
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self) -> nn.Module:
+    def __call__(self) -> _T:
         with fork_rng(seed=0):
             return self.architecture(*self.args, **self.kwargs).to(device=DEVICE, dtype=DTYPE)
 
@@ -44,7 +48,7 @@ def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
 
-    elif isinstance(module, (nn.BatchNorm2d, nn.InstanceNorm2d)):
+    elif isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
         HEIGHT = 6  # Arbitrary choice
         WIDTH = 6  # Arbitrary choice
         shape = (module.num_features, HEIGHT, WIDTH)
@@ -592,9 +596,11 @@ class WithBuffered(ShapedModule):
     OUTPUT_SHAPES = (10,)
 
     class _Buffered(nn.Module):
+        buffer: Tensor
+
         def __init__(self):
             super().__init__()
-            self.buffer = nn.Buffer(torch.tensor(1.5))
+            self.register_buffer("buffer", torch.tensor(1.5))
 
         def forward(self, input: Tensor) -> Tensor:
             return input * self.buffer
@@ -633,7 +639,7 @@ class WithSideEffect(ShapedModule):
     def __init__(self):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(9, 10))
-        self.buffer = nn.Buffer(torch.zeros((9,)))
+        self.register_buffer("buffer", torch.zeros((9,)))
 
     def forward(self, input: Tensor) -> Tensor:
         self.buffer = self.buffer + 1.0

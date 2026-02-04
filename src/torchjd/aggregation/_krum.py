@@ -61,7 +61,7 @@ class KrumWeighting(Weighting[PSDMatrix]):
         self.n_byzantine = n_byzantine
         self.n_selected = n_selected
 
-    def forward(self, gramian: PSDMatrix) -> Tensor:
+    def forward(self, gramian: PSDMatrix, /) -> Tensor:
         self._check_matrix_shape(gramian)
         gradient_norms_squared = torch.diagonal(gramian)
         distances_squared = (

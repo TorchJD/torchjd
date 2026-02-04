@@ -24,7 +24,7 @@ class Weighting(Generic[_T], nn.Module, ABC):
         super().__init__()
 
     @abstractmethod
-    def forward(self, stat: _T) -> Tensor:
+    def forward(self, stat: _T, /) -> Tensor:
         """Computes the vector of weights from the input stat."""
 
     def __call__(self, stat: Tensor) -> Tensor:
@@ -51,7 +51,7 @@ class _Composition(Weighting[_T]):
         self.fn = fn
         self.weighting = weighting
 
-    def forward(self, stat: _T) -> Tensor:
+    def forward(self, stat: _T, /) -> Tensor:
         return self.weighting(self.fn(stat))
 
 

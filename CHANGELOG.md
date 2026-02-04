@@ -45,9 +45,13 @@ changelog does not include internal changes that do not affect the user.
   mtl_backward(losses, features)
   jac_to_grad(shared_module.parameters(), aggregator)
   ```
-
+  
 - Removed several unnecessary memory duplications. This should significantly improve the memory
   efficiency and speed of `autojac`.
+- Increased the lower bounds of the torch (from 2.0.0 to 2.3.0) and numpy (from 1.21.0
+  to 1.21.2) dependencies to reflect what really works with torchjd. We now also run torchjd's tests
+  with the dependency lower-bounds specified in `pyproject.toml`, so we should now always accurately
+  reflect the actual lower-bounds.
 
 ## [0.8.1] - 2026-01-07
 

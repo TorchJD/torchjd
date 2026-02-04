@@ -31,8 +31,7 @@ class MatrixSampler(ABC):
 
     def __str__(self) -> str:
         return (
-            f"{self.__class__.__name__.replace('MatrixSampler', '')}"
-            f"({self.m}x{self.n}r{self.rank})"
+            f"{self.__class__.__name__.replace('MatrixSampler', '')}({self.m}x{self.n}r{self.rank})"
         )
 
 

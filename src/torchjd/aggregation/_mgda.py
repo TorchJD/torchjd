@@ -43,7 +43,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         self.epsilon = epsilon
         self.max_iters = max_iters
 
-    def forward(self, gramian: PSDMatrix) -> Tensor:
+    def forward(self, gramian: PSDMatrix, /) -> Tensor:
         """
         This is the Frank-Wolfe solver in Algorithm 2 of `Multi-Task Learning as Multi-Objective
         Optimization
@@ -53,7 +53,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
         dtype = gramian.dtype
 
         alpha = torch.ones(gramian.shape[0], device=device, dtype=dtype) / gramian.shape[0]
-        for i in range(self.max_iters):
+        for _ in range(self.max_iters):
             t = torch.argmin(gramian @ alpha)
             e_t = torch.zeros(gramian.shape[0], device=device, dtype=dtype)
             e_t[t] = 1.0
@@ -65,7 +65,7 @@ class MGDAWeighting(Weighting[PSDMatrix]):
             elif b <= a:
                 gamma = 0.0
             else:
-                gamma = (b - a) / (b + c - 2 * a)  # type: ignore[assignment]
+                gamma = (b - a) / (b + c - 2 * a)
             alpha = (1 - gamma) * alpha + gamma * e_t
             if gamma < self.epsilon:
                 break

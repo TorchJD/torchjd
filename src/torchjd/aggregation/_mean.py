@@ -24,7 +24,7 @@ class MeanWeighting(Weighting[Matrix]):
     \mathbb{R}^m`.
     """
 
-    def forward(self, matrix: Tensor) -> Tensor:
+    def forward(self, matrix: Tensor, /) -> Tensor:
         device = matrix.device
         dtype = matrix.dtype
         m = matrix.shape[0]

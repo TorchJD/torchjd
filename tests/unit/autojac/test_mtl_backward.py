@@ -351,7 +351,7 @@ def test_various_feature_lists(shapes: list[tuple[int]]):
 
     features = [rand_(shape) @ p0 for shape in shapes]
 
-    y1 = sum([(f * p).sum() for f, p in zip(features, p1)])
+    y1 = sum([(f * p).sum() for f, p in zip(features, p1, strict=True)])
     y2 = (features[0] * p2).sum()
 
     mtl_backward(losses=[y1, y2], features=features)
@@ -448,7 +448,7 @@ def test_shared_param_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -a.grad
+        _ = -a.grad  # type: ignore[unsupported-operator]
 
 
 def test_shared_activation_retaining_grad_fails():
@@ -477,7 +477,7 @@ def test_shared_activation_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -a.grad
+        _ = -a.grad  # type: ignore[unsupported-operator]
 
 
 def test_tasks_params_overlap():

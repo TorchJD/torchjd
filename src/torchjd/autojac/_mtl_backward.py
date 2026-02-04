@@ -132,7 +132,7 @@ def _create_transform(
             OrderedSet([loss]),
             retain_graph,
         )
-        for task_params, loss in zip(tasks_params, losses)
+        for task_params, loss in zip(tasks_params, losses, strict=True)
     ]
 
     # Transform that stacks the gradients of the losses w.r.t. the shared representations into a

@@ -42,7 +42,7 @@ def test_jac():
     jacobians = jac(outputs, inputs)
 
     assert len(jacobians) == len([a1, a2])
-    for jacobian, a in zip(jacobians, [a1, a2]):
+    for jacobian, a in zip(jacobians, [a1, a2], strict=True):
         assert jacobian.shape[0] == len([y1, y2])
         assert jacobian.shape[1:] == a.shape
 
@@ -197,7 +197,7 @@ def test_input_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -b.grad
+        _ = -b.grad  # type: ignore[unsupported-operator]
 
 
 def test_non_input_retaining_grad_fails():
@@ -216,7 +216,7 @@ def test_non_input_retaining_grad_fails():
 
     with raises(RuntimeError):
         # Using such a BatchedTensor should result in an error
-        _ = -b.grad
+        _ = -b.grad  # type: ignore[unsupported-operator]
 
 
 @mark.parametrize("chunk_size", [1, 3, None])

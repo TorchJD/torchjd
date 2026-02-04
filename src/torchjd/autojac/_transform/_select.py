@@ -15,7 +15,7 @@ class Select(Transform):
     def __init__(self, keys: Set[Tensor]):
         self.keys = keys
 
-    def __call__(self, tensor_dict: TensorDict) -> TensorDict:
+    def __call__(self, tensor_dict: TensorDict, /) -> TensorDict:
         output = {key: tensor_dict[key] for key in self.keys}
         return type(tensor_dict)(output)
 

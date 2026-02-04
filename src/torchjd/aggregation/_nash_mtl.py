@@ -23,7 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# mypy: ignore-errors
+from typing import cast
 
 from torchjd._linalg import Matrix
 
@@ -96,7 +96,7 @@ class NashMTL(WeightedAggregator):
 
     def reset(self) -> None:
         """Resets the internal state of the algorithm."""
-        self.weighting.reset()
+        cast(_NashMTLWeighting, self.weighting).reset()
 
     def __repr__(self) -> str:
         return (
@@ -141,7 +141,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         self.prvs_alpha = np.ones(self.n_tasks, dtype=np.float32)
 
     def _stop_criteria(self, gtg: np.ndarray, alpha_t: np.ndarray) -> bool:
-        return (
+        return bool(
             (self.alpha_param.value is None)
             or (np.linalg.norm(gtg @ alpha_t - 1 / (alpha_t + 1e-10)) < 1e-3)
             or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
@@ -198,7 +198,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         obj = cp.Minimize(cp.sum(G_alpha) + self.phi_alpha / self.normalization_factor_param)
         self.prob = cp.Problem(obj, constraint)
 
-    def forward(self, matrix: Tensor) -> Tensor:
+    def forward(self, matrix: Tensor, /) -> Tensor:
         if self.step == 0:
             self._init_optim_problem()
 

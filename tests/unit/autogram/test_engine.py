@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from itertools import combinations
 from math import prod
+from typing import cast
 
 import pytest
 import torch
@@ -78,7 +79,7 @@ from utils.forward_backwards import (
 )
 from utils.tensors import make_inputs_and_targets, ones_, randn_, zeros_
 
-from torchjd._linalg import compute_gramian
+from torchjd._linalg import PSDMatrix, compute_gramian
 from torchjd.aggregation import UPGradWeighting
 from torchjd.autogram._engine import Engine
 from torchjd.autogram._gramian_utils import movedim, reshape
@@ -263,7 +264,7 @@ def test_compute_gramian_unsupported_architectures(
     ],
 )
 def test_compute_gramian_various_output_shapes(
-    batch_size: int | None,
+    batch_size: int,
     reduction: Callable[[list[Tensor]], Tensor],
     batch_dim: int | None,
     movedim_source: list[int],
@@ -340,7 +341,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
     engine = Engine(model, batch_dim=batch_dim)
     optimizer = SGD(model.parameters(), lr=1e-7)
 
-    for i in range(n_iter):
+    for _ in range(n_iter):
         inputs, targets = make_inputs_and_targets(model, batch_size)
         loss_fn = make_mse_loss_fn(targets)
         autogram_forward_backward(model, inputs, loss_fn, engine, weighting)
@@ -457,7 +458,7 @@ def test_reshape_equivariance(shape: list[int]):
 
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input)
-    gramian = engine1.compute_gramian(output)
+    gramian = cast(PSDMatrix, engine1.compute_gramian(output))
     expected_reshaped_gramian = reshape(gramian, shape[1:])
 
     engine2 = Engine(model2, batch_dim=None)
@@ -495,7 +496,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
 
     engine1 = Engine(model1, batch_dim=None)
     output = model1(input).reshape(shape[1:])
-    gramian = engine1.compute_gramian(output)
+    gramian = cast(PSDMatrix, engine1.compute_gramian(output))
     expected_moved_gramian = movedim(gramian, source, destination)
 
     engine2 = Engine(model2, batch_dim=None)

@@ -131,7 +131,7 @@ def _unite_jacobians(jacobians: deque[Tensor]) -> Tensor:
 
 def _disunite_gradient(gradient_vector: Tensor, tensors: list[TensorWithJac]) -> list[Tensor]:
     gradient_vectors = gradient_vector.split([t.numel() for t in tensors])
-    gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors)]
+    gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
     return gradients
 
 
