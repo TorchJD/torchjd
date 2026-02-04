@@ -595,9 +595,11 @@ class WithBuffered(ShapedModule):
     OUTPUT_SHAPES = (10,)
 
     class _Buffered(nn.Module):
+        buffer: Tensor
+
         def __init__(self):
             super().__init__()
-            self.buffer = nn.Buffer(torch.tensor(1.5))
+            self.register_buffer("buffer", torch.tensor(1.5))
 
         def forward(self, input: Tensor) -> Tensor:
             return input * self.buffer
@@ -636,7 +638,7 @@ class WithSideEffect(ShapedModule):
     def __init__(self):
         super().__init__()
         self.matrix = nn.Parameter(torch.randn(9, 10))
-        self.buffer = nn.Buffer(torch.zeros((9,)))
+        self.register_buffer("buffer", torch.zeros((9,)))
 
     def forward(self, input: Tensor) -> Tensor:
         self.buffer = self.buffer + 1.0
