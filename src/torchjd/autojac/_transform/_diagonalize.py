@@ -65,7 +65,7 @@ class Diagonalize(Transform):
         diagonal_matrix = torch.cat(flattened_considered_values).diag()
         diagonalized_tensors = {
             key: diagonal_matrix[:, begin:end].reshape((-1,) + key.shape)
-            for (begin, end), key in zip(self.indices, self.key_order, strict=False)
+            for (begin, end), key in zip(self.indices, self.key_order, strict=True)
         }
         return diagonalized_tensors
 

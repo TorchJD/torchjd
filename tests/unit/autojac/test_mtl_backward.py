@@ -351,7 +351,7 @@ def test_various_feature_lists(shapes: list[tuple[int]]):
 
     features = [rand_(shape) @ p0 for shape in shapes]
 
-    y1 = sum([(f * p).sum() for f, p in zip(features, p1, strict=False)])
+    y1 = sum([(f * p).sum() for f, p in zip(features, p1, strict=True)])
     y2 = (features[0] * p2).sum()
 
     mtl_backward(losses=[y1, y2], features=features)

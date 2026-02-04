@@ -41,7 +41,7 @@ class Differentiate(Transform, ABC):
         tensor_outputs = [tensors[output] for output in self.outputs]
 
         differentiated_tuple = self._differentiate(tensor_outputs)
-        new_differentiations = dict(zip(self.inputs, differentiated_tuple, strict=False))
+        new_differentiations = dict(zip(self.inputs, differentiated_tuple, strict=True))
         return type(tensors)(new_differentiations)
 
     @abstractmethod

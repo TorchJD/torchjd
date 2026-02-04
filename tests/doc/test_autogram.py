@@ -22,7 +22,7 @@ def test_engine():
     # Create the engine before the backward pass, and only once.
     engine = Engine(model, batch_dim=0)
 
-    for input, target in zip(inputs, targets, strict=False):
+    for input, target in zip(inputs, targets, strict=True):
         output = model(input).squeeze(dim=1)  # shape: [16]
         losses = criterion(output, target)  # shape: [16]
 
