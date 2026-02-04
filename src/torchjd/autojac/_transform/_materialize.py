@@ -3,8 +3,6 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-# todo: test todo
-
 
 def materialize(
     optional_tensors: Sequence[Tensor | None], inputs: Sequence[Tensor]
