@@ -595,6 +595,8 @@ class WithBuffered(ShapedModule):
     OUTPUT_SHAPES = (10,)
 
     class _Buffered(nn.Module):
+        buffer: Tensor
+
         def __init__(self):
             super().__init__()
             self.register_buffer("buffer", torch.tensor(1.5))
