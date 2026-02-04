@@ -109,8 +109,8 @@ jobs:
           # This reduces false positives due to rate limits
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  check-code:
-    name: Check code correctness
+  code-quality:
+    name: Code quality (ty and ruff)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
