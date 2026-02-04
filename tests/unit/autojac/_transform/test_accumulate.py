@@ -38,7 +38,7 @@ def test_multiple_grad_accumulations(iterations: int):
     values = [ones_(shape) for shape in shapes]
     accumulate = AccumulateGrad()
 
-    for _i in range(iterations):
+    for _ in range(iterations):
         # Clone values to ensure that we accumulate values that are not ever used afterwards
         input = {key: value.clone() for key, value in zip(keys, values, strict=False)}
         accumulate(input)
@@ -122,7 +122,7 @@ def test_multiple_jac_accumulations(iterations: int):
 
     accumulate = AccumulateJac()
 
-    for _i in range(iterations):
+    for _ in range(iterations):
         # Clone values to ensure that we accumulate values that are not ever used afterwards
         input = {key: value.clone() for key, value in zip(keys, values, strict=False)}
         accumulate(input)
