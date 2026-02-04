@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-# TODO: test todos
+# todo: test todo
 
 
 def materialize(
