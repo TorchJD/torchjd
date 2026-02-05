@@ -49,7 +49,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(xfail_cuda)
 
 
-def pytest_make_parametrize_id(config, val, argname):
+def pytest_make_parametrize_id(_, val, __):
     MAX_SIZE = 40
     optional_string = None  # Returning None means using pytest's way of making the string
 
