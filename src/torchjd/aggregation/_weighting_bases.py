@@ -13,7 +13,7 @@ _FnInputT = TypeVar("_FnInputT", bound=Tensor)
 _FnOutputT = TypeVar("_FnOutputT", bound=Tensor)
 
 
-class Weighting(Generic[_T], nn.Module, ABC):
+class Weighting(nn.Module, ABC, Generic[_T]):
     r"""
     Abstract base class for all weighting methods. It has the role of extracting a vector of weights
     of dimension :math:`m` from some statistic of a matrix of dimension :math:`m \times n`,

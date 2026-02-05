@@ -141,6 +141,7 @@ select = [
     "SIM",  # flake8-simplify
     "ARG",  # flake8-unused-arguments
     "RET",  # flake8-return
+    "PYI",  # flake8-pyi
     "PERF", # Perflint
     "FURB", # refurb
     "RUF",  # Ruff-specific rules
