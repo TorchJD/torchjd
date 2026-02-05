@@ -84,7 +84,7 @@ class NashMTL(WeightedAggregator):
                 max_norm=max_norm,
                 update_weights_every=update_weights_every,
                 optim_niter=optim_niter,
-            )
+            ),
         )
         self._n_tasks = n_tasks
         self._max_norm = max_norm
@@ -144,7 +144,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         return bool(
             (self.alpha_param.value is None)
             or (np.linalg.norm(gtg @ alpha_t - 1 / (alpha_t + 1e-10)) < 1e-3)
-            or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
+            or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6),
         )
 
     def _solve_optimization(self, gtg: np.ndarray) -> np.ndarray:

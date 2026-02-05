@@ -70,7 +70,9 @@ def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     """
 
     regularization_matrix = eps * torch.eye(
-        gramian.shape[0], dtype=gramian.dtype, device=gramian.device
+        gramian.shape[0],
+        dtype=gramian.dtype,
+        device=gramian.device,
     )
     output = gramian + regularization_matrix
     return cast(PSDMatrix, output)

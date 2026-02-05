@@ -39,7 +39,7 @@ def main() -> None:
             [0.0, 1.0],
             [1.0, -1.0],
             [1.0, 0.0],
-        ]
+        ],
     )
 
     aggregators = [
@@ -148,7 +148,8 @@ def main() -> None:
 
 
 def make_gradient_div(
-    i: int, initial_gradient: torch.Tensor
+    i: int,
+    initial_gradient: torch.Tensor,
 ) -> tuple[html.Div, dcc.Input, dcc.Input]:
     x = initial_gradient[0].item()
     y = initial_gradient[1].item()

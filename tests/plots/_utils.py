@@ -28,7 +28,11 @@ class Plotter:
 
         for i in range(len(results)):
             scatter = make_vector_scatter(
-                results[i], "black", str(self.aggregators[i]), showlegend=True, dash=True
+                results[i],
+                "black",
+                str(self.aggregators[i]),
+                showlegend=True,
+                dash=True,
             )
             fig.add_trace(scatter)
 
@@ -87,7 +91,11 @@ def make_vector_scatter(
 
 
 def make_cone_scatter(
-    start_angle: float, opening: float, label: str, scale: float = 100.0, printable: bool = False
+    start_angle: float,
+    opening: float,
+    label: str,
+    scale: float = 100.0,
+    printable: bool = False,
 ) -> Scatter:
     if opening < -1e-8:
         cone_outline = np.zeros([0, 2])
@@ -105,7 +113,7 @@ def make_cone_scatter(
                     start_vec,  # Tip of the first vector
                     end_vec,  # Tip of the second vector
                     [0, 0],  # Back to the origin to close the cone
-                ]
+                ],
             )
         else:
             middle_point = angle_to_coord(middle_angle, scale)
@@ -117,7 +125,7 @@ def make_cone_scatter(
                     middle_point,  # Tip of the vector in-between
                     end_vec,  # Tip of the second vector
                     [0, 0],  # Back to the origin to close the cone
-                ]
+                ],
             )
 
     if printable:
@@ -167,7 +175,10 @@ def make_polygon_scatter(points: list[torch.Tensor]) -> Scatter:
 
 
 def make_right_angle(
-    vector: torch.Tensor, size: float, positive_para: bool = True, positive_orth: bool = True
+    vector: torch.Tensor,
+    size: float,
+    positive_para: bool = True,
+    positive_orth: bool = True,
 ) -> list[torch.Tensor]:
     vec_para = vector / torch.linalg.norm(vector) * size
     vec_orth = torch.tensor([-vec_para[1], vec_para[0]])

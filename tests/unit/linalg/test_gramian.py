@@ -57,7 +57,7 @@ def test_compute_gramian_matrix_input_0():
         [
             [[[1.0, 3.0], [2.0, 4.0]], [[2.0, 6.0], [4.0, 8.0]]],
             [[[3.0, 9.0], [6.0, 12.0]], [[4.0, 12.0], [8.0, 16.0]]],
-        ]
+        ],
     )
 
     assert_close(gramian, expected)

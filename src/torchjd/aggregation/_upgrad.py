@@ -41,7 +41,7 @@ class UPGrad(GramianWeightedAggregator):
         self._solver: SUPPORTED_SOLVER = solver
 
         super().__init__(
-            UPGradWeighting(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver)
+            UPGradWeighting(pref_vector, norm_eps=norm_eps, reg_eps=reg_eps, solver=solver),
         )
 
         # This prevents considering the computed weights as constant w.r.t. the matrix.

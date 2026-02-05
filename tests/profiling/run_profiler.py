@@ -90,7 +90,10 @@ def _get_profiler_activities() -> list[ProfilerActivity]:
 
 
 def _save_and_print_trace(
-    prof: profile, method_name: str, factory: ModuleFactory, batch_size: int
+    prof: profile,
+    method_name: str,
+    factory: ModuleFactory,
+    batch_size: int,
 ) -> None:
     filename = f"{factory}-bs{batch_size}-{DEVICE.type}.json"
     output_dir = TRACES_DIR / method_name

@@ -20,7 +20,7 @@ class TrimmedMean(Aggregator):
         if trim_number < 0:
             raise ValueError(
                 "Parameter `trim_number` should be a non-negative integer. Found `trim_number` = "
-                f"{trim_number}`."
+                f"{trim_number}`.",
             )
         self.trim_number = trim_number
 
@@ -41,7 +41,7 @@ class TrimmedMean(Aggregator):
         if n_rows < min_rows:
             raise ValueError(
                 f"Parameter `matrix` should be a matrix of at least {min_rows} rows "
-                f"(i.e. `2 * trim_number + 1`). Found `matrix` of shape `{matrix.shape}`."
+                f"(i.e. `2 * trim_number + 1`). Found `matrix` of shape `{matrix.shape}`.",
             )
 
     def __repr__(self) -> str:

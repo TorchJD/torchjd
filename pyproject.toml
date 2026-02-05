@@ -142,6 +142,7 @@ select = [
     "RET",  # flake8-return
     "PYI",  # flake8-pyi
     "PIE",  # flake8-pie
+    "COM",  # flake8-commas
     "PERF", # Perflint
     "FURB", # refurb
     "RUF",  # Ruff-specific rules

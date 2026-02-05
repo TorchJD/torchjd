@@ -115,7 +115,9 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
 
 def compute_gramian_with_autograd(
-    output: Tensor, params: list[nn.Parameter], retain_graph: bool = False
+    output: Tensor,
+    params: list[nn.Parameter],
+    retain_graph: bool = False,
 ) -> PSDTensor:
     """
     Computes the Gramian of the Jacobian of the outputs with respect to the params using vmapped

@@ -73,6 +73,6 @@ class Diagonalize(Transform):
         if not set(self.key_order) == input_keys:
             raise RequirementError(
                 f"The input_keys must match the key_order. Found input_keys {input_keys} and"
-                f"key_order {self.key_order}."
+                f"key_order {self.key_order}.",
             )
         return input_keys
