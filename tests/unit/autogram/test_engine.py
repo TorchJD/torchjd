@@ -361,6 +361,7 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
 def test_autograd_while_modules_are_hooked(
     factory: ModuleFactory,
     batch_size: int,
+    *,
     use_engine: bool,
     batch_dim: int | None,
 ):

@@ -27,7 +27,7 @@ def fix_randomness() -> None:
     # reproducibility on GPU. We also use GPU to benchmark algorithms, and we would rather have them
     # use non-deterministic but faster algorithms.
     if DEVICE.type == "cpu":
-        torch.use_deterministic_algorithms(True)
+        torch.use_deterministic_algorithms(mode=True)
 
 
 def pytest_addoption(parser):

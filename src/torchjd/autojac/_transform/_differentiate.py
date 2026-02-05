@@ -29,6 +29,7 @@ class Differentiate(Transform, ABC):
         self,
         outputs: OrderedSet[Tensor],
         inputs: OrderedSet[Tensor],
+        *,
         retain_graph: bool,
         create_graph: bool,
     ):
@@ -64,7 +65,7 @@ class Differentiate(Transform, ABC):
             )
         return set(self.inputs)
 
-    def _get_vjp(self, grad_outputs: Sequence[Tensor], retain_graph: bool) -> tuple[Tensor, ...]:
+    def _get_vjp(self, grad_outputs: Sequence[Tensor], *, retain_graph: bool) -> tuple[Tensor, ...]:
         optional_grads = torch.autograd.grad(
             self.outputs,
             self.inputs,

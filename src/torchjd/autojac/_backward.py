@@ -9,6 +9,7 @@ from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, 
 def backward(
     tensors: Sequence[Tensor] | Tensor,
     inputs: Iterable[Tensor] | None = None,
+    *,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
@@ -86,6 +87,7 @@ def backward(
 def _create_transform(
     tensors: OrderedSet[Tensor],
     inputs: OrderedSet[Tensor],
+    *,
     retain_graph: bool,
     parallel_chunk_size: int | None,
 ) -> Transform:

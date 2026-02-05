@@ -48,7 +48,7 @@ def test_jac_is_populated():
 @mark.parametrize("chunk_size", [1, 2, None])
 def test_value_is_correct(
     shape: tuple[int, int],
-    manually_specify_inputs: bool,
+    *manually_specify_inputs: bool,
     chunk_size: int | None,
 ):
     """

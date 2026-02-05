@@ -114,6 +114,7 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 def compute_gramian_with_autograd(
     output: Tensor,
     params: list[nn.Parameter],
+    *,
     retain_graph: bool = False,
 ) -> PSDTensor:
     """

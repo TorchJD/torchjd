@@ -86,7 +86,7 @@ def test_no_tensors():
 
 
 @mark.parametrize("retain_jac", [True, False])
-def test_jacs_are_freed(retain_jac: bool):
+def test_jacs_are_freed(*, retain_jac: bool):
     """Tests that jac_to_grad frees the jac fields if an only if retain_jac is False."""
 
     aggregator = UPGrad()

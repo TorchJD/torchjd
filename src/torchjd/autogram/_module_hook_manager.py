@@ -36,7 +36,7 @@ class ModuleHookManager:
     ):
         self._target_edges = target_edges
         self._gramian_accumulator = gramian_accumulator
-        self.gramian_accumulation_phase = BoolRef(False)
+        self.gramian_accumulation_phase = BoolRef(value=False)
         self._handles: list[TorchRemovableHandle] = []
 
         # When the ModuleHookManager is not referenced anymore, there is no reason to keep the hooks
@@ -79,7 +79,7 @@ class ModuleHookManager:
 class BoolRef:
     """Class wrapping a boolean value, acting as a reference to this boolean value."""
 
-    def __init__(self, value: bool):
+    def __init__(self, *, value: bool):
         self.value = value
 
     def __bool__(self) -> bool:

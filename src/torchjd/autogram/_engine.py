@@ -306,7 +306,7 @@ class Engine:
 
         return gramian
 
-    def _compute_square_gramian(self, output: Tensor, has_non_batch_dim: bool) -> PSDMatrix:
+    def _compute_square_gramian(self, output: Tensor, *, has_non_batch_dim: bool) -> PSDMatrix:
         leaf_targets = list(self._target_edges.get_leaf_edges({get_gradient_edge(output)}))
 
         def differentiation(_grad_output: Tensor) -> tuple[Tensor, ...]:

@@ -86,7 +86,7 @@ def plot_memory_timelines(experiment: str, folders: list[str]) -> None:
     ax_cuda.set_ylabel("CUDA Memory (bytes)", fontsize=12)
     ax_cuda.set_title(f"CUDA Memory Timeline: {experiment}", fontsize=14, fontweight="bold")
     ax_cuda.legend(loc="best", fontsize=11)
-    ax_cuda.grid(True, alpha=0.3)
+    ax_cuda.grid(visible=True, alpha=0.3)
     ax_cuda.set_ylim(bottom=0)
 
     # Plot CPU memory (bottom subplot)
@@ -99,7 +99,7 @@ def plot_memory_timelines(experiment: str, folders: list[str]) -> None:
     ax_cpu.set_ylabel("CPU Memory (bytes)", fontsize=12)
     ax_cpu.set_title(f"CPU Memory Timeline: {experiment}", fontsize=14, fontweight="bold")
     ax_cpu.legend(loc="best", fontsize=11)
-    ax_cpu.grid(True, alpha=0.3)
+    ax_cpu.grid(visible=True, alpha=0.3)
     ax_cpu.set_ylim(bottom=0)
 
     fig.tight_layout()

@@ -21,6 +21,7 @@ def mtl_backward(
     features: Sequence[Tensor] | Tensor,
     tasks_params: Sequence[Iterable[Tensor]] | None = None,
     shared_params: Iterable[Tensor] | None = None,
+    *,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
@@ -113,6 +114,7 @@ def _create_transform(
     features: OrderedSet[Tensor],
     tasks_params: list[OrderedSet[Tensor]],
     shared_params: OrderedSet[Tensor],
+    *,
     retain_graph: bool,
     parallel_chunk_size: int | None,
 ) -> Transform:
@@ -152,6 +154,7 @@ def _create_task_transform(
     features: OrderedSet[Tensor],
     task_params: OrderedSet[Tensor],
     loss: OrderedSet[Tensor],  # contains a single scalar loss
+    *,
     retain_graph: bool,
 ) -> Transform:
     # Tensors with respect to which we compute the gradients.

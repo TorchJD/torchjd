@@ -11,6 +11,7 @@ from ._accumulation import TensorWithJac, accumulate_grads, is_tensor_with_jac
 def jac_to_grad(
     tensors: Iterable[Tensor],
     aggregator: Aggregator,
+    *,
     retain_jac: bool = False,
 ) -> None:
     r"""

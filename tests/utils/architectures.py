@@ -524,7 +524,7 @@ class WithSomeFrozenModule(ShapedModule):
         super().__init__()
         self.non_frozen = nn.Linear(50, 10)
         self.all_frozen = nn.Linear(50, 10)
-        self.all_frozen.requires_grad_(False)
+        self.all_frozen.requires_grad_(requires_grad=False)
 
     def forward(self, input: Tensor) -> Tensor:
         return self.all_frozen(input) + self.non_frozen(input**2 / 5.0)

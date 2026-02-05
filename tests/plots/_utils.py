@@ -59,6 +59,7 @@ def make_vector_scatter(
     gradient: torch.Tensor,
     color: str,
     label: str,
+    *,
     showlegend: bool = False,
     dash: bool = False,
     textposition: str = "bottom center",
@@ -94,6 +95,7 @@ def make_cone_scatter(
     opening: float,
     label: str,
     scale: float = 100.0,
+    *,
     printable: bool = False,
 ) -> Scatter:
     if opening < -1e-8:
@@ -171,6 +173,7 @@ def make_polygon_scatter(points: list[torch.Tensor]) -> Scatter:
 def make_right_angle(
     vector: torch.Tensor,
     size: float,
+    *,
     positive_para: bool = True,
     positive_orth: bool = True,
 ) -> list[torch.Tensor]:

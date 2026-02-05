@@ -29,6 +29,7 @@ class Grad(Differentiate):
         self,
         outputs: OrderedSet[Tensor],
         inputs: OrderedSet[Tensor],
+        *,
         retain_graph: bool = False,
         create_graph: bool = False,
     ):

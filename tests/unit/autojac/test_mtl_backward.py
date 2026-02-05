@@ -67,6 +67,7 @@ def test_shape_is_correct():
 @mark.parametrize("chunk_size", [1, 2, None])
 def test_value_is_correct(
     shape: tuple[int, int],
+    *,
     manually_specify_shared_params: bool,
     manually_specify_tasks_params: bool,
     chunk_size: int | None,
