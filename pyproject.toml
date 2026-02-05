@@ -140,6 +140,7 @@ select = [
     "TID",  # flake8-tidy-imports
     "SIM",  # flake8-simplify
     "PERF", # Perflint
+    "FURB", # refurb
 ]
 
 ignore = [
