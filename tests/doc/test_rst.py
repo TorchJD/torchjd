@@ -256,8 +256,7 @@ def test_lightning_integration():
             opt.zero_grad()
 
         def configure_optimizers(self) -> OptimizerLRScheduler:
-            optimizer = Adam(self.parameters(), lr=1e-3)
-            return optimizer
+            return Adam(self.parameters(), lr=1e-3)
 
     model = Model()
 

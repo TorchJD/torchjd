@@ -173,8 +173,7 @@ def _create_task_transform(
 
     # Transform that accumulates the gradient of the losses w.r.t. the task-specific parameters into
     # their .grad fields and backpropagates the gradient of the losses w.r.t. to the features.
-    backward_task = (backpropagate | accumulate) << grad << init
-    return backward_task
+    return (backpropagate | accumulate) << grad << init
 
 
 def _check_losses_are_scalar(losses: Iterable[Tensor]) -> None:

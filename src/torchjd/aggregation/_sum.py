@@ -26,5 +26,4 @@ class SumWeighting(Weighting[Matrix]):
     def forward(self, matrix: Tensor, /) -> Tensor:
         device = matrix.device
         dtype = matrix.dtype
-        weights = torch.ones(matrix.shape[0], device=device, dtype=dtype)
-        return weights
+        return torch.ones(matrix.shape[0], device=device, dtype=dtype)

@@ -101,6 +101,4 @@ class CAGradWeighting(Weighting[PSDMatrix]):
             # We are approximately on the pareto front
             weight_array = np.zeros(dimension)
 
-        weights = torch.from_numpy(weight_array).to(device=gramian.device, dtype=gramian.dtype)
-
-        return weights
+        return torch.from_numpy(weight_array).to(device=gramian.device, dtype=gramian.dtype)

@@ -73,5 +73,4 @@ class Differentiate(Transform, ABC):
             create_graph=self.create_graph,
             allow_unused=True,
         )
-        grads = materialize(optional_grads, inputs=self.inputs)
-        return grads
+        return materialize(optional_grads, inputs=self.inputs)

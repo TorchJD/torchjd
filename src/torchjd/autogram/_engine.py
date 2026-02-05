@@ -209,9 +209,7 @@ class Engine:
             jacobian_computer = FunctionalJacobianComputer(module)
         else:
             jacobian_computer = AutogradJacobianComputer(module)
-        gramian_computer = JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
-
-        return gramian_computer
+        return JacobianBasedGramianComputerWithCrossTerms(jacobian_computer)
 
     def _check_module_is_compatible(self, module: nn.Module) -> None:
         if self._batch_dim is not None:
@@ -333,6 +331,4 @@ class Engine:
 
         # If the gramian were None, then leaf_targets would be empty, so autograd.grad would
         # have failed. So gramian is necessarily a valid Tensor here.
-        gramian = cast(PSDMatrix, self._gramian_accumulator.gramian)
-
-        return gramian
+        return cast(PSDMatrix, self._gramian_accumulator.gramian)

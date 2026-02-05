@@ -101,9 +101,7 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
     def forward(self, gramian: PSDMatrix, /) -> Tensor:
         w = self.weighting(gramian)
         B = self._compute_balance_transformation(gramian, self._scale_mode)
-        alpha = B @ w
-
-        return alpha
+        return B @ w
 
     @staticmethod
     def _compute_balance_transformation(
@@ -114,8 +112,7 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
         rank = sum(lambda_ > tol)
 
         if rank == 0:
-            identity = torch.eye(len(M), dtype=M.dtype, device=M.device)
-            return identity
+            return torch.eye(len(M), dtype=M.dtype, device=M.device)
 
         order = torch.argsort(lambda_, dim=-1, descending=True)
         lambda_, V = lambda_[order][:rank], V[:, order][:, :rank]
@@ -133,5 +130,4 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
                 f"Invalid scale_mode={scale_mode!r}. Expected 'min', 'median', or 'rmse'."
             )
 
-        B = scale.sqrt() * V @ sigma_inv @ V.T
-        return B
+        return scale.sqrt() * V @ sigma_inv @ V.T

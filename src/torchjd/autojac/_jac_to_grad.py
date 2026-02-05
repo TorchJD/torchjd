@@ -79,14 +79,12 @@ def jac_to_grad(
 
 def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
     jacobian_matrices = [jacobian.reshape(jacobian.shape[0], -1) for jacobian in jacobians]
-    jacobian_matrix = torch.concat(jacobian_matrices, dim=1)
-    return jacobian_matrix
+    return torch.concat(jacobian_matrices, dim=1)
 
 
 def _disunite_gradient(gradient_vector: Tensor, tensors: list[TensorWithJac]) -> list[Tensor]:
     gradient_vectors = gradient_vector.split([t.numel() for t in tensors])
-    gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
-    return gradients
+    return [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
 
 
 def _free_jacs(tensors: Iterable[TensorWithJac]) -> None:

@@ -73,5 +73,4 @@ class JacobianBasedGramianComputerWithCrossTerms(JacobianBasedGramianComputer):
             gramian = compute_gramian(self.summed_jacobian)
             del self.summed_jacobian
             return gramian
-        else:
-            return None
+        return None

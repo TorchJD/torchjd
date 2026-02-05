@@ -19,8 +19,7 @@ class FakeTransform(Transform):
 
     def __call__(self, _: TensorDict, /) -> TensorDict:
         # Ignore the input, create a dictionary with the right keys as an output.
-        output_dict = {key: empty_(0) for key in self._output_keys}
-        return output_dict
+        return {key: empty_(0) for key in self._output_keys}
 
     def check_keys(self, input_keys: set[Tensor], /) -> set[Tensor]:
         # Arbitrary requirement for testing purposes.

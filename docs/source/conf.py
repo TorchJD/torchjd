@@ -96,8 +96,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
     line_str = _get_line_str(obj)
     version_str = _get_version_str()
 
-    link = f"https://github.com/TorchJD/torchjd/blob/{version_str}/{file_name}{line_str}"
-    return link
+    return f"https://github.com/TorchJD/torchjd/blob/{version_str}/{file_name}{line_str}"
 
 
 def _get_obj(_info: dict[str, str]):
@@ -108,8 +107,7 @@ def _get_obj(_info: dict[str, str]):
     for part in full_name.split("."):
         obj = getattr(obj, part)
     # strip decorators, which would resolve to the source of the decorator
-    obj = inspect.unwrap(obj)
-    return obj
+    return inspect.unwrap(obj)
 
 
 def _get_file_name(obj) -> str | None:
@@ -124,8 +122,7 @@ def _get_file_name(obj) -> str | None:
 def _get_line_str(obj) -> str:
     source, start = inspect.getsourcelines(obj)
     end = start + len(source) - 1
-    line_str = f"#L{start}-L{end}"
-    return line_str
+    return f"#L{start}-L{end}"
 
 
 def _get_version_str() -> str:

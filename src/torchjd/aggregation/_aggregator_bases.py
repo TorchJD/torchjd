@@ -59,13 +59,11 @@ class WeightedAggregator(Aggregator):
         weights.
         """
 
-        vector = weights @ matrix
-        return vector
+        return weights @ matrix
 
     def forward(self, matrix: Matrix) -> Tensor:
         weights = self.weighting(matrix)
-        vector = self.combine(matrix, weights)
-        return vector
+        return self.combine(matrix, weights)
 
 
 class GramianWeightedAggregator(WeightedAggregator):

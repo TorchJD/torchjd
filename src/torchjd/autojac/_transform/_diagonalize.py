@@ -63,11 +63,10 @@ class Diagonalize(Transform):
     def __call__(self, tensors: TensorDict, /) -> TensorDict:
         flattened_considered_values = [tensors[key].reshape([-1]) for key in self.key_order]
         diagonal_matrix = torch.cat(flattened_considered_values).diag()
-        diagonalized_tensors = {
+        return {
             key: diagonal_matrix[:, begin:end].reshape((-1, *key.shape))
             for (begin, end), key in zip(self.indices, self.key_order, strict=True)
         }
-        return diagonalized_tensors
 
     def check_keys(self, input_keys: set[Tensor], /) -> set[Tensor]:
         if not set(self.key_order) == input_keys:

@@ -25,8 +25,7 @@ class Stack(Transform):
 
     def __call__(self, input: TensorDict, /) -> TensorDict:
         results = [transform(input) for transform in self.transforms]
-        result = _stack(results)
-        return result
+        return _stack(results)
 
     def check_keys(self, input_keys: set[Tensor], /) -> set[Tensor]:
         return {key for transform in self.transforms for key in transform.check_keys(input_keys)}
@@ -40,8 +39,7 @@ def _stack(gradient_dicts: list[TensorDict]) -> TensorDict:
     for d in gradient_dicts:
         union |= d
     unique_keys = union.keys()
-    result = {key: _stack_one_key(gradient_dicts, key) for key in unique_keys}
-    return result
+    return {key: _stack_one_key(gradient_dicts, key) for key in unique_keys}
 
 
 def _stack_one_key(gradient_dicts: list[TensorDict], input: Tensor) -> Tensor:
@@ -49,5 +47,4 @@ def _stack_one_key(gradient_dicts: list[TensorDict], input: Tensor) -> Tensor:
 
     optional_gradients = [gradients.get(input, None) for gradients in gradient_dicts]
     gradients = materialize(optional_gradients, [input] * len(optional_gradients))
-    jacobian = torch.stack(gradients, dim=0)
-    return jacobian
+    return torch.stack(gradients, dim=0)

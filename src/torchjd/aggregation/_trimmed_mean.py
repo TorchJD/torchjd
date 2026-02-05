@@ -32,8 +32,7 @@ class TrimmedMean(Aggregator):
 
         sorted_matrix, _ = torch.sort(matrix, dim=0)
         trimmed = torch.narrow(sorted_matrix, dim=0, start=self.trim_number, length=n_remaining)
-        vector = trimmed.mean(dim=0)
-        return vector
+        return trimmed.mean(dim=0)
 
     def _check_matrix_has_enough_rows(self, matrix: Tensor) -> None:
         min_rows = 1 + 2 * self.trim_number

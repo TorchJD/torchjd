@@ -29,5 +29,4 @@ class Flattening(GeneralizedWeighting):
         shape = generalized_gramian.shape[:k]
         square_gramian = flatten(generalized_gramian)
         weights_vector = self.weighting(square_gramian)
-        weights = weights_vector.reshape(shape)
-        return weights
+        return weights_vector.reshape(shape)

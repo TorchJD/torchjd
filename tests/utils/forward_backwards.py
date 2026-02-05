@@ -71,8 +71,7 @@ def forward_pass(
     assert tree_map(lambda t: t.shape[1:], output) == expected_output_shapes
 
     loss_tensors = loss_fn(output)
-    losses = reduction(loss_tensors)
-    return losses
+    return reduction(loss_tensors)
 
 
 def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], list[Tensor]]:
@@ -80,12 +79,10 @@ def make_mse_loss_fn(targets: PyTree) -> Callable[[PyTree], list[Tensor]]:
         flat_outputs, _ = tree_flatten(outputs)
         flat_targets, _ = tree_flatten(targets)
 
-        loss_tensors = [
+        return [
             mse_loss(output, target, reduction="none")
             for output, target in zip(flat_outputs, flat_targets, strict=True)
         ]
-
-        return loss_tensors
 
     return mse_loss_fn
 
@@ -111,8 +108,7 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
     if raw_losses.ndim == 1:
         return raw_losses.unsqueeze(1)
-    else:
-        return raw_losses.flatten(start_dim=1)
+    return raw_losses.flatten(start_dim=1)
 
 
 def compute_gramian_with_autograd(
@@ -137,9 +133,7 @@ def compute_gramian_with_autograd(
 
     jacobians = vmap(get_vjp)(torch.diag(torch.ones_like(output)))
     jacobian_matrices = [jacobian.reshape([jacobian.shape[0], -1]) for jacobian in jacobians]
-    gramian = sum([jacobian @ jacobian.T for jacobian in jacobian_matrices])
-
-    return gramian
+    return sum([jacobian @ jacobian.T for jacobian in jacobian_matrices])
 
 
 class CloneParams:

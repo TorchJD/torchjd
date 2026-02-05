@@ -76,9 +76,7 @@ class KrumWeighting(Weighting[PSDMatrix]):
 
         _, selected_indices = torch.topk(scores, k=self.n_selected, largest=False)
         one_hot_selected_indices = F.one_hot(selected_indices, num_classes=gramian.shape[0])
-        weights = one_hot_selected_indices.sum(dim=0).to(dtype=gramian.dtype) / self.n_selected
-
-        return weights
+        return one_hot_selected_indices.sum(dim=0).to(dtype=gramian.dtype) / self.n_selected
 
     def _check_matrix_shape(self, gramian: PSDMatrix) -> None:
         min_rows = self.n_byzantine + 3

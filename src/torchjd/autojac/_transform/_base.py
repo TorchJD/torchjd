@@ -82,8 +82,7 @@ class Composition(Transform):
 
     def check_keys(self, input_keys: set[Tensor], /) -> set[Tensor]:
         intermediate_keys = self.inner.check_keys(input_keys)
-        output_keys = self.outer.check_keys(intermediate_keys)
-        return output_keys
+        return self.outer.check_keys(intermediate_keys)
 
 
 class Conjunction(Transform):

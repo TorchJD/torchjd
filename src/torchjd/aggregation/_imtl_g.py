@@ -34,6 +34,4 @@ class IMTLGWeighting(Weighting[PSDMatrix]):
         v = torch.linalg.pinv(gramian) @ d
         v_sum = v.sum()
 
-        weights = torch.zeros_like(v) if v_sum.abs() < 1e-12 else v / v_sum
-
-        return weights
+        return torch.zeros_like(v) if v_sum.abs() < 1e-12 else v / v_sum

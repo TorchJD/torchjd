@@ -28,5 +28,4 @@ class MeanWeighting(Weighting[Matrix]):
         device = matrix.device
         dtype = matrix.dtype
         m = matrix.shape[0]
-        weights = torch.full(size=[m], fill_value=1 / m, device=device, dtype=dtype)
-        return weights
+        return torch.full(size=[m], fill_value=1 / m, device=device, dtype=dtype)

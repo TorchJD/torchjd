@@ -140,6 +140,7 @@ select = [
     "TID",  # flake8-tidy-imports
     "SIM",  # flake8-simplify
     "ARG",  # flake8-unused-arguments
+    "RET",  # flake8-return
     "PERF", # Perflint
     "FURB", # refurb
     "RUF",  # Ruff-specific rules

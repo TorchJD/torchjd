@@ -110,8 +110,7 @@ class FunctionalJacobianComputer(JacobianComputer):
             ]
             output = torch.func.functional_call(self.module, all_state, args_j, kwargs_j)
             flat_outputs = tree_flatten(output)[0]
-            rg_outputs = tuple(t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad)
-            return rg_outputs
+            return tuple(t for t in flat_outputs if isinstance(t, Tensor) and t.requires_grad)
 
         vjp_func = torch.func.vjp(functional_model_call, self.rg_params)[1]
 
@@ -119,8 +118,7 @@ class FunctionalJacobianComputer(JacobianComputer):
         # functional has a single primal which is dict(module.named_parameters()). We therefore take
         # the 0'th element to obtain the dict of gradients w.r.t. the module's named_parameters.
         gradients = vjp_func(grad_outputs_j_)[0]
-        gradient = torch.cat([t.reshape(-1) for t in gradients.values()])
-        return gradient
+        return torch.cat([t.reshape(-1) for t in gradients.values()])
 
 
 class AutogradJacobianComputer(JacobianComputer):
@@ -163,8 +161,7 @@ class ComputeModuleJacobians(torch.autograd.Function):
         kwargs: dict[str, PyTree],
     ) -> Tensor:
         # There is no non-batched dimension
-        jacobian = compute_jacobian_fn(rg_outputs, grad_outputs, args, kwargs)
-        return jacobian
+        return compute_jacobian_fn(rg_outputs, grad_outputs, args, kwargs)
 
     @staticmethod
     def vmap(

@@ -42,8 +42,7 @@ class NormalSampler(MatrixSampler):
         U = _sample_orthonormal_matrix(self.m, rng=rng)
         Vt = _sample_orthonormal_matrix(self.n, rng=rng)
         S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
-        A = U[:, : self.rank] @ S @ Vt[: self.rank, :]
-        return A
+        return U[:, : self.rank] @ S @ Vt[: self.rank, :]
 
 
 class StrongSampler(MatrixSampler):
@@ -68,8 +67,7 @@ class StrongSampler(MatrixSampler):
         U2 = _sample_semi_orthonormal_complement(U1, rng=rng)
         Vt = _sample_orthonormal_matrix(self.n, rng=rng)
         S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
-        A = U2[:, : self.rank] @ S @ Vt[: self.rank, :]
-        return A
+        return U2[:, : self.rank] @ S @ Vt[: self.rank, :]
 
 
 class StrictlyWeakSampler(MatrixSampler):
@@ -110,8 +108,7 @@ class StrictlyWeakSampler(MatrixSampler):
         U = torch.hstack([U1, U2])
         Vt = _sample_orthonormal_matrix(self.n, rng=rng)
         S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
-        A = U[:, 1 : self.rank + 1] @ S @ Vt[: self.rank, :]
-        return A
+        return U[:, 1 : self.rank + 1] @ S @ Vt[: self.rank, :]
 
 
 class NonWeakSampler(MatrixSampler):
@@ -135,8 +132,7 @@ class NonWeakSampler(MatrixSampler):
         U = torch.hstack([U1, U2])
         Vt = _sample_orthonormal_matrix(self.n, rng=rng)
         S = torch.diag(torch.abs(randn_([self.rank], generator=rng)))
-        A = U[:, : self.rank] @ S @ Vt[: self.rank, :]
-        return A
+        return U[:, : self.rank] @ S @ Vt[: self.rank, :]
 
 
 def _sample_orthonormal_matrix(dim: int, rng: torch.Generator | None = None) -> Tensor:

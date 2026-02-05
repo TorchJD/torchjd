@@ -48,14 +48,13 @@ def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
 
-    elif isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
+    if isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
         HEIGHT = 6  # Arbitrary choice
         WIDTH = 6  # Arbitrary choice
         shape = (module.num_features, HEIGHT, WIDTH)
         return shape, shape
 
-    else:
-        raise ValueError("Unknown input / output shapes of module", module)
+    raise ValueError("Unknown input / output shapes of module", module)
 
 
 class OverlyNested(ShapedModule):
@@ -103,8 +102,7 @@ class MultiInputSingleOutput(ShapedModule):
 
     def forward(self, inputs: tuple[Tensor, Tensor]) -> Tensor:
         input1, input2 = inputs
-        output = input1 @ self.matrix1 + input2 @ self.matrix2
-        return output
+        return input1 @ self.matrix1 + input2 @ self.matrix2
 
 
 class MultiInputMultiOutput(ShapedModule):
@@ -182,9 +180,7 @@ class PyTreeInputSingleOutput(ShapedModule):
         output3 = input3 @ self.matrix3
         output4 = input4 @ self.matrix4
         output5 = input5 @ self.matrix5
-        output = torch.concatenate([output1, output2, output3, output4, output5], dim=1)
-
-        return output
+        return torch.concatenate([output1, output2, output3, output4, output5], dim=1)
 
 
 class PyTreeInputPyTreeOutput(ShapedModule):
@@ -245,8 +241,7 @@ class SimpleBranched(ShapedModule):
         common_input = self.relu(self.fc0(input))
         branch1 = self.fc2(self.relu(self.fc1(common_input)))
         branch2 = self.fc3(common_input)
-        output = self.fc4(self.relu(branch1 + branch2))
-        return output
+        return self.fc4(self.relu(branch1 + branch2))
 
 
 class MISOBranched(ShapedModule):
@@ -662,8 +657,7 @@ class SomeUnusedOutput(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         _ = self.linear1(input)
-        output = self.linear2(input)
-        return output
+        return self.linear2(input)
 
 
 class Ndim0Output(ShapedModule):
@@ -808,8 +802,7 @@ class _WithStringArg(nn.Module):
     def forward(self, s: str, input: Tensor) -> Tensor:
         if s == "two":
             return input @ self.matrix * 2.0
-        else:
-            return input @ self.matrix
+        return input @ self.matrix
 
 
 class WithModuleWithStringArg(ShapedModule):
@@ -1030,8 +1023,7 @@ class FreeParam(ShapedModule):
         output = self.relu(self.linear1(output))
         output = self.relu(self.linear2(output))
         output = self.relu(self.linear3(output))
-        output = self.linear4(output)
-        return output
+        return self.linear4(output)
 
 
 class NoFreeParam(ShapedModule):
@@ -1057,8 +1049,7 @@ class NoFreeParam(ShapedModule):
         output = self.relu(self.linear1(output))
         output = self.relu(self.linear2(output))
         output = self.relu(self.linear3(output))
-        output = self.linear4(output)
-        return output
+        return self.linear4(output)
 
 
 class Cifar10Model(ShapedModule):
@@ -1116,8 +1107,7 @@ class Cifar10Model(ShapedModule):
 
     def forward(self, input: Tensor) -> Tensor:
         features = self.body(input)
-        output = self.head(features)
-        return output
+        return self.head(features)
 
 
 class AlexNet(ShapedModule):

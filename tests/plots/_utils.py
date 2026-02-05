@@ -66,7 +66,7 @@ def make_vector_scatter(
     if dash:
         line["dash"] = "dash"
 
-    scatter = go.Scatter(
+    return go.Scatter(
         x=[0, gradient[0]],
         y=[0, gradient[1]],
         mode="lines+markers+text",
@@ -83,7 +83,6 @@ def make_vector_scatter(
         textfont={"color": color, "size": text_size},
         showlegend=showlegend,
     )
-    return scatter
 
 
 def make_cone_scatter(
@@ -131,7 +130,7 @@ def make_cone_scatter(
     else:
         fillpattern = None
 
-    cone = go.Scatter(
+    return go.Scatter(
         x=cone_outline[:, 0],
         y=cone_outline[:, 1],
         fill="toself",  # Fill the area inside the polygon
@@ -142,28 +141,23 @@ def make_cone_scatter(
         fillpattern=fillpattern,
     )
 
-    return cone
-
 
 def make_segment_scatter(start: torch.Tensor, end: torch.Tensor) -> Scatter:
-    segment = go.Scatter(
+    return go.Scatter(
         x=[start[0], end[0]],
         y=[start[1], end[1]],
         mode="lines",
         line={"color": "rgb(150, 150, 150)", "width": 2.5, "dash": "longdash"},
     )
 
-    return segment
-
 
 def make_polygon_scatter(points: list[torch.Tensor]) -> Scatter:
-    polygon = go.Scatter(
+    return go.Scatter(
         x=[point[0] for point in points],
         y=[point[1] for point in points],
         mode="lines",
         line={"color": "rgb(100, 100, 100)", "width": 1.5},
     )
-    return polygon
 
 
 def make_right_angle(
@@ -239,10 +233,7 @@ def coord_to_angle(x: float, y: float) -> tuple[float, float]:
 
     if r == 0:
         raise ValueError("No angle")
-    elif y >= 0:
-        angle = np.arccos(x / r)
-    else:
-        angle = 2 * np.pi - np.arccos(x / r)
+    angle = np.arccos(x / r) if y >= 0 else 2 * np.pi - np.arccos(x / r)
 
     return angle, r
 
