@@ -138,6 +138,7 @@ select = [
     "C4",   # flake8-comprehensions
     "FIX",  # flake8-fixme
     "TID",  # flake8-tidy-imports
+    "SIM",  # flake8-simplify
 ]
 
 ignore = [

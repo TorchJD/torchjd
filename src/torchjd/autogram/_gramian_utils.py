@@ -75,8 +75,8 @@ def movedim(gramian: PSDTensor, half_source: list[int], half_destination: list[i
 
     # Map everything to the range [0, gramian.ndim//2[
     half_ndim = gramian.ndim // 2
-    half_source_ = [i if 0 <= i else i + half_ndim for i in half_source]
-    half_destination_ = [i if 0 <= i else i + half_ndim for i in half_destination]
+    half_source_ = [i if i >= 0 else i + half_ndim for i in half_source]
+    half_destination_ = [i if i >= 0 else i + half_ndim for i in half_destination]
 
     # Mirror the half source and the half destination and use the result to move the dimensions of
     # the gramian
