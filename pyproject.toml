@@ -129,13 +129,14 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle Error
-    "F",   # Pyflakes
-    "W",   # pycodestyle Warning
-    "I",   # isort
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
+    "E",    # pycodestyle Error
+    "F",    # Pyflakes
+    "W",    # pycodestyle Warning
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
     "FIX",  # flake8-fixme
+    "TID",  # flake8-tidy-imports
 ]
 
 ignore = [
