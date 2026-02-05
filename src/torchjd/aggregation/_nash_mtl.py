@@ -189,12 +189,10 @@ class _NashMTLWeighting(Weighting[Matrix]):
         self.phi_alpha = self._calc_phi_alpha_linearization()
 
         G_alpha = self.G_param @ self.alpha_param
-        constraint = []
-        for i in range(self.n_tasks):
-            constraint.append(
-                -cp.log(self.alpha_param[i] * self.normalization_factor_param) - cp.log(G_alpha[i])
-                <= 0
-            )
+        constraint = [
+            -cp.log(self.a * self.normalization_factor_param) - cp.log(G_a) <= 0
+            for a, G_a in zip(self.alpha_param, G_alpha, strict=True)
+        ]
         obj = cp.Minimize(cp.sum(G_alpha) + self.phi_alpha / self.normalization_factor_param)
         self.prob = cp.Problem(obj, constraint)
 
