@@ -536,11 +536,11 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     input = randn_([batch_size, input_size])
 
     engine1 = Engine(model1, batch_dim=batch_dim)
-    output1 = model1(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
+    output1 = model1(input).reshape([batch_size, *non_batched_shape]).movedim(0, batch_dim)
     gramian1 = engine1.compute_gramian(output1)
 
     engine2 = Engine(model2, batch_dim=None)
-    output2 = model2(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
+    output2 = model2(input).reshape([batch_size, *non_batched_shape]).movedim(0, batch_dim)
     gramian2 = engine2.compute_gramian(output2)
 
     assert_close(gramian1, gramian2)

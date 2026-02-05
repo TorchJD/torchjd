@@ -62,7 +62,7 @@ class Jac(Differentiate):
         if len(self.outputs) == 0:
             return tuple(
                 [
-                    torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
+                    torch.empty((0, *input.shape), device=input.device, dtype=input.dtype)
                     for input in self.inputs
                 ]
             )

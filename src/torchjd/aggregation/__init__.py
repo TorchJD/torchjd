@@ -81,6 +81,8 @@ from ._utils.check_dependencies import (
 from ._weighting_bases import GeneralizedWeighting, Weighting
 
 __all__ = [
+    "IMTLG",
+    "MGDA",
     "Aggregator",
     "AlignedMTL",
     "AlignedMTLWeighting",
@@ -92,14 +94,12 @@ __all__ = [
     "Flattening",
     "GeneralizedWeighting",
     "GradDrop",
-    "IMTLG",
     "IMTLGWeighting",
     "Krum",
     "KrumWeighting",
+    "MGDAWeighting",
     "Mean",
     "MeanWeighting",
-    "MGDA",
-    "MGDAWeighting",
     "PCGrad",
     "PCGradWeighting",
     "Random",

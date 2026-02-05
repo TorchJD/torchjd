@@ -278,7 +278,7 @@ class Engine:
             target_shape = []
 
         if has_non_batch_dim:
-            target_shape = [-1] + target_shape
+            target_shape = [-1, *target_shape]
 
         reshaped_output = ordered_output.reshape(target_shape)
         # There are four different cases for the shape of reshaped_output:

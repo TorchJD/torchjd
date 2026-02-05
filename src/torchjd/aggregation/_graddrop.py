@@ -68,7 +68,7 @@ class GradDrop(Aggregator):
             )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(f={repr(self.f)}, leak={repr(self.leak)})"
+        return f"{self.__class__.__name__}(f={self.f!r}, leak={self.leak!r})"
 
     def __str__(self) -> str:
         if self.leak is None:

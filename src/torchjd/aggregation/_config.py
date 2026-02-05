@@ -70,7 +70,7 @@ class ConFIG(Aggregator):
         return length * unit_target_vector
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)})"
+        return f"{self.__class__.__name__}(pref_vector={self._pref_vector!r})"
 
     def __str__(self) -> str:
         return f"ConFIG{pref_vector_to_str_suffix(self._pref_vector)}"

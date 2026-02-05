@@ -20,7 +20,7 @@ class Constant(WeightedAggregator):
         self._weights = weights
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(weights={repr(self._weights)})"
+        return f"{self.__class__.__name__}(weights={self._weights!r})"
 
     def __str__(self) -> str:
         weights_str = vector_to_str(self._weights)

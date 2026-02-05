@@ -68,8 +68,8 @@ class AlignedMTL(GramianWeightedAggregator):
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, "
-            f"scale_mode={repr(self._scale_mode)})"
+            f"{self.__class__.__name__}(pref_vector={self._pref_vector!r}, "
+            f"scale_mode={self._scale_mode!r})"
         )
 
     def __str__(self) -> str:

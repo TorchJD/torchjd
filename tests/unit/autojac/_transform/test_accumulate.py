@@ -97,7 +97,7 @@ def test_single_jac_accumulation():
 
     shapes = [[], [1], [2, 3]]
     keys = [zeros_(shape, requires_grad=True) for shape in shapes]
-    values = [ones_([4] + shape) for shape in shapes]
+    values = [ones_([4, *shape]) for shape in shapes]
     input = dict(zip(keys, values, strict=True))
 
     accumulate = AccumulateJac()
@@ -118,7 +118,7 @@ def test_multiple_jac_accumulations(iterations: int):
 
     shapes = [[], [1], [2, 3]]
     keys = [zeros_(shape, requires_grad=True) for shape in shapes]
-    values = [ones_([4] + shape) for shape in shapes]
+    values = [ones_([4, *shape]) for shape in shapes]
 
     accumulate = AccumulateJac()
 

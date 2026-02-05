@@ -40,4 +40,4 @@ def _make_tensors(batch_size: int, tensor_shapes: PyTree) -> PyTree:
     def is_leaf(s):
         return isinstance(s, tuple) and all(isinstance(e, int) for e in s)
 
-    return tree_map(lambda s: randn_((batch_size,) + s), tensor_shapes, is_leaf=is_leaf)
+    return tree_map(lambda s: randn_((batch_size, *s)), tensor_shapes, is_leaf=is_leaf)

@@ -29,8 +29,8 @@ from torchjd.autogram._gramian_utils import flatten, movedim, reshape
 def test_reshape_equivarience(original_shape: list[int], target_shape: list[int]):
     """Tests that reshape_gramian is such that compute_gramian is equivariant to a reshape."""
 
-    original_matrix = randn_(original_shape + [2])
-    target_matrix = original_matrix.reshape(target_shape + [2])
+    original_matrix = randn_([*original_shape, 2])
+    target_matrix = original_matrix.reshape([*target_shape, 2])
 
     original_gramian = compute_gramian(original_matrix, 1)
     target_gramian = compute_gramian(target_matrix, 1)
@@ -56,7 +56,7 @@ def test_reshape_equivarience(original_shape: list[int], target_shape: list[int]
     ],
 )
 def test_reshape_yields_psd(original_shape: list[int], target_shape: list[int]):
-    matrix = randn_(original_shape + [2])
+    matrix = randn_([*original_shape, 2])
     gramian = compute_gramian(matrix, 1)
     reshaped_gramian = reshape(gramian, target_shape)
     assert_is_psd_tensor(reshaped_gramian, atol=1e-04, rtol=0.0)
@@ -73,7 +73,7 @@ def test_reshape_yields_psd(original_shape: list[int], target_shape: list[int]):
     ],
 )
 def test_flatten_yields_matrix(shape: list[int]):
-    matrix = randn_(shape + [2])
+    matrix = randn_([*shape, 2])
     gramian = compute_gramian(matrix, 1)
     flattened_gramian = flatten(gramian)
     assert is_psd_matrix(flattened_gramian)
@@ -90,7 +90,7 @@ def test_flatten_yields_matrix(shape: list[int]):
     ],
 )
 def test_flatten_yields_psd(shape: list[int]):
-    matrix = randn_(shape + [2])
+    matrix = randn_([*shape, 2])
     gramian = compute_gramian(matrix, 1)
     flattened_gramian = flatten(gramian)
     assert_is_psd_matrix(flattened_gramian, atol=1e-04, rtol=0.0)
@@ -117,7 +117,7 @@ def test_flatten_yields_psd(shape: list[int]):
 def test_movedim_equivariance(shape: list[int], source: list[int], destination: list[int]):
     """Tests that movedim_gramian is such that compute_gramian is equivariant to a movedim."""
 
-    original_matrix = randn_(shape + [2])
+    original_matrix = randn_([*shape, 2])
     target_matrix = original_matrix.movedim(source, destination)
 
     original_gramian = compute_gramian(original_matrix, 1)
@@ -147,7 +147,7 @@ def test_movedim_equivariance(shape: list[int], source: list[int], destination: 
     ],
 )
 def test_movedim_yields_psd(shape: list[int], source: list[int], destination: list[int]):
-    matrix = randn_(shape + [2])
+    matrix = randn_([*shape, 2])
     gramian = compute_gramian(matrix, 1)
     moveddim_gramian = movedim(gramian, source, destination)
     assert_is_psd_tensor(moveddim_gramian)

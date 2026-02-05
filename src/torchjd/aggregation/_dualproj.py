@@ -48,8 +48,8 @@ class DualProj(GramianWeightedAggregator):
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(pref_vector={repr(self._pref_vector)}, norm_eps="
-            f"{self._norm_eps}, reg_eps={self._reg_eps}, solver={repr(self._solver)})"
+            f"{self.__class__.__name__}(pref_vector={self._pref_vector!r}, norm_eps="
+            f"{self._norm_eps}, reg_eps={self._reg_eps}, solver={self._solver!r})"
         )
 
     def __str__(self) -> str:

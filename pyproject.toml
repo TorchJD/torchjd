@@ -141,6 +141,7 @@ select = [
     "SIM",  # flake8-simplify
     "PERF", # Perflint
     "FURB", # refurb
+    "RUF",  # Ruff-specific rules
 ]
 
 ignore = [
