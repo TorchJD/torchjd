@@ -183,7 +183,8 @@ def _check_losses_are_scalar(losses: Iterable[Tensor]) -> None:
 
 
 def _check_no_overlap(
-    shared_params: Iterable[Tensor], tasks_params: Sequence[Iterable[Tensor]]
+    shared_params: Iterable[Tensor],
+    tasks_params: Sequence[Iterable[Tensor]],
 ) -> None:
     task_param_set = {param for task_params in tasks_params for param in task_params}
     shared_param_set = set(shared_params)

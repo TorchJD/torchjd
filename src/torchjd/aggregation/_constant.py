@@ -39,7 +39,7 @@ class ConstantWeighting(Weighting[Matrix]):
         if weights.dim() != 1:
             raise ValueError(
                 "Parameter `weights` should be a 1-dimensional tensor. Found `weights.shape = "
-                f"{weights.shape}`."
+                f"{weights.shape}`.",
             )
 
         super().__init__()
@@ -53,5 +53,5 @@ class ConstantWeighting(Weighting[Matrix]):
         if matrix.shape[0] != len(self.weights):
             raise ValueError(
                 f"Parameter `matrix` should have {len(self.weights)} rows (the number of specified "
-                f"weights). Found `matrix` with {matrix.shape[0]} rows."
+                f"weights). Found `matrix` with {matrix.shape[0]} rows.",
             )

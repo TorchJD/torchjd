@@ -60,7 +60,7 @@ class Differentiate(Transform, ABC):
         if not outputs == input_keys:
             raise RequirementError(
                 f"The input_keys must match the expected outputs. Found input_keys {input_keys} and"
-                f"outputs {outputs}."
+                f"outputs {outputs}.",
             )
         return set(self.inputs)
 

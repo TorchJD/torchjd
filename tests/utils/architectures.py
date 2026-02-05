@@ -1140,7 +1140,7 @@ class InstanceNormResNet18(ShapedModule):
     def __init__(self):
         super().__init__()
         self.resnet18 = torchvision.models.resnet18(
-            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:
@@ -1156,7 +1156,7 @@ class GroupNormMobileNetV3Small(ShapedModule):
     def __init__(self):
         super().__init__()
         self.mobile_net = torchvision.models.mobilenet_v3_small(
-            norm_layer=partial(nn.GroupNorm, 2, affine=True)
+            norm_layer=partial(nn.GroupNorm, 2, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:
@@ -1186,7 +1186,7 @@ class InstanceNormMobileNetV2(ShapedModule):
     def __init__(self):
         super().__init__()
         self.mobilenet = torchvision.models.mobilenet_v2(
-            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:

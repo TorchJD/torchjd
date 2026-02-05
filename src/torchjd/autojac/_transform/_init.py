@@ -22,6 +22,6 @@ class Init(Transform):
     def check_keys(self, input_keys: set[Tensor], /) -> set[Tensor]:
         if not input_keys == set():
             raise RequirementError(
-                f"The input_keys should be the empty set. Found input_keys {input_keys}."
+                f"The input_keys should be the empty set. Found input_keys {input_keys}.",
             )
         return set(self.values)

@@ -105,7 +105,8 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
 
     @staticmethod
     def _compute_balance_transformation(
-        M: Tensor, scale_mode: SUPPORTED_SCALE_MODE = "min"
+        M: Tensor,
+        scale_mode: SUPPORTED_SCALE_MODE = "min",
     ) -> Tensor:
         lambda_, V = torch.linalg.eigh(M, UPLO="U")  # More modern equivalent to torch.symeig
         tol = torch.max(lambda_) * len(M) * torch.finfo().eps
@@ -127,7 +128,7 @@ class AlignedMTLWeighting(Weighting[PSDMatrix]):
             scale = lambda_.mean()
         else:
             raise ValueError(
-                f"Invalid scale_mode={scale_mode!r}. Expected 'min', 'median', or 'rmse'."
+                f"Invalid scale_mode={scale_mode!r}. Expected 'min', 'median', or 'rmse'.",
             )
 
         return scale.sqrt() * V @ sigma_inv @ V.T

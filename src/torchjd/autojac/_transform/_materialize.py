@@ -5,7 +5,8 @@ from torch import Tensor
 
 
 def materialize(
-    optional_tensors: Sequence[Tensor | None], inputs: Sequence[Tensor]
+    optional_tensors: Sequence[Tensor | None],
+    inputs: Sequence[Tensor],
 ) -> tuple[Tensor, ...]:
     """
     Transforms a sequence of optional tensors by changing each None by a tensor of zeros of the same

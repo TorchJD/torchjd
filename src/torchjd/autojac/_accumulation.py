@@ -27,7 +27,7 @@ def accumulate_jacs(params: Iterable[Tensor], jacobians: Iterable[Tensor]) -> No
             raise RuntimeError(
                 f"attempting to assign a jacobian of size '{list(jac.shape)}' to a tensor of "
                 f"size '{list(param.shape)}'. Please ensure that the tensor and each row of the"
-                " jacobian are the same size"
+                " jacobian are the same size",
             )
 
         if is_tensor_with_jac(param):
@@ -57,7 +57,7 @@ def _check_expects_grad(tensor: Tensor, field_name: str) -> None:
     if not _expects_grad(tensor):
         raise ValueError(
             f"Cannot populate the {field_name} field of a Tensor that does not satisfy:\n"
-            "`tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)`."
+            "`tensor.requires_grad and (tensor.is_leaf or tensor.retains_grad)`.",
         )
 
 

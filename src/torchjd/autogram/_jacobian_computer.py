@@ -46,7 +46,11 @@ class JacobianComputer(ABC):
     ) -> Matrix:
         # This makes __call__ vmappable.
         return ComputeModuleJacobians.apply(
-            self._compute_jacobian, rg_outputs, grad_outputs, args, kwargs
+            self._compute_jacobian,
+            rg_outputs,
+            grad_outputs,
+            args,
+            kwargs,
         )
 
     @abstractmethod
@@ -153,7 +157,8 @@ class ComputeModuleJacobians(torch.autograd.Function):
     @staticmethod
     def forward(
         compute_jacobian_fn: Callable[
-            [tuple[Tensor, ...], tuple[Tensor, ...], tuple[PyTree, ...], dict[str, PyTree]], Matrix
+            [tuple[Tensor, ...], tuple[Tensor, ...], tuple[PyTree, ...], dict[str, PyTree]],
+            Matrix,
         ],
         rg_outputs: tuple[Tensor, ...],
         grad_outputs: tuple[Tensor, ...],

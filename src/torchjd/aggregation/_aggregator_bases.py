@@ -21,7 +21,7 @@ class Aggregator(nn.Module, ABC):
         if not is_matrix(matrix):
             raise ValueError(
                 "Parameter `matrix` should be a tensor of dimension 2. Found `matrix.shape = "
-                f"{matrix.shape}`."
+                f"{matrix.shape}`.",
             )
 
     @abstractmethod

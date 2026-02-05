@@ -52,7 +52,10 @@ def test_equivalence_upgrad_sum_two_rows(shape: tuple[int, int]):
 
     pc_grad_weighting = PCGradWeighting()
     upgrad_sum_weighting = UPGradWeighting(
-        ones_((2,)), norm_eps=0.0, reg_eps=0.0, solver="quadprog"
+        ones_((2,)),
+        norm_eps=0.0,
+        reg_eps=0.0,
+        solver="quadprog",
     )
 
     result = pc_grad_weighting(gramian)
