@@ -189,7 +189,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
 
         G_alpha = self.G_param @ self.alpha_param
         constraint = [
-            -cp.log(self.a * self.normalization_factor_param) - cp.log(G_a) <= 0
+            -cp.log(a * self.normalization_factor_param) - cp.log(G_a) <= 0
             for a, G_a in zip(self.alpha_param, G_alpha, strict=True)
         ]
         obj = cp.Minimize(cp.sum(G_alpha) + self.phi_alpha / self.normalization_factor_param)

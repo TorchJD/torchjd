@@ -151,8 +151,9 @@ select = [
 ]
 
 ignore = [
-    "E501", # line-too-long (handled by the formatter)
-    "E402", # module-import-not-at-top-of-file
+    "E501",   # line-too-long (handled by the formatter)
+    "E402",   # module-import-not-at-top-of-file
+    "COM812",
 ]
 
 [tool.ruff.lint.isort]

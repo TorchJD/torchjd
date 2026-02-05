@@ -33,7 +33,7 @@ class Grad(Differentiate):
         retain_graph: bool = False,
         create_graph: bool = False,
     ):
-        super().__init__(outputs, inputs, retain_graph, create_graph)
+        super().__init__(outputs, inputs, retain_graph=retain_graph, create_graph=create_graph)
 
     def _differentiate(self, grad_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:
         """
@@ -54,4 +54,4 @@ class Grad(Differentiate):
         if len(self.outputs) == 0:
             return tuple(torch.zeros_like(input) for input in self.inputs)
 
-        return self._get_vjp(grad_outputs, self.retain_graph)
+        return self._get_vjp(grad_outputs, retain_graph=self.retain_graph)

@@ -288,7 +288,9 @@ class Engine:
         self._module_hook_manager.gramian_accumulation_phase.value = True
 
         try:
-            square_gramian = self._compute_square_gramian(reshaped_output, has_non_batch_dim)
+            square_gramian = self._compute_square_gramian(
+                reshaped_output, has_non_batch_dim=has_non_batch_dim
+            )
         finally:
             # Reset everything that has a state, even if the previous call raised an exception
             self._module_hook_manager.gramian_accumulation_phase.value = False

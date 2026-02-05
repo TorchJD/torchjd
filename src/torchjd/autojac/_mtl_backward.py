@@ -132,7 +132,7 @@ def _create_transform(
             features,
             task_params,
             OrderedSet([loss]),
-            retain_graph,
+            retain_graph=retain_graph,
         )
         for task_params, loss in zip(tasks_params, losses, strict=True)
     ]
@@ -142,7 +142,7 @@ def _create_transform(
     stack = Stack(task_transforms)
 
     # Transform that computes the Jacobians of the losses w.r.t. the shared parameters.
-    jac = Jac(features, shared_params, parallel_chunk_size, retain_graph)
+    jac = Jac(features, shared_params, chunk_size=parallel_chunk_size, retain_graph=retain_graph)
 
     # Transform that accumulates the result in the .jac field of the shared parameters.
     accumulate = AccumulateJac()
@@ -165,7 +165,7 @@ def _create_task_transform(
 
     # Transform that computes the gradients of the loss w.r.t. the task-specific parameters and
     # the features.
-    grad = Grad(loss, to_differentiate, retain_graph)
+    grad = Grad(loss, to_differentiate, retain_graph=retain_graph)
 
     # Transform that accumulates the gradients w.r.t. the task-specific parameters into their
     # .grad fields.

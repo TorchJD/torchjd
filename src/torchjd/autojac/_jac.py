@@ -148,6 +148,6 @@ def _create_transform(
     diag = Diagonalize(outputs)
 
     # Transform that computes the required Jacobians.
-    jac = Jac(outputs, inputs, parallel_chunk_size, retain_graph)
+    jac = Jac(outputs, inputs, chunk_size=parallel_chunk_size, retain_graph=retain_graph)
 
     return jac << diag << init

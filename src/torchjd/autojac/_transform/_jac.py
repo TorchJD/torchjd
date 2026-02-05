@@ -40,7 +40,7 @@ class Jac(Differentiate):
         retain_graph: bool = False,
         create_graph: bool = False,
     ):
-        super().__init__(outputs, inputs, retain_graph, create_graph)
+        super().__init__(outputs, inputs, retain_graph=retain_graph, create_graph=create_graph)
         self.chunk_size = chunk_size
 
     def _differentiate(self, jac_outputs: Sequence[Tensor], /) -> tuple[Tensor, ...]:

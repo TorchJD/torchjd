@@ -100,7 +100,7 @@ def _create_transform(
     diag = Diagonalize(tensors)
 
     # Transform that computes the required Jacobians.
-    jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
+    jac = Jac(tensors, inputs, chunk_size=parallel_chunk_size, retain_graph=retain_graph)
 
     # Transform that accumulates the result in the .jac field of the inputs.
     accumulate = AccumulateJac()
