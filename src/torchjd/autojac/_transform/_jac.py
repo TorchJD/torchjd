@@ -57,7 +57,7 @@ class Jac(Differentiate):
         """
 
         if len(self.inputs) == 0:
-            return tuple()
+            return ()
 
         if len(self.outputs) == 0:
             return tuple(
