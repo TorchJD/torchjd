@@ -65,7 +65,7 @@ def jac_to_grad(
 
     jacobians = [t.jac for t in tensors_]
 
-    if not all([jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]]):
+    if not all(jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]):
         raise ValueError("All Jacobians should have the same number of rows.")
 
     if not retain_jac:

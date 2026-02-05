@@ -224,13 +224,13 @@ def test_multiple_params_per_task():
 @mark.parametrize(
     "shared_params_shapes",
     [
-        [tuple()],
+        [()],
         [(2,)],
         [(3, 2)],
         [(4, 3, 2)],
-        [tuple(), (2,)],
+        [(), (2,)],
         [(3, 2), (2,)],
-        [(4, 3, 2), (3, 2), tuple()],
+        [(4, 3, 2), (3, 2), ()],
         [(5, 4, 3, 2), (5, 4, 3, 2)],
     ],
 )

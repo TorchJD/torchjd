@@ -42,10 +42,10 @@ def get_leaf_tensors(tensors: Iterable[Tensor], excluded: Iterable[Tensor]) -> O
 
     """
 
-    if any([tensor.grad_fn is None for tensor in tensors]):
+    if any(tensor.grad_fn is None for tensor in tensors):
         raise ValueError("All `tensors` should have a `grad_fn`.")
 
-    if any([tensor.grad_fn is None for tensor in excluded]):
+    if any(tensor.grad_fn is None for tensor in excluded):
         raise ValueError("All `excluded` tensors should have a `grad_fn`.")
 
     accumulate_grads = _get_descendant_accumulate_grads(

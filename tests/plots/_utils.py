@@ -62,7 +62,7 @@ def make_vector_scatter(
     text_size: float = 12,
     marker_size: float = 12,
 ) -> Scatter:
-    line = dict(color=color, width=line_width)
+    line = {"color": color, "width": line_width}
     if dash:
         line["dash"] = "dash"
 
@@ -71,16 +71,16 @@ def make_vector_scatter(
         y=[0, gradient[1]],
         mode="lines+markers+text",
         line=line,
-        marker=dict(
-            symbol="arrow",
-            color=color,
-            size=marker_size,
-            angleref="previous",
-        ),
+        marker={
+            "symbol": "arrow",
+            "color": color,
+            "size": marker_size,
+            "angleref": "previous",
+        },
         name=label,
         text=["", label],
         textposition=textposition,
-        textfont=dict(color=color, size=text_size),
+        textfont={"color": color, "size": text_size},
         showlegend=showlegend,
     )
     return scatter
@@ -121,9 +121,13 @@ def make_cone_scatter(
             )
 
     if printable:
-        fillpattern = dict(
-            bgcolor="white", shape="\\", fgcolor="rgba(0, 220, 0, 0.5)", size=30, solidity=0.15
-        )
+        fillpattern = {
+            "bgcolor": "white",
+            "shape": "\\",
+            "fgcolor": "rgba(0, 220, 0, 0.5)",
+            "size": 30,
+            "solidity": 0.15,
+        }
     else:
         fillpattern = None
 
@@ -133,7 +137,7 @@ def make_cone_scatter(
         fill="toself",  # Fill the area inside the polygon
         mode="lines",
         fillcolor="rgba(0, 255, 0, 0.07)",
-        line=dict(color="rgb(0, 220, 0)", width=2),
+        line={"color": "rgb(0, 220, 0)", "width": 2},
         name=label,
         fillpattern=fillpattern,
     )
@@ -146,11 +150,7 @@ def make_segment_scatter(start: torch.Tensor, end: torch.Tensor) -> Scatter:
         x=[start[0], end[0]],
         y=[start[1], end[1]],
         mode="lines",
-        line=dict(
-            color="rgb(150, 150, 150)",
-            width=2.5,
-            dash="longdash",
-        ),
+        line={"color": "rgb(150, 150, 150)", "width": 2.5, "dash": "longdash"},
     )
 
     return segment
@@ -161,10 +161,7 @@ def make_polygon_scatter(points: list[torch.Tensor]) -> Scatter:
         x=[point[0] for point in points],
         y=[point[1] for point in points],
         mode="lines",
-        line=dict(
-            color="rgb(100, 100, 100)",
-            width=1.5,
-        ),
+        line={"color": "rgb(100, 100, 100)", "width": 1.5},
     )
     return polygon
 

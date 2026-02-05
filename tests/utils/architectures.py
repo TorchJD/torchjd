@@ -393,7 +393,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> PyTree:
-            return {"one": [None, tuple()], "two": None}
+            return {"one": [None, ()], "two": None}
 
     class _EmptyTupleOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
@@ -401,7 +401,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> tuple:
-            return tuple()
+            return ()
 
     class _EmptyPytreeOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
@@ -409,7 +409,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> PyTree:
-            return {"one": [tuple(), tuple()], "two": [[], []]}
+            return {"one": [(), ()], "two": [[], []]}
 
     def __init__(self):
         super().__init__()
@@ -670,7 +670,7 @@ class Ndim0Output(ShapedModule):
     """Simple model whose output is a scalar."""
 
     INPUT_SHAPES = (5,)
-    OUTPUT_SHAPES = tuple()
+    OUTPUT_SHAPES = ()
 
     def __init__(self):
         super().__init__()
