@@ -59,7 +59,7 @@ class NashMTL(WeightedAggregator):
         This aggregator is not installed by default. When not installed, trying to import it should
         result in the following error:
         ``ImportError: cannot import name 'NashMTL' from 'torchjd.aggregation'``.
-        To install it, use ``pip install torchjd[nash_mtl]``.
+        To install it, use ``pip install "torchjd[nash_mtl]"``.
 
     .. warning::
         This implementation was adapted from the `official implementation

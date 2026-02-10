@@ -31,7 +31,7 @@ class CAGrad(GramianWeightedAggregator):
         This aggregator is not installed by default. When not installed, trying to import it should
         result in the following error:
         ``ImportError: cannot import name 'CAGrad' from 'torchjd.aggregation'``.
-        To install it, use ``pip install torchjd[cagrad]``.
+        To install it, use ``pip install "torchjd[cagrad]"``.
     """
 
     def __init__(self, c: float, norm_eps: float = 0.0001):

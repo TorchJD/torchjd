@@ -106,9 +106,9 @@ changelog does not include internal changes that do not affect the user.
 ### Changed
 
 - **BREAKING**: Changed the dependencies of `CAGrad` and `NashMTL` to be optional when installing
-  TorchJD. Users of these aggregators will have to use `pip install torchjd[cagrad]`, `pip install
-  torchjd[nash_mtl]` or `pip install torchjd[full]` to install TorchJD alongside those dependencies.
-  This should make TorchJD more lightweight.
+  TorchJD. Users of these aggregators will have to use `pip install "torchjd[cagrad]"`, `pip install
+  "torchjd[nash_mtl]"` or `pip install "torchjd[full]"` to install TorchJD alongside those
+  dependencies. This should make TorchJD more lightweight.
 - **BREAKING**: Made the aggregator modules and the `autojac` package protected. The aggregators
   must now always be imported via their package (e.g.
   `from torchjd.aggregation.upgrad import UPGrad` must be changed to
