@@ -115,5 +115,4 @@ def _get_jacs_chunk(
         grad_outputs = [tensor.squeeze(0) for tensor in jac_outputs_chunk]
         gradients = get_vjp(grad_outputs)
         return tuple(gradient.unsqueeze(0) for gradient in gradients)
-    else:
-        return torch.vmap(get_vjp, chunk_size=chunk_size)(jac_outputs_chunk)
+    return torch.vmap(get_vjp, chunk_size=chunk_size)(jac_outputs_chunk)

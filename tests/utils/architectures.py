@@ -48,14 +48,13 @@ def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
 
-    elif isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
+    if isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
         HEIGHT = 6  # Arbitrary choice
         WIDTH = 6  # Arbitrary choice
         shape = (module.num_features, HEIGHT, WIDTH)
         return shape, shape
 
-    else:
-        raise ValueError("Unknown input / output shapes of module", module)
+    raise ValueError("Unknown input / output shapes of module", module)
 
 
 class OverlyNested(ShapedModule):
@@ -808,8 +807,7 @@ class _WithStringArg(nn.Module):
     def forward(self, s: str, input: Tensor) -> Tensor:
         if s == "two":
             return input @ self.matrix * 2.0
-        else:
-            return input @ self.matrix
+        return input @ self.matrix
 
 
 class WithModuleWithStringArg(ShapedModule):

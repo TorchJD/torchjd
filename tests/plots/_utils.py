@@ -239,10 +239,7 @@ def coord_to_angle(x: float, y: float) -> tuple[float, float]:
 
     if r == 0:
         raise ValueError("No angle")
-    elif y >= 0:
-        angle = np.arccos(x / r)
-    else:
-        angle = 2 * np.pi - np.arccos(x / r)
+    angle = np.arccos(x / r) if y >= 0 else 2 * np.pi - np.arccos(x / r)
 
     return angle, r
 

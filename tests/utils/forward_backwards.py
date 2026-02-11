@@ -111,8 +111,7 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
     if raw_losses.ndim == 1:
         return raw_losses.unsqueeze(1)
-    else:
-        return raw_losses.flatten(start_dim=1)
+    return raw_losses.flatten(start_dim=1)
 
 
 def compute_gramian_with_autograd(
