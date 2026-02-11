@@ -141,11 +141,14 @@ select = [
     "SIM",  # flake8-simplify
     "PERF", # Perflint
     "FURB", # refurb
+    "RUF",  # Ruff-specific rules
 ]
 
 ignore = [
-    "E501", # line-too-long (handled by the formatter)
-    "E402", # module-import-not-at-top-of-file
+    "E501",    # line-too-long (handled by the formatter)
+    "E402",    # module-import-not-at-top-of-file
+    "RUF022",  # __all__ not sorted
+    "RUF010",  # Use explicit conversion flag
 ]
 
 [tool.ruff.lint.isort]

@@ -198,7 +198,7 @@ class CloneParams:
         for module in self.model.modules():
             self._restore_original_params(module)
 
-        return False  # don’t suppress exceptions
+        return False  # don't suppress exceptions
 
     def _restore_original_params(self, module: nn.Module):
         original_params = self._module_to_original_params.pop(module, {})
