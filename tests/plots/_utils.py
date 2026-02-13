@@ -263,3 +263,35 @@ def angle_to_coord(angle: float, r: float = 1.0) -> tuple[float, float]:
     x = r * np.cos(angle)
     y = r * np.sin(angle)
     return x, y
+
+
+def compute_2d_non_conflicting_cone(matrix: np.ndarray) -> tuple[float, float]:
+    """
+    Computes the frontier of the non-conflicting cone from a matrix of 2-dimensional rows.
+    Returns the result as an angle in [0, 2pi[ corresponding to the start of the cone, and an
+    opening angle, that is <= pi and that can be negative if the cone is empty.
+
+    This method currently does not handle the case where the cone is a straight line passing by the
+    origin (when matrix is for instance [[1, 0],[-1, 0]]).
+
+    :param matrix: Any real-valued [m, 2] matrix.
+    """
+
+    row_angles = [coord_to_angle(*row)[0] for row in matrix]
+
+    # Compute the start of the non-conflicting half-space of each individual row.
+    start_angles = [(angle - np.pi / 2) % (2 * np.pi) for angle in row_angles]
+
+    # Combine these non-conflicting half-spaces to obtain the global non-conflicting cone.
+    cone_start_angle = start_angles[0]
+    opening = np.pi
+    for hs_start_angle in start_angles[1:]:
+        cone_start_angle, opening = combine_bounds(cone_start_angle, opening, hs_start_angle)
+
+    return cone_start_angle, opening
+
+
+def project(vector: torch.Tensor, onto: torch.Tensor) -> torch.Tensor:
+    onto_normalized = onto / torch.linalg.norm(onto)
+    projection = vector @ onto_normalized * onto_normalized
+    return projection
