@@ -62,7 +62,24 @@ def backward(
         The ``.jac`` field of ``param`` now contains the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
 
-    # TODO: Need an example with `jac_tensors` not None.
+    .. admonition::
+        Example
+
+        If `jac_tensors` is made of matrices whose first dimension is 1, then this function is
+        essentially equivalent to `autograd.grad`.
+
+            >>> import torch
+            >>>
+            >>> from torchjd.autojac import backward
+            >>
+            >>> param = torch.tensor([1., 2.], requires_grad=True)
+            >>> y = torch.stack([param[0] ** 2, param[1] ** 3])
+            >>>
+            >>> weights = torch.tensor([[0.5, 1.0]])
+            >>> backward([y], jac_tensors=[weights])
+            >>>
+            >>> param.jac
+            tensor([[ 1., 12.]])
 
     .. warning::
         To differentiate in parallel, ``backward`` relies on ``torch.vmap``, which has some
@@ -92,6 +109,8 @@ def backward(
         diag = Diagonalize(tensors_)
         jac_tensors_dict = (diag << init)({})
     else:
+        # TODO: Check that the first dimension of each jac_tensors is the same, and that the rest
+        # correspond to the shape of the corresponding element in tensors_
         jac_tensors_ = as_checked_ordered_set(jac_tensors, "jac_tensors")
         jac_tensors_dict = dict(zip(tensors_, jac_tensors_, strict=True))
 
