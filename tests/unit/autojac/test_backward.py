@@ -4,28 +4,8 @@ from utils.asserts import assert_has_jac, assert_has_no_jac, assert_jac_close
 from utils.tensors import randn_, tensor_
 
 from torchjd.autojac import backward
-from torchjd.autojac._backward import _create_transform
-from torchjd.autojac._transform import OrderedSet
 
-
-def test_check_create_transform():
-    """Tests that _create_transform creates a valid Transform."""
-
-    a1 = tensor_([1.0, 2.0], requires_grad=True)
-    a2 = tensor_([3.0, 4.0], requires_grad=True)
-
-    y1 = tensor_([-1.0, 1.0]) @ a1 + a2.sum()
-    y2 = (a1**2).sum() + a2.norm()
-
-    transform = _create_transform(
-        tensors=OrderedSet([y1, y2]),
-        inputs=OrderedSet([a1, a2]),
-        retain_graph=False,
-        parallel_chunk_size=None,
-    )
-
-    output_keys = transform.check_keys(set())
-    assert output_keys == set()
+# TODO: Add tests of the `jac_tensors` parameter.
 
 
 def test_jac_is_populated():

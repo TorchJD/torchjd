@@ -2,22 +2,32 @@ from collections.abc import Iterable, Sequence
 
 from torch import Tensor
 
-from ._transform import AccumulateJac, Diagonalize, Init, Jac, OrderedSet, Transform
+from ._transform import AccumulateJac, Diagonalize, Init, Jac, OrderedSet
 from ._utils import as_checked_ordered_set, check_optional_positive_chunk_size, get_leaf_tensors
 
 
 def backward(
     tensors: Sequence[Tensor] | Tensor,
+    jac_tensors: Sequence[Tensor] | Tensor | None = None,
     inputs: Iterable[Tensor] | None = None,
     retain_graph: bool = False,
     parallel_chunk_size: int | None = None,
 ) -> None:
     r"""
-    Computes the Jacobians of all values in ``tensors`` with respect to all ``inputs`` and
-    accumulates them in the ``.jac`` fields of the ``inputs``.
+    Computes the Jacobians of ``tensors`` with respect to ``inputs``, potentially pre-multiplied by
+    ``jac_tensors``, and accumulates the results in the ``.jac`` fields of the ``inputs``.
 
-    :param tensors: The tensor or tensors to differentiate. Should be non-empty. The Jacobians will
-        have one row for each value of each of these tensors.
+    Mathematically, if ``jac_tensors`` is provided, this function computes the matrix product
+    :math:`J_{init} \cdot J`, where :math:`J` is the Jacobian of ``tensors`` w.r.t ``inputs``, and
+    :math:`J_{init}` is the concatenation of ``jac_tensors``. If ``jac_tensors`` is ``None``, it
+    assumes an Identity matrix, resulting in the full Jacobian.
+
+    :param tensors: The tensor or tensors to differentiate. Should be non-empty.
+    :param jac_tensors: The initial Jacobian to backpropagate. If provided, it must have the same
+        length and structure as ``tensors``. Each tensor in ``jac_tensors`` must match the shape of
+        the corresponding tensor in ``tensors``, with an extra leading dimension representing the
+        number of rows of the resulting Jacobian. If ``None``, defaults to the Identity matrix,
+        resulting in the standard Jacobian of ``tensors``.
     :param inputs: The tensors with respect to which the Jacobians must be computed. These must have
         their ``requires_grad`` flag set to ``True``. If not provided, defaults to the leaf tensors
         that were used to compute the ``tensors`` parameter.
@@ -52,6 +62,8 @@ def backward(
         The ``.jac`` field of ``param`` now contains the Jacobian of
         :math:`\begin{bmatrix}y_1 \\ y_2\end{bmatrix}` with respect to ``param``.
 
+    # TODO: Need an example with `jac_tensors` not None.
+
     .. warning::
         To differentiate in parallel, ``backward`` relies on ``torch.vmap``, which has some
         limitations: `it does not work on the output of compiled functions
@@ -73,34 +85,19 @@ def backward(
     else:
         inputs_ = OrderedSet(inputs)
 
-    backward_transform = _create_transform(
-        tensors=tensors_,
-        inputs=inputs_,
-        retain_graph=retain_graph,
-        parallel_chunk_size=parallel_chunk_size,
-    )
-
-    backward_transform({})
-
-
-def _create_transform(
-    tensors: OrderedSet[Tensor],
-    inputs: OrderedSet[Tensor],
-    retain_graph: bool,
-    parallel_chunk_size: int | None,
-) -> Transform:
-    """Creates the backward transform."""
-
-    # Transform that creates gradient outputs containing only ones.
-    init = Init(tensors)
-
-    # Transform that turns the gradients into Jacobians.
-    diag = Diagonalize(tensors)
+    if jac_tensors is None:
+        # Transform that creates gradient outputs containing only ones.
+        init = Init(tensors_)
+        # Transform that turns the gradients into Jacobians.
+        diag = Diagonalize(tensors_)
+        jac_tensors_dict = (diag << init)({})
+    else:
+        jac_tensors_ = as_checked_ordered_set(jac_tensors, "jac_tensors")
+        jac_tensors_dict = dict(zip(tensors_, jac_tensors_, strict=True))
 
     # Transform that computes the required Jacobians.
-    jac = Jac(tensors, inputs, parallel_chunk_size, retain_graph)
-
+    jac = Jac(tensors_, inputs_, parallel_chunk_size, retain_graph)
     # Transform that accumulates the result in the .jac field of the inputs.
     accumulate = AccumulateJac()
 
-    return accumulate << jac << diag << init
+    (accumulate << jac)(jac_tensors_dict)
