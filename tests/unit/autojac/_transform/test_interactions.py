@@ -235,9 +235,7 @@ def test_equivalence_jac_grads():
     grad_2_A, grad_2_b, grad_2_c = grad_dict_2[A], grad_dict_2[b], grad_dict_2[c]
 
     n_outputs = len(outputs)
-    batched_grad_outputs = [
-        zeros_((n_outputs,) + grad_output.shape) for grad_output in grad_outputs
-    ]
+    batched_grad_outputs = [zeros_((n_outputs, *grad_output.shape)) for grad_output in grad_outputs]
     for i, grad_output in enumerate(grad_outputs):
         batched_grad_outputs[i][i] = grad_output
 

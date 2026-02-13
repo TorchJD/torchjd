@@ -28,7 +28,11 @@ class Plotter:
 
         for i in range(len(results)):
             scatter = make_vector_scatter(
-                results[i], "black", str(self.aggregators[i]), showlegend=True, dash=True
+                results[i],
+                "black",
+                str(self.aggregators[i]),
+                showlegend=True,
+                dash=True,
             )
             fig.add_trace(scatter)
 
@@ -62,7 +66,7 @@ def make_vector_scatter(
     text_size: float = 12,
     marker_size: float = 12,
 ) -> Scatter:
-    line = dict(color=color, width=line_width)
+    line = {"color": color, "width": line_width}
     if dash:
         line["dash"] = "dash"
 
@@ -71,23 +75,27 @@ def make_vector_scatter(
         y=[0, gradient[1]],
         mode="lines+markers+text",
         line=line,
-        marker=dict(
-            symbol="arrow",
-            color=color,
-            size=marker_size,
-            angleref="previous",
-        ),
+        marker={
+            "symbol": "arrow",
+            "color": color,
+            "size": marker_size,
+            "angleref": "previous",
+        },
         name=label,
         text=["", label],
         textposition=textposition,
-        textfont=dict(color=color, size=text_size),
+        textfont={"color": color, "size": text_size},
         showlegend=showlegend,
     )
     return scatter
 
 
 def make_cone_scatter(
-    start_angle: float, opening: float, label: str, scale: float = 100.0, printable: bool = False
+    start_angle: float,
+    opening: float,
+    label: str,
+    scale: float = 100.0,
+    printable: bool = False,
 ) -> Scatter:
     if opening < -1e-8:
         cone_outline = np.zeros([0, 2])
@@ -105,7 +113,7 @@ def make_cone_scatter(
                     start_vec,  # Tip of the first vector
                     end_vec,  # Tip of the second vector
                     [0, 0],  # Back to the origin to close the cone
-                ]
+                ],
             )
         else:
             middle_point = angle_to_coord(middle_angle, scale)
@@ -117,13 +125,17 @@ def make_cone_scatter(
                     middle_point,  # Tip of the vector in-between
                     end_vec,  # Tip of the second vector
                     [0, 0],  # Back to the origin to close the cone
-                ]
+                ],
             )
 
     if printable:
-        fillpattern = dict(
-            bgcolor="white", shape="\\", fgcolor="rgba(0, 220, 0, 0.5)", size=30, solidity=0.15
-        )
+        fillpattern = {
+            "bgcolor": "white",
+            "shape": "\\",
+            "fgcolor": "rgba(0, 220, 0, 0.5)",
+            "size": 30,
+            "solidity": 0.15,
+        }
     else:
         fillpattern = None
 
@@ -133,7 +145,7 @@ def make_cone_scatter(
         fill="toself",  # Fill the area inside the polygon
         mode="lines",
         fillcolor="rgba(0, 255, 0, 0.07)",
-        line=dict(color="rgb(0, 220, 0)", width=2),
+        line={"color": "rgb(0, 220, 0)", "width": 2},
         name=label,
         fillpattern=fillpattern,
     )
@@ -146,11 +158,7 @@ def make_segment_scatter(start: torch.Tensor, end: torch.Tensor) -> Scatter:
         x=[start[0], end[0]],
         y=[start[1], end[1]],
         mode="lines",
-        line=dict(
-            color="rgb(150, 150, 150)",
-            width=2.5,
-            dash="longdash",
-        ),
+        line={"color": "rgb(150, 150, 150)", "width": 2.5, "dash": "longdash"},
     )
 
     return segment
@@ -161,16 +169,16 @@ def make_polygon_scatter(points: list[torch.Tensor]) -> Scatter:
         x=[point[0] for point in points],
         y=[point[1] for point in points],
         mode="lines",
-        line=dict(
-            color="rgb(100, 100, 100)",
-            width=1.5,
-        ),
+        line={"color": "rgb(100, 100, 100)", "width": 1.5},
     )
     return polygon
 
 
 def make_right_angle(
-    vector: torch.Tensor, size: float, positive_para: bool = True, positive_orth: bool = True
+    vector: torch.Tensor,
+    size: float,
+    positive_para: bool = True,
+    positive_orth: bool = True,
 ) -> list[torch.Tensor]:
     vec_para = vector / torch.linalg.norm(vector) * size
     vec_orth = torch.tensor([-vec_para[1], vec_para[0]])
@@ -242,10 +250,7 @@ def coord_to_angle(x: float, y: float) -> tuple[float, float]:
 
     if r == 0:
         raise ValueError("No angle")
-    elif y >= 0:
-        angle = np.arccos(x / r)
-    else:
-        angle = 2 * np.pi - np.arccos(x / r)
+    angle = np.arccos(x / r) if y >= 0 else 2 * np.pi - np.arccos(x / r)
 
     return angle, r
 

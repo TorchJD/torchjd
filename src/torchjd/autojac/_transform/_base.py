@@ -22,8 +22,6 @@ TensorDict: TypeAlias = dict[Tensor, Tensor]
 class RequirementError(ValueError):
     """Inappropriate set of inputs keys."""
 
-    pass
-
 
 class Transform(ABC):
     """

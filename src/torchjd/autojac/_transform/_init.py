@@ -1,4 +1,4 @@
-from collections.abc import Set
+from collections.abc import Set as AbstractSet
 
 import torch
 from torch import Tensor
@@ -13,7 +13,7 @@ class Init(Transform):
     :param values: Tensors for which Gradients must be returned.
     """
 
-    def __init__(self, values: Set[Tensor]):
+    def __init__(self, values: AbstractSet[Tensor]):
         self.values = values
 
     def __call__(self, input: TensorDict, /) -> TensorDict:
@@ -22,6 +22,6 @@ class Init(Transform):
     def check_keys(self, input_keys: set[Tensor]) -> set[Tensor]:
         if not input_keys == set():
             raise RequirementError(
-                f"The input_keys should be the empty set. Found input_keys {input_keys}."
+                f"The input_keys should be the empty set. Found input_keys {input_keys}.",
             )
         return set(self.values)

@@ -1,6 +1,7 @@
 from torch import Tensor
 
-from .._accumulation import accumulate_grads, accumulate_jacs
+from torchjd.autojac._accumulation import accumulate_grads, accumulate_jacs
+
 from ._base import TensorDict, Transform
 
 

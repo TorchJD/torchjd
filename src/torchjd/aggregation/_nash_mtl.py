@@ -84,7 +84,7 @@ class NashMTL(WeightedAggregator):
                 max_norm=max_norm,
                 update_weights_every=update_weights_every,
                 optim_niter=optim_niter,
-            )
+            ),
         )
         self._n_tasks = n_tasks
         self._max_norm = max_norm
@@ -144,7 +144,7 @@ class _NashMTLWeighting(Weighting[Matrix]):
         return bool(
             (self.alpha_param.value is None)
             or (np.linalg.norm(gtg @ alpha_t - 1 / (alpha_t + 1e-10)) < 1e-3)
-            or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6)
+            or (np.linalg.norm(self.alpha_param.value - self.prvs_alpha_param.value) < 1e-6),
         )
 
     def _solve_optimization(self, gtg: np.ndarray) -> np.ndarray:
@@ -189,12 +189,10 @@ class _NashMTLWeighting(Weighting[Matrix]):
         self.phi_alpha = self._calc_phi_alpha_linearization()
 
         G_alpha = self.G_param @ self.alpha_param
-        constraint = []
-        for i in range(self.n_tasks):
-            constraint.append(
-                -cp.log(self.alpha_param[i] * self.normalization_factor_param) - cp.log(G_alpha[i])
-                <= 0
-            )
+        constraint = [
+            -cp.log(a * self.normalization_factor_param) - cp.log(G_a) <= 0
+            for a, G_a in zip(self.alpha_param, G_alpha, strict=True)
+        ]
         obj = cp.Minimize(cp.sum(G_alpha) + self.phi_alpha / self.normalization_factor_param)
         self.prob = cp.Problem(obj, constraint)
 

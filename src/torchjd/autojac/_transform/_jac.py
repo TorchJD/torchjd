@@ -57,14 +57,14 @@ class Jac(Differentiate):
         """
 
         if len(self.inputs) == 0:
-            return tuple()
+            return ()
 
         if len(self.outputs) == 0:
             return tuple(
                 [
-                    torch.empty((0,) + input.shape, device=input.device, dtype=input.dtype)
+                    torch.empty((0, *input.shape), device=input.device, dtype=input.dtype)
                     for input in self.inputs
-                ]
+                ],
             )
 
         # If the jac_outputs are correct, this value should be the same for all jac_outputs.
@@ -101,7 +101,8 @@ class Jac(Differentiate):
 
 
 def _get_jacs_chunk(
-    jac_outputs_chunk: list[Tensor], get_vjp: Callable[[Sequence[Tensor]], tuple[Tensor, ...]]
+    jac_outputs_chunk: list[Tensor],
+    get_vjp: Callable[[Sequence[Tensor]], tuple[Tensor, ...]],
 ) -> tuple[Tensor, ...]:
     """
     Computes the jacobian matrix chunk corresponding to the provided get_vjp function, either by
@@ -115,5 +116,4 @@ def _get_jacs_chunk(
         grad_outputs = [tensor.squeeze(0) for tensor in jac_outputs_chunk]
         gradients = get_vjp(grad_outputs)
         return tuple(gradient.unsqueeze(0) for gradient in gradients)
-    else:
-        return torch.vmap(get_vjp, chunk_size=chunk_size)(jac_outputs_chunk)
+    return torch.vmap(get_vjp, chunk_size=chunk_size)(jac_outputs_chunk)

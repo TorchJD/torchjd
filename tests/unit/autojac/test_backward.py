@@ -60,10 +60,7 @@ def test_value_is_correct(
     input = randn_([shape[1]], requires_grad=True)
     output = J @ input  # Note that the Jacobian of output w.r.t. input is J.
 
-    if manually_specify_inputs:
-        inputs = [input]
-    else:
-        inputs = None
+    inputs = [input] if manually_specify_inputs else None
 
     backward(
         [output],

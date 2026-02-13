@@ -129,18 +129,32 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle Error
-    "F",   # Pyflakes
-    "W",   # pycodestyle Warning
-    "I",   # isort
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
+    "E",    # pycodestyle Error
+    "F",    # Pyflakes
+    "W",    # pycodestyle Warning
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
     "FIX",  # flake8-fixme
+    "TID",  # flake8-tidy-imports
+    "SIM",  # flake8-simplify
+    "RET",  # flake8-return
+    "PYI",  # flake8-pyi
+    "PIE",  # flake8-pie
+    "COM",  # flake8-commas
+    "PERF", # Perflint
+    "FURB", # refurb
+    "RUF",  # Ruff-specific rules
 ]
 
 ignore = [
-    "E501", # line-too-long (handled by the formatter)
-    "E402", # module-import-not-at-top-of-file
+    "E501",    # line-too-long (handled by the formatter)
+    "E402",    # module-import-not-at-top-of-file
+    "RUF022",  # __all__ not sorted
+    "RUF010",  # Use explicit conversion flag
+    "RUF012",  # Mutable default value for class attribute (a bit tedious to fix)
+    "RET504",  # Unnecessary assignment return statement
 ]
 
 [tool.ruff.lint.isort]

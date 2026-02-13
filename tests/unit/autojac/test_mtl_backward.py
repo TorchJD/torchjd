@@ -90,15 +90,9 @@ def test_value_is_correct(
     y2 = p2 @ f
     y3 = p3 @ f
 
-    if manually_specify_shared_params:
-        shared_params = [p0]
-    else:
-        shared_params = None
+    shared_params = [p0] if manually_specify_shared_params else None
 
-    if manually_specify_tasks_params:
-        tasks_params = [[p1], [p2], [p3]]
-    else:
-        tasks_params = None
+    tasks_params = [[p1], [p2], [p3]] if manually_specify_tasks_params else None
 
     mtl_backward(
         losses=[y1, y2, y3],
@@ -224,13 +218,13 @@ def test_multiple_params_per_task():
 @mark.parametrize(
     "shared_params_shapes",
     [
-        [tuple()],
+        [()],
         [(2,)],
         [(3, 2)],
         [(4, 3, 2)],
-        [tuple(), (2,)],
+        [(), (2,)],
         [(3, 2), (2,)],
-        [(4, 3, 2), (3, 2), tuple()],
+        [(4, 3, 2), (3, 2), ()],
         [(5, 4, 3, 2), (5, 4, 3, 2)],
     ],
 )

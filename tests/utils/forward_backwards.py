@@ -111,12 +111,13 @@ def reshape_raw_losses(raw_losses: Tensor) -> Tensor:
 
     if raw_losses.ndim == 1:
         return raw_losses.unsqueeze(1)
-    else:
-        return raw_losses.flatten(start_dim=1)
+    return raw_losses.flatten(start_dim=1)
 
 
 def compute_gramian_with_autograd(
-    output: Tensor, params: list[nn.Parameter], retain_graph: bool = False
+    output: Tensor,
+    params: list[nn.Parameter],
+    retain_graph: bool = False,
 ) -> PSDTensor:
     """
     Computes the Gramian of the Jacobian of the outputs with respect to the params using vmapped
@@ -198,7 +199,7 @@ class CloneParams:
         for module in self.model.modules():
             self._restore_original_params(module)
 
-        return False  # don’t suppress exceptions
+        return False  # don't suppress exceptions
 
     def _restore_original_params(self, module: nn.Module):
         original_params = self._module_to_original_params.pop(module, {})

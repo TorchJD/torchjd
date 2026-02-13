@@ -9,7 +9,9 @@ from ._accumulation import TensorWithJac, accumulate_grads, is_tensor_with_jac
 
 
 def jac_to_grad(
-    tensors: Iterable[Tensor], aggregator: Aggregator, retain_jac: bool = False
+    tensors: Iterable[Tensor],
+    aggregator: Aggregator,
+    retain_jac: bool = False,
 ) -> None:
     r"""
     Aggregates the Jacobians stored in the ``.jac`` fields of ``tensors`` and accumulates the result
@@ -56,7 +58,7 @@ def jac_to_grad(
         if not is_tensor_with_jac(t):
             raise ValueError(
                 "Some `jac` fields were not populated. Did you use `autojac.backward` or "
-                "`autojac.mtl_backward` before calling `jac_to_grad`?"
+                "`autojac.mtl_backward` before calling `jac_to_grad`?",
             )
         tensors_.append(t)
 
@@ -65,7 +67,7 @@ def jac_to_grad(
 
     jacobians = [t.jac for t in tensors_]
 
-    if not all([jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]]):
+    if not all(jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]):
         raise ValueError("All Jacobians should have the same number of rows.")
 
     if not retain_jac:
@@ -84,7 +86,9 @@ def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
 
 
 def _disunite_gradient(
-    gradient_vector: Tensor, jacobians: list[Tensor], tensors: list[TensorWithJac]
+    gradient_vector: Tensor,
+    jacobians: list[Tensor],
+    tensors: list[TensorWithJac],
 ) -> list[Tensor]:
     gradient_vectors = gradient_vector.split([t.numel() for t in tensors])
     gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
