@@ -144,7 +144,9 @@ PARAMETRIZATIONS = [
 
 
 def _assert_gramian_is_equivalent_to_autograd(
-    factory: ModuleFactory, batch_size: int, batch_dim: int | None
+    factory: ModuleFactory,
+    batch_size: int,
+    batch_dim: int | None,
 ):
     model_autograd, model_autogram = factory(), factory()
     engine = Engine(model_autogram, batch_dim=batch_dim)
@@ -208,7 +210,9 @@ def test_compute_gramian(factory: ModuleFactory, batch_size: int, batch_dim: int
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [param(0, marks=mark.xfail), None])
 def test_compute_gramian_with_weird_modules(
-    factory: ModuleFactory, batch_size: int, batch_dim: int | None
+    factory: ModuleFactory,
+    batch_size: int,
+    batch_dim: int | None,
 ):
     """
     Tests that compute_gramian works even with some problematic modules when batch_dim is None. It
@@ -230,7 +234,9 @@ def test_compute_gramian_with_weird_modules(
 @mark.parametrize("batch_size", [1, 3, 32])
 @mark.parametrize("batch_dim", [0, None])
 def test_compute_gramian_unsupported_architectures(
-    factory: ModuleFactory, batch_size: int, batch_dim: int | None
+    factory: ModuleFactory,
+    batch_size: int,
+    batch_dim: int | None,
 ):
     """
     Tests compute_gramian on some architectures that are known to be unsupported. It is expected to
@@ -353,7 +359,10 @@ def test_iwrm_steps_with_autogram(factory: ModuleFactory, batch_size: int, batch
 @mark.parametrize("use_engine", [False, True])
 @mark.parametrize("batch_dim", [0, None])
 def test_autograd_while_modules_are_hooked(
-    factory: ModuleFactory, batch_size: int, use_engine: bool, batch_dim: int | None
+    factory: ModuleFactory,
+    batch_size: int,
+    use_engine: bool,
+    batch_dim: int | None,
 ):
     """
     Tests that the hooks added when constructing the engine do not interfere with a simple autograd
@@ -536,11 +545,11 @@ def test_batched_non_batched_equivalence(shape: list[int], batch_dim: int):
     input = randn_([batch_size, input_size])
 
     engine1 = Engine(model1, batch_dim=batch_dim)
-    output1 = model1(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
+    output1 = model1(input).reshape([batch_size, *non_batched_shape]).movedim(0, batch_dim)
     gramian1 = engine1.compute_gramian(output1)
 
     engine2 = Engine(model2, batch_dim=None)
-    output2 = model2(input).reshape([batch_size] + non_batched_shape).movedim(0, batch_dim)
+    output2 = model2(input).reshape([batch_size, *non_batched_shape]).movedim(0, batch_dim)
     gramian2 = engine2.compute_gramian(output2)
 
     assert_close(gramian1, gramian2)

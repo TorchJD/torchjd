@@ -46,11 +46,12 @@ def compute_gramian(t: Tensor, contracted_dims: int = -1) -> PSDTensor:
         gramian = matrix @ matrix.T
 
     else:
-        contracted_dims = contracted_dims if 0 <= contracted_dims else contracted_dims + t.ndim
+        contracted_dims = contracted_dims if contracted_dims >= 0 else contracted_dims + t.ndim
         indices_source = list(range(t.ndim - contracted_dims))
         indices_dest = list(range(t.ndim - 1, contracted_dims - 1, -1))
         transposed = t.movedim(indices_source, indices_dest)
         gramian = torch.tensordot(t, transposed, dims=contracted_dims)
+
     return cast(PSDTensor, gramian)
 
 
@@ -81,7 +82,9 @@ def regularize(gramian: PSDMatrix, eps: float) -> PSDMatrix:
     """
 
     regularization_matrix = eps * torch.eye(
-        gramian.shape[0], dtype=gramian.dtype, device=gramian.device
+        gramian.shape[0],
+        dtype=gramian.dtype,
+        device=gramian.device,
     )
     output = gramian + regularization_matrix
     return cast(PSDMatrix, output)

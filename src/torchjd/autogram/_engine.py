@@ -222,7 +222,7 @@ class Engine:
                     f" are {_MODULES_INCOMPATIBLE_WITH_BATCHED} (and their subclasses). The "
                     f"recommended fix is to replace incompatible layers by something else (e.g. "
                     f"BatchNorm by InstanceNorm). If you really can't and performance is not a "
-                    f"priority, you may also just set `batch_dim=None` when creating the engine."
+                    f"priority, you may also just set `batch_dim=None` when creating the engine.",
                 )
             if isinstance(module, _TRACK_RUNNING_STATS_MODULE_TYPES) and module.track_running_stats:
                 raise ValueError(
@@ -231,7 +231,7 @@ class Engine:
                     f" to performing in-place operations on tensors and having side-effects during "
                     f"the forward pass. Try setting `track_running_stats` to `False`. If you really"
                     f" can't and performance is not a priority, you may also just set "
-                    f"`batch_dim=None` when creating the engine."
+                    f"`batch_dim=None` when creating the engine.",
                 )
 
     # Currently, the type PSDMatrix is hidden from users, so Tensor is correct.
@@ -278,7 +278,7 @@ class Engine:
             target_shape = []
 
         if has_non_batch_dim:
-            target_shape = [-1] + target_shape
+            target_shape = [-1, *target_shape]
 
         reshaped_output = ordered_output.reshape(target_shape)
         # There are four different cases for the shape of reshaped_output:

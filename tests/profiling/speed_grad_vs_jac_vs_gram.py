@@ -105,7 +105,11 @@ def compare_autograd_autojac_and_autogram_speed(factory: ModuleFactory, batch_si
     print_times("autograd", autograd_times)
 
     autograd_gramian_times = time_call(
-        fn_autograd_gramian, init_fn_autograd_gramian, pre_fn, post_fn, n_runs
+        fn_autograd_gramian,
+        init_fn_autograd_gramian,
+        pre_fn,
+        post_fn,
+        n_runs,
     )
     print_times("autograd gramian", autograd_gramian_times)
 

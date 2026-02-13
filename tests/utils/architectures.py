@@ -48,14 +48,13 @@ def get_in_out_shapes(module: nn.Module) -> tuple[PyTree, PyTree]:
     if isinstance(module, ShapedModule):
         return module.INPUT_SHAPES, module.OUTPUT_SHAPES
 
-    elif isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
+    if isinstance(module, nn.BatchNorm2d | nn.InstanceNorm2d):
         HEIGHT = 6  # Arbitrary choice
         WIDTH = 6  # Arbitrary choice
         shape = (module.num_features, HEIGHT, WIDTH)
         return shape, shape
 
-    else:
-        raise ValueError("Unknown input / output shapes of module", module)
+    raise ValueError("Unknown input / output shapes of module", module)
 
 
 class OverlyNested(ShapedModule):
@@ -393,7 +392,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> PyTree:
-            return {"one": [None, tuple()], "two": None}
+            return {"one": [None, ()], "two": None}
 
     class _EmptyTupleOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
@@ -401,7 +400,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> tuple:
-            return tuple()
+            return ()
 
     class _EmptyPytreeOutput(nn.Module):
         def __init__(self, shape: tuple[int, ...]):
@@ -409,7 +408,7 @@ class WithNoTensorOutput(ShapedModule):
             self.matrix = nn.Parameter(torch.randn(shape))
 
         def forward(self, _: PyTree) -> PyTree:
-            return {"one": [tuple(), tuple()], "two": [[], []]}
+            return {"one": [(), ()], "two": [[], []]}
 
     def __init__(self):
         super().__init__()
@@ -670,7 +669,7 @@ class Ndim0Output(ShapedModule):
     """Simple model whose output is a scalar."""
 
     INPUT_SHAPES = (5,)
-    OUTPUT_SHAPES = tuple()
+    OUTPUT_SHAPES = ()
 
     def __init__(self):
         super().__init__()
@@ -808,8 +807,7 @@ class _WithStringArg(nn.Module):
     def forward(self, s: str, input: Tensor) -> Tensor:
         if s == "two":
             return input @ self.matrix * 2.0
-        else:
-            return input @ self.matrix
+        return input @ self.matrix
 
 
 class WithModuleWithStringArg(ShapedModule):
@@ -1150,7 +1148,7 @@ class InstanceNormResNet18(ShapedModule):
     def __init__(self):
         super().__init__()
         self.resnet18 = torchvision.models.resnet18(
-            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:
@@ -1166,7 +1164,7 @@ class GroupNormMobileNetV3Small(ShapedModule):
     def __init__(self):
         super().__init__()
         self.mobile_net = torchvision.models.mobilenet_v3_small(
-            norm_layer=partial(nn.GroupNorm, 2, affine=True)
+            norm_layer=partial(nn.GroupNorm, 2, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:
@@ -1196,7 +1194,7 @@ class InstanceNormMobileNetV2(ShapedModule):
     def __init__(self):
         super().__init__()
         self.mobilenet = torchvision.models.mobilenet_v2(
-            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True)
+            norm_layer=partial(nn.InstanceNorm2d, track_running_stats=False, affine=True),
         )
 
     def forward(self, input: Tensor) -> Tensor:

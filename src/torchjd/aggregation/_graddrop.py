@@ -30,7 +30,7 @@ class GradDrop(Aggregator):
         if leak is not None and leak.dim() != 1:
             raise ValueError(
                 "Parameter `leak` should be a 1-dimensional tensor. Found `leak.shape = "
-                f"{leak.shape}`."
+                f"{leak.shape}`.",
             )
 
         super().__init__()
@@ -64,7 +64,7 @@ class GradDrop(Aggregator):
         if self.leak is not None and n_rows != len(self.leak):
             raise ValueError(
                 f"Parameter `matrix` should be a matrix of exactly {len(self.leak)} rows (i.e. the "
-                f"number of leak scalars). Found `matrix` of shape `{matrix.shape}`."
+                f"number of leak scalars). Found `matrix` of shape `{matrix.shape}`.",
             )
 
     def __repr__(self) -> str:

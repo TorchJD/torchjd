@@ -64,7 +64,7 @@ class Diagonalize(Transform):
         flattened_considered_values = [tensors[key].reshape([-1]) for key in self.key_order]
         diagonal_matrix = torch.cat(flattened_considered_values).diag()
         diagonalized_tensors = {
-            key: diagonal_matrix[:, begin:end].reshape((-1,) + key.shape)
+            key: diagonal_matrix[:, begin:end].reshape((-1, *key.shape))
             for (begin, end), key in zip(self.indices, self.key_order, strict=True)
         }
         return diagonalized_tensors
@@ -73,6 +73,6 @@ class Diagonalize(Transform):
         if not set(self.key_order) == input_keys:
             raise RequirementError(
                 f"The input_keys must match the key_order. Found input_keys {input_keys} and"
-                f"key_order {self.key_order}."
+                f"key_order {self.key_order}.",
             )
         return input_keys
