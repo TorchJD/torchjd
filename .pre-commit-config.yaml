@@ -10,10 +10,10 @@ repos:
     -   id: check-merge-conflict  # Check for files that contain merge conflict strings.
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.0
+    rev: v0.15.1
     hooks:
-      - id: ruff
-        args: [ --fix, --ignore, FIX ]
+      - id: ruff-check
+        args: [ --fix, --ignore, FIX ]  # Allow committing with TODOs. Only CI checks should prevent merging with TODOs.
       - id: ruff-format
 
 ci:
