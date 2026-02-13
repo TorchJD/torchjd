@@ -1,172 +1,146 @@
-#!/usr/bin/env python3
-"""Compare autojac traces before and after optimization."""
+"""Compare profiling traces between autojac_old and autojac_new."""
 
 import json
 from pathlib import Path
 
 
-def extract_duration(trace_file, function_name):
-    """Extract the total duration of a function from a trace file.
+def find_event_duration(trace_data: dict, event_name: str) -> float | None:
+    """Find the duration of a specific event in the trace.
 
-    Args:
-        trace_file: Path to the JSON trace file
-        function_name: Name of the function to find (partial match)
-
-    Returns:
-        Duration in milliseconds, or None if not found
+    :param trace_data: The parsed JSON trace data
+    :param event_name: The name of the event to find (e.g., "jac_to_grad")
     """
-    with open(trace_file) as f:
-        data = json.load(f)
-
-    events = data.get("traceEvents", [])
-    matching_events = [e for e in events if function_name in e.get("name", "")]
-
-    if not matching_events:
-        return None
-
-    # Sum up all durations (in case there are multiple calls)
-    total_dur_us = sum(e.get("dur", 0) for e in matching_events)
-    # Convert microseconds to milliseconds
-    return total_dur_us / 1000
+    events = trace_data.get("traceEvents", [])
+    for event in events:
+        if "name" in event and "dur" in event and event["name"].endswith(f": {event_name}"):
+            return event["dur"] / 1000.0  # Convert microseconds to milliseconds
+    return None
 
 
-def parse_filename(filename):
-    """Parse model name and batch size from filename.
+def parse_filename(filename: str) -> tuple[str, int, str]:
+    """Parse model name, batch size, and device from filename.
 
-    Args:
-        filename: e.g., "AlexNet()-bs4-cpu.json"
-
-    Returns:
-        tuple: (model_name, batch_size)
+    :param filename: The trace filename (e.g., "AlexNet()-bs4-cpu.json")
     """
     # Remove .json extension
     name = filename.replace(".json", "")
-    # Split by -bs
+    # Split by -bs and -
     parts = name.split("-bs")
     model = parts[0].replace("()", "")
-    batch_size = parts[1].split("-")[0]
-    return model, batch_size
+    rest = parts[1].split("-")
+    batch_size = int(rest[0])
+    device = rest[1]
+    return model, batch_size, device
 
 
-def compare_traces(old_dir, new_dir, device):
-    """Compare traces for a specific device.
+def compare_traces() -> None:
+    """Compare traces between autojac_old and autojac_new directories."""
+    traces_dir = Path(__file__).parent.parent.parent / "traces"
+    old_dir = traces_dir / "autojac_old"
+    new_dir = traces_dir / "autojac_new"
 
-    Args:
-        old_dir: Path to autojac_old directory
-        new_dir: Path to autojac_new directory
-        device: 'cpu' or 'cuda'
+    # Collect data
+    cpu_data = []
+    cuda_data = []
 
-    Returns:
-        list: List of result rows
-    """
-    results = []
-
-    # Get all trace files for this device
-    old_files = sorted(Path(old_dir).glob(f"*-{device}.json"))
-
-    for old_file in old_files:
-        new_file = Path(new_dir) / old_file.name
+    for old_file in sorted(old_dir.glob("*.json")):
+        model, batch_size, device = parse_filename(old_file.name)
+        new_file = new_dir / old_file.name
 
         if not new_file.exists():
+            print(f"Warning: {new_file.name} not found in autojac_new")
             continue
 
-        model, batch_size = parse_filename(old_file.name)
+        # Load trace files
+        with open(old_file) as f:
+            old_trace = json.load(f)
+        with open(new_file) as f:
+            new_trace = json.load(f)
 
-        # Extract durations for jac_to_grad
-        jac_old = extract_duration(old_file, "jac_to_grad")
-        jac_new = extract_duration(new_file, "jac_to_grad")
+        # Find durations for both events
+        old_jac_to_grad = find_event_duration(old_trace, "jac_to_grad")
+        new_jac_to_grad = find_event_duration(new_trace, "jac_to_grad")
+        old_forward_backward = find_event_duration(old_trace, "autojac_forward_backward")
+        new_forward_backward = find_event_duration(new_trace, "autojac_forward_backward")
 
-        # Extract durations for autojac_forward_backward
-        fb_old = extract_duration(old_file, "autojac_forward_backward")
-        fb_new = extract_duration(new_file, "autojac_forward_backward")
+        if old_jac_to_grad is None or new_jac_to_grad is None:
+            print(f"Warning: jac_to_grad not found in {old_file.name}")
+            continue
+        if old_forward_backward is None or new_forward_backward is None:
+            print(f"Warning: autojac_forward_backward not found in {old_file.name}")
+            continue
 
         # Calculate differences
-        if jac_old and jac_new:
-            jac_diff = jac_new - jac_old
-            jac_pct = (jac_diff / jac_old) * 100 if jac_old else 0
+        diff_jac_to_grad = new_jac_to_grad - old_jac_to_grad
+        diff_forward_backward = new_forward_backward - old_forward_backward
+        pct_jac_to_grad = (diff_jac_to_grad / old_jac_to_grad) * 100
+        pct_forward_backward = (diff_forward_backward / old_forward_backward) * 100
+
+        row = {
+            "model": model,
+            "batch_size": batch_size,
+            "old_jac_to_grad": old_jac_to_grad,
+            "new_jac_to_grad": new_jac_to_grad,
+            "diff_jac_to_grad": diff_jac_to_grad,
+            "pct_jac_to_grad": pct_jac_to_grad,
+            "old_forward_backward": old_forward_backward,
+            "new_forward_backward": new_forward_backward,
+            "diff_forward_backward": diff_forward_backward,
+            "pct_forward_backward": pct_forward_backward,
+        }
+
+        if device == "cpu":
+            cpu_data.append(row)
         else:
-            jac_diff = None
-            jac_pct = None
+            cuda_data.append(row)
 
-        if fb_old and fb_new:
-            fb_diff = fb_new - fb_old
-            fb_pct = (fb_diff / fb_old) * 100 if fb_old else 0
-        else:
-            fb_diff = None
-            fb_pct = None
+    # Print tables
+    print("CPU Traces Comparison")
+    print_table(cpu_data)
 
-        results.append(
-            {
-                "model": model,
-                "batch_size": batch_size,
-                "jac_old": jac_old,
-                "jac_new": jac_new,
-                "jac_diff": jac_diff,
-                "jac_pct": jac_pct,
-                "fb_old": fb_old,
-                "fb_new": fb_new,
-                "fb_diff": fb_diff,
-                "fb_pct": fb_pct,
-            },
-        )
-
-    return results
+    print("\nCUDA Traces Comparison")
+    print_table(cuda_data)
 
 
-def format_ms(value):
-    """Format a value as milliseconds."""
-    if value is None:
-        return "N/A"
-    return f"{round(value)}"
+def print_table(data: list[dict]) -> None:
+    """Print a formatted comparison table.
 
-
-def format_diff(diff, pct):
-    """Format difference with percentage."""
-    if diff is None or pct is None:
-        return "N/A"
-    sign = "+" if diff >= 0 else ""
-    return f"{sign}{round(diff)} ({sign}{round(pct)}%)"
-
-
-def print_table(results, device):
-    """Print comparison table for a device."""
-    print(f"\n## {device.upper()} Results\n")
-
-    # Print header
-    header = "|Model|Batch Size|Time before (jac_to_grad)|Time after (jac_to_grad)|Difference (jac_to_grad)|Time before (autojac_forward_backward)|Time after (autojac_forward_backward)|Difference (autojac_forward_backward)|"
+    :param data: List of row dictionaries with timing data
+    """
+    # Header
+    header = (
+        "|Model|Batch Size|Time before (jac_to_grad)|Time after (jac_to_grad)|"
+        "Difference (jac_to_grad)|Time before (autojac_forward_backward)|"
+        "Time after (autojac_forward_backward)|Difference (autojac_forward_backward)|"
+    )
     separator = "|---|---|---|---|---|---|---|---|"
 
     print(header)
     print(separator)
 
-    # Print rows
-    for r in results:
-        row = (
-            f"|{r['model']}"
-            f"|{r['batch_size']}"
-            f"|{format_ms(r['jac_old'])} ms"
-            f"|{format_ms(r['jac_new'])} ms"
-            f"|{format_diff(r['jac_diff'], r['jac_pct'])}"
-            f"|{format_ms(r['fb_old'])} ms"
-            f"|{format_ms(r['fb_new'])} ms"
-            f"|{format_diff(r['fb_diff'], r['fb_pct'])}|"
+    # Rows
+    for row in data:
+        # Format differences with + sign for positive values
+        diff_jac = round(row["diff_jac_to_grad"])
+        pct_jac = round(row["pct_jac_to_grad"])
+        diff_fb = round(row["diff_forward_backward"])
+        pct_fb = round(row["pct_forward_backward"])
+
+        diff_jac_str = f"+{diff_jac}" if diff_jac > 0 else str(diff_jac)
+        pct_jac_str = f"+{pct_jac}" if pct_jac > 0 else str(pct_jac)
+        diff_fb_str = f"+{diff_fb}" if diff_fb > 0 else str(diff_fb)
+        pct_fb_str = f"+{pct_fb}" if pct_fb > 0 else str(pct_fb)
+
+        print(
+            f"|{row['model']}|{row['batch_size']}|"
+            f"{round(row['old_jac_to_grad'])} ms|"
+            f"{round(row['new_jac_to_grad'])} ms|"
+            f"{diff_jac_str} ms ({pct_jac_str}%)|"
+            f"{round(row['old_forward_backward'])} ms|"
+            f"{round(row['new_forward_backward'])} ms|"
+            f"{diff_fb_str} ms ({pct_fb_str}%)|",
         )
-        print(row)
-
-
-def main():
-    """Main entry point."""
-    old_dir = Path("traces/autojac_old")
-    new_dir = Path("traces/autojac_new")
-
-    # Compare CPU traces
-    cpu_results = compare_traces(old_dir, new_dir, "cpu")
-    print_table(cpu_results, "cpu")
-
-    # Compare CUDA traces
-    cuda_results = compare_traces(old_dir, new_dir, "cuda")
-    print_table(cuda_results, "cuda")
 
 
 if __name__ == "__main__":
-    main()
+    compare_traces()
