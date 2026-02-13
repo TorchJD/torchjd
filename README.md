@@ -35,7 +35,7 @@ are conflicting, and averaging them gives an update direction that is detrimenta
 objective. Note that in this picture, the dual cone, represented in green, is the set of vectors
 that have a non-negative inner product with both $g_1$ and $g_2$.
 
-![image](docs/source/_static/direction_upgrad_mean.svg)
+![image](docs/source/_static/gradients_cone_projections_upgrad_mean.svg)
 
 With Jacobian descent, $g_1$ and $g_2$ are computed individually and carefully aggregated using an
 aggregator $\mathcal A$. In this example, the aggregator is the Unconflicting Projection of
