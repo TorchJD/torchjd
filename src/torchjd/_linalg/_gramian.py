@@ -38,10 +38,7 @@ def compute_gramian(t: Tensor, contracted_dims: int = -1) -> PSDTensor:
     # Optimization: it's faster to do that than moving dims and using tensordot, and this case
     # happens very often, sometimes hundreds of times for a single jac_to_grad.
     if contracted_dims == -1:
-        if t.ndim == 1:
-            matrix = t.unsqueeze(1)
-        else:
-            matrix = t.flatten(start_dim=1)
+        matrix = t.unsqueeze(1) if t.ndim == 1 else t.flatten(start_dim=1)
 
         gramian = matrix @ matrix.T
 
