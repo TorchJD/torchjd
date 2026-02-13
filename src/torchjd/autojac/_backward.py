@@ -133,7 +133,6 @@ def backward(
         diag = Diagonalize(tensors_)
         jac_tensors_dict = (diag << init)({})
     else:
-        # TODO: Check that the first dimension of each jac_tensors is the same, and that the rest
         # correspond to the shape of the corresponding element in tensors_
         jac_tensors_ = as_checked_ordered_set(jac_tensors, "jac_tensors")
         jac_tensors_dict = dict(zip(tensors_, jac_tensors_, strict=True))

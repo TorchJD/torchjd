@@ -5,8 +5,6 @@ from utils.tensors import randn_, tensor_
 
 from torchjd.autojac import backward
 
-# TODO: Add tests of the `jac_tensors` parameter.
-
 
 def test_jac_is_populated():
     """Tests that backward correctly fills the .jac field."""
