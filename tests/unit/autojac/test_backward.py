@@ -1,7 +1,7 @@
 import torch
 from pytest import mark, raises
 from utils.asserts import assert_has_jac, assert_has_no_jac, assert_jac_close
-from utils.tensors import randn_, tensor_
+from utils.tensors import eye_, randn_, tensor_
 
 from torchjd.autojac import backward
 
@@ -92,9 +92,9 @@ def test_jac_tensors_multiple_components(rows: int):
 
     backward([y1, y2], jac_tensors=[J1, J2], inputs=[input])
 
-    jac_y1 = torch.eye(2) * 2
+    jac_y1 = eye_(2) * 2
 
-    jac_y2 = torch.tensor([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
+    jac_y2 = tensor_([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
 
     expected = J1 @ jac_y1 + J2 @ jac_y2
 
