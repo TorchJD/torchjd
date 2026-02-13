@@ -1,9 +1,13 @@
+from collections import deque
 from collections.abc import Iterable
+from typing import TypeGuard, cast
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
+from torchjd._linalg import PSDMatrix, compute_gramian
 from torchjd.aggregation import Aggregator
+from torchjd.aggregation._aggregator_bases import GramianWeightedAggregator
 
 from ._accumulation import TensorWithJac, accumulate_grads, is_tensor_with_jac
 
@@ -65,31 +69,73 @@ def jac_to_grad(
     if len(tensors_) == 0:
         return
 
-    jacobians = [t.jac for t in tensors_]
+    jacobians = deque(t.jac for t in tensors_)
 
-    if not all(jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians[1:]):
+    if not all(jacobian.shape[0] == jacobians[0].shape[0] for jacobian in jacobians):
         raise ValueError("All Jacobians should have the same number of rows.")
 
     if not retain_jac:
         _free_jacs(tensors_)
 
-    jacobian_matrix = _unite_jacobians(jacobians)
-    gradient_vector = aggregator(jacobian_matrix)
-    gradients = _disunite_gradient(gradient_vector, jacobians, tensors_)
+    if _can_skip_jacobian_combination(aggregator):
+        gradients = _gramian_based(aggregator, jacobians, tensors_)
+    else:
+        gradients = _jacobian_based(aggregator, jacobians, tensors_)
     accumulate_grads(tensors_, gradients)
 
 
-def _unite_jacobians(jacobians: list[Tensor]) -> Tensor:
-    jacobian_matrices = [jacobian.reshape(jacobian.shape[0], -1) for jacobian in jacobians]
+def _can_skip_jacobian_combination(aggregator: Aggregator) -> TypeGuard[GramianWeightedAggregator]:
+    return isinstance(aggregator, GramianWeightedAggregator) and not _has_forward_hook(aggregator)
+
+
+def _has_forward_hook(module: nn.Module) -> bool:
+    """Return whether the module has any forward hook registered."""
+    return len(module._forward_hooks) > 0 or len(module._forward_pre_hooks) > 0
+
+
+def _jacobian_based(
+    aggregator: Aggregator,
+    jacobians: deque[Tensor],
+    tensors: list[TensorWithJac],
+) -> list[Tensor]:
+    jacobian_matrix = _unite_jacobians(jacobians)
+    gradient_vector = aggregator(jacobian_matrix)
+    gradients = _disunite_gradient(gradient_vector, tensors)
+    return gradients
+
+
+def _gramian_based(
+    aggregator: GramianWeightedAggregator,
+    jacobians: deque[Tensor],
+    tensors: list[TensorWithJac],
+) -> list[Tensor]:
+    weighting = aggregator.gramian_weighting
+    gramian = _compute_gramian_sum(jacobians)
+    weights = weighting(gramian)
+
+    gradients = list[Tensor]()
+    while jacobians:
+        jacobian = jacobians.popleft()  # get jacobian + dereference it to free memory asap
+        gradients.append(torch.tensordot(weights, jacobian, dims=1))
+
+    return gradients
+
+
+def _compute_gramian_sum(jacobians: deque[Tensor]) -> PSDMatrix:
+    gramian = sum([compute_gramian(matrix) for matrix in jacobians])
+    return cast(PSDMatrix, gramian)
+
+
+def _unite_jacobians(jacobians: deque[Tensor]) -> Tensor:
+    jacobian_matrices = list[Tensor]()
+    while jacobians:
+        jacobian = jacobians.popleft()  # get jacobian + dereference it to free memory asap
+        jacobian_matrices.append(jacobian.reshape(jacobian.shape[0], -1))
     jacobian_matrix = torch.concat(jacobian_matrices, dim=1)
     return jacobian_matrix
 
 
-def _disunite_gradient(
-    gradient_vector: Tensor,
-    jacobians: list[Tensor],
-    tensors: list[TensorWithJac],
-) -> list[Tensor]:
+def _disunite_gradient(gradient_vector: Tensor, tensors: list[TensorWithJac]) -> list[Tensor]:
     gradient_vectors = gradient_vector.split([t.numel() for t in tensors])
     gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
     return gradients
