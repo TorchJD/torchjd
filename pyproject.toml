@@ -88,9 +88,8 @@ test = [
 ]
 
 plot = [
-    "plotly>=5.19.0",  # Recent version to avoid problems, could be relaxed
+    "plotly[kaleido]>=5.19.0",  # Recent version to avoid problems, could be relaxed
     "dash>=2.16.0",  # Recent version to avoid problems, could be relaxed
-    "kaleido==0.2.1",  # Only works with locked version
     "matplotlib>=3.10.0",  # Recent version to avoid problems, could be relaxed
 ]
 # Dependency group allowing to easily resolve version of the core dependencies to the lower bound.
