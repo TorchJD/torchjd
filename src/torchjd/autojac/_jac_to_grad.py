@@ -94,7 +94,9 @@ def _has_forward_hook(module: nn.Module) -> bool:
 
 
 def _jacobian_based(
-    aggregator: Aggregator, jacobians: deque[Tensor], tensors: list[TensorWithJac]
+    aggregator: Aggregator,
+    jacobians: deque[Tensor],
+    tensors: list[TensorWithJac],
 ) -> list[Tensor]:
     jacobian_matrix = _unite_jacobians(jacobians)
     gradient_vector = aggregator(jacobian_matrix)
@@ -103,7 +105,9 @@ def _jacobian_based(
 
 
 def _gramian_based(
-    aggregator: GramianWeightedAggregator, jacobians: deque[Tensor], tensors: list[TensorWithJac]
+    aggregator: GramianWeightedAggregator,
+    jacobians: deque[Tensor],
+    tensors: list[TensorWithJac],
 ) -> list[Tensor]:
     weighting = aggregator.gramian_weighting
     gramian = _compute_gramian_sum(jacobians)
@@ -131,7 +135,7 @@ def _unite_jacobians(jacobians: deque[Tensor]) -> Tensor:
     return jacobian_matrix
 
 
-def _disunite_gradient(gradient_vector: Tensor, tensors: list[TensorWithJac],) -> list[Tensor]:
+def _disunite_gradient(gradient_vector: Tensor, tensors: list[TensorWithJac]) -> list[Tensor]:
     gradient_vectors = gradient_vector.split([t.numel() for t in tensors])
     gradients = [g.view(t.shape) for g, t in zip(gradient_vectors, tensors, strict=True)]
     return gradients
