@@ -153,6 +153,7 @@ ignore = [
     "E402",    # module-import-not-at-top-of-file
     "RUF022",  # __all__ not sorted
     "RUF010",  # Use explicit conversion flag
+    "RUF012",  # Mutable default value for class attribute (a bit tedious to fix)
     "RET504",  # Unnecessary assignment return statement
 ]
 

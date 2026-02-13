@@ -1,5 +1,5 @@
 from functools import partial
-from typing import ClassVar, Generic, TypeVar
+from typing import Generic, TypeVar
 
 import torch
 import torchvision
@@ -130,7 +130,7 @@ class SingleInputPyTreeOutput(ShapedModule):
     """Module taking a single input and returning a complex PyTree of tensors as output."""
 
     INPUT_SHAPES = (50,)
-    OUTPUT_SHAPES: ClassVar = {
+    OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
         "second": (80,),
         "third": ([((90,),)],),
@@ -155,7 +155,7 @@ class SingleInputPyTreeOutput(ShapedModule):
 class PyTreeInputSingleOutput(ShapedModule):
     """Module taking a complex PyTree of tensors as input and returning a single output."""
 
-    INPUT_SHAPES: ClassVar = {
+    INPUT_SHAPES = {
         "one": [((10,), [(20,), (30,)]), (12,)],
         "two": (14,),
     }
@@ -192,12 +192,12 @@ class PyTreeInputPyTreeOutput(ShapedModule):
     output.
     """
 
-    INPUT_SHAPES: ClassVar = {
+    INPUT_SHAPES = {
         "one": [((10,), [(20,), (30,)]), (12,)],
         "two": (14,),
     }
 
-    OUTPUT_SHAPES: ClassVar = {
+    OUTPUT_SHAPES = {
         "first": ((50,), [(60,), (70,)]),
         "second": (80,),
         "third": ([((90,),)],),
