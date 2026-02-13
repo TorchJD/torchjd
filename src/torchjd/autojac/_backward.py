@@ -65,8 +65,32 @@ def backward(
     .. admonition::
         Example
 
-        If `jac_tensors` is made of matrices whose first dimension is 1, then this function is
-        essentially equivalent to `autograd.grad`.
+        This is the same example as before, except that we specify the ``jac_tensors`` that correspond
+        to the default `None`
+
+            >>> import torch
+            >>>
+            >>> from torchjd.autojac import backward
+            >>>
+            >>> param = torch.tensor([1., 2.], requires_grad=True)
+            >>> # Compute arbitrary quantities that are function of param
+            >>> y1 = torch.tensor([-1., 1.]) @ param
+            >>> y2 = (param ** 2).sum()
+            >>>
+            >>> J1 = torch.tensor([1.0, 0.0])
+            >>> J2 = torch.tensor([0.0, 1.0])
+            >>>
+            >>> backward([y1, y2])
+            >>>
+            >>> param.jac
+            tensor([[-1.,  1.],
+                    [ 2.,  4.]])
+
+    .. admonition::
+        Example
+
+        If ``jac_tensors`` is made of matrices whose first dimension is 1, then this function is
+        essentially equivalent to ``autograd.grad``.
 
             >>> import torch
             >>>
