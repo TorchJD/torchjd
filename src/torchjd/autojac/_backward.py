@@ -90,7 +90,8 @@ def backward(
         Example
 
         If ``jac_tensors`` is made of matrices whose first dimension is 1, then this function is
-        essentially equivalent to ``autograd.grad``.
+        equivalent to the call ``autograd.grad(y, grad_tensors=weights)`` up to a reshape of the
+        output.
 
             >>> import torch
             >>>
@@ -100,7 +101,7 @@ def backward(
             >>> y = torch.stack([param[0] ** 2, param[1] ** 3])
             >>>
             >>> weights = torch.tensor([[0.5, 1.0]])
-            >>> backward([y], jac_tensors=[weights])
+            >>> backward(y, jac_tensors=weights)
             >>>
             >>> param.jac
             tensor([[ 1., 12.]])

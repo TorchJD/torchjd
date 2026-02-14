@@ -48,6 +48,6 @@ def test_backward3():
     y = torch.stack([param[0] ** 2, param[1] ** 3])
 
     weights = torch.tensor([[0.5, 1.0]])
-    backward([y], jac_tensors=[weights])
+    backward(y, jac_tensors=weights)
 
     assert_jac_close(param, torch.tensor([[1.0, 12.0]]), rtol=0.0, atol=1e-04)
