@@ -95,7 +95,7 @@ def backward(
             >>> import torch
             >>>
             >>> from torchjd.autojac import backward
-            >>
+            >>>
             >>> param = torch.tensor([1., 2.], requires_grad=True)
             >>> y = torch.stack([param[0] ** 2, param[1] ** 3])
             >>>
