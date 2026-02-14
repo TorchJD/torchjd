@@ -80,7 +80,7 @@ def backward(
             >>> J1 = torch.tensor([1.0, 0.0])
             >>> J2 = torch.tensor([0.0, 1.0])
             >>>
-            >>> backward([y1, y2])
+            >>> backward([y1, y2], jac_tensors=[J1, J2])
             >>>
             >>> param.jac
             tensor([[-1.,  1.],
