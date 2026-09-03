@@ -119,12 +119,11 @@ allows safe mutation after construction and gives immediate, clear error message
 def alpha(self) -> float:
     return self._alpha
 
+
 @alpha.setter
 def alpha(self, value: float) -> None:
     if not (0.0 <= value <= 1.0):
-        raise ValueError(
-            f"Attribute `alpha` must be in [0, 1]. Found alpha={value!r}."
-        )
+        raise ValueError(f"Attribute `alpha` must be in [0, 1]. Found alpha={value!r}.")
     self._alpha = value
 ```
 
@@ -164,11 +163,7 @@ already defines `__str__` to return just the class name, and `Weighting` inherit
 
 ```python
 def __repr__(self) -> str:
-    return (
-        f"{self.__class__.__name__}("
-        f"alpha={self.alpha!r}, "
-        f"rho={self.rho!r})"
-    )
+    return f"{self.__class__.__name__}(alpha={self.alpha!r}, rho={self.rho!r})"
 ```
 
 ---

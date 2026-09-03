@@ -174,11 +174,13 @@ device and dtype, you have to use the partial functions defined in `tests/utils/
 instantiate tensors. For instance, instead of
 ```python
 import torch
+
 a = torch.ones(3, 4)
 ```
 use
 ```python
 from utils.tensors import ones_
+
 a = ones_(3, 4)
 ```
 

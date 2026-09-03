@@ -117,16 +117,18 @@ changelog does not include internal changes that do not affect the user.
   ```python
   # Before
   from torchjd.aggregation import Flattening, UPGradWeighting
+
   weighting = Flattening(UPGradWeighting())
   gramian = engine.compute_gramian(losses)  # shape: [m1, m2, m2, m1]
-  weights = weighting(gramian)              # shape: [m1, m2]
+  weights = weighting(gramian)  # shape: [m1, m2]
   losses.backward(weights)
 
   # After
   from torchjd.aggregation import UPGradWeighting
+
   weighting = UPGradWeighting()
-  gramian = engine.compute_gramian(losses)           # shape: [m1 * m2, m1 * m2]
-  weights = weighting(gramian).reshape(losses.shape) # shape: [m1, m2]
+  gramian = engine.compute_gramian(losses)  # shape: [m1 * m2, m1 * m2]
+  weights = weighting(gramian).reshape(losses.shape)  # shape: [m1, m2]
   losses.backward(weights)
   ```
 
@@ -140,11 +142,13 @@ changelog does not include internal changes that do not affect the user.
   ```python
   # Before
   from torchjd.aggregation import UPGrad
+
   aggregator = UPGrad(norm_eps=1e-6, reg_eps=1e-6, solver="quadprog")
 
   # After
   from torchjd.aggregation import UPGrad
   from torchjd.linalg import QuadprogProjector
+
   aggregator = UPGrad(projector=QuadprogProjector(norm_eps=1e-6, reg_eps=1e-6))
   ```
   If you used the default `norm_eps`, `reg_eps` and `solver`, you don't have to change anything and
